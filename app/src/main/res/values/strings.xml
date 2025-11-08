@@ -7,4 +7,12 @@
     <string name="name">Name</string>
     <string name="confirm_password">Confirm Password</string>
     <string name="back_to_login">Back to Login</string>
+    <string name="phone_number">Phone Number</string>
+    <string name="role">Role</string>
+    <string name="department">Department</string>
+    <string name="address">Address</string>
+    <string name="employee">Employee</string>
+    <string name="admin">Admin</string>
+    <string name="registering">Registering…</string>
+    <string name="please_wait">Please wait…</string>
 </resources>

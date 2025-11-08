@@ -15,10 +15,16 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.ProgressBar;
+import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -34,6 +40,9 @@ public class RegisterActivity extends AppCompatActivity {
 	private TokenManager tokenManager;
 	private String registeredEmail;
 	private String registeredName;
+	private ProgressBar progressBar;
+	private TextView messageTextView;
+	private Spinner roleSpinner;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -46,9 +55,18 @@ public class RegisterActivity extends AppCompatActivity {
 		TextInputEditText emailInput = findViewById(R.id.emailInput);
 		TextInputEditText passwordInput = findViewById(R.id.passwordInput);
 		TextInputEditText confirmPasswordInput = findViewById(R.id.confirmPasswordInput);
+		TextInputEditText phoneInput = findViewById(R.id.phoneInput);
+		TextInputEditText departmentInput = findViewById(R.id.departmentInput);
+		TextInputEditText addressInput = findViewById(R.id.addressInput);
 		TextInputLayout emailInputLayout = findViewById(R.id.emailInputLayout);
+		roleSpinner = findViewById(R.id.roleSpinner);
+		progressBar = findViewById(R.id.progressBar);
+		messageTextView = findViewById(R.id.messageTextView);
 		MaterialButton registerButton = findViewById(R.id.registerButton);
 		MaterialButton backToLoginButton = findViewById(R.id.backToLoginButton);
+
+		// Setup role spinner
+		setupRoleSpinner();
 
 		// Real-time email validation
 		if (emailInput != null) {
@@ -86,13 +104,20 @@ public class RegisterActivity extends AppCompatActivity {
 
 		if (registerButton != null) {
 			registerButton.setOnClickListener(v -> {
+				// Clear previous messages
+				hideMessage();
+
 				String name = nameInput != null ? nameInput.getText().toString().trim() : "";
 				String email = emailInput != null ? emailInput.getText().toString().trim() : "";
 				String password = passwordInput != null ? passwordInput.getText().toString() : "";
 				String confirmPassword = confirmPasswordInput != null ? confirmPasswordInput.getText().toString() : "";
+				String phone = phoneInput != null ? phoneInput.getText().toString().trim() : "";
+				String department = departmentInput != null ? departmentInput.getText().toString().trim() : "";
+				String address = addressInput != null ? addressInput.getText().toString().trim() : "";
+				String role = roleSpinner != null ? roleSpinner.getSelectedItem().toString().toLowerCase() : "employee";
 
-				if (validateInput(name, email, password, confirmPassword)) {
-					register(name, email, password, confirmPassword);
+				if (validateInput(name, email, password, confirmPassword, phone)) {
+					register(name, email, password, confirmPassword, role, phone, department, address);
 				}
 			});
 		}
@@ -106,66 +131,100 @@ public class RegisterActivity extends AppCompatActivity {
 		}
 	}
 
-	private boolean validateInput(String name, String email, String password, String confirmPassword) {
+	private void setupRoleSpinner() {
+		if (roleSpinner != null) {
+			String[] roles = {getString(R.string.employee), getString(R.string.admin)};
+			ArrayAdapter<String> adapter = new ArrayAdapter<>(this, 
+				android.R.layout.simple_spinner_item, roles);
+			adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+			roleSpinner.setAdapter(adapter);
+		}
+	}
+
+	private boolean validateInput(String name, String email, String password, String confirmPassword, String phone) {
+		boolean isValid = true;
+		StringBuilder errorMessage = new StringBuilder();
+
 		if (name.isEmpty()) {
-			showError("Validation Error", "Please enter your name");
-			return false;
+			errorMessage.append("• Please enter your name\n");
+			isValid = false;
 		}
 
 		if (email.isEmpty()) {
-			showError("Validation Error", "Please enter your email");
-			return false;
-		}
-
-		EmailValidator.ValidationResult emailValidation = EmailValidator.validate(email);
-		if (!emailValidation.isValid()) {
-			showError("Validation Error", emailValidation.getMessage());
-			return false;
+			errorMessage.append("• Please enter your email\n");
+			isValid = false;
+		} else {
+			EmailValidator.ValidationResult emailValidation = EmailValidator.validate(email);
+			if (!emailValidation.isValid()) {
+				errorMessage.append("• ").append(emailValidation.getMessage()).append("\n");
+				isValid = false;
+			}
 		}
 
 		if (password.isEmpty()) {
-			showError("Validation Error", "Please enter a password");
-			return false;
-		}
-
-		if (password.length() < 8) {
-			showError("Validation Error", "Password must be at least 8 characters");
-			return false;
+			errorMessage.append("• Please enter a password\n");
+			isValid = false;
+		} else if (password.length() < 8) {
+			errorMessage.append("• Password must be at least 8 characters\n");
+			isValid = false;
 		}
 
 		if (confirmPassword.isEmpty()) {
-			showError("Validation Error", "Please confirm your password");
-			return false;
+			errorMessage.append("• Please confirm your password\n");
+			isValid = false;
+		} else if (!password.equals(confirmPassword)) {
+			errorMessage.append("• Passwords do not match\n");
+			isValid = false;
 		}
 
-		if (!password.equals(confirmPassword)) {
-			showError("Validation Error", "Passwords do not match");
-			return false;
+		// Phone validation (optional but if provided, should be valid)
+		if (!phone.isEmpty() && phone.length() < 10) {
+			errorMessage.append("• Please enter a valid phone number\n");
+			isValid = false;
 		}
 
-		return true;
+		if (!isValid) {
+			showMessage(errorMessage.toString().trim(), true);
+		}
+
+		return isValid;
 	}
 
-	private void register(String name, String email, String password, String confirmPassword) {
-		final MaterialButton registerButton = findViewById(R.id.registerButton);
-		if (registerButton != null) {
-			registerButton.setEnabled(false);
-			registerButton.setText("Registering...");
+	private void showMessage(String message, boolean isError) {
+		if (messageTextView != null) {
+			messageTextView.setText(message);
+			if (isError) {
+				messageTextView.setTextColor(ContextCompat.getColor(this, android.R.color.holo_red_dark));
+			} else {
+				messageTextView.setTextColor(ContextCompat.getColor(this, android.R.color.holo_green_dark));
+			}
+			messageTextView.setVisibility(View.VISIBLE);
 		}
+	}
+
+	private void hideMessage() {
+		if (messageTextView != null) {
+			messageTextView.setVisibility(View.GONE);
+			messageTextView.setText("");
+		}
+	}
+
+	private void register(String name, String email, String password, String confirmPassword, 
+			String role, String phone, String department, String address) {
+		// Show loading state
+		setLoadingState(true);
 
 		ApiService apiService = ApiClient.getApiService();
-		RegisterRequest request = new RegisterRequest(name, email, password, confirmPassword);
+		RegisterRequest request = new RegisterRequest(name, email, password, confirmPassword, 
+			role, phone.isEmpty() ? null : phone, 
+			department.isEmpty() ? null : department, 
+			address.isEmpty() ? null : address);
 
 		Call<RegisterResponse> call = apiService.register(request);
 		call.enqueue(new Callback<RegisterResponse>() {
 			@Override
 			public void onResponse(Call<RegisterResponse> call, Response<RegisterResponse> response) {
-				runOnUiThread(() -> {
-					if (registerButton != null) {
-						registerButton.setEnabled(true);
-						registerButton.setText(getString(R.string.register));
-					}
-				});
+				setLoadingState(false);
 
 				if (response.isSuccessful() && response.body() != null) {
 					RegisterResponse registerResponse = response.body();
@@ -198,7 +257,10 @@ public class RegisterActivity extends AppCompatActivity {
 							errorMessage = formatErrors(registerResponse.getErrors());
 						}
 						final String finalMessage = errorMessage != null ? errorMessage : "Registration failed";
-						runOnUiThread(() -> showError("Registration Failed", finalMessage));
+						runOnUiThread(() -> {
+							showMessage(finalMessage, true);
+							showError("Registration Failed", finalMessage);
+						});
 					}
 				} else {
 					// Handle HTTP error responses
@@ -211,23 +273,21 @@ public class RegisterActivity extends AppCompatActivity {
 						errorMsg = "Server error. Please try again later.";
 					}
 					final String finalErrorMsg = errorMsg;
-					runOnUiThread(() -> showError("Registration Failed", finalErrorMsg));
+					runOnUiThread(() -> {
+						showMessage(finalErrorMsg, true);
+						showError("Registration Failed", finalErrorMsg);
+					});
 				}
 			}
 
 			@Override
 			public void onFailure(Call<RegisterResponse> call, Throwable t) {
-				runOnUiThread(() -> {
-					if (registerButton != null) {
-						registerButton.setEnabled(true);
-						registerButton.setText(getString(R.string.register));
-					}
-				});
+				setLoadingState(false);
 
 				String errorMsg = "Connection error";
 				if (t.getMessage() != null) {
 					if (t.getMessage().contains("Failed to connect") || t.getMessage().contains("Unable to resolve host")) {
-						errorMsg = "Cannot connect to server.\n\nPlease check:\n1. Laravel server is running\n2. Correct API URL in ApiClient.java\n3. Network connection";
+						errorMsg = "Cannot connect to server. Please check:\n1. Laravel server is running\n2. Correct API URL in ApiClient.java\n3. Network connection";
 					} else if (t.getMessage().contains("timeout")) {
 						errorMsg = "Connection timeout. Server may be slow or unreachable.";
 					} else {
@@ -235,7 +295,26 @@ public class RegisterActivity extends AppCompatActivity {
 					}
 				}
 				final String finalErrorMsg = errorMsg;
-				runOnUiThread(() -> showError("Connection Error", finalErrorMsg));
+				runOnUiThread(() -> {
+					showMessage(finalErrorMsg, true);
+					showError("Connection Error", finalErrorMsg);
+				});
+			}
+		});
+	}
+
+	private void setLoadingState(boolean isLoading) {
+		final MaterialButton registerButton = findViewById(R.id.registerButton);
+		runOnUiThread(() -> {
+			if (registerButton != null) {
+				registerButton.setEnabled(!isLoading);
+				registerButton.setText(isLoading ? getString(R.string.registering) : getString(R.string.register));
+			}
+			if (progressBar != null) {
+				progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE);
+			}
+			if (!isLoading) {
+				hideMessage();
 			}
 		});
 	}
