@@ -10,6 +10,9 @@ public interface ApiService {
     @POST("api/v1/login")
     Call<LoginResponse> login(@Body LoginRequest request);
 
+    @POST("api/v1/register")
+    Call<RegisterResponse> register(@Body RegisterRequest request);
+
     @POST("api/v1/logout")
     Call<LogoutResponse> logout(@Header("Authorization") String token);
 

@@ -43,6 +43,14 @@ public class MainActivity extends AppCompatActivity {
 		TextInputEditText emailInput = findViewById(R.id.emailInput);
 		TextInputEditText passwordInput = findViewById(R.id.passwordInput);
 		MaterialButton loginButton = findViewById(R.id.loginButton);
+		MaterialButton registerButton = findViewById(R.id.registerButton);
+
+		if (registerButton != null) {
+			registerButton.setOnClickListener(v -> {
+				Intent intent = new Intent(this, RegisterActivity.class);
+				startActivity(intent);
+			});
+		}
 
 		if (loginButton != null) {
 			loginButton.setOnClickListener(v -> {

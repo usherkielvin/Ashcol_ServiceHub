@@ -16,8 +16,36 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
-        android:layout_marginTop="100dp"
+        android:layout_marginTop="60dp"
         tools:ignore="TextContrastCheck">
+
+        <TextView
+            android:id="@+id/registerTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/register"
+            android:textAppearance="@style/TextAppearance.Material3.HeadlineLarge"
+            android:textAlignment="center"
+            android:layout_marginBottom="32dp"
+            tools:text="@string/register" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/nameInputLayout"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/name"
+            tools:hint="@string/name"
+            tools:ignore="TextContrastCheck">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/nameInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textPersonName"
+                android:autofillHints="name"
+                tools:ignore="TextContrastCheck" />
+        </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/emailInputLayout"
@@ -25,6 +53,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="@string/email"
+            android:layout_marginTop="16dp"
             tools:hint="@string/email"
             tools:ignore="TextContrastCheck">
 
@@ -52,28 +81,49 @@
                 android:id="@+id/passwordInput"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:autofillHints="password"
                 android:inputType="textPassword"
+                android:autofillHints="password"
+                tools:ignore="TextContrastCheck" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/confirmPasswordInputLayout"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/confirm_password"
+            app:endIconMode="password_toggle"
+            android:layout_marginTop="16dp"
+            tools:hint="@string/confirm_password"
+            tools:ignore="TextContrastCheck">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/confirmPasswordInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textPassword"
+                android:autofillHints="password"
                 tools:ignore="TextContrastCheck" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/loginButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/login"
-            android:layout_marginTop="24dp"
-            tools:text="@string/login" />
-
-        <com.google.android.material.button.MaterialButton
             android:id="@+id/registerButton"
-            style="@style/Widget.Material3.Button.OutlinedButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/register"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="24dp"
             tools:text="@string/register" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/backToLoginButton"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/back_to_login"
+            android:layout_marginTop="16dp"
+            tools:text="@string/back_to_login" />
 
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
+
