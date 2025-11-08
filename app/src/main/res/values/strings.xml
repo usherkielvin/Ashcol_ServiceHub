@@ -15,4 +15,11 @@
     <string name="admin">Admin</string>
     <string name="registering">Registering…</string>
     <string name="please_wait">Please wait…</string>
+    <string name="change_password">Change Password</string>
+    <string name="edit_name">Edit Name</string>
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
+    <string name="current_password">Current Password</string>
+    <string name="new_password">New Password</string>
+    <string name="confirm_new_password">Confirm New Password</string>
 </resources>

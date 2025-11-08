@@ -48,11 +48,11 @@ public class RegisterActivity extends AppCompatActivity {
 
 		tokenManager = new TokenManager(this);
 
-		TextInputEditText nameInput = findViewById(R.id.nameInput);
-		TextInputEditText emailInput = findViewById(R.id.emailInput);
+		final TextInputEditText nameInput = findViewById(R.id.nameInput);
+		final TextInputEditText emailInput = findViewById(R.id.emailInput);
 		TextInputEditText passwordInput = findViewById(R.id.passwordInput);
 		TextInputEditText confirmPasswordInput = findViewById(R.id.confirmPasswordInput);
-		TextInputLayout emailInputLayout = findViewById(R.id.emailInputLayout);
+		final TextInputLayout emailInputLayout = findViewById(R.id.emailInputLayout);
 		progressBar = findViewById(R.id.progressBar);
 		messageTextView = findViewById(R.id.messageTextView);
 		MaterialButton registerButton = findViewById(R.id.registerButton);
@@ -65,7 +65,19 @@ public class RegisterActivity extends AppCompatActivity {
 				public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
 
 				@Override
-				public void onTextChanged(CharSequence s, int start, int before, int count) {}
+				public void onTextChanged(CharSequence s, int start, int before, int count) {
+					// Clear email error when user starts typing (but keep format validation)
+					if (emailInputLayout != null && emailInputLayout.getError() != null) {
+						String currentError = emailInputLayout.getError().toString();
+						// Only clear if it's an "already used" error, not format errors
+						if (currentError.contains("already") || currentError.contains("taken") || currentError.contains("exists")) {
+							// Clear error on first character change, format validation will show if needed
+							if (s.length() > 0) {
+								emailInputLayout.setError(null);
+							}
+						}
+					}
+				}
 
 				@Override
 				public void afterTextChanged(Editable s) {
@@ -84,8 +96,12 @@ public class RegisterActivity extends AppCompatActivity {
 							emailInputLayout.setError(result.getMessage());
 						}
 					} else {
-						if (emailInputLayout != null) {
-							emailInputLayout.setError(null);
+						// Only clear error if it's a format error, not "already used" error
+						if (emailInputLayout != null && emailInputLayout.getError() != null) {
+							String currentError = emailInputLayout.getError().toString();
+							if (!currentError.contains("already") && !currentError.contains("taken") && !currentError.contains("exists")) {
+								emailInputLayout.setError(null);
+							}
 						}
 					}
 				}
@@ -219,29 +235,109 @@ public class RegisterActivity extends AppCompatActivity {
 					} else {
 						// Handle validation errors from backend
 						String errorMessage = registerResponse.getMessage();
-						if (registerResponse.getErrors() != null) {
-							errorMessage = formatErrors(registerResponse.getErrors());
+						final TextInputLayout emailInputLayout = findViewById(R.id.emailInputLayout);
+						
+						// Check for email errors and show in email field
+						if (registerResponse.getErrors() != null && registerResponse.getErrors().getEmail() != null) {
+							String[] emailErrors = registerResponse.getErrors().getEmail();
+							if (emailErrors.length > 0) {
+								String emailError = emailErrors[0];
+								// Normalize error message
+								if (emailError.contains("already") || emailError.contains("taken") || emailError.contains("unique")) {
+									emailError = "Email already used";
+								}
+								final String finalEmailError = emailError;
+								runOnUiThread(() -> {
+									if (emailInputLayout != null) {
+										emailInputLayout.setError(finalEmailError);
+									}
+								});
+								errorMessage = finalEmailError;
+							}
 						}
+						
+						if (registerResponse.getErrors() != null) {
+							String formattedErrors = formatErrors(registerResponse.getErrors());
+							if (formattedErrors != null && !formattedErrors.isEmpty()) {
+								errorMessage = formattedErrors;
+							}
+						}
+						
 						final String finalMessage = errorMessage != null ? errorMessage : "Registration failed";
 						runOnUiThread(() -> {
 							showMessage(finalMessage, true);
-							showError("Registration Failed", finalMessage);
+							// Only show dialog if email error is not shown in field
+							if (registerResponse.getErrors() == null || 
+								registerResponse.getErrors().getEmail() == null ||
+								registerResponse.getErrors().getEmail().length == 0) {
+								showError("Registration Failed", finalMessage);
+							}
 						});
 					}
 				} else {
 					// Handle HTTP error responses
 					String errorMsg = "Registration failed";
+					final TextInputLayout emailInputLayout = findViewById(R.id.emailInputLayout);
+					
 					if (response.code() == 422) {
-						errorMsg = "Validation error. Please check your input.";
+						// Parse error response body
+						try {
+							com.google.gson.Gson gson = new com.google.gson.Gson();
+							okhttp3.ResponseBody errorBody = response.errorBody();
+							if (errorBody != null) {
+								String errorJson = errorBody.string();
+								RegisterResponse errorResponse = gson.fromJson(errorJson, RegisterResponse.class);
+								
+								// Check for email errors
+								if (errorResponse.getErrors() != null && errorResponse.getErrors().getEmail() != null) {
+									String[] emailErrors = errorResponse.getErrors().getEmail();
+									if (emailErrors.length > 0) {
+										String emailError = emailErrors[0];
+										// Normalize error message
+										if (emailError.contains("already") || emailError.contains("taken") || emailError.contains("unique")) {
+											emailError = "Email already used";
+										}
+										final String finalEmailError = emailError;
+										// Show error in email field
+										runOnUiThread(() -> {
+											if (emailInputLayout != null) {
+												emailInputLayout.setError(finalEmailError);
+											}
+										});
+										errorMsg = finalEmailError;
+									}
+								} else {
+									errorMsg = errorResponse.getMessage() != null ? errorResponse.getMessage() : "Validation error. Please check your input.";
+								}
+								
+								// Format and show other errors
+								if (errorResponse.getErrors() != null) {
+									String formattedErrors = formatErrors(errorResponse.getErrors());
+									if (formattedErrors != null && !formattedErrors.isEmpty()) {
+										errorMsg = formattedErrors;
+									}
+								}
+							}
+						} catch (Exception e) {
+							errorMsg = "Validation error. Please check your input.";
+						}
 					} else if (response.code() == 409) {
 						errorMsg = "Email already exists. Please use a different email.";
+						runOnUiThread(() -> {
+							if (emailInputLayout != null) {
+								emailInputLayout.setError("Email already used");
+							}
+						});
 					} else if (response.code() == 500) {
 						errorMsg = "Server error. Please try again later.";
 					}
+					
 					final String finalErrorMsg = errorMsg;
 					runOnUiThread(() -> {
 						showMessage(finalErrorMsg, true);
-						showError("Registration Failed", finalErrorMsg);
+						if (response.code() != 422 || (emailInputLayout != null && emailInputLayout.getError() == null)) {
+							showError("Registration Failed", finalErrorMsg);
+						}
 					});
 				}
 			}
@@ -293,6 +389,7 @@ public class RegisterActivity extends AppCompatActivity {
 		MaterialButton verifyButton = dialogView.findViewById(R.id.verifyButton);
 		MaterialButton resendCodeButton = dialogView.findViewById(R.id.resendCodeButton);
 		android.widget.TextView messageTextView = dialogView.findViewById(R.id.verificationMessage);
+		android.widget.ImageButton closeButton = dialogView.findViewById(R.id.closeButton);
 		
 		if (messageTextView != null) {
 			messageTextView.setText("Enter the 6-digit code sent to\n" + email);
@@ -300,8 +397,13 @@ public class RegisterActivity extends AppCompatActivity {
 
 		AlertDialog dialog = new MaterialAlertDialogBuilder(this)
 			.setView(dialogView)
-			.setCancelable(false)
+			.setCancelable(true)
 			.create();
+		
+		// Handle close button click
+		if (closeButton != null) {
+			closeButton.setOnClickListener(v -> dialog.dismiss());
+		}
 
 		// Clear any previous errors
 		if (codeInputLayout != null) {
