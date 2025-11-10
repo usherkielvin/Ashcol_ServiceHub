@@ -1,0 +1,15 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../../../../xampp/htdocs/ashcol_portal"
+		}
+	],
+	"settings": {
+		"java.import.gradle.wrapper.enabled": true,
+		"java.import.gradle.enabled": true,
+		"java.configuration.updateBuildConfiguration": "interactive"
+	}
+}
