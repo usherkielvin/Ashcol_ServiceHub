@@ -1,6 +1,5 @@
 package hans.ph;
 
-import hans.ph.R;
 import hans.ph.api.ApiClient;
 import hans.ph.api.ApiService;
 import hans.ph.api.RegisterRequest;
@@ -20,6 +19,9 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import android.annotation.SuppressLint;
+
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
@@ -33,161 +35,232 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+/**
+ * Activity for user registration
+ * Handles registration form, validation, and email verification
+ */
 public class RegisterActivity extends AppCompatActivity {
 
-	private TokenManager tokenManager;
-	private String registeredEmail;
-	private String registeredName;
+	// UI Components
 	private ProgressBar progressBar;
 	private TextView messageTextView;
+	private TextInputLayout emailInputLayout;
+	
+	// Data
+	private TokenManager tokenManager;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_register);
 
+		// Initialize components
 		tokenManager = new TokenManager(this);
+		initializeViews();
+		setupEmailValidation();
+		setupRegisterButton();
+		setupBackToLoginButton();
+	}
 
-		final TextInputEditText nameInput = findViewById(R.id.nameInput);
-		final TextInputEditText emailInput = findViewById(R.id.emailInput);
-		TextInputEditText passwordInput = findViewById(R.id.passwordInput);
-		TextInputEditText confirmPasswordInput = findViewById(R.id.confirmPasswordInput);
-		final TextInputLayout emailInputLayout = findViewById(R.id.emailInputLayout);
+	/**
+	 * Initialize all view components
+	 */
+	private void initializeViews() {
 		progressBar = findViewById(R.id.progressBar);
 		messageTextView = findViewById(R.id.messageTextView);
-		MaterialButton registerButton = findViewById(R.id.registerButton);
-		MaterialButton backToLoginButton = findViewById(R.id.backToLoginButton);
+		emailInputLayout = findViewById(R.id.emailInputLayout);
+	}
 
-		// Real-time email validation
-		if (emailInput != null) {
-			emailInput.addTextChangedListener(new TextWatcher() {
-				@Override
-				public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-
-				@Override
-				public void onTextChanged(CharSequence s, int start, int before, int count) {
-					// Clear email error when user starts typing (but keep format validation)
-					if (emailInputLayout != null && emailInputLayout.getError() != null) {
-						String currentError = emailInputLayout.getError().toString();
-						// Only clear if it's an "already used" error, not format errors
-						if (currentError.contains("already") || currentError.contains("taken") || currentError.contains("exists")) {
-							// Clear error on first character change, format validation will show if needed
-							if (s.length() > 0) {
-								emailInputLayout.setError(null);
-							}
-						}
-					}
-				}
-
-				@Override
-				public void afterTextChanged(Editable s) {
-					String email = s.toString().trim();
-					if (email.isEmpty()) {
-						if (emailInputLayout != null) {
-							emailInputLayout.setError(null);
-						}
-						return;
-					}
-
-					EmailValidator.ValidationResult result = EmailValidator.validate(email);
-					if (!result.isValid() && email.length() > 5) {
-						// Only show error if user has typed enough characters
-						if (emailInputLayout != null) {
-							emailInputLayout.setError(result.getMessage());
-						}
-					} else {
-						// Only clear error if it's a format error, not "already used" error
-						if (emailInputLayout != null && emailInputLayout.getError() != null) {
-							String currentError = emailInputLayout.getError().toString();
-							if (!currentError.contains("already") && !currentError.contains("taken") && !currentError.contains("exists")) {
-								emailInputLayout.setError(null);
-							}
-						}
-					}
-				}
-			});
+	/**
+	 * Setup real-time email validation as user types
+	 */
+	private void setupEmailValidation() {
+		TextInputEditText emailInput = findViewById(R.id.emailInput);
+		if (emailInput == null || emailInputLayout == null) {
+			return;
 		}
 
-		if (registerButton != null) {
-			registerButton.setOnClickListener(v -> {
-				// Clear previous messages
-				hideMessage();
+		emailInput.addTextChangedListener(new TextWatcher() {
+			@Override
+			public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
 
-				String name = nameInput != null ? nameInput.getText().toString().trim() : "";
-				String email = emailInput != null ? emailInput.getText().toString().trim() : "";
-				String password = passwordInput != null ? passwordInput.getText().toString() : "";
-				String confirmPassword = confirmPasswordInput != null ? confirmPasswordInput.getText().toString() : "";
+			@Override
+			public void onTextChanged(CharSequence s, int start, int before, int count) {
+				clearEmailErrorIfNeeded();
+			}
 
-				if (validateInput(name, email, password, confirmPassword)) {
-					register(name, email, password, confirmPassword);
-				}
-			});
+			@Override
+			public void afterTextChanged(Editable s) {
+				validateEmailInRealTime(s.toString().trim());
+			}
+		});
+	}
+
+	/**
+	 * Clear email error if it's an "already used" error (user is fixing it)
+	 */
+	private void clearEmailErrorIfNeeded() {
+		if (emailInputLayout == null || emailInputLayout.getError() == null) {
+			return;
 		}
 
-		if (backToLoginButton != null) {
-			backToLoginButton.setOnClickListener(v -> {
-				Intent intent = new Intent(this, MainActivity.class);
-				startActivity(intent);
-				finish();
-			});
+		String error = emailInputLayout.getError().toString();
+		boolean isEmailTakenError = error.contains("already") || 
+		                           error.contains("taken") || 
+		                           error.contains("exists");
+
+		if (isEmailTakenError) {
+			emailInputLayout.setError(null);
 		}
 	}
 
-	private boolean validateInput(String name, String email, String password, String confirmPassword) {
-		boolean isValid = true;
-		StringBuilder errorMessage = new StringBuilder();
-
-		if (name.isEmpty()) {
-			errorMessage.append("• Please enter your name\n");
-			isValid = false;
+	/**
+	 * Validate email format in real-time as user types
+	 */
+	private void validateEmailInRealTime(String email) {
+		if (emailInputLayout == null) {
+			return;
 		}
 
+		// Clear error if email is empty
 		if (email.isEmpty()) {
-			errorMessage.append("• Please enter your email\n");
-			isValid = false;
+			emailInputLayout.setError(null);
+			return;
+		}
+
+		// Validate email format
+		EmailValidator.ValidationResult result = EmailValidator.validate(email);
+		
+		// Only show error if email is invalid and user has typed enough characters
+		if (!result.isValid() && email.length() > 5) {
+			emailInputLayout.setError(result.getMessage());
+		} else if (result.isValid()) {
+			// Clear format errors, but keep "already used" errors
+			String currentError = emailInputLayout.getError() != null ? 
+			                     emailInputLayout.getError().toString() : "";
+			boolean isEmailTakenError = currentError.contains("already") || 
+			                           currentError.contains("taken") || 
+			                           currentError.contains("exists");
+			
+			if (!isEmailTakenError) {
+				emailInputLayout.setError(null);
+			}
+		}
+	}
+
+	/**
+	 * Setup register button click listener
+	 */
+	private void setupRegisterButton() {
+		MaterialButton registerButton = findViewById(R.id.registerButton);
+		if (registerButton == null) {
+			return;
+		}
+
+		registerButton.setOnClickListener(v -> {
+			hideMessage();
+			
+			// Get input values
+			String name = getTextFromEditText(R.id.nameInput);
+			String email = getTextFromEditText(R.id.emailInput);
+			String password = getTextFromEditText(R.id.passwordInput);
+			String confirmPassword = getTextFromEditText(R.id.confirmPasswordInput);
+
+			// Validate and register
+			if (validateInput(name, email, password, confirmPassword)) {
+				registerUser(name, email, password, confirmPassword);
+			}
+		});
+	}
+
+	/**
+	 * Setup back to login button
+	 */
+	private void setupBackToLoginButton() {
+		MaterialButton backButton = findViewById(R.id.backToLoginButton);
+		if (backButton == null) {
+			return;
+		}
+
+		backButton.setOnClickListener(v -> {
+			Intent intent = new Intent(this, MainActivity.class);
+			startActivity(intent);
+			finish();
+		});
+	}
+
+	/**
+	 * Helper method to get text from EditText
+	 */
+	private String getTextFromEditText(int viewId) {
+		TextInputEditText editText = findViewById(viewId);
+		if (editText == null || editText.getText() == null) {
+			return "";
+		}
+		return editText.getText().toString().trim();
+	}
+
+	/**
+	 * Validate all input fields before registration
+	 * Returns true if all inputs are valid, false otherwise
+	 */
+	private boolean validateInput(String name, String email, String password, String confirmPassword) {
+		StringBuilder errors = new StringBuilder();
+
+		// Validate name
+		if (name.isEmpty()) {
+			errors.append("• Please enter your name\n");
+		}
+
+		// Validate email
+		if (email.isEmpty()) {
+			errors.append("• Please enter your email\n");
 		} else {
-			EmailValidator.ValidationResult emailValidation = EmailValidator.validate(email);
-			if (!emailValidation.isValid()) {
-				errorMessage.append("• ").append(emailValidation.getMessage()).append("\n");
-				isValid = false;
+			EmailValidator.ValidationResult result = EmailValidator.validate(email);
+			if (!result.isValid()) {
+				errors.append("• ").append(result.getMessage()).append("\n");
 			}
 		}
 
+		// Validate password
 		if (password.isEmpty()) {
-			errorMessage.append("• Please enter a password\n");
-			isValid = false;
+			errors.append("• Please enter a password\n");
 		} else if (password.length() < 8) {
-			errorMessage.append("• Password must be at least 8 characters\n");
-			isValid = false;
+			errors.append("• Password must be at least 8 characters\n");
 		}
 
+		// Validate password confirmation
 		if (confirmPassword.isEmpty()) {
-			errorMessage.append("• Please confirm your password\n");
-			isValid = false;
+			errors.append("• Please confirm your password\n");
 		} else if (!password.equals(confirmPassword)) {
-			errorMessage.append("• Passwords do not match\n");
-			isValid = false;
+			errors.append("• Passwords do not match\n");
 		}
 
-		if (!isValid) {
-			showMessage(errorMessage.toString().trim(), true);
+		// Show errors if any
+		if (errors.length() > 0) {
+			showMessage(errors.toString().trim());
+			return false;
 		}
 
-		return isValid;
+		return true;
 	}
 
-	private void showMessage(String message, boolean isError) {
-		if (messageTextView != null) {
-			messageTextView.setText(message);
-			if (isError) {
-				messageTextView.setTextColor(ContextCompat.getColor(this, android.R.color.holo_red_dark));
-			} else {
-				messageTextView.setTextColor(ContextCompat.getColor(this, android.R.color.holo_green_dark));
-			}
-			messageTextView.setVisibility(View.VISIBLE);
+	/**
+	 * Show error message to user
+	 */
+	private void showMessage(String message) {
+		if (messageTextView == null) {
+			return;
 		}
+
+		messageTextView.setText(message);
+		messageTextView.setTextColor(ContextCompat.getColor(this, android.R.color.holo_red_dark));
+		messageTextView.setVisibility(View.VISIBLE);
 	}
 
+	/**
+	 * Hide the message TextView
+	 */
 	private void hideMessage() {
 		if (messageTextView != null) {
 			messageTextView.setVisibility(View.GONE);
@@ -195,195 +268,286 @@ public class RegisterActivity extends AppCompatActivity {
 		}
 	}
 
-	private void register(String name, String email, String password, String confirmPassword) {
-		// Show loading state
+	/**
+	 * Register a new user with the API
+	 */
+	private void registerUser(String name, String email, String password, String confirmPassword) {
 		setLoadingState(true);
 
+		// Create API request
 		ApiService apiService = ApiClient.getApiService();
 		RegisterRequest request = new RegisterRequest(name, email, password, confirmPassword);
 
+		// Make API call
 		Call<RegisterResponse> call = apiService.register(request);
-		call.enqueue(new Callback<RegisterResponse>() {
+		call.enqueue(new Callback<>() {
 			@Override
-			public void onResponse(Call<RegisterResponse> call, Response<RegisterResponse> response) {
+			public void onResponse(@NonNull Call<RegisterResponse> call, @NonNull Response<RegisterResponse> response) {
 				setLoadingState(false);
-
-				if (response.isSuccessful() && response.body() != null) {
-					RegisterResponse registerResponse = response.body();
-					if (registerResponse.isSuccess() && registerResponse.getData() != null) {
-						registeredEmail = email;
-						registeredName = name;
-						
-						// Check if verification is required
-						if (registerResponse.getData().isRequires_verification()) {
-							// Show verification dialog
-							runOnUiThread(() -> showVerificationDialog(email, name));
-						} else {
-							// Old flow - auto login (if verification not required)
-							if (registerResponse.getData().getToken() != null) {
-								tokenManager.saveToken("Bearer " + registerResponse.getData().getToken());
-								tokenManager.saveEmail(registerResponse.getData().getUser().getEmail());
-								tokenManager.saveName(registerResponse.getData().getUser().getName());
-
-								runOnUiThread(() -> {
-									showSuccess("Registration Successful", 
-										"Welcome " + registerResponse.getData().getUser().getName() + "! You have been registered successfully.",
-										registerResponse.getData().getUser().getEmail());
-								});
-							}
-						}
-					} else {
-						// Handle validation errors from backend
-						String errorMessage = registerResponse.getMessage();
-						final TextInputLayout emailInputLayout = findViewById(R.id.emailInputLayout);
-						
-						// Check for email errors and show in email field
-						if (registerResponse.getErrors() != null && registerResponse.getErrors().getEmail() != null) {
-							String[] emailErrors = registerResponse.getErrors().getEmail();
-							if (emailErrors.length > 0) {
-								String emailError = emailErrors[0];
-								// Normalize error message
-								if (emailError.contains("already") || emailError.contains("taken") || emailError.contains("unique")) {
-									emailError = "Email already used";
-								}
-								final String finalEmailError = emailError;
-								runOnUiThread(() -> {
-									if (emailInputLayout != null) {
-										emailInputLayout.setError(finalEmailError);
-									}
-								});
-								errorMessage = finalEmailError;
-							}
-						}
-						
-						if (registerResponse.getErrors() != null) {
-							String formattedErrors = formatErrors(registerResponse.getErrors());
-							if (formattedErrors != null && !formattedErrors.isEmpty()) {
-								errorMessage = formattedErrors;
-							}
-						}
-						
-						final String finalMessage = errorMessage != null ? errorMessage : "Registration failed";
-						runOnUiThread(() -> {
-							showMessage(finalMessage, true);
-							// Only show dialog if email error is not shown in field
-							if (registerResponse.getErrors() == null || 
-								registerResponse.getErrors().getEmail() == null ||
-								registerResponse.getErrors().getEmail().length == 0) {
-								showError("Registration Failed", finalMessage);
-							}
-						});
-					}
-				} else {
-					// Handle HTTP error responses
-					String errorMsg = "Registration failed";
-					final TextInputLayout emailInputLayout = findViewById(R.id.emailInputLayout);
-					
-					if (response.code() == 422) {
-						// Parse error response body
-						try {
-							com.google.gson.Gson gson = new com.google.gson.Gson();
-							okhttp3.ResponseBody errorBody = response.errorBody();
-							if (errorBody != null) {
-								String errorJson = errorBody.string();
-								RegisterResponse errorResponse = gson.fromJson(errorJson, RegisterResponse.class);
-								
-								// Check for email errors
-								if (errorResponse.getErrors() != null && errorResponse.getErrors().getEmail() != null) {
-									String[] emailErrors = errorResponse.getErrors().getEmail();
-									if (emailErrors.length > 0) {
-										String emailError = emailErrors[0];
-										// Normalize error message
-										if (emailError.contains("already") || emailError.contains("taken") || emailError.contains("unique")) {
-											emailError = "Email already used";
-										}
-										final String finalEmailError = emailError;
-										// Show error in email field
-										runOnUiThread(() -> {
-											if (emailInputLayout != null) {
-												emailInputLayout.setError(finalEmailError);
-											}
-										});
-										errorMsg = finalEmailError;
-									}
-								} else {
-									errorMsg = errorResponse.getMessage() != null ? errorResponse.getMessage() : "Validation error. Please check your input.";
-								}
-								
-								// Format and show other errors
-								if (errorResponse.getErrors() != null) {
-									String formattedErrors = formatErrors(errorResponse.getErrors());
-									if (formattedErrors != null && !formattedErrors.isEmpty()) {
-										errorMsg = formattedErrors;
-									}
-								}
-							}
-						} catch (Exception e) {
-							errorMsg = "Validation error. Please check your input.";
-						}
-					} else if (response.code() == 409) {
-						errorMsg = "Email already exists. Please use a different email.";
-						runOnUiThread(() -> {
-							if (emailInputLayout != null) {
-								emailInputLayout.setError("Email already used");
-							}
-						});
-					} else if (response.code() == 500) {
-						errorMsg = "Server error. Please try again later.";
-					}
-					
-					final String finalErrorMsg = errorMsg;
-					runOnUiThread(() -> {
-						showMessage(finalErrorMsg, true);
-						if (response.code() != 422 || (emailInputLayout != null && emailInputLayout.getError() == null)) {
-							showError("Registration Failed", finalErrorMsg);
-						}
-					});
-				}
+				handleRegisterResponse(response, email);
 			}
 
 			@Override
-			public void onFailure(Call<RegisterResponse> call, Throwable t) {
+			public void onFailure(@NonNull Call<RegisterResponse> call, @NonNull Throwable t) {
 				setLoadingState(false);
-
-				String errorMsg = "Connection error";
-				if (t.getMessage() != null) {
-					if (t.getMessage().contains("Failed to connect") || t.getMessage().contains("Unable to resolve host")) {
-						errorMsg = "Cannot connect to server. Please check:\n1. Laravel server is running\n2. Correct API URL in ApiClient.java\n3. Network connection";
-					} else if (t.getMessage().contains("timeout")) {
-						errorMsg = "Connection timeout. Server may be slow or unreachable.";
-					} else {
-						errorMsg = "Error: " + t.getMessage();
-					}
-				}
-				final String finalErrorMsg = errorMsg;
-				runOnUiThread(() -> {
-					showMessage(finalErrorMsg, true);
-					showError("Connection Error", finalErrorMsg);
-				});
+				handleRegisterFailure(t);
 			}
 		});
 	}
 
-	private void setLoadingState(boolean isLoading) {
-		final MaterialButton registerButton = findViewById(R.id.registerButton);
+	/**
+	 * Handle successful registration response
+	 */
+	private void handleRegisterResponse(Response<RegisterResponse> response, String email) {
+		if (response.isSuccessful() && response.body() != null) {
+			RegisterResponse registerResponse = response.body();
+			handleSuccessfulRegistration(registerResponse, email);
+		} else {
+			handleRegistrationError(response);
+		}
+	}
+
+	/**
+	 * Handle successful registration (with or without verification)
+	 */
+	private void handleSuccessfulRegistration(RegisterResponse response, String email) {
+		if (!response.isSuccess() || response.getData() == null) {
+			handleRegistrationErrors(response);
+			return;
+		}
+
+		// Check if email verification is required
+		if (response.getData().isRequires_verification()) {
+			showVerificationDialog(email);
+		} else {
+			// Auto-login if verification not required
+			saveUserDataAndNavigate(response);
+		}
+	}
+
+	/**
+	 * Save user data and navigate to dashboard
+	 */
+	private void saveUserDataAndNavigate(RegisterResponse response) {
+		if (response.getData().getToken() == null) {
+			return;
+		}
+
+		// Save user data
+		tokenManager.saveToken("Bearer " + response.getData().getToken());
+		tokenManager.saveEmail(response.getData().getUser().getEmail());
+		tokenManager.saveName(response.getData().getUser().getName());
+
+		// Show success and navigate
+		String userName = response.getData().getUser().getName();
+		String userEmail = response.getData().getUser().getEmail();
+		String message = String.format("Welcome %s! You have been registered successfully.", userName);
+		
+		runOnUiThread(() -> showSuccess("Registration Successful", message, userEmail));
+	}
+
+	/**
+	 * Handle registration errors from backend
+	 */
+	private void handleRegistrationError(Response<RegisterResponse> response) {
+		String errorMessage = getErrorMessage(response);
+		showErrorMessage(errorMessage, response.code());
+	}
+
+	/**
+	 * Handle errors in successful response body
+	 */
+	private void handleRegistrationErrors(RegisterResponse response) {
+		// Check for email-specific errors first
+		if (response.getErrors() != null && response.getErrors().getEmail() != null) {
+			String[] emailErrors = response.getErrors().getEmail();
+			if (emailErrors.length > 0) {
+				String emailError = normalizeEmailError(emailErrors[0]);
+				runOnUiThread(() -> {
+					if (emailInputLayout != null) {
+						emailInputLayout.setError(emailError);
+					}
+				});
+				return;
+			}
+		}
+
+		// Show general error message
+		String errorMsg = response.getMessage();
+		if (response.getErrors() != null) {
+			String formattedErrors = formatErrors(response.getErrors());
+			if (!formattedErrors.isEmpty()) {
+				errorMsg = formattedErrors;
+			}
+		}
+
+		final String finalMessage = errorMsg != null ? errorMsg : "Registration failed";
+		runOnUiThread(() -> showMessage(finalMessage));
+	}
+
+	/**
+	 * Get error message from HTTP error response
+	 */
+	private String getErrorMessage(Response<RegisterResponse> response) {
+		int statusCode = response.code();
+
+		// Handle validation errors (422)
+		if (statusCode == 422) {
+			return parseValidationError(response);
+		}
+
+		// Handle email conflict (409)
+		if (statusCode == 409) {
+			runOnUiThread(() -> {
+				if (emailInputLayout != null) {
+					emailInputLayout.setError("Email already used");
+				}
+			});
+			return "Email already exists. Please use a different email.";
+		}
+
+		// Handle server errors (500)
+		if (statusCode == 500) {
+			return "Server error. Please try again later.";
+		}
+
+		return "Registration failed. Please try again.";
+	}
+
+	/**
+	 * Parse validation error from error response body
+	 */
+	@SuppressWarnings("resource")
+	private String parseValidationError(Response<RegisterResponse> response) {
+		okhttp3.ResponseBody errorBody = response.errorBody();
+		if (errorBody == null) {
+			return "Validation error. Please check your input.";
+		}
+
+		try {
+			com.google.gson.Gson gson = new com.google.gson.Gson();
+			// ResponseBody.string() consumes the body, so we can't use try-with-resources here
+			// The Retrofit library handles cleanup automatically
+			String errorJson = errorBody.string();
+			RegisterResponse errorResponse = gson.fromJson(errorJson, RegisterResponse.class);
+
+			// Check for email errors
+			if (errorResponse.getErrors() != null && errorResponse.getErrors().getEmail() != null) {
+				String[] emailErrors = errorResponse.getErrors().getEmail();
+				if (emailErrors.length > 0) {
+					String emailError = normalizeEmailError(emailErrors[0]);
+					runOnUiThread(() -> {
+						if (emailInputLayout != null) {
+							emailInputLayout.setError(emailError);
+						}
+					});
+					return emailError;
+				}
+			}
+
+			// Format other errors
+			if (errorResponse.getErrors() != null) {
+				String formattedErrors = formatErrors(errorResponse.getErrors());
+				if (!formattedErrors.isEmpty()) {
+					return formattedErrors;
+				}
+			}
+
+			return errorResponse.getMessage() != null ? 
+				errorResponse.getMessage() : 
+				"Validation error. Please check your input.";
+
+		} catch (Exception e) {
+			return "Validation error. Please check your input.";
+		}
+	}
+
+	/**
+	 * Normalize email error message to a standard format
+	 */
+	private String normalizeEmailError(String error) {
+		if (error.contains("already") || error.contains("taken") || error.contains("unique")) {
+			return "Email already used";
+		}
+		return error;
+	}
+
+	/**
+	 * Show error message to user
+	 */
+	private void showErrorMessage(String message, int statusCode) {
 		runOnUiThread(() -> {
+			showMessage(message);
+			// Only show dialog if email error is not already shown in field
+			boolean emailErrorShown = emailInputLayout != null && emailInputLayout.getError() != null;
+			if (statusCode != 422 || !emailErrorShown) {
+				showError("Registration Failed", message);
+			}
+		});
+	}
+
+	/**
+	 * Handle registration failure (network errors, etc.)
+	 */
+	private void handleRegisterFailure(Throwable t) {
+		String errorMsg = getConnectionErrorMessage(t);
+		runOnUiThread(() -> {
+			showMessage(errorMsg);
+			showError("Connection Error", errorMsg);
+		});
+	}
+
+	/**
+	 * Get user-friendly connection error message
+	 */
+	private String getConnectionErrorMessage(Throwable t) {
+		if (t.getMessage() == null) {
+			return "Connection error. Please try again.";
+		}
+
+		String message = t.getMessage();
+		if (message.contains("Failed to connect") || message.contains("Unable to resolve host")) {
+			return "Cannot connect to server. Please check:\n" +
+			       "1. Laravel server is running\n" +
+			       "2. Correct API URL in ApiClient.java\n" +
+			       "3. Network connection";
+		} else if (message.contains("timeout")) {
+			return "Connection timeout. Server may be slow or unreachable.";
+		}
+
+		return "Error: " + message;
+	}
+
+	/**
+	 * Show or hide loading state during registration
+	 */
+	private void setLoadingState(boolean isLoading) {
+		runOnUiThread(() -> {
+			MaterialButton registerButton = findViewById(R.id.registerButton);
 			if (registerButton != null) {
 				registerButton.setEnabled(!isLoading);
-				registerButton.setText(isLoading ? getString(R.string.registering) : getString(R.string.register));
+				registerButton.setText(isLoading ? 
+					getString(R.string.registering) : 
+					getString(R.string.register));
 			}
+
 			if (progressBar != null) {
 				progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE);
 			}
+
 			if (!isLoading) {
 				hideMessage();
 			}
 		});
 	}
 
-	private void showVerificationDialog(String email, String name) {
+	/**
+	 * Show email verification dialog
+	 */
+	private void showVerificationDialog(String email) {
 		android.view.View dialogView = getLayoutInflater().inflate(R.layout.dialog_verification_code, null);
 		
+		// Initialize dialog views
 		TextInputEditText codeInput = dialogView.findViewById(R.id.codeInput);
 		TextInputLayout codeInputLayout = dialogView.findViewById(R.id.codeInputLayout);
 		MaterialButton verifyButton = dialogView.findViewById(R.id.verifyButton);
@@ -391,18 +555,45 @@ public class RegisterActivity extends AppCompatActivity {
 		android.widget.TextView messageTextView = dialogView.findViewById(R.id.verificationMessage);
 		android.widget.ImageButton closeButton = dialogView.findViewById(R.id.closeButton);
 		
+		// Set dialog message
 		if (messageTextView != null) {
-			messageTextView.setText("Enter the 6-digit code sent to\n" + email);
+			// Email is dynamic, so we format the string
+			String message = String.format("Enter the 6-digit code sent to\n%s", email);
+			messageTextView.setText(message);
 		}
 
+		// Create and show dialog
 		AlertDialog dialog = new MaterialAlertDialogBuilder(this)
 			.setView(dialogView)
 			.setCancelable(true)
 			.create();
 		
-		// Handle close button click
+		// Setup dialog components
+		setupVerificationDialogCloseButton(closeButton, dialog);
+		setupVerificationCodeInput(codeInput, codeInputLayout, verifyButton);
+		setupVerifyButton(verifyButton, codeInput, codeInputLayout, email, dialog);
+		setupResendButton(resendCodeButton, email);
+
+		dialog.show();
+	}
+
+	/**
+	 * Setup close button for verification dialog
+	 */
+	private void setupVerificationDialogCloseButton(android.widget.ImageButton closeButton, AlertDialog dialog) {
 		if (closeButton != null) {
 			closeButton.setOnClickListener(v -> dialog.dismiss());
+		}
+	}
+
+	/**
+	 * Setup code input field with real-time validation
+	 */
+	private void setupVerificationCodeInput(TextInputEditText codeInput, 
+	                                       TextInputLayout codeInputLayout, 
+	                                       MaterialButton verifyButton) {
+		if (codeInput == null) {
+			return;
 		}
 
 		// Clear any previous errors
@@ -410,205 +601,262 @@ public class RegisterActivity extends AppCompatActivity {
 			codeInputLayout.setError(null);
 		}
 
-		// Auto-focus on code input and show keyboard
-		if (codeInput != null) {
-			codeInput.post(() -> {
-				codeInput.requestFocus();
-				android.view.inputmethod.InputMethodManager imm = (android.view.inputmethod.InputMethodManager) getSystemService(android.content.Context.INPUT_METHOD_SERVICE);
-				if (imm != null) {
-					imm.showSoftInput(codeInput, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT);
-				}
-			});
-			
-			// Enable verify button when 6 digits are entered
-			codeInput.addTextChangedListener(new TextWatcher() {
-				@Override
-				public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+		// Auto-focus and show keyboard
+		codeInput.post(() -> {
+			codeInput.requestFocus();
+			android.view.inputmethod.InputMethodManager imm = 
+				(android.view.inputmethod.InputMethodManager) getSystemService(android.content.Context.INPUT_METHOD_SERVICE);
+			if (imm != null) {
+				imm.showSoftInput(codeInput, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT);
+			}
+		});
+		
+		// Enable verify button when code is entered
+		codeInput.addTextChangedListener(new TextWatcher() {
+			@Override
+			public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
 
-				@Override
-				public void onTextChanged(CharSequence s, int start, int before, int count) {}
+			@Override
+			public void onTextChanged(CharSequence s, int start, int before, int count) {}
 
-				@Override
-				public void afterTextChanged(Editable s) {
-					if (codeInputLayout != null) {
-						codeInputLayout.setError(null);
-					}
-					if (s.length() == 6) {
-						// Code is complete, can verify
-						if (verifyButton != null) {
-							verifyButton.setEnabled(true);
-						}
-					} else {
-						if (verifyButton != null) {
-							verifyButton.setEnabled(s.length() > 0);
-						}
-					}
-				}
-			});
-		}
-
-		if (verifyButton != null) {
-			verifyButton.setEnabled(false);
-			verifyButton.setOnClickListener(v -> {
-				String code = codeInput != null ? codeInput.getText().toString().trim() : "";
-				if (code.length() != 6) {
-					if (codeInputLayout != null) {
-						codeInputLayout.setError("Please enter a 6-digit code");
-					}
-					return;
-				}
+			@Override
+			public void afterTextChanged(Editable s) {
 				if (codeInputLayout != null) {
 					codeInputLayout.setError(null);
 				}
-				verifyButton.setEnabled(false);
-				verifyButton.setText("Verifying...");
-				verifyEmail(email, code, dialog, verifyButton);
-			});
-		}
-
-		if (resendCodeButton != null) {
-			resendCodeButton.setOnClickListener(v -> {
-				resendCodeButton.setEnabled(false);
-				resendCodeButton.setText("Sending...");
-				resendVerificationCode(email, resendCodeButton);
-			});
-		}
-
-		dialog.show();
+				if (verifyButton != null) {
+					verifyButton.setEnabled(s.length() > 0);
+				}
+			}
+		});
 	}
 
+	/**
+	 * Setup verify button click handler
+	 */
+	@SuppressLint("SetTextI18n")
+	private void setupVerifyButton(MaterialButton verifyButton, 
+	                              TextInputEditText codeInput, 
+	                              TextInputLayout codeInputLayout,
+	                              String email, 
+	                              AlertDialog dialog) {
+		if (verifyButton == null) {
+			return;
+		}
+
+		verifyButton.setEnabled(false);
+		verifyButton.setOnClickListener(v -> {
+			String code = "";
+			if (codeInput != null && codeInput.getText() != null) {
+				code = codeInput.getText().toString().trim();
+			}
+			
+			// Validate code length
+			if (code.length() != 6) {
+				if (codeInputLayout != null) {
+					codeInputLayout.setError("Please enter a 6-digit code");
+				}
+				return;
+			}
+
+			// Clear error and verify
+			if (codeInputLayout != null) {
+				codeInputLayout.setError(null);
+			}
+			verifyButton.setEnabled(false);
+			verifyButton.setText("Verifying..."); // Temporary loading state
+			verifyEmail(email, code, dialog, verifyButton);
+		});
+	}
+
+	/**
+	 * Setup resend code button
+	 */
+	@SuppressLint("SetTextI18n")
+	private void setupResendButton(MaterialButton resendButton, String email) {
+		if (resendButton == null) {
+			return;
+		}
+
+		resendButton.setOnClickListener(v -> {
+			resendButton.setEnabled(false);
+			resendButton.setText("Sending..."); // Temporary loading state
+			resendVerificationCode(email, resendButton);
+		});
+	}
+
+	/**
+	 * Verify email with verification code
+	 */
 	private void verifyEmail(String email, String code, AlertDialog dialog, MaterialButton verifyButton) {
 		ApiService apiService = ApiClient.getApiService();
 		VerifyEmailRequest request = new VerifyEmailRequest(email, code);
 
 		Call<VerifyEmailResponse> call = apiService.verifyEmail(request);
-		call.enqueue(new Callback<VerifyEmailResponse>() {
+		call.enqueue(new Callback<>() {
 			@Override
-			public void onResponse(Call<VerifyEmailResponse> call, Response<VerifyEmailResponse> response) {
-				runOnUiThread(() -> {
-					if (verifyButton != null) {
-						verifyButton.setEnabled(true);
-						verifyButton.setText("Verify");
-					}
-				});
+			public void onResponse(@NonNull Call<VerifyEmailResponse> call, @NonNull Response<VerifyEmailResponse> response) {
+				resetVerifyButton(verifyButton);
 
 				if (response.isSuccessful() && response.body() != null) {
-					VerifyEmailResponse verifyResponse = response.body();
-					if (verifyResponse.isSuccess() && verifyResponse.getData() != null) {
-						// Save token and user data
-						tokenManager.saveToken("Bearer " + verifyResponse.getData().getToken());
-						tokenManager.saveEmail(verifyResponse.getData().getUser().getEmail());
-						tokenManager.saveName(verifyResponse.getData().getUser().getName());
-
-						dialog.dismiss();
-
-						// Navigate to dashboard
-						runOnUiThread(() -> {
-							showSuccess("Email Verified", 
-								"Welcome " + verifyResponse.getData().getUser().getName() + "! Your email has been verified successfully.",
-								verifyResponse.getData().getUser().getEmail());
-						});
-					} else {
-						final String errorMsg = verifyResponse.getMessage() != null ? verifyResponse.getMessage() : "Invalid verification code";
-						runOnUiThread(() -> {
-							showError("Verification Failed", errorMsg);
-						});
-					}
+					handleVerificationSuccess(response.body(), dialog);
 				} else {
-					String errorMsg = "Invalid verification code";
-					if (response.code() == 400) {
-						errorMsg = "Invalid or expired verification code. Please request a new code.";
-					}
-					final String finalErrorMsg = errorMsg;
-					runOnUiThread(() -> {
-						showError("Verification Failed", finalErrorMsg);
-					});
+					handleVerificationError(response.code());
 				}
 			}
 
 			@Override
-			public void onFailure(Call<VerifyEmailResponse> call, Throwable t) {
-				runOnUiThread(() -> {
-					if (verifyButton != null) {
-						verifyButton.setEnabled(true);
-						verifyButton.setText("Verify");
-					}
-					showError("Connection Error", "Failed to verify code. Please check your connection and try again.");
-				});
+			public void onFailure(@NonNull Call<VerifyEmailResponse> call, @NonNull Throwable t) {
+				resetVerifyButton(verifyButton);
+				showError("Connection Error", 
+					"Failed to verify code. Please check your connection and try again.");
 			}
 		});
 	}
 
+	/**
+	 * Reset verify button to original state
+	 */
+	@SuppressLint("SetTextI18n")
+	private void resetVerifyButton(MaterialButton verifyButton) {
+		runOnUiThread(() -> {
+			if (verifyButton != null) {
+				verifyButton.setEnabled(true);
+				verifyButton.setText("Verify"); // Button label
+			}
+		});
+	}
+
+	/**
+	 * Handle successful email verification
+	 */
+	private void handleVerificationSuccess(VerifyEmailResponse response, AlertDialog dialog) {
+		if (!response.isSuccess() || response.getData() == null) {
+			String errorMsg = response.getMessage() != null ? 
+				response.getMessage() : 
+				"Invalid verification code";
+			showError("Verification Failed", errorMsg);
+			return;
+		}
+
+		// Save user data
+		tokenManager.saveToken("Bearer " + response.getData().getToken());
+		tokenManager.saveEmail(response.getData().getUser().getEmail());
+		tokenManager.saveName(response.getData().getUser().getName());
+
+		// Close dialog and show success
+		dialog.dismiss();
+		String userName = response.getData().getUser().getName();
+		String userEmail = response.getData().getUser().getEmail();
+		String message = String.format("Welcome %s! Your email has been verified successfully.", userName);
+		
+		runOnUiThread(() -> showSuccess("Email Verified", message, userEmail));
+	}
+
+	/**
+	 * Handle verification error
+	 */
+	private void handleVerificationError(int statusCode) {
+		String errorMsg = (statusCode == 400) ? 
+			"Invalid or expired verification code. Please request a new code." :
+			"Invalid verification code";
+		
+		showError("Verification Failed", errorMsg);
+	}
+
+	/**
+	 * Resend verification code to email
+	 */
 	private void resendVerificationCode(String email, MaterialButton resendButton) {
 		ApiService apiService = ApiClient.getApiService();
 		VerificationRequest request = new VerificationRequest(email);
 
 		Call<VerificationResponse> call = apiService.sendVerificationCode(request);
-		call.enqueue(new Callback<VerificationResponse>() {
+		call.enqueue(new Callback<>() {
 			@Override
-			public void onResponse(Call<VerificationResponse> call, Response<VerificationResponse> response) {
-				runOnUiThread(() -> {
-					if (resendButton != null) {
-						resendButton.setEnabled(true);
-						resendButton.setText("Resend Code");
-					}
-				});
+			public void onResponse(@NonNull Call<VerificationResponse> call, @NonNull Response<VerificationResponse> response) {
+				resetResendButton(resendButton);
 
 				if (response.isSuccessful() && response.body() != null) {
-					VerificationResponse verifyResponse = response.body();
-					if (verifyResponse.isSuccess()) {
-						runOnUiThread(() -> {
-							Toast.makeText(RegisterActivity.this, 
-								verifyResponse.getMessage() != null ? verifyResponse.getMessage() : "Verification code sent to your email", 
-								Toast.LENGTH_LONG).show();
-						});
-					} else {
-						final String errorMsg = verifyResponse.getMessage() != null ? verifyResponse.getMessage() : "Failed to send code";
-						runOnUiThread(() -> {
-							showError("Error", errorMsg);
-						});
-					}
+					handleResendSuccess(response.body());
 				} else {
-					runOnUiThread(() -> {
-						showError("Error", "Failed to send verification code. Please try again.");
-					});
+					showError("Error", "Failed to send verification code. Please try again.");
 				}
 			}
 
 			@Override
-			public void onFailure(Call<VerificationResponse> call, Throwable t) {
-				runOnUiThread(() -> {
-					if (resendButton != null) {
-						resendButton.setEnabled(true);
-						resendButton.setText("Resend Code");
-					}
-					String errorMsg = "Connection error";
-					if (t.getMessage() != null && t.getMessage().contains("Failed to connect")) {
-						errorMsg = "Cannot connect to server. Please check your connection.";
-					}
-					final String finalErrorMsg = errorMsg;
-					showError("Connection Error", finalErrorMsg);
-				});
+			public void onFailure(@NonNull Call<VerificationResponse> call, @NonNull Throwable t) {
+				resetResendButton(resendButton);
+				String errorMsg = getConnectionErrorMessage(t);
+				showError("Connection Error", errorMsg);
 			}
 		});
 	}
 
+	/**
+	 * Reset resend button to original state
+	 */
+	@SuppressLint("SetTextI18n")
+	private void resetResendButton(MaterialButton resendButton) {
+		runOnUiThread(() -> {
+			if (resendButton != null) {
+				resendButton.setEnabled(true);
+				resendButton.setText("Resend Code"); // Button label
+			}
+		});
+	}
+
+	/**
+	 * Handle successful code resend
+	 */
+	private void handleResendSuccess(VerificationResponse response) {
+		if (response.isSuccess()) {
+			String message = response.getMessage() != null ? 
+				response.getMessage() : 
+				"Verification code sent to your email";
+			
+			runOnUiThread(() -> Toast.makeText(this, message, Toast.LENGTH_LONG).show());
+		} else {
+			String errorMsg = response.getMessage() != null ? 
+				response.getMessage() : 
+				"Failed to send code";
+			showError("Error", errorMsg);
+		}
+	}
+
+	/**
+	 * Format validation errors from backend response
+	 */
 	private String formatErrors(RegisterResponse.Errors errors) {
+		if (errors == null) {
+			return "Please check your input";
+		}
+
 		StringBuilder errorMessage = new StringBuilder();
 		
+		// Format email errors
 		if (errors.getEmail() != null && errors.getEmail().length > 0) {
 			errorMessage.append("Email: ").append(errors.getEmail()[0]).append("\n");
 		}
+		
+		// Format password errors
 		if (errors.getPassword() != null && errors.getPassword().length > 0) {
 			errorMessage.append("Password: ").append(errors.getPassword()[0]).append("\n");
 		}
+		
+		// Format name errors
 		if (errors.getName() != null && errors.getName().length > 0) {
 			errorMessage.append("Name: ").append(errors.getName()[0]).append("\n");
 		}
 		
-		return errorMessage.length() > 0 ? errorMessage.toString().trim() : "Please check your input";
+		return errorMessage.length() > 0 ? 
+			errorMessage.toString().trim() : 
+			"Please check your input";
 	}
 
+	/**
+	 * Show error dialog to user
+	 */
 	private void showError(String title, String message) {
 		new AlertDialog.Builder(this)
 			.setTitle(title)
@@ -617,18 +865,25 @@ public class RegisterActivity extends AppCompatActivity {
 			.show();
 	}
 
+	/**
+	 * Show success dialog and navigate to dashboard
+	 */
 	private void showSuccess(String title, String message, String email) {
 		new AlertDialog.Builder(this)
 			.setTitle(title)
 			.setMessage(message)
-			.setPositiveButton("OK", (dialog, which) -> {
-				// Navigate to dashboard
-				Intent intent = new Intent(RegisterActivity.this, DashboardActivity.class);
-				intent.putExtra(DashboardActivity.EXTRA_EMAIL, email);
-				startActivity(intent);
-				finish();
-			})
+			.setPositiveButton("OK", (dialog, which) -> navigateToDashboard(email))
 			.setCancelable(false)
 			.show();
+	}
+
+	/**
+	 * Navigate to dashboard activity
+	 */
+	private void navigateToDashboard(String email) {
+		Intent intent = new Intent(this, DashboardActivity.class);
+		intent.putExtra(DashboardActivity.EXTRA_EMAIL, email);
+		startActivity(intent);
+		finish();
 	}
 }
