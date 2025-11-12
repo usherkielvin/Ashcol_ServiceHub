@@ -52,7 +52,9 @@ public class VerifyEmailResponse {
 
     public static class User {
         private int id;
-        private String name;
+        private String username;
+        private String firstName;
+        private String lastName;
         private String email;
         private String role;
 
@@ -64,12 +66,28 @@ public class VerifyEmailResponse {
             this.id = id;
         }
 
-        public String getName() {
-            return name;
+        public String getUsername() {
+            return username;
         }
 
-        public void setName(String name) {
-            this.name = name;
+        public void setUsername(String username) {
+            this.username = username;
+        }
+
+        public String getFirstName() {
+            return firstName;
+        }
+
+        public void setFirstName(String firstName) {
+            this.firstName = firstName;
+        }
+
+        public String getLastName() {
+            return lastName;
+        }
+
+        public void setLastName(String lastName) {
+            this.lastName = lastName;
         }
 
         public String getEmail() {
@@ -89,4 +107,3 @@ public class VerifyEmailResponse {
         }
     }
 }
-

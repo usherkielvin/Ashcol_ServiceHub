@@ -11,6 +11,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
@@ -48,7 +49,7 @@ public class MainActivity extends AppCompatActivity {
 		TextInputEditText passwordInput = findViewById(R.id.passwordInput);
 		TextInputLayout emailInputLayout = findViewById(R.id.emailInputLayout);
 		MaterialButton loginButton = findViewById(R.id.loginButton);
-		MaterialButton registerButton = findViewById(R.id.registerButton);
+		TextView registerButton = findViewById(R.id.registerButton);
 
 		// Real-time email validation
 		if (emailInput != null) {

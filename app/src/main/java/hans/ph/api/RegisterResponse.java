@@ -70,7 +70,9 @@ public class RegisterResponse {
 
     public static class User {
         private int id;
-        private String name;
+        private String username;
+        private String firstName;
+        private String lastName;
         private String email;
         private String role;
 
@@ -82,12 +84,28 @@ public class RegisterResponse {
             this.id = id;
         }
 
-        public String getName() {
-            return name;
+        public String getUsername() {
+            return username;
         }
 
-        public void setName(String name) {
-            this.name = name;
+        public void setUsername(String username) {
+            this.username = username;
+        }
+
+        public String getFirstName() {
+            return firstName;
+        }
+
+        public void setFirstName(String firstName) {
+            this.firstName = firstName;
+        }
+
+        public String getLastName() {
+            return lastName;
+        }
+
+        public void setLastName(String lastName) {
+            this.lastName = lastName;
         }
 
         public String getEmail() {
@@ -110,7 +128,9 @@ public class RegisterResponse {
     public static class Errors {
         private String[] email;
         private String[] password;
-        private String[] name;
+        private String[] username;
+        private String[] firstName;
+        private String[] lastName;
 
         public String[] getEmail() {
             return email;
@@ -128,13 +148,28 @@ public class RegisterResponse {
             this.password = password;
         }
 
-        public String[] getName() {
-            return name;
+        public String[] getUsername() {
+            return username;
         }
 
-        public void setName(String[] name) {
-            this.name = name;
+        public void setUsername(String[] username) {
+            this.username = username;
+        }
+
+        public String[] getFirstName() {
+            return firstName;
+        }
+
+        public void setFirstName(String[] firstName) {
+            this.firstName = firstName;
+        }
+
+        public String[] getLastName() {
+            return lastName;
+        }
+
+        public void setLastName(String[] lastName) {
+            this.lastName = lastName;
         }
     }
 }
-

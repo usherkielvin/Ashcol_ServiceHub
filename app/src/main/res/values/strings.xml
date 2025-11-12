@@ -5,6 +5,9 @@
     <string name="login">Login</string>
     <string name="register">Register</string>
     <string name="name">Name</string>
+    <string name="username">Username</string>
+    <string name="first_name">First Name</string>
+    <string name="last_name">Last Name</string>
     <string name="confirm_password">Confirm Password</string>
     <string name="back_to_login">Back to Login</string>
     <string name="phone_number">Phone Number</string>
@@ -22,4 +25,26 @@
     <string name="current_password">Current Password</string>
     <string name="new_password">New Password</string>
     <string name="confirm_new_password">Confirm New Password</string>
+    <string name="ashcol_corporation_logo">Ashcol Corporation Logo</string>
+    <string name="keeping_you_cool">Keeping you cool</string>
+    <string name="sign_in">Sign In</string>
+    <string name="enter_email_or_username">Enter email or username</string>
+    <string name="enter_password">Enter password</string>
+    <string name="remember_me">Remember Me</string>
+    <string name="forgot_password">Forgot Password?</string>
+    <string name="log_in">Log In</string>
+    <string name="legal_text">By tapping Continue, you agree to our Terms and\nacknowledge that you have read our Privacy Policy</string>
+    <string name="or_log_in_with">  or Log In with  </string>
+    <string name="sign_in_with_google">Sign in with Google</string>
+    <string name="sign_in_with_facebook">Sign in with Facebook</string>
+    <string name="dont_have_an_account_yet">Don\'t have an account yet? </string>
+    <string name="sign_up">Sign Up</string>
+    <string name="sign_up_subtitle">Sign up and start your journey with the Ashcol family.</string>
+    <string name="enter_username">Enter Username</string>
+    <string name="enter_email">Enter Email</string>
+    <string name="continue_button">Continue</string>
+    <string name="terms_and_conditions">By tapping Continue, you agree to our Terms and acknowledge that you have read our Privacy Policy</string>
+    <string name="or_sign_up_with">or Sign Up with</string>
+    <string name="sign_up_with_google">Sign up with Google</string>
+    <string name="sign_up_with_facebook">Sign up with Facebook</string>
 </resources>

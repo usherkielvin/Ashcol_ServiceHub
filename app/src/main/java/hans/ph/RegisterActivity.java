@@ -15,6 +15,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -148,14 +149,16 @@ public class RegisterActivity extends AppCompatActivity {
 			hideMessage();
 			
 			// Get input values
-			String name = getTextFromEditText(R.id.nameInput);
+			String username = getTextFromEditText(R.id.usernameInput);
+			String firstName = getTextFromEditText(R.id.firstNameInput);
+			String lastName = getTextFromEditText(R.id.lastNameInput);
 			String email = getTextFromEditText(R.id.emailInput);
 			String password = getTextFromEditText(R.id.passwordInput);
 			String confirmPassword = getTextFromEditText(R.id.confirmPasswordInput);
 
 			// Validate and register
-			if (validateInput(name, email, password, confirmPassword)) {
-				registerUser(name, email, password, confirmPassword);
+			if (validateInput(username, firstName, lastName, email, password, confirmPassword)) {
+				registerUser(username, firstName, lastName, email, password, confirmPassword);
 			}
 		});
 	}
@@ -184,12 +187,22 @@ public class RegisterActivity extends AppCompatActivity {
 	}
 
 	// Validate all input fields before registration
-	private boolean validateInput(String name, String email, String password, String confirmPassword) {
+	private boolean validateInput(String username, String firstName, String lastName, String email, String password, String confirmPassword) {
 		StringBuilder errors = new StringBuilder();
 
-		// Validate name
-		if (name.isEmpty()) {
-			errors.append("• Please enter your name\n");
+		// Validate username
+		if (username.isEmpty()) {
+			errors.append("• Please enter your username\n");
+		}
+
+		// Validate first name
+		if (firstName.isEmpty()) {
+			errors.append("• Please enter your first name\n");
+		}
+
+		// Validate last name
+		if (lastName.isEmpty()) {
+			errors.append("• Please enter your last name\n");
 		}
 
 		// Validate email
@@ -245,12 +258,12 @@ public class RegisterActivity extends AppCompatActivity {
 	}
 
 	// Register a new user with the API
-	private void registerUser(String name, String email, String password, String confirmPassword) {
+	private void registerUser(String username, String firstName, String lastName, String email, String password, String confirmPassword) {
 		setLoadingState(true);
 
 		// Create API request
 		ApiService apiService = ApiClient.getApiService();
-		RegisterRequest request = new RegisterRequest(name, email, password, confirmPassword);
+		RegisterRequest request = new RegisterRequest(username, firstName, lastName, email, password, confirmPassword);
 
 		// Make API call
 		Call<RegisterResponse> call = apiService.register(request);
@@ -304,18 +317,24 @@ public class RegisterActivity extends AppCompatActivity {
 		// Save user data
 		tokenManager.saveToken("Bearer " + response.getData().getToken());
 		tokenManager.saveEmail(response.getData().getUser().getEmail());
-		tokenManager.saveName(response.getData().getUser().getName());
 
 		// Show success and navigate
-		String userName = response.getData().getUser().getName();
+		String firstName = response.getData().getUser().getFirstName();
+		String lastName = response.getData().getUser().getLastName();
 		String userEmail = response.getData().getUser().getEmail();
-		String message = String.format("Welcome %s! You have been registered successfully.", userName);
+		String message = String.format("Welcome %s %s! You have been registered successfully.", firstName, lastName);
 		
 		runOnUiThread(() -> showSuccess("Registration Successful", message, userEmail));
 	}
 
 	// Handle registration errors from backend
 	private void handleRegistrationError(Response<RegisterResponse> response) {
+        try {
+            String errorBody = response.errorBody() != null ? response.errorBody().string() : "No error body";
+            Log.e("RegistrationError", "Response code: " + response.code() + ", Error: " + errorBody);
+        } catch (java.io.IOException e) {
+            Log.e("RegistrationError", "Error parsing error body", e);
+        }
 		String errorMessage = getErrorMessage(response);
 		showErrorMessage(errorMessage, response.code());
 	}
@@ -639,7 +658,7 @@ public class RegisterActivity extends AppCompatActivity {
 					handleVerificationSuccess(response.body(), dialog);
 				} else {
 					handleVerificationError(response.code());
-				}
+			}
 			}
 
 			@Override
@@ -675,13 +694,13 @@ public class RegisterActivity extends AppCompatActivity {
 		// Save user data
 		tokenManager.saveToken("Bearer " + response.getData().getToken());
 		tokenManager.saveEmail(response.getData().getUser().getEmail());
-		tokenManager.saveName(response.getData().getUser().getName());
 
 		// Close dialog and show success
 		dialog.dismiss();
-		String userName = response.getData().getUser().getName();
+		String firstName = response.getData().getUser().getFirstName();
+		String lastName = response.getData().getUser().getLastName();
 		String userEmail = response.getData().getUser().getEmail();
-		String message = String.format("Welcome %s! Your email has been verified successfully.", userName);
+		String message = String.format("Welcome %s %s! Your email has been verified successfully.", firstName, lastName);
 		
 		runOnUiThread(() -> showSuccess("Email Verified", message, userEmail));
 	}
@@ -767,9 +786,19 @@ public class RegisterActivity extends AppCompatActivity {
 			errorMessage.append("Password: ").append(errors.getPassword()[0]).append("\n");
 		}
 		
-		// Format name errors
-		if (errors.getName() != null && errors.getName().length > 0) {
-			errorMessage.append("Name: ").append(errors.getName()[0]).append("\n");
+		// Format username errors
+		if (errors.getUsername() != null && errors.getUsername().length > 0) {
+			errorMessage.append("Username: ").append(errors.getUsername()[0]).append("\n");
+		}
+
+		// Format first name errors
+		if (errors.getFirstName() != null && errors.getFirstName().length > 0) {
+			errorMessage.append("First Name: ").append(errors.getFirstName()[0]).append("\n");
+		}
+
+		// Format last name errors
+		if (errors.getLastName() != null && errors.getLastName().length > 0) {
+			errorMessage.append("Last Name: ").append(errors.getLastName()[0]).append("\n");
 		}
 		
 		return errorMessage.length() > 0 ? 

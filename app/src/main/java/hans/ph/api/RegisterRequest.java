@@ -1,24 +1,44 @@
 package hans.ph.api;
 
 public class RegisterRequest {
-    private String name;
+    private String username;
+    private String firstName;
+    private String lastName;
     private String email;
     private String password;
     private String password_confirmation;
 
-    public RegisterRequest(String name, String email, String password, String passwordConfirmation) {
-        this.name = name;
+    public RegisterRequest(String username, String firstName, String lastName, String email, String password, String passwordConfirmation) {
+        this.username = username;
+        this.firstName = firstName;
+        this.lastName = lastName;
         this.email = email;
         this.password = password;
         this.password_confirmation = passwordConfirmation;
     }
 
-    public String getName() {
-        return name;
+    public String getUsername() {
+        return username;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
     }
 
     public String getEmail() {
@@ -45,4 +65,3 @@ public class RegisterRequest {
         this.password_confirmation = password_confirmation;
     }
 }
-
