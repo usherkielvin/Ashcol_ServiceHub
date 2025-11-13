@@ -11,6 +11,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -20,7 +21,12 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 
+import java.io.IOException;
+
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -144,17 +150,23 @@ public class MainActivity extends AppCompatActivity {
 							finish();
 						});
 					} else {
-						final String message = loginResponse.getMessage() != null ? loginResponse.getMessage() : "Login failed";
+						final String message = loginResponse != null && loginResponse.getMessage() != null 
+							? loginResponse.getMessage() : "Login failed";
 						runOnUiThread(() -> showError("Login Failed", message));
 					}
 				} else {
-					String errorMsg;
-					if (response.code() == 401) {
-						errorMsg = "Invalid email or password";
-					} else if (response.code() == 500) {
-						errorMsg = "Server error. Please try again later.";
-					} else {
-						errorMsg = "Invalid credentials";
+					// Handle error response - try to parse error body
+					String errorMsg = parseErrorResponse(response);
+					if (errorMsg == null || errorMsg.isEmpty()) {
+						if (response.code() == 401) {
+							errorMsg = "Invalid email or password";
+						} else if (response.code() == 422) {
+							errorMsg = "Invalid input. Please check your email and password.";
+						} else if (response.code() == 500) {
+							errorMsg = "Server error. Please try again later.";
+						} else {
+							errorMsg = "Login failed. Please try again.";
+						}
 					}
 					final String finalErrorMsg = errorMsg;
 					runOnUiThread(() -> showError("Login Failed", finalErrorMsg));
@@ -170,7 +182,17 @@ public class MainActivity extends AppCompatActivity {
 					}
 				});
 
-				String errorMsg = getConnectionErrorMessage(t);
+				// Check if it's a JSON parsing error
+				String errorMsg;
+				if (t.getMessage() != null && t.getMessage().contains("Expected BEGIN_OBJECT but was STRING")) {
+					errorMsg = "Server returned an unexpected response format.\n\n" +
+						"Please check:\n" +
+						"1. Laravel server is running correctly\n" +
+						"2. Server is returning JSON responses\n" +
+						"3. Check server logs for errors";
+				} else {
+					errorMsg = getConnectionErrorMessage(t);
+				}
 				runOnUiThread(() -> showError("Connection Error", errorMsg));
 			}
 		});
@@ -182,6 +204,90 @@ public class MainActivity extends AppCompatActivity {
 			.setMessage(message)
 			.setPositiveButton("OK", null)
 			.show();
+	}
+
+	/**
+	 * Parse error response from server
+	 * Handles cases where server returns JSON error or plain text
+	 */
+	private String parseErrorResponse(Response<LoginResponse> response) {
+		ResponseBody errorBody = response.errorBody();
+		if (errorBody == null) {
+			return null;
+		}
+
+		try {
+			String errorString = errorBody.string();
+			if (errorString == null || errorString.isEmpty()) {
+				return null;
+			}
+
+			// Try to parse as JSON first
+			try {
+				// Use Gson to parse the JSON string (compatible with all Gson versions)
+				Gson gson = new Gson();
+				JsonObject jsonObject = gson.fromJson(errorString, JsonObject.class);
+				
+				if (jsonObject != null) {
+					// Try to get message field
+					if (jsonObject.has("message") && jsonObject.get("message").isJsonPrimitive()) {
+						String message = jsonObject.get("message").getAsString();
+						if (message != null && !message.isEmpty()) {
+							return message;
+						}
+					}
+					
+					// Try to get error field
+					if (jsonObject.has("error") && jsonObject.get("error").isJsonPrimitive()) {
+						String error = jsonObject.get("error").getAsString();
+						if (error != null && !error.isEmpty()) {
+							return error;
+						}
+					}
+					
+					// Try to get errors object (validation errors)
+					if (jsonObject.has("errors") && jsonObject.get("errors").isJsonObject()) {
+						StringBuilder errorMessages = new StringBuilder();
+						JsonObject errorsObj = jsonObject.getAsJsonObject("errors");
+						errorsObj.entrySet().forEach(entry -> {
+							if (errorMessages.length() > 0) {
+								errorMessages.append("\n");
+							}
+							try {
+								if (entry.getValue().isJsonArray() && entry.getValue().getAsJsonArray().size() > 0) {
+									errorMessages.append(entry.getValue().getAsJsonArray().get(0).getAsString());
+								} else if (entry.getValue().isJsonPrimitive()) {
+									errorMessages.append(entry.getValue().getAsString());
+								}
+							} catch (Exception e) {
+								// Skip invalid error entries
+							}
+						});
+						if (errorMessages.length() > 0) {
+							return errorMessages.toString();
+						}
+					}
+				}
+			} catch (Exception e) {
+				// Not JSON, treat as plain text
+				Log.d("MainActivity", "Error response is not JSON: " + e.getMessage());
+			}
+
+			// If it's not JSON or doesn't have expected fields, check if it's HTML
+			if (errorString.trim().startsWith("<!DOCTYPE") || errorString.trim().startsWith("<html")) {
+				return "Server returned an HTML error page. Please check server logs.";
+			}
+
+			// Return plain text (truncate if too long)
+			if (errorString.length() > 200) {
+				return errorString.substring(0, 200) + "...";
+			}
+			return errorString;
+
+		} catch (IOException e) {
+			Log.e("MainActivity", "Error reading error response: " + e.getMessage());
+			return null;
+		}
 	}
 
 	// Get user-friendly connection error message with diagnostics

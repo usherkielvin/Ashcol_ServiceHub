@@ -40,6 +40,12 @@ public class ProfileActivity extends AppCompatActivity {
 		MaterialToolbar toolbar = findViewById(R.id.toolbar);
 		if (toolbar != null) {
 			setSupportActionBar(toolbar);
+			// Enable back button
+			if (getSupportActionBar() != null) {
+				getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+				getSupportActionBar().setDisplayShowHomeEnabled(true);
+			}
+			toolbar.setNavigationOnClickListener(v -> finish());
 		}
 
 		// Get email from intent or token manager
@@ -93,30 +99,53 @@ public class ProfileActivity extends AppCompatActivity {
 				if (response.isSuccessful() && response.body() != null) {
 					UserResponse userResponse = response.body();
 					if (userResponse.isSuccess() && userResponse.getData() != null) {
-						currentName = userResponse.getData().getName();
-						currentEmail = userResponse.getData().getEmail();
+						UserResponse.Data userData = userResponse.getData();
+						
+						// Get name - prefer name field, fallback to firstName + lastName
+						currentName = userData.getName();
+						if (currentName == null || currentName.isEmpty()) {
+							String firstName = userData.getFirstName();
+							String lastName = userData.getLastName();
+							if (firstName != null || lastName != null) {
+								currentName = trim((firstName != null ? firstName : "") + " " + (lastName != null ? lastName : ""));
+							}
+						}
+						
+						currentEmail = userData.getEmail();
 						
 						TextView nameTextView = findViewById(R.id.nameTextView);
 						TextView emailTextView = findViewById(R.id.emailTextView);
 						
-						if (nameTextView != null && currentName != null) {
-							nameTextView.setText(currentName);
+						if (nameTextView != null) {
+							nameTextView.setText(currentName != null && !currentName.isEmpty() ? currentName : "No name");
 						}
 						
-						if (emailTextView != null && currentEmail != null) {
-							emailTextView.setText(currentEmail);
+						if (emailTextView != null) {
+							emailTextView.setText(currentEmail != null && !currentEmail.isEmpty() ? currentEmail : "No email");
 						}
 						
 						// Update token manager with latest data
-						tokenManager.saveName(currentName);
-						tokenManager.saveEmail(currentEmail);
+						if (currentName != null) {
+							tokenManager.saveName(currentName);
+						}
+						if (currentEmail != null) {
+							tokenManager.saveEmail(currentEmail);
+						}
 					}
+				} else {
+					// Handle error response
+					runOnUiThread(() -> {
+						Toast.makeText(ProfileActivity.this, "Failed to load user data", Toast.LENGTH_SHORT).show();
+					});
 				}
 			}
 
 			@Override
 			public void onFailure(Call<UserResponse> call, Throwable t) {
-				// Silently fail - use cached data
+				// Show error but keep using cached data
+				runOnUiThread(() -> {
+					Toast.makeText(ProfileActivity.this, "Failed to load user data: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+				});
 			}
 		});
 	}
@@ -289,5 +318,9 @@ public class ProfileActivity extends AppCompatActivity {
 		intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
 		startActivity(intent);
 		finish();
+	}
+
+	private String trim(String str) {
+		return str != null ? str.trim() : "";
 	}
 }
