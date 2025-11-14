@@ -50,4 +50,5 @@
     <string name="email_icon">Email icon</string>
     <string name="password_icon">Password icon</string>
     <string name="toggle_password_visibility">Toggle password visibility</string>
+    <string name="chatbot_button_description">Open chatbot assistant</string>
 </resources>

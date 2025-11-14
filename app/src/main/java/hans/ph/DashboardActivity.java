@@ -7,6 +7,7 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageButton;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
@@ -48,6 +49,18 @@ public class DashboardActivity extends AppCompatActivity {
 
         FloatingActionButton fab = findViewById(R.id.fab_chatbot);
         fab.setOnClickListener(v -> showChatbotDialog());
+
+        Button profileButton = findViewById(R.id.button);
+        if (profileButton != null) {
+            profileButton.setOnClickListener(v -> {
+                Intent intent = new Intent(this, ProfileActivity.class);
+                String email = getIntent().getStringExtra(EXTRA_EMAIL);
+                if (email != null) {
+                    intent.putExtra(ProfileActivity.EXTRA_EMAIL, email);
+                }
+                startActivity(intent);
+            });
+        }
     }
 
     private void showChatbotDialog() {
