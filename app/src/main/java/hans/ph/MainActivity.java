@@ -12,6 +12,7 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -54,7 +55,7 @@ public class MainActivity extends AppCompatActivity {
 		TextInputEditText emailInput = findViewById(R.id.emailInput);
 		TextInputEditText passwordInput = findViewById(R.id.passwordInput);
 		TextInputLayout emailInputLayout = findViewById(R.id.emailInputLayout);
-		MaterialButton loginButton = findViewById(R.id.loginButton);
+		Button loginButton = findViewById(R.id.loginButton);
 		TextView registerButton = findViewById(R.id.registerButton);
 
 		// Real-time email validation
@@ -114,7 +115,7 @@ public class MainActivity extends AppCompatActivity {
 	}
 
 	private void login(String email, String password) {
-		final MaterialButton loginButton = findViewById(R.id.loginButton);
+		final Button loginButton = findViewById(R.id.loginButton);
 		if (loginButton != null) {
 			loginButton.setEnabled(false);
 			loginButton.setText("Logging in...");

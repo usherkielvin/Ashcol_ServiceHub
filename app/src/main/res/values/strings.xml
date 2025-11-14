@@ -37,7 +37,7 @@
     <string name="or_log_in_with">  or Log In with  </string>
     <string name="sign_in_with_google">Sign in with Google</string>
     <string name="sign_in_with_facebook">Sign in with Facebook</string>
-    <string name="dont_have_an_account_yet">Don\'t have an account yet? </string>
+    <string name="dont_have_an_account_yet">Don\'t have an account yet?</string>
     <string name="sign_up">Sign Up</string>
     <string name="sign_up_subtitle">Sign up and start your journey with the Ashcol family.</string>
     <string name="enter_username">Enter Username</string>
@@ -47,4 +47,7 @@
     <string name="or_sign_up_with">or Sign Up with</string>
     <string name="sign_up_with_google">Sign up with Google</string>
     <string name="sign_up_with_facebook">Sign up with Facebook</string>
+    <string name="email_icon">Email icon</string>
+    <string name="password_icon">Password icon</string>
+    <string name="toggle_password_visibility">Toggle password visibility</string>
 </resources>
