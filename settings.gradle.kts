@@ -19,6 +19,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "JavaApp"
+rootProject.name = "ServiceHubApp"
 include(":app")
  

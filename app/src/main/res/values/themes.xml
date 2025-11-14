@@ -1,6 +1,6 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme (Material 3, NoActionBar). -->
-    <style name="Theme.JavaApp" parent="Theme.Material3.DayNight.NoActionBar">
+    <style name="Theme.ServiceHubApp" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Material 3 colors map automatically; keep custom colors if needed -->
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>

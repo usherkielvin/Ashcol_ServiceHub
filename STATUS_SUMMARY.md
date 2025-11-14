@@ -10,7 +10,7 @@
 - ✅ Bootstrap configured for API routes
 - ✅ Laravel 11.46.1 is installed
 
-### Android App (JavaApp):
+### Android App (ServiceHub App):
 - ✅ Retrofit dependencies (already in build.gradle.kts)
 - ✅ API Service interface
 - ✅ API Models (LoginRequest, LoginResponse, UserResponse, LogoutResponse)

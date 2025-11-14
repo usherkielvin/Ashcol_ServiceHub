@@ -2,7 +2,7 @@
 
 ## 🎯 What Was Implemented
 
-### **Android App (JavaApp)**
+### **Android App (ServiceHub App)**
 
 #### 1. **Model Classes** ✅
 - **RegisterRequest.java** - Contains registration data (name, email, password, password_confirmation, role)
