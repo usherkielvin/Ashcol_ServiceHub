@@ -139,9 +139,36 @@ public class MainActivity extends AppCompatActivity {
 					LoginResponse loginResponse = response.body();
 					if (loginResponse.isSuccess() && loginResponse.getData() != null) {
 						// Save token and user data
+						LoginResponse.User user = loginResponse.getData().getUser();
 						tokenManager.saveToken("Bearer " + loginResponse.getData().getToken());
-						tokenManager.saveEmail(loginResponse.getData().getUser().getEmail());
-						tokenManager.saveName(loginResponse.getData().getUser().getName());
+						tokenManager.saveEmail(user.getEmail());
+						
+						// Get name - prefer name field, fallback to firstName + lastName
+						String userName = user.getName();
+						if (userName == null || userName.trim().isEmpty()) {
+							String firstName = user.getFirstName();
+							String lastName = user.getLastName();
+							
+							// Build name from firstName and lastName
+							StringBuilder nameBuilder = new StringBuilder();
+							if (firstName != null && !firstName.trim().isEmpty()) {
+								nameBuilder.append(firstName.trim());
+							}
+							if (lastName != null && !lastName.trim().isEmpty()) {
+								if (nameBuilder.length() > 0) {
+									nameBuilder.append(" ");
+								}
+								nameBuilder.append(lastName.trim());
+							}
+							
+							userName = nameBuilder.toString();
+						} else {
+							userName = userName.trim();
+						}
+						
+						if (userName != null && !userName.isEmpty()) {
+							tokenManager.saveName(userName);
+						}
 
 						// Navigate to dashboard
 						runOnUiThread(() -> {

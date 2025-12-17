@@ -315,13 +315,31 @@ public class RegisterActivity extends AppCompatActivity {
 		}
 
 		// Save user data
+		RegisterResponse.User user = response.getData().getUser();
 		tokenManager.saveToken("Bearer " + response.getData().getToken());
-		tokenManager.saveEmail(response.getData().getUser().getEmail());
+		tokenManager.saveEmail(user.getEmail());
+		
+		// Build name from firstName and lastName (RegisterResponse.User doesn't have getName())
+		String firstName = user.getFirstName();
+		String lastName = user.getLastName();
+		StringBuilder nameBuilder = new StringBuilder();
+		if (firstName != null && !firstName.trim().isEmpty()) {
+			nameBuilder.append(firstName.trim());
+		}
+		if (lastName != null && !lastName.trim().isEmpty()) {
+			if (nameBuilder.length() > 0) {
+				nameBuilder.append(" ");
+			}
+			nameBuilder.append(lastName.trim());
+		}
+		
+		String userName = nameBuilder.toString();
+		if (userName != null && !userName.isEmpty()) {
+			tokenManager.saveName(userName);
+		}
 
-		// Show success and navigate
-		String firstName = response.getData().getUser().getFirstName();
-		String lastName = response.getData().getUser().getLastName();
-		String userEmail = response.getData().getUser().getEmail();
+		// Show success and navigate (reusing firstName and lastName from above)
+		String userEmail = user.getEmail();
 		String message = String.format("Welcome %s %s! You have been registered successfully.", firstName, lastName);
 		
 		runOnUiThread(() -> showSuccess("Registration Successful", message, userEmail));
@@ -755,14 +773,32 @@ public class RegisterActivity extends AppCompatActivity {
 		}
 
 		// Save user data
+		VerifyEmailResponse.User user = response.getData().getUser();
 		tokenManager.saveToken("Bearer " + response.getData().getToken());
-		tokenManager.saveEmail(response.getData().getUser().getEmail());
+		tokenManager.saveEmail(user.getEmail());
+		
+		// Build name from firstName and lastName
+		String firstName = user.getFirstName();
+		String lastName = user.getLastName();
+		StringBuilder nameBuilder = new StringBuilder();
+		if (firstName != null && !firstName.trim().isEmpty()) {
+			nameBuilder.append(firstName.trim());
+		}
+		if (lastName != null && !lastName.trim().isEmpty()) {
+			if (nameBuilder.length() > 0) {
+				nameBuilder.append(" ");
+			}
+			nameBuilder.append(lastName.trim());
+		}
+		
+		String userName = nameBuilder.toString();
+		if (userName != null && !userName.isEmpty()) {
+			tokenManager.saveName(userName);
+		}
 
-		// Close dialog and show success
+		// Close dialog and show success (reusing firstName and lastName from above)
 		dialog.dismiss();
-		String firstName = response.getData().getUser().getFirstName();
-		String lastName = response.getData().getUser().getLastName();
-		String userEmail = response.getData().getUser().getEmail();
+		String userEmail = user.getEmail();
 		String message = String.format("Welcome %s %s! Your email has been verified successfully.", firstName, lastName);
 		
 		runOnUiThread(() -> showSuccess("Email Verified", message, userEmail));

@@ -7,6 +7,7 @@ import hans.ph.api.UserResponse;
 import hans.ph.util.TokenManager;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -50,7 +51,7 @@ public class ProfileActivity extends AppCompatActivity {
 
 		// Get email from intent or token manager
 		String email = getIntent().getStringExtra(EXTRA_EMAIL);
-		if (email == null) {
+		if (email == null || email.trim().isEmpty()) {
 			email = tokenManager.getEmail();
 		}
 
@@ -59,11 +60,19 @@ public class ProfileActivity extends AppCompatActivity {
 		
 		if (nameTextView != null) {
 			String name = tokenManager.getName();
-			nameTextView.setText(name != null ? name : "Loading...");
+			if (name != null && !name.trim().isEmpty()) {
+				nameTextView.setText(name.trim());
+			} else {
+				nameTextView.setText("Loading...");
+			}
 		}
 		
 		if (emailTextView != null) {
-			emailTextView.setText(email != null ? email : "Loading...");
+			if (email != null && !email.trim().isEmpty()) {
+				emailTextView.setText(email.trim());
+			} else {
+				emailTextView.setText("Loading...");
+			}
 		}
 
 		// Fetch user data from API
@@ -88,8 +97,15 @@ public class ProfileActivity extends AppCompatActivity {
 	private void fetchUserData() {
 		String token = tokenManager.getToken();
 		if (token == null) {
+			Log.e("ProfileActivity", "No token available, using cached data only");
+			fallbackToCachedData();
 			return;
 		}
+
+		// Log cached data before API call
+		String cachedName = tokenManager.getName();
+		String cachedEmail = tokenManager.getEmail();
+		Log.d("ProfileActivity", "Cached data before API call - Name: " + cachedName + ", Email: " + cachedEmail);
 
 		ApiService apiService = ApiClient.getApiService();
 		Call<UserResponse> call = apiService.getUser(token);
@@ -98,54 +114,145 @@ public class ProfileActivity extends AppCompatActivity {
 			public void onResponse(Call<UserResponse> call, Response<UserResponse> response) {
 				if (response.isSuccessful() && response.body() != null) {
 					UserResponse userResponse = response.body();
+					Log.d("ProfileActivity", "API Response - Success: " + userResponse.isSuccess());
+					
 					if (userResponse.isSuccess() && userResponse.getData() != null) {
 						UserResponse.Data userData = userResponse.getData();
 						
+						// Log the raw data from API
+						Log.d("ProfileActivity", "API Data - Name: " + userData.getName() + 
+							", FirstName: " + userData.getFirstName() + 
+							", LastName: " + userData.getLastName() + 
+							", Email: " + userData.getEmail());
+						
 						// Get name - prefer name field, fallback to firstName + lastName
 						currentName = userData.getName();
-						if (currentName == null || currentName.isEmpty()) {
+						if (currentName == null || currentName.trim().isEmpty()) {
 							String firstName = userData.getFirstName();
 							String lastName = userData.getLastName();
-							if (firstName != null || lastName != null) {
-								currentName = trim((firstName != null ? firstName : "") + " " + (lastName != null ? lastName : ""));
+							
+							Log.d("ProfileActivity", "Name field is empty, combining firstName and lastName");
+							
+							// Build name from firstName and lastName
+							StringBuilder nameBuilder = new StringBuilder();
+							if (firstName != null && !firstName.trim().isEmpty()) {
+								nameBuilder.append(firstName.trim());
 							}
+							if (lastName != null && !lastName.trim().isEmpty()) {
+								if (nameBuilder.length() > 0) {
+									nameBuilder.append(" ");
+								}
+								nameBuilder.append(lastName.trim());
+							}
+							
+							currentName = nameBuilder.toString();
+							Log.d("ProfileActivity", "Combined name: " + currentName);
+						} else {
+							currentName = currentName.trim();
 						}
 						
 						currentEmail = userData.getEmail();
-						
-						TextView nameTextView = findViewById(R.id.nameTextView);
-						TextView emailTextView = findViewById(R.id.emailTextView);
-						
-						if (nameTextView != null) {
-							nameTextView.setText(currentName != null && !currentName.isEmpty() ? currentName : "No name");
+						if (currentEmail != null) {
+							currentEmail = currentEmail.trim();
 						}
 						
-						if (emailTextView != null) {
-							emailTextView.setText(currentEmail != null && !currentEmail.isEmpty() ? currentEmail : "No email");
+						Log.d("ProfileActivity", "Final values - Name: " + currentName + ", Email: " + currentEmail);
+						
+						// If API returned empty data, fallback to cached data
+						if ((currentName == null || currentName.isEmpty()) && 
+							(currentEmail == null || currentEmail.isEmpty())) {
+							Log.w("ProfileActivity", "API returned empty data, falling back to cached data");
+							fallbackToCachedData();
+							return;
 						}
+						
+						// If name is empty but email exists, try to get name from cache
+						if ((currentName == null || currentName.isEmpty()) && 
+							(currentEmail != null && !currentEmail.isEmpty())) {
+							String cachedName = tokenManager.getName();
+							if (cachedName != null && !cachedName.trim().isEmpty()) {
+								currentName = cachedName.trim();
+								Log.d("ProfileActivity", "Using cached name: " + currentName);
+							}
+						}
+						
+						// If email is empty but name exists, try to get email from cache
+						if ((currentEmail == null || currentEmail.isEmpty()) && 
+							(currentName != null && !currentName.isEmpty())) {
+							String cachedEmail = tokenManager.getEmail();
+							if (cachedEmail != null && !cachedEmail.trim().isEmpty()) {
+								currentEmail = cachedEmail.trim();
+								Log.d("ProfileActivity", "Using cached email: " + currentEmail);
+							}
+						}
+						
+						// Update UI on main thread
+						runOnUiThread(() -> {
+							TextView nameTextView = findViewById(R.id.nameTextView);
+							TextView emailTextView = findViewById(R.id.emailTextView);
+							
+							if (nameTextView != null) {
+								if (currentName != null && !currentName.isEmpty()) {
+									nameTextView.setText(currentName);
+								} else {
+									// Try cached data one more time
+									String cachedName = tokenManager.getName();
+									if (cachedName != null && !cachedName.trim().isEmpty()) {
+										nameTextView.setText(cachedName.trim());
+										currentName = cachedName.trim();
+									} else {
+										nameTextView.setText("No name available");
+									}
+								}
+							}
+							
+							if (emailTextView != null) {
+								if (currentEmail != null && !currentEmail.isEmpty()) {
+									emailTextView.setText(currentEmail);
+								} else {
+									// Try cached data one more time
+									String cachedEmail = tokenManager.getEmail();
+									if (cachedEmail != null && !cachedEmail.trim().isEmpty()) {
+										emailTextView.setText(cachedEmail.trim());
+										currentEmail = cachedEmail.trim();
+									} else {
+										emailTextView.setText("No email available");
+									}
+								}
+							}
+						});
 						
 						// Update token manager with latest data
-						if (currentName != null) {
+						if (currentName != null && !currentName.isEmpty()) {
 							tokenManager.saveName(currentName);
 						}
-						if (currentEmail != null) {
+						if (currentEmail != null && !currentEmail.isEmpty()) {
 							tokenManager.saveEmail(currentEmail);
 						}
+					} else {
+						// Handle case where response is not successful - fallback to cached data
+						Log.e("ProfileActivity", "API response not successful or data is null");
+						fallbackToCachedData();
 					}
 				} else {
-					// Handle error response
-					runOnUiThread(() -> {
-						Toast.makeText(ProfileActivity.this, "Failed to load user data", Toast.LENGTH_SHORT).show();
-					});
+					// Handle error response - fallback to cached data
+					Log.e("ProfileActivity", "API call not successful. Code: " + response.code());
+					if (response.errorBody() != null) {
+						try {
+							Log.e("ProfileActivity", "Error body: " + response.errorBody().string());
+						} catch (java.io.IOException e) {
+							Log.e("ProfileActivity", "Error reading error body", e);
+						}
+					}
+					fallbackToCachedData();
 				}
 			}
 
 			@Override
 			public void onFailure(Call<UserResponse> call, Throwable t) {
-				// Show error but keep using cached data
-				runOnUiThread(() -> {
-					Toast.makeText(ProfileActivity.this, "Failed to load user data: " + t.getMessage(), Toast.LENGTH_SHORT).show();
-				});
+				// Show error but fallback to cached data
+				Log.e("ProfileActivity", "API call failed: " + t.getMessage());
+				fallbackToCachedData();
 			}
 		});
 	}
@@ -322,5 +429,43 @@ public class ProfileActivity extends AppCompatActivity {
 
 	private String trim(String str) {
 		return str != null ? str.trim() : "";
+	}
+
+	private void fallbackToCachedData() {
+		// Fallback to cached data from TokenManager if API fails
+		runOnUiThread(() -> {
+			TextView nameTextView = findViewById(R.id.nameTextView);
+			TextView emailTextView = findViewById(R.id.emailTextView);
+			
+			// Get cached data
+			String cachedName = tokenManager.getName();
+			String cachedEmail = tokenManager.getEmail();
+			
+			Log.d("ProfileActivity", "Using cached data - Name: " + cachedName + ", Email: " + cachedEmail);
+			
+			if (nameTextView != null) {
+				if (cachedName != null && !cachedName.trim().isEmpty()) {
+					nameTextView.setText(cachedName.trim());
+					currentName = cachedName.trim();
+				} else {
+					nameTextView.setText("No name available");
+				}
+			}
+			
+			if (emailTextView != null) {
+				if (cachedEmail != null && !cachedEmail.trim().isEmpty()) {
+					emailTextView.setText(cachedEmail.trim());
+					currentEmail = cachedEmail.trim();
+				} else {
+					emailTextView.setText("No email available");
+				}
+			}
+			
+			// Show a subtle message that we're using cached data
+			if (cachedName == null || cachedName.trim().isEmpty() || 
+				cachedEmail == null || cachedEmail.trim().isEmpty()) {
+				Toast.makeText(ProfileActivity.this, "Using cached data. Please check your connection.", Toast.LENGTH_SHORT).show();
+			}
+		});
 	}
 }
