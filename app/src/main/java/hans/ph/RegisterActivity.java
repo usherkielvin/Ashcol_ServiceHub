@@ -17,6 +17,7 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -41,9 +42,14 @@ public class RegisterActivity extends AppCompatActivity {
 
 	// UI Components
 	private ProgressBar progressBar;
-	private TextView messageTextView;
+
+    private MaterialButton registerButton;
+    private TextView messageTextView;
 	private TextInputLayout emailInputLayout;
-	
+
+    private TextView fval, lval, uval, pval, cval, eval, passrate;
+    private TextInputEditText firstNameInput, lastNameInput, usernameInput, passwordInput, confirmPasswordInput;
+    private Button openOTPButton;
 	// Data
 	private TokenManager tokenManager;
 
@@ -54,17 +60,268 @@ public class RegisterActivity extends AppCompatActivity {
 
 		// Initialize components
 		tokenManager = new TokenManager(this);
-		initializeViews();
-		setupEmailValidation();
-		setupRegisterButton();
-		setupBackToLoginButton();
-	}
+        initializeViews();
+     //   setupEmailValidation(); // You already have this
+        setupRealTimeValidationListeners(); // <-- ADD THIS NEW METHOD CALL
+        setupRegisterButton();
+        setupBackToLoginButton();
 
-	// Initialize all view components
+        setupOpenOTPButton();
+    }
+    private void setupOpenOTPButton() {
+        // The button is initially hidden. We will set the listener later
+        // when we have the email, but we can find the view now.
+        openOTPButton = findViewById(R.id.OpenOTP);
+        if (openOTPButton != null) {
+            openOTPButton.setVisibility(View.GONE); // Ensure it's hidden at start
+        }
+    }
+    /**
+     * Sets up real-time validation listeners for all relevant input fields.
+     */
+    // Add these new methods to RegisterActivity.java
+
+    /**
+     * Sets up real-time validation listeners for all relevant input fields.
+     */
+    // In RegisterActivity.java
+
+    private void setupRealTimeValidationListeners() {
+        // First Name Listener
+        firstNameInput.addTextChangedListener(new TextWatcher() {
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+            public void afterTextChanged(Editable s) {
+                validateFirstName(s.toString());
+            }
+        });
+
+        // Last Name Listener
+        lastNameInput.addTextChangedListener(new TextWatcher() {
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+            public void afterTextChanged(Editable s) {
+                validateLastName(s.toString());
+            }
+        });
+
+        // Username Listener
+        usernameInput.addTextChangedListener(new TextWatcher() {
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+            public void afterTextChanged(Editable s) {
+                validateUsername(s.toString());
+            }
+        });
+
+        // Password Listener
+        passwordInput.addTextChangedListener(new TextWatcher() {
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+            public void afterTextChanged(Editable s) {
+                validatePasswordAndStrength(s.toString());
+                // Also validate confirm password whenever password changes
+                validateConfirmPassword(s.toString(), getTextFromEditText(R.id.confirmPasswordInput));
+            }
+        });
+
+        // Confirm Password Listener (MOVED TO THE CORRECT LOCATION)
+        confirmPasswordInput.addTextChangedListener(new TextWatcher() {
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+            public void afterTextChanged(Editable s) {
+                validateConfirmPassword(getTextFromEditText(R.id.passwordInput), s.toString());
+            }
+        });
+        TextInputEditText emailInput = findViewById(R.id.emailInput);
+        emailInput.addTextChangedListener(new TextWatcher() {
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+            public void afterTextChanged(Editable s) {
+                validateEmail(s.toString());
+            }
+        });
+    }
+
+// Add this new method to RegisterActivity.java
+
+    /**
+     * Validates the email address in real-time as the user types.
+     * Updates the 'eval' TextView.
+     *
+     * @param email The current text in the email input field.
+     */
+    private void validateEmail(String email) {
+        if (eval == null) return; // 'eval' is the TextView with ID R.id.Email_val
+
+        // Hide the validation message if the field is empty
+        if (email.isEmpty()) {
+            eval.setVisibility(View.GONE);
+            return;
+        }
+
+        // Use Android's built-in pattern to check for a valid email format
+        // This will correctly flag "d" as invalid but "d@g" as potentially valid
+        if (android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            // The format is valid, so hide the error message
+            eval.setVisibility(View.GONE);
+        } else {
+            // The format is invalid, show the error message
+            eval.setText("Invalid email format");
+            eval.setVisibility(View.VISIBLE);
+        }
+    }
+
+    private void validatePasswordAndStrength(java.lang.String password) {
+        if (pval == null || passrate == null) return;
+
+        // --- Part 1: Check for Specific Requirements (updates pval) ---
+
+        // Define regex patterns for each requirement
+        boolean hasUppercase = password.matches(".*[A-Z].*");
+        boolean hasNumber = password.matches(".*\\d.*");
+        boolean hasSymbol = password.matches(".*[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>\\/?].*");
+
+        if (password.isEmpty()) {
+            pval.setVisibility(View.GONE); // Hide if empty
+            passrate.setVisibility(View.GONE);
+            return;
+        }
+
+        // Build the error message for pval
+        StringBuilder requirements = new StringBuilder();
+        if (password.length() < 8) {
+            requirements.append("• At least 8 characters\n");
+        }
+        if (!hasUppercase) {
+            requirements.append("• One uppercase letter\n");
+        }
+        if (!hasNumber) {
+            requirements.append("• One number\n");
+        }
+        if (!hasSymbol) {
+            requirements.append("• One symbol (@#$...)\n");
+        }
+
+        // Display or hide the requirements list (pval)
+        if (requirements.length() > 0) {
+            // Remove the last newline character for cleaner display
+            pval.setText(requirements.toString().trim());
+            pval.setVisibility(View.VISIBLE);
+        } else {
+            // All requirements are met, hide the validation message
+            pval.setVisibility(View.GONE);
+        }
+
+
+        // --- Part 2: Calculate and Display Strength Score (updates passrate) ---
+
+        int strengthScore = 0;
+        if (password.length() >= 8) strengthScore++;
+        if (password.length() > 10) strengthScore++; // Bonus for longer passwords
+        if (hasUppercase) strengthScore++;
+        if (hasNumber) strengthScore++;
+        if (hasSymbol) strengthScore++;
+
+        passrate.setVisibility(View.VISIBLE); // Show the strength meter
+
+        // Set the text and color based on the score
+        if (strengthScore < 3) {
+            passrate.setText("Strength: Weak");
+            passrate.setTextColor(getResources().getColor(android.R.color.holo_red_dark)); // Red for weak
+        } else if (strengthScore < 5) {
+            passrate.setText("Strength: Good");
+            passrate.setTextColor(getResources().getColor(android.R.color.holo_orange_dark)); // Orange for good
+        } else {
+            passrate.setText("Strength: Strong");
+            passrate.setTextColor(getResources().getColor(android.R.color.holo_green_dark)); // Green for strong
+        }
+    }
+
+
+
+
+
+
+
+// --- Validation Logic Methods ---
+
+    private void validateFirstName(String firstName) {
+        if (firstName.matches(".*\\d+.*")) {
+            fval.setText("Name cannot contain numbers");
+            fval.setVisibility(View.VISIBLE);
+        } else if (!firstName.isEmpty() && firstName.length() < 2) {
+            fval.setText("Name is too short");
+            fval.setVisibility(View.VISIBLE);
+        } else {
+            fval.setVisibility(View.GONE);
+        }
+    }
+
+    private void validateLastName(String lastName) {
+        if (lastName.matches(".*\\d+.*")) {
+            lval.setText("Name cannot contain numbers");
+            lval.setVisibility(View.VISIBLE);
+        } else {
+            lval.setVisibility(View.GONE);
+        }
+    }
+
+    private void validateUsername(String username) {
+        if (username.contains(" ")) {
+            uval.setText("Username cannot contain spaces");
+            uval.setVisibility(View.VISIBLE);
+        } else if (!username.isEmpty() && username.length() < 4) {
+            uval.setText("Username is too short (min 4)");
+            uval.setVisibility(View.VISIBLE);
+        } else {
+            uval.setVisibility(View.GONE);
+        }
+    }
+
+
+
+    private void validateConfirmPassword(String password, String confirmPassword) {
+        if (!confirmPassword.isEmpty() && !password.equals(confirmPassword)) {
+            cval.setText("Passwords do not match");
+            cval.setVisibility(View.VISIBLE);
+        } else {
+            cval.setVisibility(View.GONE);
+        }
+    }
+
+
+    // Initialize all view components
 	private void initializeViews() {
 		progressBar = findViewById(R.id.progressBar);
 		messageTextView = findViewById(R.id.messageTextView);
 		emailInputLayout = findViewById(R.id.emailInputLayout);
+        firstNameInput = findViewById(R.id.firstNameInput);
+        lastNameInput = findViewById(R.id.lastNameInput);
+        usernameInput = findViewById(R.id.usernameInput);
+        passwordInput = findViewById(R.id.passwordInput);
+        confirmPasswordInput = findViewById(R.id.confirmPasswordInput);
+        openOTPButton = findViewById(R.id.OpenOTP);
+        registerButton = findViewById(R.id.registerButton);
+
+        // Initialize Validation TextViews
+        fval = findViewById(R.id.fname_val);
+        lval = findViewById(R.id.lname_val);
+        uval = findViewById(R.id.Uname_val);
+        pval = findViewById(R.id.Pass_val);
+        cval = findViewById(R.id.CPass_val);
+        eval = findViewById(R.id.Email_val); // You already had an 'eval'
+        passrate = findViewById(R.id.passrate);
+
+        // Hide all validation text views by default
+        fval.setVisibility(View.GONE);
+        lval.setVisibility(View.GONE);
+        uval.setVisibility(View.GONE);
+        pval.setVisibility(View.GONE);
+        cval.setVisibility(View.GONE);
+        eval.setVisibility(View.GONE);
+
+
 	}
 
 	// Setup real-time email validation as user types
@@ -107,61 +364,60 @@ public class RegisterActivity extends AppCompatActivity {
 	}
 
 	// Validate email format in real-time as user types
-	private void validateEmailInRealTime(String email) {
-		if (emailInputLayout == null) {
-			return;
-		}
+    // In RegisterActivity.java, modify this method
 
-		// Clear error if email is empty
-		if (email.isEmpty()) {
-			emailInputLayout.setError(null);
-			return;
-		}
+    private void validateEmailInRealTime(String email) {
+        // Use your 'eval' TextView instead of the TextInputLayout's error
+        if (email.isEmpty()) {
+            eval.setVisibility(View.GONE); // Hide when empty
+            emailInputLayout.setError(null); // Also clear the layout's error
+            return;
+        }
 
-		// Validate email format
-		EmailValidator.ValidationResult result = EmailValidator.validate(email);
-		
-		// Only show error if email is invalid and user has typed enough characters
-		if (!result.isValid() && email.length() > 5) {
-			emailInputLayout.setError(result.getMessage());
-		} else if (result.isValid()) {
-			// Clear format errors, but keep "already used" errors
-			String currentError = emailInputLayout.getError() != null ? 
-			                     emailInputLayout.getError().toString() : "";
-			boolean isEmailTakenError = currentError.contains("already") || 
-			                           currentError.contains("taken") || 
-			                           currentError.contains("exists");
-			
-			if (!isEmailTakenError) {
-				emailInputLayout.setError(null);
-			}
-		}
-	}
+        EmailValidator.ValidationResult result = EmailValidator.validate(email);
+
+        // Check for "already used" error on the layout first
+        String currentLayoutError = emailInputLayout.getError() != null ? emailInputLayout.getError().toString() : "";
+        boolean isEmailTakenError = currentLayoutError.contains("already") || currentLayoutError.contains("taken");
+
+        if (!result.isValid() && email.length() > 5) {
+            eval.setText(result.getMessage());
+            eval.setVisibility(View.VISIBLE);
+            emailInputLayout.setError(null); // Clear layout error to avoid double messages
+        } else if (isEmailTakenError) {
+            // If the email format is now valid, but it's still "taken", hide our custom TextView
+            eval.setVisibility(View.GONE);
+        } else {
+            // If valid, hide our custom TextView
+            eval.setVisibility(View.GONE);
+            emailInputLayout.setError(null); // Clear any old errors
+        }
+    }
 
 	// Setup register button click listener
-	private void setupRegisterButton() {
-		MaterialButton registerButton = findViewById(R.id.registerButton);
-		if (registerButton == null) {
-			return;
-		}
+    private void setupRegisterButton() {
+        if (registerButton == null) {return;
+        }
 
-		registerButton.setOnClickListener(v -> {
-			hideMessage();
-			
-			// Get input values
-			String username = getTextFromEditText(R.id.usernameInput);
-			String firstName = getTextFromEditText(R.id.firstNameInput);
-			String lastName = getTextFromEditText(R.id.lastNameInput);
-			String email = getTextFromEditText(R.id.emailInput);
-			String password = getTextFromEditText(R.id.passwordInput);
-			String confirmPassword = getTextFromEditText(R.id.confirmPasswordInput);
+        registerButton.setOnClickListener(v -> {
+            hideMessage();
 
-			// Validate and register
-			if (validateInput(username, firstName, lastName, email, password, confirmPassword)) {
-				registerUser(username, firstName, lastName, email, password, confirmPassword);
-			}
-		});
-	}
+            // Get input values
+            String username = getTextFromEditText(R.id.usernameInput);
+            String firstName = getTextFromEditText(R.id.firstNameInput);
+            String lastName = getTextFromEditText(R.id.lastNameInput);
+            String email = getTextFromEditText(R.id.emailInput);
+            String password = getTextFromEditText(R.id.passwordInput);
+            String confirmPassword = getTextFromEditText(R.id.confirmPasswordInput);
+
+            // Validate and register
+            if (validateInput(username, firstName, lastName, email, password, confirmPassword)) {
+                // ---> KEY CHANGE: Disable the button right before making the API call <---
+                registerButton.setEnabled(false);
+                registerUser(username, firstName, lastName, email, password, confirmPassword);
+            }
+        });
+    }
 
 	// Setup back to login button
 	private void setupBackToLoginButton() {
@@ -267,46 +523,67 @@ public class RegisterActivity extends AppCompatActivity {
 
 		// Make API call
 		Call<RegisterResponse> call = apiService.register(request);
-		call.enqueue(new Callback<>() {
-			@Override
-			public void onResponse(@NonNull Call<RegisterResponse> call, @NonNull Response<RegisterResponse> response) {
-				setLoadingState(false);
-				handleRegisterResponse(response, email);
-			}
+        call.enqueue(new Callback<>() {
+            @Override
+            public void onResponse(@NonNull Call<RegisterResponse> call, @NonNull Response<RegisterResponse> response) {
+                setLoadingState(false);
+                // Note: We don't re-enable the button on success here because we want it to stay disabled.
+                handleRegisterResponse(response, email);
+            }
 
-			@Override
-			public void onFailure(@NonNull Call<RegisterResponse> call, @NonNull Throwable t) {
-				setLoadingState(false);
-				handleRegisterFailure(t);
-			}
-		});
+            @Override
+            public void onFailure(@NonNull Call<RegisterResponse> call, @NonNull Throwable t) {
+                setLoadingState(false);
+                // ---> KEY CHANGE: Re-enable on failure <---
+                registerButton.setEnabled(true);
+                handleRegisterFailure(t);
+            }
+        });
 	}
 
 	// Handle successful registration response
-	private void handleRegisterResponse(Response<RegisterResponse> response, String email) {
-		if (response.isSuccessful() && response.body() != null) {
-			RegisterResponse registerResponse = response.body();
-			handleSuccessfulRegistration(registerResponse, email);
-		} else {
-			handleRegistrationError(response);
-		}
-	}
+    private void handleRegisterResponse(Response<RegisterResponse> response, String email) {
+        if (response.isSuccessful() && response.body() != null) {
+            RegisterResponse registerResponse = response.body();
+            handleSuccessfulRegistration(registerResponse, email);
+        } else {
+            // ---> KEY CHANGE: Re-enable on error <---
+            registerButton.setEnabled(true);
+            handleRegistrationError(response);
+        }
+    }
 
 	// Handle successful registration (with or without verification)
-	private void handleSuccessfulRegistration(RegisterResponse response, String email) {
-		if (!response.isSuccess() || response.getData() == null) {
-			handleRegistrationErrors(response);
-			return;
-		}
+    private void handleSuccessfulRegistration(RegisterResponse response, String email) {
+        if (!response.isSuccess() || response.getData() == null) {
+            handleRegistrationErrors(response);
+            return;
+        }
 
-		// Check if email verification is required
-		if (response.getData().isRequires_verification()) {
-			showVerificationDialog(email);
-		} else {
-			// Auto-login if verification not required
-			saveUserDataAndNavigate(response);
-		}
-	}
+        // Check if email verification is required
+        if (response.getData().isRequires_verification()) {
+            // --- KEY CHANGES START HERE ---
+
+            // 1. Show the OTP dialog for the first time
+            showVerificationDialog(email);
+
+            // 2. Make the "Re-open OTP" button visible on the main screen
+            if (openOTPButton != null) {
+                openOTPButton.setVisibility(View.VISIBLE);
+
+                // 3. Set its click listener so it can re-open the dialog
+                openOTPButton.setOnClickListener(v -> {
+                    // When clicked, simply show the verification dialog again
+                    showVerificationDialog(email);
+                });
+            }
+            // --- KEY CHANGES END HERE ---
+
+        } else {
+            // Auto-login if verification not required
+            saveUserDataAndNavigate(response);
+        }
+    }
 
 	// Save user data and navigate to dashboard
 	private void saveUserDataAndNavigate(RegisterResponse response) {
