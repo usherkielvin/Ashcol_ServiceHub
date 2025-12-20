@@ -51,4 +51,6 @@
     <string name="password_icon">Password icon</string>
     <string name="toggle_password_visibility">Toggle password visibility</string>
     <string name="chatbot_button_description">Open chatbot assistant</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

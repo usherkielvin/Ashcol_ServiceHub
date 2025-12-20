@@ -1,20 +1,26 @@
 package hans.ph;
 
+import android.animation.ObjectAnimator;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageButton;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
+import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.servicehub.adapter.ChatAdapter;
@@ -42,25 +48,124 @@ public class DashboardActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_dashboard);
 
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-
         apiService = ApiClient.getApiService();
 
         FloatingActionButton fab = findViewById(R.id.fab_chatbot);
-        fab.setOnClickListener(v -> showChatbotDialog());
+        setupFab(fab);
 
-        Button profileButton = findViewById(R.id.button);
-        if (profileButton != null) {
-            profileButton.setOnClickListener(v -> {
-                Intent intent = new Intent(this, ProfileActivity.class);
-                String email = getIntent().getStringExtra(EXTRA_EMAIL);
-                if (email != null) {
-                    intent.putExtra(ProfileActivity.EXTRA_EMAIL, email);
-                }
-                startActivity(intent);
-            });
+        if (savedInstanceState == null) {
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.fragmentContainerView, new user_Home())
+                    .commit();
         }
+
+        BottomNavigationView bottomNavigationView = findViewById(R.id.bottomNavigationView);
+        bottomNavigationView.setOnNavigationItemSelectedListener(item -> {
+            Fragment selectedFragment = null;
+            int itemId = item.getItemId();
+            if (itemId == R.id.home) {
+                selectedFragment = new user_Home();
+            } else if (itemId == R.id.my_ticket) {
+                selectedFragment = new user_Ticket();
+            } else if (itemId == R.id.notificationHistory) {
+                selectedFragment = new user_Notification();
+            } else if (itemId == R.id.Profile) {
+                selectedFragment = new user_Profile();
+            }
+
+            if (selectedFragment != null) {
+                getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.fragmentContainerView, selectedFragment)
+                        .setReorderingAllowed(true)
+                        .addToBackStack(null)
+                        .commit();
+                return true;
+            }
+
+            return false;
+        });
+
+        Button openSheet = findViewById(R.id.servicebtn);
+        openSheet.setOnClickListener(v -> {
+            BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(DashboardActivity.this);
+            View view = getLayoutInflater().inflate(R.layout.service_options, null);
+
+            Button btnCleaning = view.findViewById(R.id.btn_cleaning);
+            Button btnRepair = view.findViewById(R.id.btn_repair);
+            Button btnInstallation = view.findViewById(R.id.btn_installation);
+            Button btnMaintenance = view.findViewById(R.id.btn_maintenance);
+
+            View.OnClickListener serviceClickListener = b -> {
+                Button clickedButton = (Button) b;
+                Intent intent = new Intent(this, ServiceSelectActivity.class);
+                intent.putExtra("serviceType", clickedButton.getText().toString());
+                startActivity(intent);
+                bottomSheetDialog.dismiss();
+            };
+
+            btnCleaning.setOnClickListener(serviceClickListener);
+            btnRepair.setOnClickListener(serviceClickListener);
+            btnInstallation.setOnClickListener(serviceClickListener);
+            btnMaintenance.setOnClickListener(serviceClickListener);
+
+            bottomSheetDialog.setContentView(view);
+            bottomSheetDialog.show();
+        });
+    }
+
+    private void setupFab(FloatingActionButton fab) {
+        fab.setOnTouchListener(new View.OnTouchListener() {
+            private float initialX, initialY;
+            private float initialTouchX, initialTouchY;
+            private long lastDownTime = 0;
+
+            @Override
+            public boolean onTouch(View view, MotionEvent event) {
+                ViewGroup parentView = (ViewGroup) view.getParent();
+                switch (event.getActionMasked()) {
+                    case MotionEvent.ACTION_DOWN:
+                        initialX = view.getX();
+                        initialY = view.getY();
+                        initialTouchX = event.getRawX();
+                        initialTouchY = event.getRawY();
+                        lastDownTime = event.getDownTime();
+                        return true;
+
+                    case MotionEvent.ACTION_MOVE:
+                        float newX = initialX + (event.getRawX() - initialTouchX);
+                        float newY = initialY + (event.getRawY() - initialTouchY);
+
+                        // Stay within parent bounds
+                        newX = Math.max(0, Math.min(newX, parentView.getWidth() - view.getWidth()));
+                        newY = Math.max(0, Math.min(newY, parentView.getHeight() - view.getHeight()));
+
+                        view.setY(newY);
+                        view.setX(newX);
+                        return true;
+
+                    case MotionEvent.ACTION_UP:
+                        float endX = event.getRawX();
+                        float endY = event.getRawY();
+                        if (isAClick(initialTouchX, endX, initialTouchY, endY)) {
+                            view.performClick(); // This will trigger the OnClickListener
+                        } else {
+                            float center = parentView.getWidth() / 2f;
+                            float finalX = view.getX() < center - view.getWidth() / 2f ? 0 : parentView.getWidth() - view.getWidth();
+                            ObjectAnimator.ofFloat(view, "x", view.getX(), finalX).setDuration(200).start();
+                        }
+                        return true;
+                }
+                return false;
+            }
+        });
+
+        fab.setOnClickListener(v -> showChatbotDialog());
+    }
+
+    private boolean isAClick(float startX, float endX, float startY, float endY) {
+        float differenceX = Math.abs(startX - endX);
+        float differenceY = Math.abs(startY - endY);
+        return !(differenceX > 200 || differenceY > 200); // Click threshold
     }
 
     private void showChatbotDialog() {
@@ -79,7 +184,6 @@ public class DashboardActivity extends AppCompatActivity {
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(chatAdapter);
 
-        // Add a welcome message
         messageList.add(new Message("Hello! How can I help you today?", false));
         chatAdapter.notifyItemInserted(messageList.size() - 1);
 
@@ -108,24 +212,11 @@ public class DashboardActivity extends AppCompatActivity {
                 if (response.isSuccessful() && response.body() != null) {
                     String reply = response.body().getReply();
                     messageList.add(new Message(reply, false));
-                    chatAdapter.notifyItemInserted(messageList.size() - 1);
-                    recyclerView.scrollToPosition(messageList.size() - 1);
                 } else {
-                    String errorBody = "No error body";
-                    okhttp3.ResponseBody errorResponseBody = response.errorBody();
-                    if (errorResponseBody != null) {
-                        try (okhttp3.ResponseBody body = errorResponseBody) {
-                            errorBody = body.string();
-                        } catch (IOException e) {
-                            Log.e(TAG, "Error parsing error body", e);
-                            errorBody = "Error reading response";
-                        }
-                    }
-                    Log.e(TAG, "API Error: " + response.code() + " " + errorBody);
-                    messageList.add(new Message("Error: " + response.code(), false));
-                    chatAdapter.notifyItemInserted(messageList.size() - 1);
-                    recyclerView.scrollToPosition(messageList.size() - 1);
+                    handleApiError(response, messageList);
                 }
+                chatAdapter.notifyItemInserted(messageList.size() - 1);
+                recyclerView.scrollToPosition(messageList.size() - 1);
             }
 
             @Override
@@ -138,6 +229,20 @@ public class DashboardActivity extends AppCompatActivity {
         });
     }
 
+    private void handleApiError(Response<ChatResponse> response, List<Message> messageList) {
+        String errorBody = "No error body";
+        try (okhttp3.ResponseBody errorResponseBody = response.errorBody()) {
+            if (errorResponseBody != null) {
+                errorBody = errorResponseBody.string();
+            }
+        } catch (IOException e) {
+            Log.e(TAG, "Error parsing error body", e);
+            errorBody = "Error reading response";
+        }
+        Log.e(TAG, "API Error: " + response.code() + " " + errorBody);
+        messageList.add(new Message("Error: " + response.code(), false));
+    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.dashboard_menu, menu);
@@ -147,9 +252,11 @@ public class DashboardActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         if (item.getItemId() == R.id.action_profile) {
-            Intent intent = new Intent(this, ProfileActivity.class);
-            intent.putExtra(ProfileActivity.EXTRA_EMAIL, getIntent().getStringExtra(EXTRA_EMAIL));
-            startActivity(intent);
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.fragmentContainerView, new user_Profile())
+                    .setReorderingAllowed(true)
+                    .addToBackStack(null)
+                    .commit();
             return true;
         }
         return super.onOptionsItemSelected(item);
