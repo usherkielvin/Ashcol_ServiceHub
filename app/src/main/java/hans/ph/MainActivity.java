@@ -45,8 +45,15 @@ public class MainActivity extends AppCompatActivity {
 
         // Check if already logged in
         if (tokenManager.isLoggedIn()) {
-            Intent intent = new Intent(this, DashboardActivity.class);
-            intent.putExtra(DashboardActivity.EXTRA_EMAIL, tokenManager.getEmail());
+            final Intent intent;
+            if ("admin".equals(tokenManager.getRole())) {
+                intent = new Intent(this, admin_DashboardActivity.class);
+            } else if ("employee".equals(tokenManager.getRole())) {
+                intent = new Intent(this, employee_DashboardActivity.class);
+            } else {
+                intent = new Intent(this, DashboardActivity.class);
+                intent.putExtra(DashboardActivity.EXTRA_EMAIL, tokenManager.getEmail());
+            }
             startActivity(intent);
             finish();
             return;
@@ -144,6 +151,7 @@ public class MainActivity extends AppCompatActivity {
 						LoginResponse.User user = loginResponse.getData().getUser();
 						tokenManager.saveToken("Bearer " + loginResponse.getData().getToken());
 						tokenManager.saveEmail(user.getEmail());
+                        tokenManager.saveRole(user.getRole());
 						
 						// Get name - prefer name field, fallback to firstName + lastName
 						String userName = user.getName();
@@ -174,10 +182,17 @@ public class MainActivity extends AppCompatActivity {
 
 						// Navigate to dashboard
 						runOnUiThread(() -> {
-							Intent intent = new Intent(MainActivity.this, DashboardActivity.class);
-							intent.putExtra(DashboardActivity.EXTRA_EMAIL, loginResponse.getData().getUser().getEmail());
-							startActivity(intent);
-							finish();
+                            final Intent intent;
+                            if ("admin".equals(user.getRole())) {
+                                intent = new Intent(MainActivity.this, admin_DashboardActivity.class);
+                            } else if ("employee".equals(user.getRole())) {
+                                intent = new Intent(MainActivity.this, employee_DashboardActivity.class);
+                            } else {
+                                intent = new Intent(MainActivity.this, DashboardActivity.class);
+                                intent.putExtra(DashboardActivity.EXTRA_EMAIL, user.getEmail());
+                            }
+                            startActivity(intent);
+                            finish();
 						});
 					} else {
 						final String message = loginResponse != null && loginResponse.getMessage() != null 
@@ -304,7 +319,7 @@ public class MainActivity extends AppCompatActivity {
 			}
 
 			// If it's not JSON or doesn't have expected fields, check if it's HTML
-			if (errorString.trim().startsWith("<!DOCTYPE") || errorString.trim().startsWith("<html")) {
+			if (errorString.trim().startsWith("<!DOCTYPE") || errorString.trim().startsWith("<html>")) {
 				return "Server returned an HTML error page. Please check server logs.";
 			}
 

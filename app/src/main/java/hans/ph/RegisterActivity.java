@@ -519,7 +519,7 @@ public class RegisterActivity extends AppCompatActivity {
 
 		// Create API request
 		ApiService apiService = ApiClient.getApiService();
-		RegisterRequest request = new RegisterRequest(username, firstName, lastName, email, password, confirmPassword);
+		RegisterRequest request = new RegisterRequest(username, firstName, lastName, email, password, confirmPassword, "customer");
 
 		// Make API call
 		Call<RegisterResponse> call = apiService.register(request);

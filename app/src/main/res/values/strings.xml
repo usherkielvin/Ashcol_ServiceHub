@@ -1,56 +1,53 @@
 <resources>
-    <string name="app_name">ServiceHub App</string>
+    <string name="app_name">ServiceHubApp</string>
+    <string-array name="service_types">
+        <item>Select a service type...</item>
+        <item>Plumbing</item>
+        <item>Electrical</item>
+        <item>HVAC</item>
+        <item>Appliance Repair</item>
+    </string-array>
+
+    <string name="chatbot_button_description">Chatbot</string>
+    <string name="keeping_you_cool">Keeping you cool</string>
+    <string name="sign_in">Sign In</string>
     <string name="email">Email</string>
+    <string name="enter_email_or_username">Enter email or username</string>
     <string name="password">Password</string>
-    <string name="login">Login</string>
+    <string name="enter_password">Enter password</string>
+    <string name="log_in">Log In</string>
+    <string name="dont_have_an_account_yet">Dont have an account yet?</string>
+    <string name="sign_up">Sign Up</string>
+    <string name="ashcol_corporation_logo">Ashcol Corporation Logo</string>
+    <string name="remember_me">Remember me</string>
+    <string name="forgot_password">Forgot password?</string>
+    <string name="terms_and_conditions">Terms and Conditions</string>
+    <string name="registering">Registering...</string>
     <string name="register">Register</string>
-    <string name="name">Name</string>
-    <string name="username">Username</string>
+
+    <!-- New Strings -->
+    <string name="or_log_in_with">Or log in with</string>
+    <string name="sign_in_with_google">Sign in with Google</string>
+    <string name="sign_in_with_facebook">Sign in with Facebook</string>
+    <string name="edit_name">Edit Name</string>
+    <string name="change_password">Change Password</string>
+    <string name="sign_up_subtitle">Create an account</string>
     <string name="first_name">First Name</string>
     <string name="last_name">Last Name</string>
+    <string name="enter_username">Enter username</string>
+    <string name="enter_email">Enter email</string>
     <string name="confirm_password">Confirm Password</string>
+    <string name="continue_button">Continue</string>
     <string name="back_to_login">Back to Login</string>
-    <string name="phone_number">Phone Number</string>
-    <string name="role">Role</string>
-    <string name="department">Department</string>
-    <string name="address">Address</string>
-    <string name="employee">Employee</string>
-    <string name="admin">Admin</string>
-    <string name="registering">Registering…</string>
-    <string name="please_wait">Please wait…</string>
-    <string name="change_password">Change Password</string>
-    <string name="edit_name">Edit Name</string>
-    <string name="save">Save</string>
-    <string name="cancel">Cancel</string>
+    <string name="or_sign_up_with">Or sign up with</string>
+    <string name="sign_up_with_google">Sign up with Google</string>
+    <string name="sign_up_with_facebook">Sign up with Facebook</string>
     <string name="current_password">Current Password</string>
     <string name="new_password">New Password</string>
     <string name="confirm_new_password">Confirm New Password</string>
-    <string name="ashcol_corporation_logo">Ashcol Corporation Logo</string>
-    <string name="keeping_you_cool">Keeping you cool</string>
-    <string name="sign_in">Sign In</string>
-    <string name="enter_email_or_username">Enter email or username</string>
-    <string name="enter_password">Enter password</string>
-    <string name="remember_me">Remember Me</string>
-    <string name="forgot_password">Forgot Password?</string>
-    <string name="log_in">Log In</string>
-    <string name="legal_text">By tapping Continue, you agree to our Terms and\nacknowledge that you have read our Privacy Policy</string>
-    <string name="or_log_in_with">  or Log In with  </string>
-    <string name="sign_in_with_google">Sign in with Google</string>
-    <string name="sign_in_with_facebook">Sign in with Facebook</string>
-    <string name="dont_have_an_account_yet">Don\'t have an account yet?</string>
-    <string name="sign_up">Sign Up</string>
-    <string name="sign_up_subtitle">Sign up and start your journey with the Ashcol family.</string>
-    <string name="enter_username">Enter Username</string>
-    <string name="enter_email">Enter Email</string>
-    <string name="continue_button">Continue</string>
-    <string name="terms_and_conditions">By tapping Continue, you agree to our Terms and acknowledge that you have read our Privacy Policy</string>
-    <string name="or_sign_up_with">or Sign Up with</string>
-    <string name="sign_up_with_google">Sign up with Google</string>
-    <string name="sign_up_with_facebook">Sign up with Facebook</string>
-    <string name="email_icon">Email icon</string>
-    <string name="password_icon">Password icon</string>
-    <string name="toggle_password_visibility">Toggle password visibility</string>
-    <string name="chatbot_button_description">Open chatbot assistant</string>
-    <!-- TODO: Remove or change this placeholder text -->
+    <string name="name">Name</string>
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
+
 </resources>
