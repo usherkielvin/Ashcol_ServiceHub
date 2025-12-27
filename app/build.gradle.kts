@@ -3,11 +3,11 @@ plugins {
 }
 
 android {
-    namespace = "hans.ph"
+    namespace = "app.hub"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "hans.ph"
+        applicationId = "app.hub"
         minSdk = 24
         targetSdk = 36
         versionCode = 1
