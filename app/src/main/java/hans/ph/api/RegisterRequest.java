@@ -7,14 +7,16 @@ public class RegisterRequest {
     private String email;
     private String password;
     private String password_confirmation;
+    private String role;
 
-    public RegisterRequest(String username, String firstName, String lastName, String email, String password, String passwordConfirmation) {
+    public RegisterRequest(String username, String firstName, String lastName, String email, String password, String passwordConfirmation, String role) {
         this.username = username;
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
         this.password = password;
         this.password_confirmation = passwordConfirmation;
+        this.role = role;
     }
 
     public String getUsername() {
@@ -63,5 +65,13 @@ public class RegisterRequest {
 
     public void setPassword_confirmation(String password_confirmation) {
         this.password_confirmation = password_confirmation;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
     }
 }

@@ -38,81 +38,90 @@ public class MainActivity extends AppCompatActivity {
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_main);
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
 
-		tokenManager = new TokenManager(this);
+        tokenManager = new TokenManager(this);
 
-		// Check if already logged in
-		if (tokenManager.isLoggedIn()) {
-			Intent intent = new Intent(this, DashboardActivity.class);
-			intent.putExtra(DashboardActivity.EXTRA_EMAIL, tokenManager.getEmail());
-			startActivity(intent);
-			finish();
-			return;
-		}
+        // Check if already logged in
+        if (tokenManager.isLoggedIn()) {
+            final Intent intent;
+            if ("admin".equals(tokenManager.getRole())) {
+                intent = new Intent(this, admin_DashboardActivity.class);
+            } else if ("employee".equals(tokenManager.getRole())) {
+                intent = new Intent(this, employee_DashboardActivity.class);
+            } else {
+                intent = new Intent(this, DashboardActivity.class);
+                intent.putExtra(DashboardActivity.EXTRA_EMAIL, tokenManager.getEmail());
+            }
+            startActivity(intent);
+            finish();
+            return;
+        }
 
-		TextInputEditText emailInput = findViewById(R.id.emailInput);
-		TextInputEditText passwordInput = findViewById(R.id.passwordInput);
-		TextInputLayout emailInputLayout = findViewById(R.id.emailInputLayout);
-		Button loginButton = findViewById(R.id.loginButton);
-		TextView registerButton = findViewById(R.id.registerButton);
+        TextInputEditText emailInput = findViewById(R.id.emailInput);
+        TextInputEditText passwordInput = findViewById(R.id.passwordInput);
+        TextInputLayout emailInputLayout = findViewById(R.id.emailInputLayout);
+        Button loginButton = findViewById(R.id.loginButton);
+        TextView registerButton = findViewById(R.id.registerButton);
 
-		// Real-time email validation
-		if (emailInput != null) {
-			emailInput.addTextChangedListener(new TextWatcher() {
-				@Override
-				public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+        // Real-time email validation
+        if (emailInput != null) {
+            emailInput.addTextChangedListener(new TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                }
 
-				@Override
-				public void onTextChanged(CharSequence s, int start, int before, int count) {}
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+                }
 
-				@Override
-				public void afterTextChanged(Editable s) {
-					String email = s.toString().trim();
-					if (email.isEmpty()) {
-						if (emailInputLayout != null) {
-							emailInputLayout.setError(null);
-						}
-						return;
-					}
+                @Override
+                public void afterTextChanged(Editable s) {
+                    String email = s.toString().trim();
+                    if (email.isEmpty()) {
+                        if (emailInputLayout != null) {
+                            emailInputLayout.setError(null);
+                        }
+                        return;
+                    }
 
-					EmailValidator.ValidationResult result = EmailValidator.validate(email);
-					if (!result.isValid() && email.length() > 5) {
-						// Only show error if user has typed enough characters
-						if (emailInputLayout != null) {
-							emailInputLayout.setError(result.getMessage());
-						}
-					} else {
-						if (emailInputLayout != null) {
-							emailInputLayout.setError(null);
-						}
-					}
-				}
-			});
-		}
+                    EmailValidator.ValidationResult result = EmailValidator.validate(email);
+                    if (!result.isValid() && email.length() > 5) {
+                        // Only show error if user has typed enough characters
+                        if (emailInputLayout != null) {
+                            emailInputLayout.setError(result.getMessage());
+                        }
+                    } else {
+                        if (emailInputLayout != null) {
+                            emailInputLayout.setError(null);
+                        }
+                    }
+                }
+            });
+        }
 
-		if (registerButton != null) {
-			registerButton.setOnClickListener(v -> {
-				Intent intent = new Intent(this, RegisterActivity.class);
-				startActivity(intent);
-			});
-		}
+        if (registerButton != null) {
+            registerButton.setOnClickListener(v -> {
+                Intent intent = new Intent(this, RegisterActivity.class);
+                startActivity(intent);
+            });
+        }
 
-		if (loginButton != null) {
-			loginButton.setOnClickListener(v -> {
-				String email = emailInput != null ? emailInput.getText().toString().trim() : "";
-				String password = passwordInput != null ? passwordInput.getText().toString() : "";
+        if (loginButton != null) {
+            loginButton.setOnClickListener(v -> {
+                String email = emailInput != null ? emailInput.getText().toString().trim() : "";
+                String password = passwordInput != null ? passwordInput.getText().toString() : "";
 
-				if (email.isEmpty() || password.isEmpty()) {
-					Toast.makeText(this, "Please enter email and password", Toast.LENGTH_SHORT).show();
-					return;
-				}
+                if (email.isEmpty() || password.isEmpty()) {
+                    Toast.makeText(this, "Please enter email and password", Toast.LENGTH_SHORT).show();
+                    return;
+                }
 
-				login(email, password);
-			});
-		}
-	}
+                login(email, password);
+            });
+        }
+    }
 
 	private void login(String email, String password) {
 		final Button loginButton = findViewById(R.id.loginButton);
@@ -142,6 +151,7 @@ public class MainActivity extends AppCompatActivity {
 						LoginResponse.User user = loginResponse.getData().getUser();
 						tokenManager.saveToken("Bearer " + loginResponse.getData().getToken());
 						tokenManager.saveEmail(user.getEmail());
+                        tokenManager.saveRole(user.getRole());
 						
 						// Get name - prefer name field, fallback to firstName + lastName
 						String userName = user.getName();
@@ -172,10 +182,17 @@ public class MainActivity extends AppCompatActivity {
 
 						// Navigate to dashboard
 						runOnUiThread(() -> {
-							Intent intent = new Intent(MainActivity.this, DashboardActivity.class);
-							intent.putExtra(DashboardActivity.EXTRA_EMAIL, loginResponse.getData().getUser().getEmail());
-							startActivity(intent);
-							finish();
+                            final Intent intent;
+                            if ("admin".equals(user.getRole())) {
+                                intent = new Intent(MainActivity.this, admin_DashboardActivity.class);
+                            } else if ("employee".equals(user.getRole())) {
+                                intent = new Intent(MainActivity.this, employee_DashboardActivity.class);
+                            } else {
+                                intent = new Intent(MainActivity.this, DashboardActivity.class);
+                                intent.putExtra(DashboardActivity.EXTRA_EMAIL, user.getEmail());
+                            }
+                            startActivity(intent);
+                            finish();
 						});
 					} else {
 						final String message = loginResponse != null && loginResponse.getMessage() != null 
@@ -302,7 +319,7 @@ public class MainActivity extends AppCompatActivity {
 			}
 
 			// If it's not JSON or doesn't have expected fields, check if it's HTML
-			if (errorString.trim().startsWith("<!DOCTYPE") || errorString.trim().startsWith("<html")) {
+			if (errorString.trim().startsWith("<!DOCTYPE") || errorString.trim().startsWith("<html>")) {
 				return "Server returned an HTML error page. Please check server logs.";
 			}
 

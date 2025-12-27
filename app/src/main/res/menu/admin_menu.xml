@@ -1,0 +1,22 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/nav_all_tickets"
+        android:icon="@drawable/ic_tickets"
+        android:title="All Tickets" />
+    <item
+        android:id="@+id/nav_branches"
+        android:icon="@drawable/ic_branch"
+        android:title="Branches" />
+    <item
+        android:id="@+id/nav_assignments"
+        android:icon="@drawable/ic_assignment"
+        android:title="Assignments" />
+    <item
+        android:id="@+id/nav_reports"
+        android:icon="@drawable/ic_reports"
+        android:title="Reports" />
+    <item
+        android:id="@+id/nav_users"
+        android:icon="@drawable/ic_users"
+        android:title="Users" />
+</menu>

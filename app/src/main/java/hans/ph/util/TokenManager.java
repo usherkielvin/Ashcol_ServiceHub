@@ -8,6 +8,7 @@ public class TokenManager {
     private static final String KEY_TOKEN = "token";
     private static final String KEY_EMAIL = "email";
     private static final String KEY_NAME = "name";
+    private static final String KEY_ROLE = "role";
 
     private final SharedPreferences sharedPreferences;
 
@@ -37,6 +38,14 @@ public class TokenManager {
 
     public String getName() {
         return sharedPreferences.getString(KEY_NAME, null);
+    }
+
+    public void saveRole(String role) {
+        sharedPreferences.edit().putString(KEY_ROLE, role).apply();
+    }
+
+    public String getRole() {
+        return sharedPreferences.getString(KEY_ROLE, null);
     }
 
     public void clear() {

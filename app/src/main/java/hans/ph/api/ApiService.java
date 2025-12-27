@@ -3,11 +3,15 @@ package hans.ph.api;
 import com.servicehub.model.ChatRequest;
 import com.servicehub.model.ChatResponse;
 
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
+import retrofit2.http.Multipart;
 import retrofit2.http.POST;
+import retrofit2.http.Part;
 
 public interface ApiService {
     @POST("api/v1/login")
@@ -30,4 +34,18 @@ public interface ApiService {
 
     @POST("api/v1/chatbot")
     Call<ChatResponse> sendMessage(@Body ChatRequest request);
+
+    @POST("api/v1/tickets")
+    Call<CreateTicketResponse> createTicket(@Header("Authorization") String token, @Body CreateTicketRequest request);
+
+    @Multipart
+    @POST("api/v1/tickets")
+    Call<CreateTicketResponse> createTicket(
+            @Header("Authorization") String token,
+            @Part("description") RequestBody description,
+            @Part("address") RequestBody address,
+            @Part("contact") RequestBody contact,
+            @Part("service_type") RequestBody serviceType,
+            @Part MultipartBody.Part image
+    );
 }

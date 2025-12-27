@@ -4,12 +4,12 @@ plugins {
 
 android {
     namespace = "hans.ph"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "hans.ph"
         minSdk = 24
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
@@ -45,6 +45,10 @@ dependencies {
     implementation("androidx.core:core:1.12.0")
     implementation("androidx.constraintlayout:constraintlayout:2.2.0")
     implementation("androidx.coordinatorlayout:coordinatorlayout:1.2.0")
+    implementation(libs.mediarouter)
+    implementation(libs.fragment)
+    implementation(libs.activity)
+    implementation(libs.gridlayout)
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)

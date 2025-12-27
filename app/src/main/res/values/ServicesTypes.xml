@@ -1,0 +1,9 @@
+<resources>
+    <string-array name="Services">
+        <item>Cleaning</item>
+        <item>Repair</item>
+        <item>Installation</item>
+        <item>Maintenance</item>
+
+    </string-array>
+</resources>
