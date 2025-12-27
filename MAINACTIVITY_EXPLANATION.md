@@ -3,14 +3,14 @@
 ## 📦 **SECTION 1: Package Declaration (Line 1)**
 
 ```java
-package hans.ph;
+package app.hub;
 ```
 
 **Explanation:**
 - `package` = Java keyword to declare the package/namespace
-- `hans.ph` = The package name (folder structure: `hans/ph/`)
+- `app.hub` = The package name (folder structure: `hans/ph/`)
 - **Purpose:** Groups related classes together and prevents naming conflicts
-- **Why:** All classes in this folder belong to the `hans.ph` package
+- **Why:** All classes in this folder belong to the `app.hub` package
 
 ---
 
@@ -18,20 +18,20 @@ package hans.ph;
 
 ### 2.1 Project Imports (Lines 3-9)
 ```java
-import hans.ph.R;
-import hans.ph.api.ApiClient;
-import hans.ph.api.ApiService;
-import hans.ph.api.LoginRequest;
-import hans.ph.api.LoginResponse;
-import hans.ph.util.EmailValidator;
-import hans.ph.util.TokenManager;
+import app.hub.R;
+import app.hub.api.ApiClient;
+import app.hub.api.ApiService;
+import app.hub.api.LoginRequest;
+import app.hub.api.LoginResponse;
+import app.hub.util.EmailValidator;
+import app.hub.util.TokenManager;
 ```
 
 **Explanation:**
 - `import` = Java keyword to include external classes
-- `hans.ph.R` = Auto-generated class containing all resource IDs (layouts, strings, etc.)
-- `hans.ph.api.*` = API-related classes for network calls
-- `hans.ph.util.*` = Utility classes (email validation, token storage)
+- `app.hub.R` = Auto-generated class containing all resource IDs (layouts, strings, etc.)
+- `app.hub.api.*` = API-related classes for network calls
+- `app.hub.util.*` = Utility classes (email validation, token storage)
 
 **Purpose:** Allows using these classes without full package names
 
