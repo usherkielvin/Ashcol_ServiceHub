@@ -62,5 +62,12 @@
     <string name="first_name_signup">First name</string>
     <string name="by_using_ashcol_you_agree_to_the_terms_and_privacy_policy">By using Ashcol, you agree to the Terms and Privacy Policy.</string>
     <string name="continue_signup">continue</string>
+    <string name="continue_with_google">Continue with Google</string>
+    <string name="continue_with_facebook">Continue with Facebook</string>
+    <string name="or">or</string>
+    <string name="continue_with_email">Continue with email</string>
+    <string name="sign_up_and_start_your_journey_with_nthe_ashcol_family">Sign up and start your journey with\nthe Ashcol family.</string>
+    <string name="hey_there">Hey there!</string>
+    <string name="create_new_account">Create new account</string>
 
 </resources>

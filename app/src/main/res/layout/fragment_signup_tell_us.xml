@@ -33,7 +33,7 @@
                 android:id="@+id/btnContinue"
                 android:layout_width="0dp"
                 android:layout_height="56dp"
-                android:layout_marginTop="4dp"
+                android:layout_marginTop="32dp"
                 android:background="@drawable/bg_button_green"
                 android:text="@string/continue_signup"
                 android:textAllCaps="false"
