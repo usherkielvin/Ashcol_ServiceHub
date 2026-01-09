@@ -1,4 +1,4 @@
-package app.hub;
+package app.hub.user;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -12,8 +12,11 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
 import java.util.List;
+import app.hub.R;
 import app.hub.api.ApiClient;
 import app.hub.api.ApiService;
+import app.hub.common.Ticket;
+import app.hub.common.TicketAdapter;
 import app.hub.util.TokenManager;
 import retrofit2.Call;
 import retrofit2.Callback;

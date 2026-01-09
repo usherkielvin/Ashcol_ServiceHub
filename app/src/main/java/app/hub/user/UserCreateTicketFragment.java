@@ -1,4 +1,4 @@
-package app.hub;
+package app.hub.user;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -17,6 +17,7 @@ import androidx.fragment.app.Fragment;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
+import app.hub.R;
 import app.hub.api.ApiClient;
 import app.hub.api.ApiService;
 import app.hub.api.CreateTicketRequest;
@@ -26,7 +27,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class user_createTicket extends Fragment {
+public class UserCreateTicketFragment extends Fragment {
 
     private TextInputEditText titleInput, descriptionInput, addressInput, contactInput;
     private TextInputLayout titleInputLayout, descriptionInputLayout, addressInputLayout, contactInputLayout;
@@ -34,7 +35,7 @@ public class user_createTicket extends Fragment {
     private Button createTicketButton;
     private TokenManager tokenManager;
 
-    public user_createTicket() {
+    public UserCreateTicketFragment() {
         // Required empty public constructor
     }
 

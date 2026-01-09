@@ -1,4 +1,4 @@
-package app.hub;
+package app.hub.common;
 
 public class Ticket {
     private String title;

@@ -1,4 +1,4 @@
-package app.hub;
+package app.hub.user;
 
 import android.Manifest;
 import android.content.Intent;
@@ -25,6 +25,7 @@ import com.google.android.material.textfield.TextInputEditText;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
+import app.hub.R;
 import app.hub.api.ApiClient;
 import app.hub.api.ApiService;
 import app.hub.api.CreateTicketResponse;

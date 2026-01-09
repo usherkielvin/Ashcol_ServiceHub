@@ -1,5 +1,6 @@
-package app.hub;
+package app.hub.common;
 
+import app.hub.R;
 import app.hub.api.ApiClient;
 import app.hub.api.ApiService;
 import app.hub.api.RegisterRequest;
@@ -8,6 +9,7 @@ import app.hub.api.VerificationRequest;
 import app.hub.api.VerificationResponse;
 import app.hub.api.VerifyEmailRequest;
 import app.hub.api.VerifyEmailResponse;
+import app.hub.user.DashboardActivity;
 import app.hub.util.EmailValidator;
 import app.hub.util.TokenManager;
 
@@ -849,13 +851,14 @@ public class RegisterActivity extends AppCompatActivity {
 	// Show or hide loading state during registration
 	private void setLoadingState(boolean isLoading) {
 		runOnUiThread(() -> {
-			MaterialButton registerButton = findViewById(R.id.registerButton);
-			if (registerButton != null) {
-				registerButton.setEnabled(!isLoading);
-				registerButton.setText(isLoading ? 
-					getString(R.string.registering) : 
-					getString(R.string.register));
-			}
+		MaterialButton registerButton = findViewById(R.id.registerButton);
+		if (registerButton != null) {
+			registerButton.setEnabled(!isLoading);
+			String buttonText = isLoading ? 
+				getString(R.string.registering) : 
+				getString(R.string.register);
+			registerButton.setText(buttonText);
+		}
 
 			if (progressBar != null) {
 				progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE);

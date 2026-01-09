@@ -1,4 +1,4 @@
-package app.hub;
+package app.hub.employee;
 
 import android.os.Bundle;
 import androidx.fragment.app.Fragment;
@@ -6,9 +6,11 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-public class InProgressFragment extends Fragment {
+import app.hub.R;
 
-    public InProgressFragment() {
+public class EmployeeDashboardFragment extends Fragment {
+
+    public EmployeeDashboardFragment() {
         // Required empty public constructor
     }
 
@@ -16,6 +18,6 @@ public class InProgressFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_in_progress, container, false);
+        return inflater.inflate(R.layout.fragment_employee_dashboard, container, false);
     }
 }

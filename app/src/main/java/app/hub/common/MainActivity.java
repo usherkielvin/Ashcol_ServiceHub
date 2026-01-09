@@ -1,10 +1,13 @@
-package app.hub;
+package app.hub.common;
 
 import app.hub.R;
 import app.hub.api.ApiClient;
 import app.hub.api.ApiService;
 import app.hub.api.LoginRequest;
 import app.hub.api.LoginResponse;
+import app.hub.admin.AdminDashboardActivity;
+import app.hub.employee.EmployeeDashboardActivity;
+import app.hub.user.DashboardActivity;
 import app.hub.util.EmailValidator;
 import app.hub.util.TokenManager;
 import android.content.Intent;
@@ -46,9 +49,9 @@ public class MainActivity extends AppCompatActivity {
         if (tokenManager.isLoggedIn()) {
             final Intent intent;
             if ("admin".equals(tokenManager.getRole())) {
-                intent = new Intent(this, admin_DashboardActivity.class);
-            } else if ("employee".equals(tokenManager.getRole())) {
-                intent = new Intent(this, employee_DashboardActivity.class);
+                intent = new Intent(this, AdminDashboardActivity.class);
+            } else if ("employee".equals(tokenManager.getRole()) || "manager".equals(tokenManager.getRole())) {
+                intent = new Intent(this, EmployeeDashboardActivity.class);
             } else {
                 intent = new Intent(this, DashboardActivity.class);
                 intent.putExtra(DashboardActivity.EXTRA_EMAIL, tokenManager.getEmail());
@@ -79,6 +82,14 @@ public class MainActivity extends AppCompatActivity {
                 public void afterTextChanged(Editable s) {
                     String email = s.toString().trim();
                     if (email.isEmpty()) {
+                        if (emailInputLayout != null) {
+                            emailInputLayout.setError(null);
+                        }
+                        return;
+                    }
+
+                    // Allow static admin and manager usernames without validation
+                    if ("Admin1204".equals(email) || "Manager".equals(email)) {
                         if (emailInputLayout != null) {
                             emailInputLayout.setError(null);
                         }
@@ -123,6 +134,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
 	private void login(String email, String password) {
+		// Check for static admin credentials
+		if ("Admin1204".equals(email.trim()) && "@Admin1234".equals(password)) {
+			handleStaticAdminLogin();
+			return;
+		}
+
+		// Check for static manager credentials
+		if ("Manager".equals(email.trim()) && "Management1234".equals(password)) {
+			handleStaticManagerLogin();
+			return;
+		}
+
 		final MaterialButton loginButton = findViewById(R.id.loginButton);
 		if (loginButton != null) {
 			loginButton.setEnabled(false);
@@ -183,9 +206,9 @@ public class MainActivity extends AppCompatActivity {
 						runOnUiThread(() -> {
                             final Intent intent;
                             if ("admin".equals(user.getRole())) {
-                                intent = new Intent(MainActivity.this, admin_DashboardActivity.class);
-                            } else if ("employee".equals(user.getRole())) {
-                                intent = new Intent(MainActivity.this, employee_DashboardActivity.class);
+                                intent = new Intent(MainActivity.this, AdminDashboardActivity.class);
+                            } else if ("employee".equals(user.getRole()) || "manager".equals(user.getRole())) {
+                                intent = new Intent(MainActivity.this, EmployeeDashboardActivity.class);
                             } else {
                                 intent = new Intent(MainActivity.this, DashboardActivity.class);
                                 intent.putExtra(DashboardActivity.EXTRA_EMAIL, user.getEmail());
@@ -239,6 +262,48 @@ public class MainActivity extends AppCompatActivity {
 				}
 				runOnUiThread(() -> showError("Connection Error", errorMsg));
 			}
+		});
+	}
+
+	private void handleStaticAdminLogin() {
+		final MaterialButton loginButton = findViewById(R.id.loginButton);
+		if (loginButton != null) {
+			loginButton.setEnabled(false);
+			loginButton.setText("Logging in...");
+		}
+
+		// Save admin credentials to TokenManager
+		tokenManager.saveToken("Bearer static_admin_token");
+		tokenManager.saveEmail("admin1204@ashcol.com");
+		tokenManager.saveName("Admin");
+		tokenManager.saveRole("admin");
+
+		// Navigate to admin dashboard
+		runOnUiThread(() -> {
+			Intent intent = new Intent(MainActivity.this, AdminDashboardActivity.class);
+			startActivity(intent);
+			finish();
+		});
+	}
+
+	private void handleStaticManagerLogin() {
+		final MaterialButton loginButton = findViewById(R.id.loginButton);
+		if (loginButton != null) {
+			loginButton.setEnabled(false);
+			loginButton.setText("Logging in...");
+		}
+
+		// Save manager credentials to TokenManager
+		tokenManager.saveToken("Bearer static_manager_token");
+		tokenManager.saveEmail("manager@ashcol.com");
+		tokenManager.saveName("Manager");
+		tokenManager.saveRole("manager");
+
+		// Navigate to employee dashboard (managers typically use employee dashboard)
+		runOnUiThread(() -> {
+			Intent intent = new Intent(MainActivity.this, EmployeeDashboardActivity.class);
+			startActivity(intent);
+			finish();
 		});
 	}
 

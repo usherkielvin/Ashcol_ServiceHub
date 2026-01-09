@@ -1,4 +1,4 @@
-package app.hub;
+package app.hub.admin;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -9,6 +9,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.textfield.TextInputEditText;
 
+import app.hub.R;
 import app.hub.api.ApiClient;
 import app.hub.api.ApiService;
 import app.hub.api.RegisterRequest;
@@ -17,7 +18,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class admin_addEmployee extends AppCompatActivity {
+public class AdminAddEmployee extends AppCompatActivity {
 
     private TextInputEditText firstNameInput, lastNameInput, usernameInput, emailInput, passwordInput;
 
@@ -61,16 +62,16 @@ public class admin_addEmployee extends AppCompatActivity {
             @Override
             public void onResponse(Call<RegisterResponse> call, Response<RegisterResponse> response) {
                 if (response.isSuccessful()) {
-                    Toast.makeText(admin_addEmployee.this, "Employee created successfully", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(AdminAddEmployee.this, "Employee created successfully", Toast.LENGTH_SHORT).show();
                     finish();
                 } else {
-                    Toast.makeText(admin_addEmployee.this, "Failed to create employee", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(AdminAddEmployee.this, "Failed to create employee", Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onFailure(Call<RegisterResponse> call, Throwable t) {
-                Toast.makeText(admin_addEmployee.this, "An error occurred", Toast.LENGTH_SHORT).show();
+                Toast.makeText(AdminAddEmployee.this, "An error occurred", Toast.LENGTH_SHORT).show();
             }
         });
     }

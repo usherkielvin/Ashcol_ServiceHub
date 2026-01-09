@@ -1,4 +1,4 @@
-package app.hub;
+package app.hub.common;
 
 import app.hub.R;
 import app.hub.api.ApiClient;

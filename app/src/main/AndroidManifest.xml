@@ -18,19 +18,19 @@
         android:theme="@style/Theme.ServiceHubApp"
         android:usesCleartextTraffic="true" >
         <activity
-            android:name=".admin_addEmployee"
+            android:name=".admin.AdminAddEmployee"
             android:exported="false" />
         <activity
-            android:name=".employee_DashboardActivity"
+            android:name=".employee.EmployeeDashboardActivity"
             android:exported="false" />
         <activity
-            android:name=".admin_DashboardActivity"
+            android:name=".admin.AdminDashboardActivity"
             android:exported="false" />
         <activity
-            android:name=".ServiceSelectActivity"
+            android:name=".user.ServiceSelectActivity"
             android:exported="false" />
         <activity
-            android:name=".MainActivity"
+            android:name=".common.MainActivity"
             android:exported="true" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -39,13 +39,13 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".DashboardActivity"
+            android:name=".user.DashboardActivity"
             android:exported="false" />
         <activity
-            android:name=".ProfileActivity"
+            android:name=".common.ProfileActivity"
             android:exported="false" />
         <activity
-            android:name=".RegisterActivity"
+            android:name=".common.RegisterActivity"
             android:exported="false" />
     </application>
 

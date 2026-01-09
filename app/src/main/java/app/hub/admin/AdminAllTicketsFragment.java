@@ -1,4 +1,4 @@
-package app.hub;
+package app.hub.admin;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -12,14 +12,17 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
 import java.util.List;
+import app.hub.R;
 import app.hub.api.ApiClient;
 import app.hub.api.ApiService;
+import app.hub.common.Ticket;
+import app.hub.common.TicketAdapter;
 import app.hub.util.TokenManager;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class EmployeeAssignedTicketsFragment extends Fragment {
+public class AdminAllTicketsFragment extends Fragment {
 
     private RecyclerView ticketsRecyclerView;
     private TextView noTicketsTextView;
@@ -30,7 +33,7 @@ public class EmployeeAssignedTicketsFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_employee_assigned_tickets, container, false);
+        View view = inflater.inflate(R.layout.fragment_admin_all_tickets, container, false);
 
         ticketsRecyclerView = view.findViewById(R.id.ticketsRecyclerView);
         noTicketsTextView = view.findViewById(R.id.noTicketsTextView);

@@ -1,4 +1,4 @@
-package app.hub;
+package app.hub.user;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -19,22 +19,24 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
+import app.hub.R;
 import app.hub.api.ApiClient;
 import app.hub.api.ApiService;
 import app.hub.api.LogoutResponse;
 import app.hub.api.UserResponse;
+import app.hub.common.MainActivity;
 import app.hub.util.TokenManager;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class user_Profile extends Fragment {
+public class UserProfileFragment extends Fragment {
 
 	private TokenManager tokenManager;
 	private String currentName;
 	private String currentEmail;
 
-	public user_Profile() {
+	public UserProfileFragment() {
 		// Required empty public constructor
 	}
 
@@ -102,7 +104,7 @@ public class user_Profile extends Fragment {
 	private void fetchUserData() {
 		String token = tokenManager.getToken();
 		if (token == null) {
-			Log.e("user_Profile", "No token available, using cached data only");
+			Log.e("UserProfileFragment", "No token available, using cached data only");
 			fallbackToCachedData();
 			return;
 		}
@@ -110,7 +112,7 @@ public class user_Profile extends Fragment {
 		// Log cached data before API call
 		String cachedName = tokenManager.getName();
 		String cachedEmail = tokenManager.getEmail();
-		Log.d("user_Profile", "Cached data before API call - Name: " + cachedName + ", Email: " + cachedEmail);
+		Log.d("UserProfileFragment", "Cached data before API call - Name: " + cachedName + ", Email: " + cachedEmail);
 
 		ApiService apiService = ApiClient.getApiService();
 		Call<UserResponse> call = apiService.getUser(token);
@@ -119,13 +121,13 @@ public class user_Profile extends Fragment {
 			public void onResponse(@NonNull Call<UserResponse> call, @NonNull Response<UserResponse> response) {
 				if (response.isSuccessful() && response.body() != null) {
 					UserResponse userResponse = response.body();
-					Log.d("user_Profile", "API Response - Success: " + userResponse.isSuccess());
+					Log.d("UserProfileFragment", "API Response - Success: " + userResponse.isSuccess());
 					
 					if (userResponse.isSuccess() && userResponse.getData() != null) {
 						UserResponse.Data userData = userResponse.getData();
 						
 						// Log the raw data from API
-						Log.d("user_Profile", "API Data - Name: " + userData.getName() + 
+						Log.d("UserProfileFragment", "API Data - Name: " + userData.getName() + 
 							", FirstName: " + userData.getFirstName() + 
 							", LastName: " + userData.getLastName() + 
 							", Email: " + userData.getEmail());
@@ -136,7 +138,7 @@ public class user_Profile extends Fragment {
 							String firstName = userData.getFirstName();
 							String lastName = userData.getLastName();
 							
-							Log.d("user_Profile", "Name field is empty, combining firstName and lastName");
+							Log.d("UserProfileFragment", "Name field is empty, combining firstName and lastName");
 							
 							// Build name from firstName and lastName
 							StringBuilder nameBuilder = new StringBuilder();
@@ -151,7 +153,7 @@ public class user_Profile extends Fragment {
 							}
 							
 							currentName = nameBuilder.toString();
-							Log.d("user_Profile", "Combined name: " + currentName);
+							Log.d("UserProfileFragment", "Combined name: " + currentName);
 						} else {
 							currentName = currentName.trim();
 						}
@@ -161,12 +163,12 @@ public class user_Profile extends Fragment {
 							currentEmail = currentEmail.trim();
 						}
 						
-						Log.d("user_Profile", "Final values - Name: " + currentName + ", Email: " + currentEmail);
+						Log.d("UserProfileFragment", "Final values - Name: " + currentName + ", Email: " + currentEmail);
 						
 						// If API returned empty data, fallback to cached data
 						if ((currentName == null || currentName.isEmpty()) && 
 							(currentEmail == null || currentEmail.isEmpty())) {
-							Log.w("user_Profile", "API returned empty data, falling back to cached data");
+							Log.w("UserProfileFragment", "API returned empty data, falling back to cached data");
 							fallbackToCachedData();
 							return;
 						}
@@ -177,7 +179,7 @@ public class user_Profile extends Fragment {
 							String cachedName = tokenManager.getName();
 							if (cachedName != null && !cachedName.trim().isEmpty()) {
 								currentName = cachedName.trim();
-								Log.d("user_Profile", "Using cached name: " + currentName);
+								Log.d("UserProfileFragment", "Using cached name: " + currentName);
 							}
 						}
 						
@@ -187,7 +189,7 @@ public class user_Profile extends Fragment {
 							String cachedEmail = tokenManager.getEmail();
 							if (cachedEmail != null && !cachedEmail.trim().isEmpty()) {
 								currentEmail = cachedEmail.trim();
-								Log.d("user_Profile", "Using cached email: " + currentEmail);
+								Log.d("UserProfileFragment", "Using cached email: " + currentEmail);
 							}
 						}
 						
@@ -239,17 +241,17 @@ public class user_Profile extends Fragment {
 						}
 					} else {
 						// Handle case where response is not successful - fallback to cached data
-						Log.e("user_Profile", "API response not successful or data is null");
+						Log.e("UserProfileFragment", "API response not successful or data is null");
 						fallbackToCachedData();
 					}
 				} else {
 					// Handle error response - fallback to cached data
-					Log.e("user_Profile", "API call not successful. Code: " + response.code());
+					Log.e("UserProfileFragment", "API call not successful. Code: " + response.code());
 					if (response.errorBody() != null) {
 						try {
-							Log.e("user_Profile", "Error body: " + response.errorBody().string());
+							Log.e("UserProfileFragment", "Error body: " + response.errorBody().string());
 						} catch (java.io.IOException e) {
-							Log.e("user_Profile", "Error reading error body", e);
+							Log.e("UserProfileFragment", "Error reading error body", e);
 						}
 					}
 					fallbackToCachedData();
@@ -259,7 +261,7 @@ public class user_Profile extends Fragment {
 			@Override
 			public void onFailure(@NonNull Call<UserResponse> call, @NonNull Throwable t) {
 				// Show error but fallback to cached data
-				Log.e("user_Profile", "API call failed: " + t.getMessage());
+				Log.e("UserProfileFragment", "API call failed: " + t.getMessage());
 				fallbackToCachedData();
 			}
 		});
@@ -452,7 +454,7 @@ public class user_Profile extends Fragment {
 			String cachedName = tokenManager.getName();
 			String cachedEmail = tokenManager.getEmail();
 			
-			Log.d("user_Profile", "Using cached data - Name: " + cachedName + ", Email: " + cachedEmail);
+			Log.d("UserProfileFragment", "Using cached data - Name: " + cachedName + ", Email: " + cachedEmail);
 			
 			if (nameTextView != null) {
 				if (cachedName != null && !cachedName.trim().isEmpty()) {

@@ -1,4 +1,4 @@
-package app.hub;
+package app.hub.common;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -9,6 +9,8 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
+
+import app.hub.R;
 
 public class TicketAdapter extends RecyclerView.Adapter<TicketAdapter.TicketViewHolder> {
 
