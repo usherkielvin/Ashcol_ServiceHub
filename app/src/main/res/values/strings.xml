@@ -69,5 +69,6 @@
     <string name="sign_up_and_start_your_journey_with_nthe_ashcol_family">Sign up and start your journey with\nthe Ashcol family.</string>
     <string name="hey_there">Hey there!</string>
     <string name="create_new_account">Create new account</string>
+    <string name="your_account_was_successfully_created">Your account was successfully created!</string>
 
 </resources>
