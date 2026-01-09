@@ -43,6 +43,7 @@ dependencies {
     implementation(libs.appcompat)
     implementation(libs.material)
     implementation("androidx.core:core:1.12.0")
+    implementation("androidx.core:core-splashscreen:1.2.0")
     implementation("androidx.constraintlayout:constraintlayout:2.2.0")
     implementation("androidx.coordinatorlayout:coordinatorlayout:1.2.0")
     implementation(libs.mediarouter)

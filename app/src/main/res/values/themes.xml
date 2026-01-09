@@ -5,4 +5,14 @@
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
     </style>
+
+    <!-- Splash Screen Theme -->
+    <style name="Theme.App.Starting" parent="Theme.SplashScreen">
+        <!-- The background color of the splash screen -->
+        <item name="windowSplashScreenBackground">#FFFFFF</item>
+        <!-- The icon to display in the center -->
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launchericon</item>
+        <!-- The theme to switch to after the splash screen is done -->
+        <item name="postSplashScreenTheme">@style/Theme.ServiceHubApp</item>
+    </style>
 </resources>
