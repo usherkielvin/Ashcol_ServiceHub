@@ -89,7 +89,7 @@ public class DashboardActivity extends AppCompatActivity {
         Button openSheet = findViewById(R.id.servicebtn);
         openSheet.setOnClickListener(v -> {
             BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(DashboardActivity.this);
-            View view = getLayoutInflater().inflate(R.layout.service_options, null);
+            View view = getLayoutInflater().inflate(R.layout.uc_service_options, null);
 
             Button btnCleaning = view.findViewById(R.id.btn_cleaning);
             Button btnRepair = view.findViewById(R.id.btn_repair);
