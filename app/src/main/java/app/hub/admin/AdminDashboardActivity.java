@@ -1,11 +1,13 @@
-package app.hub;
+package app.hub.admin;
 
 import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
-public class admin_DashboardActivity extends AppCompatActivity {
+import app.hub.R;
+
+public class AdminDashboardActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

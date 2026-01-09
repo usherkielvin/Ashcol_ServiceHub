@@ -1,19 +1,19 @@
-package app.hub;
+package app.hub.user;
 
 import android.os.Bundle;
-
 import androidx.fragment.app.Fragment;
-
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import app.hub.R;
+
 /**
  * A simple {@link Fragment} subclass.
- * Use the {@link user_Home#newInstance} factory method to
+ * Use the {@link UserHomeFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class user_Home extends Fragment {
+public class UserHomeFragment extends Fragment {
 
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -24,7 +24,7 @@ public class user_Home extends Fragment {
     private String mParam1;
     private String mParam2;
 
-    public user_Home() {
+    public UserHomeFragment() {
         // Required empty public constructor
     }
 
@@ -34,11 +34,11 @@ public class user_Home extends Fragment {
      *
      * @param param1 Parameter 1.
      * @param param2 Parameter 2.
-     * @return A new instance of fragment user_Home.
+     * @return A new instance of fragment UserHomeFragment.
      */
     // TODO: Rename and change types and number of parameters
-    public static user_Home newInstance(String param1, String param2) {
-        user_Home fragment = new user_Home();
+    public static UserHomeFragment newInstance(String param1, String param2) {
+        UserHomeFragment fragment = new UserHomeFragment();
         Bundle args = new Bundle();
         args.putString(ARG_PARAM1, param1);
         args.putString(ARG_PARAM2, param2);

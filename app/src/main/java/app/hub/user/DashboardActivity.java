@@ -1,4 +1,4 @@
-package app.hub;
+package app.hub.user;
 
 import android.animation.ObjectAnimator;
 import android.content.Intent;
@@ -27,6 +27,7 @@ import com.servicehub.adapter.ChatAdapter;
 import com.servicehub.model.ChatRequest;
 import com.servicehub.model.ChatResponse;
 import com.servicehub.model.Message;
+import app.hub.R;
 import app.hub.api.ApiClient;
 import app.hub.api.ApiService;
 import java.io.IOException;
@@ -55,7 +56,7 @@ public class DashboardActivity extends AppCompatActivity {
 
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.fragmentContainerView, new user_Home())
+                    .replace(R.id.fragmentContainerView, new UserHomeFragment())
                     .commit();
         }
 
@@ -64,13 +65,13 @@ public class DashboardActivity extends AppCompatActivity {
             Fragment selectedFragment = null;
             int itemId = item.getItemId();
             if (itemId == R.id.home) {
-                selectedFragment = new user_Home();
+                selectedFragment = new UserHomeFragment();
             } else if (itemId == R.id.my_ticket) {
-                selectedFragment = new user_Ticket();
+                selectedFragment = new UserTicketFragment();
             } else if (itemId == R.id.notificationHistory) {
-                selectedFragment = new user_Notification();
+                selectedFragment = new UserNotificationFragment();
             } else if (itemId == R.id.Profile) {
-                selectedFragment = new user_Profile();
+                selectedFragment = new UserProfileFragment();
             }
 
             if (selectedFragment != null) {
@@ -253,7 +254,7 @@ public class DashboardActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         if (item.getItemId() == R.id.action_profile) {
             getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.fragmentContainerView, new user_Profile())
+                    .replace(R.id.fragmentContainerView, new UserProfileFragment())
                     .setReorderingAllowed(true)
                     .addToBackStack(null)
                     .commit();

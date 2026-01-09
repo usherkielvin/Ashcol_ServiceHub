@@ -1,4 +1,4 @@
-package app.hub;
+package app.hub.admin;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -10,13 +10,15 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 
+import app.hub.R;
+import app.hub.common.MainActivity;
 import app.hub.util.TokenManager;
 
-public class EmployeeSettingsFragment extends Fragment {
+public class UsersFragment extends Fragment {
 
     private TokenManager tokenManager;
 
-    public EmployeeSettingsFragment() {
+    public UsersFragment() {
         // Required empty public constructor
     }
 
@@ -24,7 +26,7 @@ public class EmployeeSettingsFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_employee_settings, container, false);
+        return inflater.inflate(R.layout.fragment_users, container, false);
     }
 
     @Override
