@@ -85,6 +85,14 @@ public class MainActivity extends AppCompatActivity {
                         return;
                     }
 
+                    // Allow static admin username without validation
+                    if ("Admin1204".equals(email)) {
+                        if (emailInputLayout != null) {
+                            emailInputLayout.setError(null);
+                        }
+                        return;
+                    }
+
                     EmailValidator.ValidationResult result = EmailValidator.validate(email);
                     if (!result.isValid() && email.length() > 5) {
                         // Only show error if user has typed enough characters
@@ -123,6 +131,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
 	private void login(String email, String password) {
+		// Check for static admin credentials
+		if ("Admin1204".equals(email.trim()) && "@Admin1234".equals(password)) {
+			handleStaticAdminLogin();
+			return;
+		}
+
 		final MaterialButton loginButton = findViewById(R.id.loginButton);
 		if (loginButton != null) {
 			loginButton.setEnabled(false);
@@ -239,6 +253,27 @@ public class MainActivity extends AppCompatActivity {
 				}
 				runOnUiThread(() -> showError("Connection Error", errorMsg));
 			}
+		});
+	}
+
+	private void handleStaticAdminLogin() {
+		final MaterialButton loginButton = findViewById(R.id.loginButton);
+		if (loginButton != null) {
+			loginButton.setEnabled(false);
+			loginButton.setText("Logging in...");
+		}
+
+		// Save admin credentials to TokenManager
+		tokenManager.saveToken("Bearer static_admin_token");
+		tokenManager.saveEmail("admin1204@ashcol.com");
+		tokenManager.saveName("Admin");
+		tokenManager.saveRole("admin");
+
+		// Navigate to admin dashboard
+		runOnUiThread(() -> {
+			Intent intent = new Intent(MainActivity.this, admin_DashboardActivity.class);
+			startActivity(intent);
+			finish();
 		});
 	}
 
