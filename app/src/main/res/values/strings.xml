@@ -54,5 +54,13 @@
     <string name="cleaning">Cleaning</string>
     <string name="installation">Installation</string>
     <string name="maintenance">Maintenance</string>
+    <string name="tell_us_about_yourself">Tell us about yourself</string>
+    <string name="we_just_need_a_few_details_to_get_started">We just need a few details to get started.</string>
+    <string name="fullname">Fullname</string>
+    <string name="email_signup">Email</string>
+    <string name="last_name_signup">Last name</string>
+    <string name="first_name_signup">First name</string>
+    <string name="by_using_ashcol_you_agree_to_the_terms_and_privacy_policy">By using Ashcol, you agree to the Terms and Privacy Policy.</string>
+    <string name="continue_signup">continue</string>
 
 </resources>
