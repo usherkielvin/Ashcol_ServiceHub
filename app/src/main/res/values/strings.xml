@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">ServiceHubApp</string>
+    <string name="app_name">Ashcol</string>
     <string-array name="service_types">
         <item>Select a service type...</item>
         <item>Plumbing</item>
