@@ -50,7 +50,7 @@ public class MainActivity extends AppCompatActivity {
             final Intent intent;
             if ("admin".equals(tokenManager.getRole())) {
                 intent = new Intent(this, AdminDashboardActivity.class);
-            } else if ("employee".equals(tokenManager.getRole()) || "manager".equals(tokenManager.getRole())) {
+            } else if ("employee".equals(tokenManager.getRole()) || "manager".equals(tokenManager.getRole()) || "staff".equals(tokenManager.getRole())) {
                 intent = new Intent(this, EmployeeDashboardActivity.class);
             } else {
                 intent = new Intent(this, DashboardActivity.class);
@@ -207,7 +207,7 @@ public class MainActivity extends AppCompatActivity {
                             final Intent intent;
                             if ("admin".equals(user.getRole())) {
                                 intent = new Intent(MainActivity.this, AdminDashboardActivity.class);
-                            } else if ("employee".equals(user.getRole()) || "manager".equals(user.getRole())) {
+                            } else if ("employee".equals(user.getRole()) || "manager".equals(user.getRole()) || "staff".equals(user.getRole())) {
                                 intent = new Intent(MainActivity.this, EmployeeDashboardActivity.class);
                             } else {
                                 intent = new Intent(MainActivity.this, DashboardActivity.class);
