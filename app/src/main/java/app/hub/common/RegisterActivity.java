@@ -20,6 +20,7 @@ import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -46,11 +47,10 @@ public class RegisterActivity extends AppCompatActivity {
 	private ProgressBar progressBar;
 
     private MaterialButton registerButton;
-    private TextView messageTextView;
-	private TextInputLayout emailInputLayout;
+	private TextInputLayout emailInputLayout, firstNameInputLayout, lastNameInputLayout, usernameInputLayout, passwordInputLayout, confirmPasswordInputLayout, phoneInputLayout;
 
-    private TextView fval, lval, uval, pval, cval, eval, passrate;
-    private TextInputEditText firstNameInput, lastNameInput, usernameInput, passwordInput, confirmPasswordInput;
+    private TextView fval, lval, uval, pval, cval, eval, passrate, phoneVal;
+    private TextInputEditText firstNameInput, lastNameInput, usernameInput, passwordInput, confirmPasswordInput, phoneInput;
     private Button openOTPButton;
 	// Data
 	private TokenManager tokenManager;
@@ -143,6 +143,15 @@ public class RegisterActivity extends AppCompatActivity {
                 validateEmail(s.toString());
             }
         });
+        
+        // Phone Listener
+        phoneInput.addTextChangedListener(new TextWatcher() {
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+            public void afterTextChanged(Editable s) {
+                validatePhone(s.toString());
+            }
+        });
     }
 
 // Add this new method to RegisterActivity.java
@@ -169,73 +178,68 @@ public class RegisterActivity extends AppCompatActivity {
             eval.setVisibility(View.GONE);
         } else {
             // The format is invalid, show the error message
-            eval.setText("Invalid email format");
+            eval.setText("Email format invalid");
             eval.setVisibility(View.VISIBLE);
         }
     }
 
     private void validatePasswordAndStrength(java.lang.String password) {
         if (pval == null || passrate == null) return;
-
-        // --- Part 1: Check for Specific Requirements (updates pval) ---
-
+    
         // Define regex patterns for each requirement
         boolean hasUppercase = password.matches(".*[A-Z].*");
         boolean hasNumber = password.matches(".*\\d.*");
-        boolean hasSymbol = password.matches(".*[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>\\/?].*");
-
+        boolean hasSymbol = password.matches(".*[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>/\\?].*");
+    
         if (password.isEmpty()) {
-            pval.setVisibility(View.GONE); // Hide if empty
-            passrate.setVisibility(View.GONE);
+            pval.setVisibility(View.GONE); // Hide validation requirements if empty
+            passrate.setVisibility(View.GONE); // Hide strength when empty
             return;
         }
-
-        // Build the error message for pval
-        StringBuilder requirements = new StringBuilder();
+    
+        // --- Part 1: Display validation requirements in pval (one at a time) ---
+        String requirement = "";
+                
+        // Check requirements in priority order and show only the first unmet one
         if (password.length() < 8) {
-            requirements.append("• At least 8 characters\n");
+            requirement = "At least 8 characters";
+        } else if (!hasUppercase) {
+            requirement = "One uppercase letter";
+        } else if (!hasNumber) {
+            requirement = "One number";
+        } else if (!hasSymbol) {
+            requirement = "One symbol";
         }
-        if (!hasUppercase) {
-            requirements.append("• One uppercase letter\n");
-        }
-        if (!hasNumber) {
-            requirements.append("• One number\n");
-        }
-        if (!hasSymbol) {
-            requirements.append("• One symbol (@#$...)\n");
-        }
-
-        // Display or hide the requirements list (pval)
-        if (requirements.length() > 0) {
-            // Remove the last newline character for cleaner display
-            pval.setText(requirements.toString().trim());
+                
+        // Display or hide the single requirement (pval)
+        if (!requirement.isEmpty()) {
+            pval.setText(requirement);
             pval.setVisibility(View.VISIBLE);
         } else {
             // All requirements are met, hide the validation message
             pval.setVisibility(View.GONE);
         }
-
-
-        // --- Part 2: Calculate and Display Strength Score (updates passrate) ---
-
+    
+        // --- Part 2: Calculate and Display Strength Score only in passrate (no validation errors) ---
         int strengthScore = 0;
         if (password.length() >= 8) strengthScore++;
         if (password.length() > 10) strengthScore++; // Bonus for longer passwords
         if (hasUppercase) strengthScore++;
         if (hasNumber) strengthScore++;
         if (hasSymbol) strengthScore++;
-
-        passrate.setVisibility(View.VISIBLE); // Show the strength meter
-
-        // Set the text and color based on the score
+    
+        // Always show the strength meter
+        passrate.setVisibility(View.VISIBLE);
+    
+        // Set the text and color based on the score (only strength, no validation errors)
         if (strengthScore < 3) {
-            passrate.setText("Strength: Weak");
+            passrate.setText("Weak");
             passrate.setTextColor(getResources().getColor(android.R.color.holo_red_dark)); // Red for weak
         } else if (strengthScore < 5) {
-            passrate.setText("Strength: Good");
+            passrate.setText("Good");
             passrate.setTextColor(getResources().getColor(android.R.color.holo_orange_dark)); // Orange for good
         } else {
-            passrate.setText("Strength: Strong");
+            passrate.setText("Strong");
             passrate.setTextColor(getResources().getColor(android.R.color.holo_green_dark)); // Green for strong
         }
     }
@@ -250,10 +254,10 @@ public class RegisterActivity extends AppCompatActivity {
 
     private void validateFirstName(String firstName) {
         if (firstName.matches(".*\\d+.*")) {
-            fval.setText("Name cannot contain numbers");
+            fval.setText("Name no numbers");
             fval.setVisibility(View.VISIBLE);
         } else if (!firstName.isEmpty() && firstName.length() < 2) {
-            fval.setText("Name is too short");
+            fval.setText("Name too short");
             fval.setVisibility(View.VISIBLE);
         } else {
             fval.setVisibility(View.GONE);
@@ -262,7 +266,7 @@ public class RegisterActivity extends AppCompatActivity {
 
     private void validateLastName(String lastName) {
         if (lastName.matches(".*\\d+.*")) {
-            lval.setText("Name cannot contain numbers");
+            lval.setText("Name no numbers");
             lval.setVisibility(View.VISIBLE);
         } else {
             lval.setVisibility(View.GONE);
@@ -271,10 +275,10 @@ public class RegisterActivity extends AppCompatActivity {
 
     private void validateUsername(String username) {
         if (username.contains(" ")) {
-            uval.setText("Username cannot contain spaces");
+            uval.setText("Username no spaces");
             uval.setVisibility(View.VISIBLE);
         } else if (!username.isEmpty() && username.length() < 4) {
-            uval.setText("Username is too short (min 4)");
+            uval.setText("Username min 4 chars");
             uval.setVisibility(View.VISIBLE);
         } else {
             uval.setVisibility(View.GONE);
@@ -285,24 +289,53 @@ public class RegisterActivity extends AppCompatActivity {
 
     private void validateConfirmPassword(String password, String confirmPassword) {
         if (!confirmPassword.isEmpty() && !password.equals(confirmPassword)) {
-            cval.setText("Passwords do not match");
+            cval.setText("Passwords mismatch");
             cval.setVisibility(View.VISIBLE);
         } else {
             cval.setVisibility(View.GONE);
         }
     }
 
+    private void validatePhone(String phone) {
+        if (phoneVal == null) return;
+
+        // Hide the validation message if the field is empty
+        if (phone.isEmpty()) {
+            phoneVal.setVisibility(View.GONE);
+            return;
+        }
+
+        // Basic phone number validation - at least 10 digits, can include common separators
+        // This pattern allows for various phone number formats like: 1234567890, 123-456-7890, (123) 456-7890, etc.
+        String phoneRegex = "^\\(?([0-9]{3})\\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})$";
+        
+        // Also check for a simpler pattern that just checks if it has at least 10 digits
+        String digitOnly = phone.replaceAll("[^0-9]", "");
+        
+        if (digitOnly.length() >= 10 && digitOnly.length() <= 15) { // Reasonable phone number length
+            phoneVal.setVisibility(View.GONE);
+        } else {
+            phoneVal.setText("Phone 10 digits min");
+            phoneVal.setVisibility(View.VISIBLE);
+        }
+    }
 
     // Initialize all view components
 	private void initializeViews() {
 		progressBar = findViewById(R.id.progressBar);
-		messageTextView = findViewById(R.id.messageTextView);
 		emailInputLayout = findViewById(R.id.emailInputLayout);
+		firstNameInputLayout = findViewById(R.id.firstNameInputLayout);
+		lastNameInputLayout = findViewById(R.id.lastNameInputLayout);
+		usernameInputLayout = findViewById(R.id.usernameInputLayout);
+		passwordInputLayout = findViewById(R.id.passwordInputLayout);
+		confirmPasswordInputLayout = findViewById(R.id.confirmPasswordInputLayout);
+		phoneInputLayout = findViewById(R.id.phoneInputLayout);
         firstNameInput = findViewById(R.id.firstNameInput);
         lastNameInput = findViewById(R.id.lastNameInput);
         usernameInput = findViewById(R.id.usernameInput);
         passwordInput = findViewById(R.id.passwordInput);
         confirmPasswordInput = findViewById(R.id.confirmPasswordInput);
+        phoneInput = findViewById(R.id.etPhone);
         openOTPButton = findViewById(R.id.OpenOTP);
         registerButton = findViewById(R.id.registerButton);
 
@@ -314,6 +347,7 @@ public class RegisterActivity extends AppCompatActivity {
         cval = findViewById(R.id.CPass_val);
         eval = findViewById(R.id.Email_val); // You already had an 'eval'
         passrate = findViewById(R.id.passrate);
+        phoneVal = findViewById(R.id.phone_val);
 
         // Hide all validation text views by default
         fval.setVisibility(View.GONE);
@@ -322,6 +356,7 @@ public class RegisterActivity extends AppCompatActivity {
         pval.setVisibility(View.GONE);
         cval.setVisibility(View.GONE);
         eval.setVisibility(View.GONE);
+        phoneVal.setVisibility(View.GONE);
 
 
 	}
@@ -361,7 +396,7 @@ public class RegisterActivity extends AppCompatActivity {
 		                           error.contains("exists");
 
 		if (isEmailTakenError) {
-			emailInputLayout.setError(null);
+			eval.setVisibility(View.GONE); // Hide our custom TextView instead
 		}
 	}
 
@@ -372,7 +407,6 @@ public class RegisterActivity extends AppCompatActivity {
         // Use your 'eval' TextView instead of the TextInputLayout's error
         if (email.isEmpty()) {
             eval.setVisibility(View.GONE); // Hide when empty
-            emailInputLayout.setError(null); // Also clear the layout's error
             return;
         }
 
@@ -383,16 +417,23 @@ public class RegisterActivity extends AppCompatActivity {
         boolean isEmailTakenError = currentLayoutError.contains("already") || currentLayoutError.contains("taken");
 
         if (!result.isValid() && email.length() > 5) {
-            eval.setText(result.getMessage());
+            // Use simplified messages without punctuation
+            String simpleMessage = result.getMessage();
+            if (simpleMessage.contains("Invalid email format")) {
+                simpleMessage = "Email format invalid";
+            } else if (simpleMessage.contains("Invalid email domain")) {
+                simpleMessage = "Email domain invalid";
+            } else if (simpleMessage.contains("Please use a real email address")) {
+                simpleMessage = "Use real email";
+            }
+            eval.setText(simpleMessage);
             eval.setVisibility(View.VISIBLE);
-            emailInputLayout.setError(null); // Clear layout error to avoid double messages
         } else if (isEmailTakenError) {
             // If the email format is now valid, but it's still "taken", hide our custom TextView
             eval.setVisibility(View.GONE);
         } else {
             // If valid, hide our custom TextView
             eval.setVisibility(View.GONE);
-            emailInputLayout.setError(null); // Clear any old errors
         }
     }
 
@@ -402,7 +443,6 @@ public class RegisterActivity extends AppCompatActivity {
         }
 
         registerButton.setOnClickListener(v -> {
-            hideMessage();
 
             // Get input values
             String username = getTextFromEditText(R.id.usernameInput);
@@ -411,19 +451,20 @@ public class RegisterActivity extends AppCompatActivity {
             String email = getTextFromEditText(R.id.emailInput);
             String password = getTextFromEditText(R.id.passwordInput);
             String confirmPassword = getTextFromEditText(R.id.confirmPasswordInput);
+            String phone = getTextFromEditText(R.id.etPhone);
 
             // Validate and register
-            if (validateInput(username, firstName, lastName, email, password, confirmPassword)) {
+            if (validateInput(username, firstName, lastName, email, password, confirmPassword, phone)) {
                 // ---> KEY CHANGE: Disable the button right before making the API call <---
                 registerButton.setEnabled(false);
-                registerUser(username, firstName, lastName, email, password, confirmPassword);
+                registerUser(username, firstName, lastName, email, password, confirmPassword, phone);
             }
         });
     }
 
 	// Setup back to login button
 	private void setupBackToLoginButton() {
-		MaterialButton backButton = findViewById(R.id.backToLoginButton);
+		ImageButton backButton = findViewById(R.id.backToLoginButton);
 		if (backButton == null) {
 			return;
 		}
@@ -445,83 +486,112 @@ public class RegisterActivity extends AppCompatActivity {
 	}
 
 	// Validate all input fields before registration
-	private boolean validateInput(String username, String firstName, String lastName, String email, String password, String confirmPassword) {
-		StringBuilder errors = new StringBuilder();
+	private boolean validateInput(String username, String firstName, String lastName, String email, String password, String confirmPassword, String phone) {
+		boolean isValid = true;
+
+		// Clear previous errors from TextViews (not setError)
+		uval.setVisibility(View.GONE);
+		fval.setVisibility(View.GONE);
+		lval.setVisibility(View.GONE);
+		eval.setVisibility(View.GONE);
+		pval.setVisibility(View.GONE);
+		cval.setVisibility(View.GONE);
+		phoneVal.setVisibility(View.GONE);
 
 		// Validate username
 		if (username.isEmpty()) {
-			errors.append("• Please enter your username\n");
+			uval.setText("Username required");
+			uval.setVisibility(View.VISIBLE);
+			isValid = false;
 		}
 
 		// Validate first name
 		if (firstName.isEmpty()) {
-			errors.append("• Please enter your first name\n");
+			fval.setText("First name required");
+			fval.setVisibility(View.VISIBLE);
+			isValid = false;
 		}
 
 		// Validate last name
 		if (lastName.isEmpty()) {
-			errors.append("• Please enter your last name\n");
+			lval.setText("Last name required");
+			lval.setVisibility(View.VISIBLE);
+			isValid = false;
 		}
 
 		// Validate email
 		if (email.isEmpty()) {
-			errors.append("• Please enter your email\n");
+			eval.setText("Email required");
+			eval.setVisibility(View.VISIBLE);
+			isValid = false;
 		} else {
 			EmailValidator.ValidationResult result = EmailValidator.validate(email);
 			if (!result.isValid()) {
-				errors.append("• ").append(result.getMessage()).append("\n");
+				// Use simplified messages without punctuation
+				String simpleMessage = result.getMessage();
+				if (simpleMessage.contains("Invalid email format")) {
+					simpleMessage = "Email format invalid";
+				} else if (simpleMessage.contains("Invalid email domain")) {
+					simpleMessage = "Email domain invalid";
+				} else if (simpleMessage.contains("Please use a real email address")) {
+					simpleMessage = "Use real email";
+				} else if (simpleMessage.contains("Email is required")) {
+					simpleMessage = "Email required";
+				}
+				eval.setText(simpleMessage);
+				eval.setVisibility(View.VISIBLE);
+				isValid = false;
 			}
 		}
 
 		// Validate password
 		if (password.isEmpty()) {
-			errors.append("• Please enter a password\n");
+			pval.setText("Password required");
+			pval.setVisibility(View.VISIBLE);
+			isValid = false;
 		} else if (password.length() < 8) {
-			errors.append("• Password must be at least 8 characters\n");
+			pval.setText("Password 8 chars min");
+			pval.setVisibility(View.VISIBLE);
+			isValid = false;
 		}
 
 		// Validate password confirmation
 		if (confirmPassword.isEmpty()) {
-			errors.append("• Please confirm your password\n");
+			cval.setText("Confirm password");
+			cval.setVisibility(View.VISIBLE);
+			isValid = false;
 		} else if (!password.equals(confirmPassword)) {
-			errors.append("• Passwords do not match\n");
+			cval.setText("Passwords mismatch");
+			cval.setVisibility(View.VISIBLE);
+			isValid = false;
 		}
 
-		// Show errors if any
-		if (errors.length() > 0) {
-			showMessage(errors.toString().trim());
-			return false;
-		}
+		// Validate phone number
+		if (phone.isEmpty()) {
+			phoneVal.setText("Phone required");
+			phoneVal.setVisibility(View.VISIBLE);
+			isValid = false;
+		} else {
+            // Basic phone number validation - check if it has at least 10 digits
+            String digitOnly = phone.replaceAll("[^0-9]", "");
+            if (digitOnly.length() < 10) {
+                phoneVal.setText("Phone 10 digits min");
+                phoneVal.setVisibility(View.VISIBLE);
+                isValid = false;
+            }
+        }
 
-		return true;
+		return isValid;
 	}
 
-	// Show error message to user
-	private void showMessage(String message) {
-		if (messageTextView == null) {
-			return;
-		}
-
-		messageTextView.setText(message);
-		messageTextView.setTextColor(ContextCompat.getColor(this, android.R.color.holo_red_dark));
-		messageTextView.setVisibility(View.VISIBLE);
-	}
-
-	// Hide the message TextView
-	private void hideMessage() {
-		if (messageTextView != null) {
-			messageTextView.setVisibility(View.GONE);
-			messageTextView.setText("");
-		}
-	}
 
 	// Register a new user with the API
-	private void registerUser(String username, String firstName, String lastName, String email, String password, String confirmPassword) {
+	private void registerUser(String username, String firstName, String lastName, String email, String password, String confirmPassword, String phone) {
 		setLoadingState(true);
 
 		// Create API request
 		ApiService apiService = ApiClient.getApiService();
-		RegisterRequest request = new RegisterRequest(username, firstName, lastName, email, password, confirmPassword, "customer");
+		RegisterRequest request = new RegisterRequest(username, firstName, lastName, email, phone, password, confirmPassword, "customer");
 
 		// Make API call
 		Call<RegisterResponse> call = apiService.register(request);
@@ -650,7 +720,8 @@ public class RegisterActivity extends AppCompatActivity {
 				String emailError = normalizeEmailError(emailErrors[0]);
 				runOnUiThread(() -> {
 					if (emailInputLayout != null) {
-						emailInputLayout.setError(emailError);
+						eval.setText(emailError);
+						eval.setVisibility(View.VISIBLE);
 					}
 				});
 				return;
@@ -667,7 +738,12 @@ public class RegisterActivity extends AppCompatActivity {
 		}
 
 		final String finalMessage = errorMsg != null ? errorMsg : "Registration failed";
-		runOnUiThread(() -> showMessage(finalMessage));
+		runOnUiThread(() -> {
+			if (emailInputLayout != null) {
+				eval.setText(finalMessage);
+				eval.setVisibility(View.VISIBLE);
+			}
+		});
 	}
 
 	// Get error message from HTTP error response
@@ -692,7 +768,8 @@ public class RegisterActivity extends AppCompatActivity {
 							String emailError = normalizeEmailError(emailErrors[0]);
 							runOnUiThread(() -> {
 								if (emailInputLayout != null) {
-									emailInputLayout.setError(emailError);
+									eval.setText(emailError);
+									eval.setVisibility(View.VISIBLE);
 								}
 							});
 							return emailError;
@@ -716,7 +793,8 @@ public class RegisterActivity extends AppCompatActivity {
 		if (statusCode == 409) {
 			runOnUiThread(() -> {
 				if (emailInputLayout != null) {
-					emailInputLayout.setError("Email already used");
+					eval.setText("Email already used");
+					eval.setVisibility(View.VISIBLE);
 				}
 			});
 			return "Email already exists. Please use a different email.";
@@ -757,7 +835,8 @@ public class RegisterActivity extends AppCompatActivity {
 					String emailError = normalizeEmailError(emailErrors[0]);
 					runOnUiThread(() -> {
 						if (emailInputLayout != null) {
-							emailInputLayout.setError(emailError);
+							eval.setText(emailError);
+							eval.setVisibility(View.VISIBLE);
 						}
 					});
 					return emailError;
@@ -786,17 +865,17 @@ public class RegisterActivity extends AppCompatActivity {
 		if (error.contains("already") || error.contains("taken") || error.contains("unique")) {
 			return "Email already used";
 		}
-		return error;
+		// Remove punctuation from error messages
+		return error.replace(".", "").replace(":", "").replace("!", "").replace(";", "").trim();
 	}
 	// Show error message to user
 	private void showErrorMessage(String message, int statusCode) {
 		runOnUiThread(() -> {
-			showMessage(message);
-			// Only show dialog if email error is not already shown in field
-			boolean emailErrorShown = emailInputLayout != null && emailInputLayout.getError() != null;
-			if (statusCode != 422 || !emailErrorShown) {
-				showError("Registration Failed", message);
+			if (emailInputLayout != null) {
+				eval.setText(message);
+				eval.setVisibility(View.VISIBLE);
 			}
+			showError("Registration Failed", message);
 		});
 	}
 
@@ -805,7 +884,10 @@ public class RegisterActivity extends AppCompatActivity {
 		Log.e("RegistrationError", "Registration failed with exception", t);
 		String errorMsg = getConnectionErrorMessage(t);
 		runOnUiThread(() -> {
-			showMessage(errorMsg);
+			if (emailInputLayout != null) {
+				eval.setText(errorMsg);
+				eval.setVisibility(View.VISIBLE);
+			}
 			showError("Connection Error", errorMsg);
 		});
 	}
@@ -864,9 +946,7 @@ public class RegisterActivity extends AppCompatActivity {
 				progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE);
 			}
 
-			if (!isLoading) {
-				hideMessage();
-			}
+
 		});
 	}
 
@@ -975,7 +1055,7 @@ public class RegisterActivity extends AppCompatActivity {
 			// Validate code length
 			if (code.length() != 6) {
 				if (codeInputLayout != null) {
-					codeInputLayout.setError("Please enter a 6-digit code");
+					codeInputLayout.setError("Enter 6-digit code");
 				}
 				return;
 			}
@@ -1087,7 +1167,7 @@ public class RegisterActivity extends AppCompatActivity {
 	// Handle verification error
 	private void handleVerificationError(int statusCode) {
 		String errorMsg = (statusCode == 400) ? 
-			"Invalid or expired verification code. Please request a new code." :
+			"Invalid/expired code" :
 			"Invalid verification code";
 		
 		showError("Verification Failed", errorMsg);
@@ -1107,7 +1187,7 @@ public class RegisterActivity extends AppCompatActivity {
 				if (response.isSuccessful() && response.body() != null) {
 					handleResendSuccess(response.body());
 				} else {
-					showError("Error", "Failed to send verification code. Please try again.");
+					showError("Error", "Send failed");
 				}
 			}
 
@@ -1150,39 +1230,54 @@ public class RegisterActivity extends AppCompatActivity {
 	// Format errors into a readable string
 	private String formatErrors(RegisterResponse.Errors errors) {
 		if (errors == null) {
-			return "Please check your input";
+			return "Check input";
 		}
 
 		StringBuilder errorMessage = new StringBuilder();
 		
 		// Format email errors
 		if (errors.getEmail() != null && errors.getEmail().length > 0) {
-			errorMessage.append("Email: ").append(errors.getEmail()[0]).append("\n");
+			String emailError = errors.getEmail()[0];
+			// Simplify and remove punctuation
+			if (emailError.toLowerCase().contains("already") || emailError.toLowerCase().contains("taken")) {
+				emailError = "Email taken";
+			} else {
+				emailError = emailError.replace(".", "").replace(":", "").replace("!", "").replace(";", "").trim();
+			}
+			errorMessage.append(emailError).append("\n");
 		}
 		
 		// Format password errors
 		if (errors.getPassword() != null && errors.getPassword().length > 0) {
-			errorMessage.append("Password: ").append(errors.getPassword()[0]).append("\n");
+			String passwordError = errors.getPassword()[0];
+			passwordError = passwordError.replace(".", "").replace(":", "").replace("!", "").replace(";", "").trim();
+			errorMessage.append(passwordError).append("\n");
 		}
 		
 		// Format username errors
 		if (errors.getUsername() != null && errors.getUsername().length > 0) {
-			errorMessage.append("Username: ").append(errors.getUsername()[0]).append("\n");
+			String usernameError = errors.getUsername()[0];
+			usernameError = usernameError.replace(".", "").replace(":", "").replace("!", "").replace(";", "").trim();
+			errorMessage.append(usernameError).append("\n");
 		}
 
 		// Format first name errors
 		if (errors.getFirstName() != null && errors.getFirstName().length > 0) {
-			errorMessage.append("First Name: ").append(errors.getFirstName()[0]).append("\n");
+			String firstNameError = errors.getFirstName()[0];
+			firstNameError = firstNameError.replace(".", "").replace(":", "").replace("!", "").replace(";", "").trim();
+			errorMessage.append(firstNameError).append("\n");
 		}
 
 		// Format last name errors
 		if (errors.getLastName() != null && errors.getLastName().length > 0) {
-			errorMessage.append("Last Name: ").append(errors.getLastName()[0]).append("\n");
+			String lastNameError = errors.getLastName()[0];
+			lastNameError = lastNameError.replace(".", "").replace(":", "").replace("!", "").replace(";", "").trim();
+			errorMessage.append(lastNameError).append("\n");
 		}
 		
 		return errorMessage.length() > 0 ? 
 			errorMessage.toString().trim() : 
-			"Please check your input";
+			"Check input";
 	}
 
 	// Show error dialog to user
