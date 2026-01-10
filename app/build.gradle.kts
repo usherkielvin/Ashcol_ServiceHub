@@ -50,6 +50,8 @@ dependencies {
     implementation(libs.fragment)
     implementation(libs.activity)
     implementation(libs.gridlayout)
+    implementation(libs.navigation.fragment)
+    implementation(libs.navigation.ui)
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
