@@ -57,7 +57,7 @@
             android:layout_marginStart="28dp"
             android:layout_marginTop="46dp"
             android:layout_marginEnd="24dp"
-            android:layout_marginBottom="619dp"
+            android:layout_marginBottom="590dp"
             android:clickable="true"
             android:contentDescription="home"
             android:src="@drawable/home"
@@ -65,10 +65,10 @@
             app:backgroundTint="@color/white"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/QSRepair"
-            app:layout_constraintHorizontal_bias="0.322"
+            app:layout_constraintHorizontal_bias="0.29"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/searchView"
-            app:layout_constraintVertical_bias="0.0" />
+            app:layout_constraintVertical_bias="1.0" />
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/QSInstallation"
@@ -76,33 +76,33 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="46dp"
             android:layout_marginEnd="24dp"
-            android:layout_marginBottom="619dp"
+            android:layout_marginBottom="590dp"
             android:clickable="true"
-            android:src="@drawable/wind"
             android:contentDescription="installation"
+            android:src="@drawable/wind"
             app:backgroundTint="@color/white"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/QSMaintenance"
-            app:layout_constraintHorizontal_bias="0.919"
+            app:layout_constraintHorizontal_bias="0.906"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/searchView"
-            app:layout_constraintVertical_bias="0.0" />
+            app:layout_constraintVertical_bias="1.0" />
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/QSRepair"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="46dp"
-            android:layout_marginEnd="32dp"
-            android:layout_marginBottom="619dp"
+            android:layout_marginEnd="40dp"
+            android:layout_marginBottom="590dp"
             android:clickable="true"
-            android:src="@drawable/wrench"
             android:contentDescription="repair"
+            android:src="@drawable/wrench"
             app:backgroundTint="@color/white"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/QSInstallation"
             app:layout_constraintTop_toBottomOf="@+id/searchView"
-            app:layout_constraintVertical_bias="0.0" />
+            app:layout_constraintVertical_bias="1.0" />
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/QSMaintenance"
@@ -110,15 +110,29 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="46dp"
             android:layout_marginEnd="28dp"
-            android:layout_marginBottom="619dp"
+            android:layout_marginBottom="590dp"
             android:clickable="true"
-            android:src="@drawable/nut"
             android:contentDescription="maintenance"
+            android:src="@drawable/nut"
             app:backgroundTint="@color/white"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/searchView"
-            app:layout_constraintVertical_bias="0.0" />
+            app:layout_constraintVertical_bias="1.0" />
+
+        <TextView
+            android:id="@+id/textView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp"
+            android:text="Quick Services"
+            android:textColor="#215531"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toTopOf="@+id/QSHome"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.105"
+            app:layout_constraintStart_toStartOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
