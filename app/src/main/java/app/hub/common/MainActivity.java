@@ -55,9 +55,9 @@ public class MainActivity extends AppCompatActivity {
         // Check if already logged in
         if (tokenManager.isLoggedIn()) {
             final Intent intent;
-            if ("admin".equals(tokenManager.getRole())) {
+            if ("admin".equals(tokenManager.getRole()) || "manager".equals(tokenManager.getRole())) {
                 intent = new Intent(this, AdminDashboardActivity.class);
-            } else if ("employee".equals(tokenManager.getRole()) || "manager".equals(tokenManager.getRole()) || "staff".equals(tokenManager.getRole())) {
+            } else if ("employee".equals(tokenManager.getRole()) || "staff".equals(tokenManager.getRole())) {
                 intent = new Intent(this, EmployeeDashboardActivity.class);
             } else {
                 intent = new Intent(this, DashboardActivity.class);
@@ -244,9 +244,9 @@ public class MainActivity extends AppCompatActivity {
 						// Navigate to dashboard
 						runOnUiThread(() -> {
                             final Intent intent;
-                            if ("admin".equals(user.getRole())) {
+                            if ("admin".equals(user.getRole()) || "manager".equals(user.getRole())) {
                                 intent = new Intent(MainActivity.this, AdminDashboardActivity.class);
-                            } else if ("employee".equals(user.getRole()) || "manager".equals(user.getRole()) || "staff".equals(user.getRole())) {
+                            } else if ("employee".equals(user.getRole()) || "staff".equals(user.getRole())) {
                                 intent = new Intent(MainActivity.this, EmployeeDashboardActivity.class);
                             } else {
                                 intent = new Intent(MainActivity.this, DashboardActivity.class);
@@ -338,9 +338,9 @@ public class MainActivity extends AppCompatActivity {
 		tokenManager.saveName("Manager");
 		tokenManager.saveRole("manager");
 
-		// Navigate to employee dashboard (managers typically use employee dashboard)
+		// Navigate to admin dashboard (managers use the same dashboard as admin)
 		runOnUiThread(() -> {
-			Intent intent = new Intent(MainActivity.this, EmployeeDashboardActivity.class);
+			Intent intent = new Intent(MainActivity.this, AdminDashboardActivity.class);
 			startActivity(intent);
 			finish();
 		});
