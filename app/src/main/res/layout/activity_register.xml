@@ -31,27 +31,28 @@
 
             <TextView
                 android:id="@+id/registerTitle"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="40dp"
+                android:layout_marginStart="16dp"
                 android:layout_marginTop="16dp"
                 android:fontFamily="sans-serif-medium"
                 android:text="@string/tell_us_about_yourself"
                 android:textColor="#000000"
                 android:textSize="24sp"
                 android:textStyle="bold"
+                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toEndOf="@+id/backToLoginButton"
                 app:layout_constraintTop_toTopOf="parent" />
 
             <TextView
                 android:id="@+id/tvSubtitle"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="24dp"
-                android:layout_marginTop="28dp"
+                android:layout_marginTop="16dp"
                 android:text="@string/we_just_need_a_few_details_to_get_started"
                 android:textColor="#4C4A53"
                 android:textSize="16sp"
+                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/registerTitle" />
 
@@ -93,18 +94,6 @@
                     android:textSize="14sp" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <TextView
-                android:id="@+id/fname_val"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="#FF0000"
-                android:textSize="12sp"
-                android:visibility="gone"
-                tools:text="Invalid first name"
-                tools:visibility="visible"
-                app:layout_constraintStart_toStartOf="@+id/firstNameInputLayout"
-                app:layout_constraintTop_toBottomOf="@+id/firstNameInputLayout" />
-
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/lastNameInputLayout"
                 android:layout_width="0dp"
@@ -131,6 +120,18 @@
                     android:textColorHint="#979797"
                     android:textSize="14sp" />
             </com.google.android.material.textfield.TextInputLayout>
+
+            <TextView
+                android:id="@+id/fname_val"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#FF0000"
+                android:textSize="12sp"
+                android:visibility="gone"
+                tools:text="Invalid first name"
+                tools:visibility="visible"
+                app:layout_constraintStart_toStartOf="@+id/firstNameInputLayout"
+                app:layout_constraintTop_toBottomOf="@+id/firstNameInputLayout" />
 
             <TextView
                 android:id="@+id/lname_val"
@@ -297,7 +298,7 @@
                 android:textColor="#000000"
                 android:textSize="16sp"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/phoneInputLayout" />
+                app:layout_constraintTop_toBottomOf="@id/phone_val" />
 
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/passwordInputLayout"
@@ -411,17 +412,25 @@
                 android:id="@+id/messageTextView"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+<<<<<<< HEAD
+                android:layout_marginTop="16dp"
+                android:textColor="#FF0000"
+                android:textSize="14sp"
+                android:visibility="gone"
+                app:layout_constraintTop_toBottomOf="@id/CPass_val"
+=======
                 android:layout_marginTop="8dp"
                 android:textColor="#FF0000"
                 android:textSize="14sp"
                 android:visibility="gone"
+>>>>>>> c5e4621a4e6fb757c4d07c7d7fd7cec63d2b21e5
                 tools:text="Error message here"
                 tools:visibility="visible"
                 app:layout_constraintTop_toBottomOf="@id/rememberMeCheckbox" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/registerButton"
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="56dp"
                 android:layout_marginTop="24dp"
                 android:backgroundTint="#00B050"
@@ -431,9 +440,12 @@
                 android:textSize="16sp"
                 android:textStyle="bold"
                 app:cornerRadius="8dp"
+<<<<<<< HEAD
+=======
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.0"
                 app:layout_constraintStart_toStartOf="parent"
+>>>>>>> c5e4621a4e6fb757c4d07c7d7fd7cec63d2b21e5
                 app:layout_constraintTop_toBottomOf="@id/messageTextView" />
 
             <ProgressBar
@@ -467,7 +479,6 @@
                 android:textColor="#3A383F"
                 android:textSize="13sp"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.0"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/imageView" />
 
@@ -475,8 +486,10 @@
                 android:id="@+id/OpenOTP"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
                 android:text="Button"
                 android:visibility="gone"
+                app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/tvFooter"/>
 
         </androidx.constraintlayout.widget.ConstraintLayout>
