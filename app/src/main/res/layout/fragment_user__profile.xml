@@ -18,11 +18,11 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="24dp"
                 android:layout_marginBottom="24dp"
+                android:background="@android:color/white"
                 android:gravity="center"
-                android:background="@android:color/white">
+                android:orientation="vertical"
+                android:padding="24dp">
 
                 <!-- Profile Image Placeholder -->
                 <View
@@ -38,11 +38,11 @@
                     android:id="@+id/nameTextView"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
                     android:text="Loading..."
                     android:textColor="#FF215531"
                     android:textSize="24sp"
                     android:textStyle="bold"
-                    android:layout_marginBottom="8dp"
                     tools:text="John Doe" />
 
                 <!-- Email -->
