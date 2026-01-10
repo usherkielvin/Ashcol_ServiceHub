@@ -17,6 +17,7 @@ import android.text.TextWatcher;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.inputmethod.EditorInfo;
+import android.widget.CheckBox;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -72,6 +73,7 @@ public class MainActivity extends AppCompatActivity {
         TextInputLayout emailInputLayout = findViewById(R.id.emailInputLayout);
         MaterialButton loginButton = findViewById(R.id.loginButton);
         TextView registerButton = findViewById(R.id.registerButton);
+        CheckBox termsCheckbox = findViewById(R.id.termsCheckbox);
 
         // Real-time email validation
         if (emailInput != null) {
@@ -151,12 +153,19 @@ public class MainActivity extends AppCompatActivity {
     private void performLogin() {
         TextInputEditText emailInput = findViewById(R.id.emailInput);
         TextInputEditText passwordInput = findViewById(R.id.passwordInput);
+        CheckBox termsCheckbox = findViewById(R.id.termsCheckbox);
         
         String email = emailInput != null ? emailInput.getText().toString().trim() : "";
         String password = passwordInput != null ? passwordInput.getText().toString() : "";
 
         if (email.isEmpty() || password.isEmpty()) {
             Toast.makeText(this, "Please enter email and password", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Check if terms and conditions checkbox is checked
+        if (termsCheckbox == null || !termsCheckbox.isChecked()) {
+            Toast.makeText(this, "Please accept the terms and conditions to continue", Toast.LENGTH_SHORT).show();
             return;
         }
 
