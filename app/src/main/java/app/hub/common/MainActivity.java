@@ -15,6 +15,8 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.KeyEvent;
+import android.view.inputmethod.EditorInfo;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -122,19 +124,43 @@ public class MainActivity extends AppCompatActivity {
             });
         }
 
-        if (loginButton != null) {
-            loginButton.setOnClickListener(v -> {
-                String email = emailInput != null ? emailInput.getText().toString().trim() : "";
-                String password = passwordInput != null ? passwordInput.getText().toString() : "";
-
-                if (email.isEmpty() || password.isEmpty()) {
-                    Toast.makeText(this, "Please enter email and password", Toast.LENGTH_SHORT).show();
-                    return;
+        // Handle Enter key press on password field to trigger login
+        if (passwordInput != null) {
+            passwordInput.setOnEditorActionListener((v, actionId, event) -> {
+                if (actionId == EditorInfo.IME_ACTION_DONE || actionId == EditorInfo.IME_ACTION_GO) {
+                    performLogin();
+                    return true;
                 }
-
-                login(email, password);
+                // Also handle physical Enter key press
+                if (event != null && event.getKeyCode() == KeyEvent.KEYCODE_ENTER && event.getAction() == KeyEvent.ACTION_DOWN) {
+                    performLogin();
+                    return true;
+                }
+                return false;
             });
         }
+
+        if (loginButton != null) {
+            loginButton.setOnClickListener(v -> performLogin());
+        }
+    }
+
+    /**
+     * Performs login action - validates inputs and calls login method
+     */
+    private void performLogin() {
+        TextInputEditText emailInput = findViewById(R.id.emailInput);
+        TextInputEditText passwordInput = findViewById(R.id.passwordInput);
+        
+        String email = emailInput != null ? emailInput.getText().toString().trim() : "";
+        String password = passwordInput != null ? passwordInput.getText().toString() : "";
+
+        if (email.isEmpty() || password.isEmpty()) {
+            Toast.makeText(this, "Please enter email and password", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        login(email, password);
     }
 
 	private void login(String email, String password) {
