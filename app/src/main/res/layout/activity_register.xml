@@ -397,33 +397,22 @@
                 app:layout_constraintStart_toStartOf="@+id/confirmPasswordInputLayout"
                 app:layout_constraintTop_toBottomOf="@+id/confirmPasswordInputLayout" />
 
-            <CheckBox
-                android:id="@+id/rememberMeCheckbox"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="@string/remember_me"
-                android:textColor="#333"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/CPass_val" />
-
             <TextView
                 android:id="@+id/messageTextView"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
                 android:textColor="#FF0000"
                 android:textSize="14sp"
                 android:visibility="gone"
+                tools:layout_editor_absoluteX="24dp"
+                tools:layout_editor_absoluteY="874dp"
                 tools:text="Error message here"
-                tools:visibility="visible"
-                app:layout_constraintTop_toBottomOf="@id/rememberMeCheckbox" />
+                tools:visibility="visible" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/registerButton"
                 android:layout_width="0dp"
                 android:layout_height="56dp"
-                android:layout_marginTop="24dp"
                 android:backgroundTint="#00B050"
                 android:text="@string/continue_signup"
                 android:textAllCaps="false"
@@ -431,10 +420,12 @@
                 android:textSize="16sp"
                 android:textStyle="bold"
                 app:cornerRadius="8dp"
+                app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.0"
+                app:layout_constraintHorizontal_bias="1.0"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/messageTextView" />
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_bias="0.803" />
 
             <ProgressBar
                 android:id="@+id/progressBar"
