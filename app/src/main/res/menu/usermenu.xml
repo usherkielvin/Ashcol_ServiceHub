@@ -4,20 +4,20 @@
     xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
-        android:id="@+id/home"
-        android:icon="@drawable/outline_background_dot_large_24"
-        android:title="home" />
+        android:id="@+id/homebtn"
+        android:icon="@drawable/ic_home"
+        android:title="Home" />
     <item
         android:id="@+id/my_ticket"
-        android:icon="@drawable/baseline_archive_24"
+        android:icon="@drawable/ic_ticket"
         android:title="myticket" />
     <item
         android:id="@+id/blank"
         android:title="blank" />
     <item
-        android:id="@+id/notificationHistory"
-        android:icon="@drawable/ic_chat"
-        android:title="notifhistory" />
+        android:id="@+id/activitybtn"
+        android:icon="@drawable/ic_activity"
+        android:title="Activity" />
     <item
         android:id="@+id/Profile"
         android:icon="@drawable/ic_profile"

@@ -70,5 +70,9 @@
     <string name="hey_there">Hey there!</string>
     <string name="create_new_account">Create new account</string>
     <string name="your_account_was_successfully_created">Your account was successfully created!</string>
+    <string name="Maintenance">maintenance</string>
+    <string name="Repair">repair</string>
+    <string name="Installation">installation</string>
+    <string name="Home">home</string>
 
 </resources>

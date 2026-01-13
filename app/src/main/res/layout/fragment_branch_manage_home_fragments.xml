@@ -57,68 +57,139 @@
             android:layout_marginStart="28dp"
             android:layout_marginTop="46dp"
             android:layout_marginEnd="24dp"
-            android:layout_marginBottom="619dp"
+            android:layout_marginBottom="590dp"
             android:clickable="true"
             android:contentDescription="home"
             android:src="@drawable/home"
             android:tint="@color/light_green"
             app:backgroundTint="@color/white"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/QSRepair"
-            app:layout_constraintHorizontal_bias="0.322"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/searchView"
-            app:layout_constraintVertical_bias="0.0" />
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.253">
 
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/QSInstallation"
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:paddingTop="10dp"
+                android:paddingBottom="10dp">
+
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/QSCleaning"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:clickable="true"
+                    android:contentDescription="@string/Home"
+                    android:src="@drawable/home"
+                    android:tint="@color/light_green"
+                    app:backgroundTint="@color/white"
+                    app:fabSize="normal"
+                    app:layout_constraintEnd_toStartOf="@+id/QSRepair"
+                    app:layout_constraintHorizontal_chainStyle="spread"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/textClean"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Cleaning"
+                    android:textSize="12sp"
+                    app:layout_constraintEnd_toEndOf="@+id/QSCleaning"
+                    app:layout_constraintStart_toStartOf="@+id/QSCleaning"
+                    app:layout_constraintTop_toBottomOf="@+id/QSCleaning" />
+
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/QSRepair"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:clickable="true"
+                    android:contentDescription="@string/Repair"
+                    android:src="@drawable/wrench"
+                    app:backgroundTint="@color/white"
+                    app:fabSize="normal"
+                    app:layout_constraintEnd_toStartOf="@+id/QSInstallation"
+                    app:layout_constraintStart_toEndOf="@+id/QSCleaning"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/textRepair"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Repair"
+                    android:textSize="12sp"
+                    app:layout_constraintEnd_toEndOf="@+id/QSRepair"
+                    app:layout_constraintStart_toStartOf="@+id/QSRepair"
+                    app:layout_constraintTop_toBottomOf="@+id/QSRepair" />
+
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/QSInstallation"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:clickable="true"
+                    android:contentDescription="@string/Installation"
+                    android:src="@drawable/wind"
+                    app:backgroundTint="@color/white"
+                    app:fabSize="normal"
+                    app:layout_constraintEnd_toStartOf="@+id/QSMaintenance"
+                    app:layout_constraintStart_toEndOf="@+id/QSRepair"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/textInstall"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Installation"
+                    android:textSize="12sp"
+                    app:layout_constraintEnd_toEndOf="@+id/QSInstallation"
+                    app:layout_constraintStart_toStartOf="@+id/QSInstallation"
+                    app:layout_constraintTop_toBottomOf="@+id/QSInstallation" />
+
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/QSMaintenance"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:clickable="true"
+                    android:contentDescription="@string/Maintenance"
+                    android:src="@drawable/nut"
+                    app:backgroundTint="@color/white"
+                    app:fabSize="normal"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toEndOf="@+id/QSInstallation"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/textMaintenance"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="Maintenance"
+                    android:textSize="12sp"
+                    app:layout_constraintEnd_toEndOf="@+id/QSMaintenance"
+                    app:layout_constraintStart_toStartOf="@+id/QSMaintenance"
+                    app:layout_constraintTop_toBottomOf="@+id/QSMaintenance" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </androidx.cardview.widget.CardView>
+
+        <TextView
+            android:id="@+id/textView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="46dp"
-            android:layout_marginEnd="24dp"
-            android:layout_marginBottom="619dp"
-            android:clickable="true"
-            android:src="@drawable/wind"
-            android:contentDescription="installation"
-            app:backgroundTint="@color/white"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/QSMaintenance"
-            app:layout_constraintHorizontal_bias="0.919"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/searchView"
-            app:layout_constraintVertical_bias="0.0" />
-
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/QSRepair"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="46dp"
-            android:layout_marginEnd="32dp"
-            android:layout_marginBottom="619dp"
-            android:clickable="true"
-            android:src="@drawable/wrench"
-            android:contentDescription="repair"
-            app:backgroundTint="@color/white"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/QSInstallation"
-            app:layout_constraintTop_toBottomOf="@+id/searchView"
-            app:layout_constraintVertical_bias="0.0" />
-
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/QSMaintenance"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="46dp"
-            android:layout_marginEnd="28dp"
-            android:layout_marginBottom="619dp"
-            android:clickable="true"
-            android:src="@drawable/nut"
-            android:contentDescription="maintenance"
-            app:backgroundTint="@color/white"
+            android:text="Quick Services"
+            android:textColor="#215531"
+            android:textSize="20sp"
+            android:textStyle="bold"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/searchView"
-            app:layout_constraintVertical_bias="0.0" />
+            app:layout_constraintHorizontal_bias="0.058"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.204" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
