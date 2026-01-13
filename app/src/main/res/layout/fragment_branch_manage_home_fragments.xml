@@ -75,7 +75,7 @@
                     android:layout_height="wrap_content"
                     android:clickable="true"
                     android:contentDescription="@string/Home"
-                    android:src="@drawable/home"
+                    android:src="@drawable/ic_home"
                     android:tint="@color/light_green"
                     app:backgroundTint="@color/white"
                     app:fabSize="normal"
