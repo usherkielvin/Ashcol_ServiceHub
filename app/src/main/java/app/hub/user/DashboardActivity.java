@@ -1,6 +1,7 @@
 package app.hub.user;
 
 import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -10,6 +11,8 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
+import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.Button;
 import android.widget.ImageButton;
 import androidx.annotation.NonNull;
@@ -43,6 +46,8 @@ public class DashboardActivity extends AppCompatActivity {
     private static final String TAG = "DashboardActivity";
 
     private ApiService apiService;
+    private View navIndicator;
+    private BottomNavigationView bottomNavigationView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,6 +55,8 @@ public class DashboardActivity extends AppCompatActivity {
         setContentView(R.layout.activity_dashboard);
 
         apiService = ApiClient.getApiService();
+        navIndicator = findViewById(R.id.navIndicator);
+        bottomNavigationView = findViewById(R.id.bottomNavigationView);
 
         FloatingActionButton fab = findViewById(R.id.fab_chatbot);
         setupFab(fab);
@@ -58,23 +65,29 @@ public class DashboardActivity extends AppCompatActivity {
             getSupportFragmentManager().beginTransaction()
                     .replace(R.id.fragmentContainerView, new UserHomeFragment())
                     .commit();
+            
+            // Set initial indicator position
+            bottomNavigationView.post(() -> moveIndicatorToItem(R.id.homebtn, false));
         }
 
-        BottomNavigationView bottomNavigationView = findViewById(R.id.bottomNavigationView);
         bottomNavigationView.setOnNavigationItemSelectedListener(item -> {
             Fragment selectedFragment = null;
             int itemId = item.getItemId();
-            if (itemId == R.id.home) {
+            
+            if (itemId == R.id.homebtn) {
                 selectedFragment = new UserHomeFragment();
             } else if (itemId == R.id.my_ticket) {
                 selectedFragment = new UserTicketFragment();
-            } else if (itemId == R.id.notificationHistory) {
+            } else if (itemId == R.id.activitybtn) {
                 selectedFragment = new UserNotificationFragment();
             } else if (itemId == R.id.Profile) {
                 selectedFragment = new UserProfileFragment();
+            } else if (itemId == R.id.blank) {
+                return false; // Middle blank item for FAB
             }
 
             if (selectedFragment != null) {
+                moveIndicatorToItem(itemId, true);
                 getSupportFragmentManager().beginTransaction()
                         .replace(R.id.fragmentContainerView, selectedFragment)
                         .setReorderingAllowed(true)
@@ -86,7 +99,7 @@ public class DashboardActivity extends AppCompatActivity {
             return false;
         });
 
-        Button openSheet = findViewById(R.id.servicebtn);
+        FloatingActionButton openSheet = findViewById(R.id.servicebtn);
         openSheet.setOnClickListener(v -> {
             BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(DashboardActivity.this);
             View view = getLayoutInflater().inflate(R.layout.uc_service_options, null);
@@ -114,11 +127,39 @@ public class DashboardActivity extends AppCompatActivity {
         });
     }
 
+
+    private void moveIndicatorToItem(int itemId, boolean animate) {
+        View itemView = bottomNavigationView.findViewById(itemId);
+
+        if (itemView == null || navIndicator == null) return;
+
+        int itemWidth = itemView.getWidth();
+        int indicatorWidth = navIndicator.getWidth();
+
+        // Calculate the center X position
+        float targetX = itemView.getLeft() + (itemWidth / 2f) - (indicatorWidth / 2f);
+
+        // ADJUST Y HERE: 0 is exactly at the top edge of the navigation bar.
+        // Negative values move it UP (out of the bar), positive move it DOWN (into the bar).
+        float targetY = 0f;
+
+        if (animate) {
+            navIndicator.animate()
+                    .translationX(targetX)
+                    .translationY(targetY) // Added Y adjustment to animation
+                    .setDuration(300)
+                    .setInterpolator(new AccelerateDecelerateInterpolator())
+                    .start();
+        } else {
+            navIndicator.setTranslationX(targetX);
+            navIndicator.setTranslationY(targetY);
+        }
+    }
+
     private void setupFab(FloatingActionButton fab) {
         fab.setOnTouchListener(new View.OnTouchListener() {
             private float initialX, initialY;
             private float initialTouchX, initialTouchY;
-            private long lastDownTime = 0;
 
             @Override
             public boolean onTouch(View view, MotionEvent event) {
@@ -129,17 +170,13 @@ public class DashboardActivity extends AppCompatActivity {
                         initialY = view.getY();
                         initialTouchX = event.getRawX();
                         initialTouchY = event.getRawY();
-                        lastDownTime = event.getDownTime();
                         return true;
 
                     case MotionEvent.ACTION_MOVE:
                         float newX = initialX + (event.getRawX() - initialTouchX);
                         float newY = initialY + (event.getRawY() - initialTouchY);
-
-                        // Stay within parent bounds
                         newX = Math.max(0, Math.min(newX, parentView.getWidth() - view.getWidth()));
                         newY = Math.max(0, Math.min(newY, parentView.getHeight() - view.getHeight()));
-
                         view.setY(newY);
                         view.setX(newX);
                         return true;
@@ -148,7 +185,7 @@ public class DashboardActivity extends AppCompatActivity {
                         float endX = event.getRawX();
                         float endY = event.getRawY();
                         if (isAClick(initialTouchX, endX, initialTouchY, endY)) {
-                            view.performClick(); // This will trigger the OnClickListener
+                            view.performClick();
                         } else {
                             float center = parentView.getWidth() / 2f;
                             float finalX = view.getX() < center - view.getWidth() / 2f ? 0 : parentView.getWidth() - view.getWidth();
@@ -166,7 +203,7 @@ public class DashboardActivity extends AppCompatActivity {
     private boolean isAClick(float startX, float endX, float startY, float endY) {
         float differenceX = Math.abs(startX - endX);
         float differenceY = Math.abs(startY - endY);
-        return !(differenceX > 200 || differenceY > 200); // Click threshold
+        return !(differenceX > 200 || differenceY > 200);
     }
 
     private void showChatbotDialog() {

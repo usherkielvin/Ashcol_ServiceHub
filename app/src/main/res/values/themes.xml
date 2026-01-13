@@ -1,9 +1,23 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources>
     <!-- Base application theme (Material 3, NoActionBar). -->
     <style name="Theme.ServiceHubApp" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Material 3 colors map automatically; keep custom colors if needed -->
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
+        
+        <!-- Remove the Material 3 selection pill background -->
+        <item name="colorSecondaryContainer">@android:color/transparent</item>
+    </style>
+
+    <!-- Style for the BottomNavigationView Active Indicator -->
+    <style name="Widget.ServiceHub.Indicator" parent="">
+        <item name="android:color">@android:color/transparent</item>
+    </style>
+
+    <!-- Shape Appearance for circular FAB -->
+    <style name="ShapeAppearance.ServiceHub.Circle" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">50%</item>
     </style>
 
     <!-- Splash Screen Theme -->
