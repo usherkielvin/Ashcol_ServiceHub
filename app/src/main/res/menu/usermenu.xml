@@ -10,10 +10,8 @@
     <item
         android:id="@+id/my_ticket"
         android:icon="@drawable/ic_ticket"
-        android:title="myticket" />
-    <item
-        android:id="@+id/blank"
-        android:title="blank" />
+        android:title="Ticket" />
+    <item android:id="@+id/blank" />
     <item
         android:id="@+id/activitybtn"
         android:icon="@drawable/ic_activity"

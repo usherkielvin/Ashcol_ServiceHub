@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@android:color/white"
-    tools:context=".ProfileActivity">
+    tools:context="app.hub.common.ProfileActivity">
 
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
@@ -20,7 +20,7 @@
             android:background="@color/teal_700"
             app:navigationIcon="?attr/homeAsUpIndicator"
             app:navigationIconTint="@android:color/white"
-            app:title="Profile"
+            app:title="@string/profile_title"
             app:titleTextColor="@android:color/white" />
 
     </com.google.android.material.appbar.AppBarLayout>
@@ -60,7 +60,7 @@
                     android:id="@+id/nameTextView"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Loading..."
+                    android:text="@string/loading"
                     android:textColor="#FF215531"
                     android:textSize="24sp"
                     android:textStyle="bold"
@@ -72,7 +72,7 @@
                     android:id="@+id/emailTextView"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Loading..."
+                    android:text="@string/loading"
                     android:textColor="@android:color/darker_gray"
                     android:textSize="16sp"
                     tools:text="user@example.com" />
@@ -105,7 +105,7 @@
                 style="@style/Widget.Material3.Button.OutlinedButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Sign Out"
+                android:text="@string/profile_sign_out"
                 android:textColor="@android:color/holo_red_dark"
                 app:strokeColor="@android:color/holo_red_dark" />
 

@@ -39,12 +39,13 @@
             android:layout_height="72dp"
             android:background="#FFFFFF"
 
+
             app:elevation="0dp"
             app:itemActiveIndicatorStyle="@null"
             app:itemIconTint="@color/nav_item_color_state"
             app:itemRippleColor="#00FFFFFF"
             app:itemTextColor="@color/nav_item_color_state"
-            app:labelVisibilityMode="selected"
+            app:labelVisibilityMode="labeled"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -56,12 +57,12 @@
         android:id="@+id/servicebtn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:backgroundTint="@color/nav_item_color_state"
+        android:backgroundTint="#215531"
         android:contentDescription="Add Service"
 
         android:src="@drawable/ic_add"
         app:borderWidth="0dp"
-        app:elevation="12dp"
+        app:elevation="0dp"
 
         app:fabCustomSize="80dp"
         app:layout_anchor="@id/bottomNavigationView"

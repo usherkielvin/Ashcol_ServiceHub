@@ -75,4 +75,32 @@
     <string name="Installation">installation</string>
     <string name="Home">home</string>
 
+    <!-- Profile Fragment Strings -->
+    <string name="profile_title">Profile</string>
+    <string name="profile_preferences">Preferences</string>
+    <string name="profile_appearance">Appearance</string>
+    <string name="profile_notifications">Notifications</string>
+    <string name="profile_language">Language</string>
+    <string name="profile_general">General</string>
+    <string name="profile_personal_info">Personal Information</string>
+    <string name="profile_password_privacy">Password &amp; Privacy</string>
+    <string name="profile_payroll">Payroll</string>
+    <string name="profile_help_feedback">Help and feedback</string>
+    <string name="profile_sign_out">Sign Out</string>
+    <string name="profile_default_name">Yoox</string>
+    <string name="profile_default_username">yooxieboy123</string>
+    <string name="loading">Loading...</string>
+
+    <!-- Accessibility Strings -->
+    <string name="desc_profile_picture">Profile Picture</string>
+    <string name="desc_edit_photo">Edit Photo</string>
+    <string name="desc_appearance_icon">Appearance Icon</string>
+    <string name="desc_notifications_icon">Notifications Icon</string>
+    <string name="desc_language_icon">Language Icon</string>
+    <string name="desc_personal_info_icon">Personal Info Icon</string>
+    <string name="desc_privacy_icon">Privacy Icon</string>
+    <string name="desc_payroll_icon">Payroll Icon</string>
+    <string name="desc_help_icon">Help Icon</string>
+    <string name="desc_sign_out_icon">Sign Out Icon</string>
+
 </resources>
