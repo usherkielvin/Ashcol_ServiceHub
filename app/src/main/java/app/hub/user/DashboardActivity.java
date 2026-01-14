@@ -48,6 +48,7 @@ public class DashboardActivity extends AppCompatActivity {
     private ApiService apiService;
     private View navIndicator;
     private BottomNavigationView bottomNavigationView;
+    private FloatingActionButton fabChatbot;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,9 +58,9 @@ public class DashboardActivity extends AppCompatActivity {
         apiService = ApiClient.getApiService();
         navIndicator = findViewById(R.id.navIndicator);
         bottomNavigationView = findViewById(R.id.bottomNavigationView);
+        fabChatbot = findViewById(R.id.fab_chatbot);
 
-        FloatingActionButton fab = findViewById(R.id.fab_chatbot);
-        setupFab(fab);
+        setupFab(fabChatbot);
 
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()
@@ -68,12 +69,23 @@ public class DashboardActivity extends AppCompatActivity {
             
             // Set initial indicator position
             bottomNavigationView.post(() -> moveIndicatorToItem(R.id.homebtn, false));
+            // Show chatbot on home by default
+            if (fabChatbot != null) fabChatbot.show();
         }
 
         bottomNavigationView.setOnNavigationItemSelectedListener(item -> {
             Fragment selectedFragment = null;
             int itemId = item.getItemId();
             
+            // Handle Chatbot visibility based on fragment
+            if (fabChatbot != null) {
+                if (itemId == R.id.homebtn) {
+                    fabChatbot.show();
+                } else {
+                    fabChatbot.hide();
+                }
+            }
+
             if (itemId == R.id.homebtn) {
                 selectedFragment = new UserHomeFragment();
             } else if (itemId == R.id.my_ticket) {
@@ -127,26 +139,19 @@ public class DashboardActivity extends AppCompatActivity {
         });
     }
 
-
     private void moveIndicatorToItem(int itemId, boolean animate) {
         View itemView = bottomNavigationView.findViewById(itemId);
-
         if (itemView == null || navIndicator == null) return;
 
         int itemWidth = itemView.getWidth();
         int indicatorWidth = navIndicator.getWidth();
-
-        // Calculate the center X position
         float targetX = itemView.getLeft() + (itemWidth / 2f) - (indicatorWidth / 2f);
-
-        // ADJUST Y HERE: 0 is exactly at the top edge of the navigation bar.
-        // Negative values move it UP (out of the bar), positive move it DOWN (into the bar).
-        float targetY = 0f;
+        float targetY = 0f; 
 
         if (animate) {
             navIndicator.animate()
                     .translationX(targetX)
-                    .translationY(targetY) // Added Y adjustment to animation
+                    .translationY(targetY)
                     .setDuration(300)
                     .setInterpolator(new AccelerateDecelerateInterpolator())
                     .start();
@@ -157,6 +162,7 @@ public class DashboardActivity extends AppCompatActivity {
     }
 
     private void setupFab(FloatingActionButton fab) {
+        if (fab == null) return;
         fab.setOnTouchListener(new View.OnTouchListener() {
             private float initialX, initialY;
             private float initialTouchX, initialTouchY;

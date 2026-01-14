@@ -5,7 +5,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#FFFFFF"
-    android:fillViewport="true">
+    android:fillViewport="true"
+    android:overScrollMode="never">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -34,9 +35,9 @@
                 android:id="@+id/img_profile"
                 android:layout_width="120dp"
                 android:layout_height="120dp"
+                android:contentDescription="@string/desc_profile_picture"
                 android:padding="4dp"
                 android:scaleType="centerCrop"
-                android:contentDescription="@string/desc_profile_picture"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
@@ -97,20 +98,20 @@
             style="@style/Widget.Material3.Button.TextButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:minHeight="48dp"
-            android:text="@string/profile_appearance"
-            android:textColor="#000000"
-            android:textAllCaps="false"
-            android:textSize="16sp"
-            android:textAlignment="viewStart"
             android:insetTop="0dp"
             android:insetBottom="0dp"
+            android:minHeight="48dp"
             android:paddingStart="8dp"
+            android:text="@string/profile_appearance"
+            android:textAlignment="viewStart"
+            android:textAllCaps="false"
+            android:textColor="#000000"
+            android:textSize="16sp"
             app:icon="@drawable/ic_palette"
-            app:iconTint="#1A4330"
-            app:iconSize="24dp"
+            app:iconGravity="start"
             app:iconPadding="16dp"
-            app:iconGravity="start" />
+            app:iconSize="24dp"
+            app:iconTint="#1A4330" />
 
         <!-- Notifications Button -->
         <com.google.android.material.button.MaterialButton
@@ -118,20 +119,20 @@
             style="@style/Widget.Material3.Button.TextButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:minHeight="48dp"
-            android:text="@string/profile_notifications"
-            android:textColor="#000000"
-            android:textAllCaps="false"
-            android:textSize="16sp"
-            android:textAlignment="viewStart"
             android:insetTop="0dp"
             android:insetBottom="0dp"
+            android:minHeight="48dp"
             android:paddingStart="8dp"
+            android:text="@string/profile_notifications"
+            android:textAlignment="viewStart"
+            android:textAllCaps="false"
+            android:textColor="#000000"
+            android:textSize="16sp"
             app:icon="@drawable/ic_notifications"
-            app:iconTint="#1A4330"
-            app:iconSize="24dp"
+            app:iconGravity="start"
             app:iconPadding="16dp"
-            app:iconGravity="start" />
+            app:iconSize="24dp"
+            app:iconTint="#1A4330" />
 
         <!-- Language Button -->
         <com.google.android.material.button.MaterialButton
@@ -139,20 +140,20 @@
             style="@style/Widget.Material3.Button.TextButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:minHeight="48dp"
-            android:text="@string/profile_language"
-            android:textColor="#000000"
-            android:textAllCaps="false"
-            android:textSize="16sp"
-            android:textAlignment="viewStart"
             android:insetTop="0dp"
             android:insetBottom="0dp"
+            android:minHeight="48dp"
             android:paddingStart="8dp"
+            android:text="@string/profile_language"
+            android:textAlignment="viewStart"
+            android:textAllCaps="false"
+            android:textColor="#000000"
+            android:textSize="16sp"
             app:icon="@drawable/ic_language"
-            app:iconTint="#1A4330"
-            app:iconSize="24dp"
+            app:iconGravity="start"
             app:iconPadding="16dp"
-            app:iconGravity="start" />
+            app:iconSize="24dp"
+            app:iconTint="#1A4330" />
 
         <View
             android:layout_width="match_parent"
@@ -176,20 +177,20 @@
             style="@style/Widget.Material3.Button.TextButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:minHeight="48dp"
-            android:text="@string/profile_personal_info"
-            android:textColor="#000000"
-            android:textAllCaps="false"
-            android:textSize="16sp"
-            android:textAlignment="viewStart"
             android:insetTop="0dp"
             android:insetBottom="0dp"
+            android:minHeight="48dp"
             android:paddingStart="8dp"
+            android:text="@string/profile_personal_info"
+            android:textAlignment="viewStart"
+            android:textAllCaps="false"
+            android:textColor="#000000"
+            android:textSize="16sp"
             app:icon="@drawable/ic_person"
-            app:iconTint="#1A4330"
-            app:iconSize="24dp"
+            app:iconGravity="start"
             app:iconPadding="16dp"
-            app:iconGravity="start" />
+            app:iconSize="24dp"
+            app:iconTint="#1A4330" />
 
         <!-- Password Button -->
         <com.google.android.material.button.MaterialButton
@@ -197,20 +198,20 @@
             style="@style/Widget.Material3.Button.TextButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:minHeight="48dp"
-            android:text="@string/profile_password_privacy"
-            android:textColor="#000000"
-            android:textAllCaps="false"
-            android:textSize="16sp"
-            android:textAlignment="viewStart"
             android:insetTop="0dp"
             android:insetBottom="0dp"
+            android:minHeight="48dp"
             android:paddingStart="8dp"
+            android:text="@string/profile_password_privacy"
+            android:textAlignment="viewStart"
+            android:textAllCaps="false"
+            android:textColor="#000000"
+            android:textSize="16sp"
             app:icon="@drawable/ic_lock"
-            app:iconTint="#1A4330"
-            app:iconSize="24dp"
+            app:iconGravity="start"
             app:iconPadding="16dp"
-            app:iconGravity="start" />
+            app:iconSize="24dp"
+            app:iconTint="#1A4330" />
 
         <!-- Payroll Button -->
         <com.google.android.material.button.MaterialButton
@@ -218,20 +219,20 @@
             style="@style/Widget.Material3.Button.TextButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:minHeight="48dp"
-            android:text="@string/profile_payroll"
-            android:textColor="#000000"
-            android:textAllCaps="false"
-            android:textSize="16sp"
-            android:textAlignment="viewStart"
             android:insetTop="0dp"
             android:insetBottom="0dp"
+            android:minHeight="48dp"
             android:paddingStart="8dp"
+            android:text="@string/profile_payroll"
+            android:textAlignment="viewStart"
+            android:textAllCaps="false"
+            android:textColor="#000000"
+            android:textSize="16sp"
             app:icon="@drawable/ic_wallet"
-            app:iconTint="#1A4330"
-            app:iconSize="24dp"
+            app:iconGravity="start"
             app:iconPadding="16dp"
-            app:iconGravity="start" />
+            app:iconSize="24dp"
+            app:iconTint="#1A4330" />
 
         <View
             android:layout_width="match_parent"
@@ -246,20 +247,20 @@
             style="@style/Widget.Material3.Button.TextButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:minHeight="48dp"
-            android:text="@string/profile_help_feedback"
-            android:textColor="#000000"
-            android:textAllCaps="false"
-            android:textSize="16sp"
-            android:textAlignment="viewStart"
             android:insetTop="0dp"
             android:insetBottom="0dp"
+            android:minHeight="48dp"
             android:paddingStart="8dp"
+            android:text="@string/profile_help_feedback"
+            android:textAlignment="viewStart"
+            android:textAllCaps="false"
+            android:textColor="#000000"
+            android:textSize="16sp"
             app:icon="@drawable/ic_help"
-            app:iconTint="#1A4330"
-            app:iconSize="24dp"
+            app:iconGravity="start"
             app:iconPadding="16dp"
-            app:iconGravity="start" />
+            app:iconSize="24dp"
+            app:iconTint="#1A4330" />
 
         <!-- Sign Out Button -->
         <com.google.android.material.button.MaterialButton
@@ -267,20 +268,20 @@
             style="@style/Widget.Material3.Button.TextButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:minHeight="48dp"
-            android:text="@string/profile_sign_out"
-            android:textColor="#000000"
-            android:textAllCaps="false"
-            android:textSize="16sp"
-            android:textAlignment="viewStart"
             android:insetTop="0dp"
             android:insetBottom="0dp"
+            android:minHeight="48dp"
             android:paddingStart="8dp"
+            android:text="@string/profile_sign_out"
+            android:textAlignment="viewStart"
+            android:textAllCaps="false"
+            android:textColor="#000000"
+            android:textSize="16sp"
             app:icon="@drawable/ic_exit"
-            app:iconTint="#1A4330"
-            app:iconSize="24dp"
+            app:iconGravity="start"
             app:iconPadding="16dp"
-            app:iconGravity="start" />
+            app:iconSize="24dp"
+            app:iconTint="#1A4330" />
 
     </LinearLayout>
 
