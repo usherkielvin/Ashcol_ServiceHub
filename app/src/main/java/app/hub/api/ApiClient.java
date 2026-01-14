@@ -20,7 +20,8 @@ public class ApiClient {
     // For physical device: http://YOUR_COMPUTER_IP:8000/
     // Example: http://192.168.1.100:8000/
     // Note: Trailing slash is required when endpoints don't start with /
-    private static final String BASE_URL = "http://192.168.0.100:8000/";
+    // Current setting: configured for Android emulator on the same PC
+    private static final String BASE_URL = "http://10.0.2.2:8000/";
     
     private static Retrofit retrofit = null;
 
