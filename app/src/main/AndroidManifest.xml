@@ -37,6 +37,9 @@
             android:name=".employee.EmployeeDashboardActivity"
             android:exported="false" />
         <activity
+            android:name=".manager.ManagerDashboardActivity"
+            android:exported="false" />
+        <activity
             android:name=".admin.AdminDashboardActivity"
             android:exported="false" />
         <activity

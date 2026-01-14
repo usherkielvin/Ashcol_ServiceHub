@@ -7,6 +7,7 @@ import app.hub.api.LoginRequest;
 import app.hub.api.LoginResponse;
 import app.hub.admin.AdminDashboardActivity;
 import app.hub.employee.EmployeeDashboardActivity;
+import app.hub.manager.ManagerDashboardActivity;
 import app.hub.user.DashboardActivity;
 import app.hub.util.EmailValidator;
 import app.hub.util.TokenManager;
@@ -55,8 +56,10 @@ public class MainActivity extends AppCompatActivity {
         // Check if already logged in
         if (tokenManager.isLoggedIn()) {
             final Intent intent;
-            if ("admin".equals(tokenManager.getRole()) || "manager".equals(tokenManager.getRole())) {
+            if ("admin".equals(tokenManager.getRole())) {
                 intent = new Intent(this, AdminDashboardActivity.class);
+            } else if ("manager".equals(tokenManager.getRole())) {
+                intent = new Intent(this, ManagerDashboardActivity.class);
             } else if ("employee".equals(tokenManager.getRole()) || "staff".equals(tokenManager.getRole())) {
                 intent = new Intent(this, EmployeeDashboardActivity.class);
             } else {
@@ -244,8 +247,10 @@ public class MainActivity extends AppCompatActivity {
 						// Navigate to dashboard
 						runOnUiThread(() -> {
                             final Intent intent;
-                            if ("admin".equals(user.getRole()) || "manager".equals(user.getRole())) {
+                            if ("admin".equals(user.getRole())) {
                                 intent = new Intent(MainActivity.this, AdminDashboardActivity.class);
+                            } else if ("manager".equals(user.getRole())) {
+                                intent = new Intent(MainActivity.this, ManagerDashboardActivity.class);
                             } else if ("employee".equals(user.getRole()) || "staff".equals(user.getRole())) {
                                 intent = new Intent(MainActivity.this, EmployeeDashboardActivity.class);
                             } else {
@@ -338,9 +343,9 @@ public class MainActivity extends AppCompatActivity {
 		tokenManager.saveName("Manager");
 		tokenManager.saveRole("manager");
 
-		// Navigate to admin dashboard (managers use the same dashboard as admin)
+		// Navigate to manager dashboard
 		runOnUiThread(() -> {
-			Intent intent = new Intent(MainActivity.this, AdminDashboardActivity.class);
+			Intent intent = new Intent(MainActivity.this, ManagerDashboardActivity.class);
 			startActivity(intent);
 			finish();
 		});
