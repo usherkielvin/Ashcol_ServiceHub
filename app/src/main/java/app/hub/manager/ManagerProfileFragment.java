@@ -13,6 +13,7 @@ import com.google.android.material.button.MaterialButton;
 
 import app.hub.R;
 import app.hub.common.MainActivity;
+import app.hub.user.ChangePasswordFragment;
 import app.hub.util.TokenManager;
 
 public class ManagerProfileFragment extends Fragment {
@@ -50,5 +51,20 @@ public class ManagerProfileFragment extends Fragment {
                 getActivity().finish();
             }
         });
+
+        MaterialButton passwordPrivacyButton = view.findViewById(R.id.btn_password_privacy);
+        if (passwordPrivacyButton != null) {
+            passwordPrivacyButton.setOnClickListener(v -> navigateToChangePassword());
+        }
+    }
+
+    private void navigateToChangePassword() {
+        if (getActivity() != null) {
+            ChangePasswordFragment changePasswordFragment = new ChangePasswordFragment();
+            getActivity().getSupportFragmentManager().beginTransaction()
+                .replace(R.id.fragment_container, changePasswordFragment)
+                .addToBackStack(null)
+                .commit();
+        }
     }
 }
