@@ -3,6 +3,8 @@ package app.hub.common;
 import app.hub.R;
 import app.hub.api.ApiClient;
 import app.hub.api.ApiService;
+import app.hub.api.ChangePasswordRequest;
+import app.hub.api.ChangePasswordResponse;
 import app.hub.api.LogoutResponse;
 import app.hub.api.UserResponse;
 import app.hub.util.TokenManager;
@@ -411,7 +413,76 @@ public class ProfileActivity extends AppCompatActivity {
 	}
 
 	private void changePassword(String currentPassword, String newPassword) {
-		Toast.makeText(this, "Password change functionality will be implemented soon", Toast.LENGTH_SHORT).show();
+		String token = tokenManager.getToken();
+		if (token == null) {
+			Toast.makeText(this, "Authentication error. Please login again.", Toast.LENGTH_SHORT).show();
+			return;
+		}
+
+		ChangePasswordRequest request = new ChangePasswordRequest(currentPassword, newPassword, newPassword);
+		ApiService apiService = ApiClient.getApiService();
+		Call<ChangePasswordResponse> call = apiService.changePassword(token, request);
+		
+		call.enqueue(new Callback<ChangePasswordResponse>() {
+			@Override
+			public void onResponse(Call<ChangePasswordResponse> call, Response<ChangePasswordResponse> response) {
+				if (response.isSuccessful() && response.body() != null) {
+					ChangePasswordResponse changePasswordResponse = response.body();
+					if (changePasswordResponse.isSuccess()) {
+						Toast.makeText(ProfileActivity.this, 
+							changePasswordResponse.getMessage() != null ? 
+								changePasswordResponse.getMessage() : "Password changed successfully", 
+							Toast.LENGTH_SHORT).show();
+					} else {
+						String errorMessage = changePasswordResponse.getMessage();
+						if (errorMessage == null || errorMessage.isEmpty()) {
+							errorMessage = "Failed to change password";
+						}
+						Toast.makeText(ProfileActivity.this, errorMessage, Toast.LENGTH_LONG).show();
+					}
+				} else {
+					if (response.code() == 400 || response.code() == 422) {
+						try {
+							ChangePasswordResponse errorResponse = response.body();
+							if (errorResponse != null && errorResponse.getErrors() != null) {
+								StringBuilder errorMsg = new StringBuilder();
+								ChangePasswordResponse.Errors errors = errorResponse.getErrors();
+								
+								if (errors.getCurrent_password() != null && errors.getCurrent_password().length > 0) {
+									errorMsg.append(errors.getCurrent_password()[0]).append("\n");
+								}
+								if (errors.getNew_password() != null && errors.getNew_password().length > 0) {
+									errorMsg.append(errors.getNew_password()[0]).append("\n");
+								}
+								if (errors.getNew_password_confirmation() != null && errors.getNew_password_confirmation().length > 0) {
+									errorMsg.append(errors.getNew_password_confirmation()[0]);
+								}
+								
+								if (errorMsg.length() > 0) {
+									Toast.makeText(ProfileActivity.this, errorMsg.toString().trim(), Toast.LENGTH_LONG).show();
+								} else {
+									Toast.makeText(ProfileActivity.this, 
+										errorResponse.getMessage() != null ? errorResponse.getMessage() : "Invalid input", 
+										Toast.LENGTH_LONG).show();
+								}
+							} else {
+								Toast.makeText(ProfileActivity.this, "Invalid input. Please check your passwords.", Toast.LENGTH_LONG).show();
+							}
+						} catch (Exception e) {
+							Toast.makeText(ProfileActivity.this, "Failed to change password", Toast.LENGTH_SHORT).show();
+						}
+					} else {
+						Toast.makeText(ProfileActivity.this, "Failed to change password. Please try again.", Toast.LENGTH_SHORT).show();
+					}
+				}
+			}
+
+			@Override
+			public void onFailure(Call<ChangePasswordResponse> call, Throwable t) {
+				Log.e("ProfileActivity", "Change password failed: " + t.getMessage());
+				Toast.makeText(ProfileActivity.this, "Network error. Please check your connection.", Toast.LENGTH_SHORT).show();
+			}
+		});
 	}
 
 	private void logout() {

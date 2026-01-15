@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -292,7 +293,7 @@ public class UserProfileFragment extends Fragment {
         setClickListener(view, R.id.btn_personal_info, () -> 
             showToast("Personal Information clicked"));
         setClickListener(view, R.id.btn_password_privacy, () -> 
-            showToast("Password & Privacy clicked"));
+            navigateToChangePassword());
         setClickListener(view, R.id.btn_help, () -> 
             showToast("Help & Feedback clicked"));
         setClickListener(view, R.id.btn_edit_photo, () -> showImagePickerDialog());
@@ -460,6 +461,16 @@ public class UserProfileFragment extends Fragment {
             }
         } catch (Exception e) {
             // Handle error silently
+        }
+    }
+
+    private void navigateToChangePassword() {
+        if (getActivity() != null) {
+            ChangePasswordFragment changePasswordFragment = new ChangePasswordFragment();
+            getActivity().getSupportFragmentManager().beginTransaction()
+                .replace(R.id.fragmentContainerView, changePasswordFragment)
+                .addToBackStack(null)
+                .commit();
         }
     }
 }

@@ -29,6 +29,9 @@ public interface ApiService {
     @POST("api/v1/logout")
     Call<LogoutResponse> logout(@Header("Authorization") String token);
 
+    @POST("api/v1/change-password")
+    Call<ChangePasswordResponse> changePassword(@Header("Authorization") String token, @Body ChangePasswordRequest request);
+
     @GET("api/v1/user")
     Call<UserResponse> getUser(@Header("Authorization") String token);
 
