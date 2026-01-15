@@ -40,6 +40,19 @@
             app:layout_constraintVertical_bias="0.391" />
 
         <Button
+            android:id="@+id/changePasswordButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="@string/change_password"
+            android:backgroundTint="#FFFFFF"
+            android:textColor="#FFC0CB"
+            android:layout_marginBottom="16dp"
+            app:layout_constraintBottom_toTopOf="@id/logoutButton"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <Button
             android:id="@+id/logoutButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
