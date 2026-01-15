@@ -1,6 +1,8 @@
 package app.hub.manager;
 
 import android.os.Bundle;
+import android.view.View;
+import android.view.animation.AccelerateDecelerateInterpolator;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -9,39 +11,73 @@ import app.hub.R;
 
 public class ManagerDashboardActivity extends AppCompatActivity {
 
+    private View navIndicator;
+    private BottomNavigationView bottomNav;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_manager_dashboard);
 
-        BottomNavigationView bottomNav = findViewById(R.id.bottom_navigation);
+        navIndicator = findViewById(R.id.navIndicator);
+        bottomNav = findViewById(R.id.bottom_navigation);
         bottomNav.setOnNavigationItemSelectedListener(navListener);
 
-        // as soon as the activity is created, we want to show the Dashboard fragment
-        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,
-                new ManagerDashboardFragment()).commit();
+        // as soon as the activity is created, we want to show the Home fragment
+        if (savedInstanceState == null) {
+            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,
+                    new ManagerHomeFragment()).commit();
+            
+            // Set initial indicator position
+            bottomNav.post(() -> moveIndicatorToItem(R.id.nav_home, false));
+        }
     }
 
     private BottomNavigationView.OnNavigationItemSelectedListener navListener = item -> {
         Fragment selectedFragment = null;
+        int itemId = item.getItemId();
 
-        if (item.getItemId() == R.id.nav_dashboard) {
-            selectedFragment = new ManagerDashboardFragment();
-        } else if (item.getItemId() == R.id.nav_assigned_tickets) {
-            selectedFragment = new ManagerAssignedTicketsFragment();
-        } else if (item.getItemId() == R.id.nav_in_progress) {
-            selectedFragment = new ManagerInProgressFragment();
-        } else if (item.getItemId() == R.id.nav_completed) {
-            selectedFragment = new ManagerCompletedFragment();
-        } else if (item.getItemId() == R.id.nav_settings) {
-            selectedFragment = new ManagerSettingsFragment();
+        if (itemId == R.id.nav_home) {
+            selectedFragment = new ManagerHomeFragment();
+        } else if (itemId == R.id.nav_employee) {
+            selectedFragment = new ManagerEmployeeFragment();
+        } else if (itemId == R.id.nav_work) {
+            selectedFragment = new ManagerWorkFragment();
+        } else if (itemId == R.id.nav_records) {
+            selectedFragment = new ManagerRecordsFragment();
+        } else if (itemId == R.id.nav_profile) {
+            selectedFragment = new ManagerProfileFragment();
         }
 
         if (selectedFragment != null) {
+            moveIndicatorToItem(itemId, true);
             getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,
                     selectedFragment).commit();
+            return true;
         }
 
-        return true;
+        return false;
     };
+
+    private void moveIndicatorToItem(int itemId, boolean animate) {
+        View itemView = bottomNav.findViewById(itemId);
+        if (itemView == null || navIndicator == null) return;
+
+        int itemWidth = itemView.getWidth();
+        int indicatorWidth = navIndicator.getWidth();
+        float targetX = itemView.getLeft() + (itemWidth / 2f) - (indicatorWidth / 2f);
+        float targetY = 0f;
+
+        if (animate) {
+            navIndicator.animate()
+                    .translationX(targetX)
+                    .translationY(targetY)
+                    .setDuration(300)
+                    .setInterpolator(new AccelerateDecelerateInterpolator())
+                    .start();
+        } else {
+            navIndicator.setTranslationX(targetX);
+            navIndicator.setTranslationY(targetY);
+        }
+    }
 }
