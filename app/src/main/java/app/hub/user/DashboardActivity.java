@@ -18,6 +18,7 @@ import android.widget.ImageButton;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.TooltipCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -61,6 +62,7 @@ public class DashboardActivity extends AppCompatActivity {
         fabChatbot = findViewById(R.id.fab_chatbot);
 
         setupFab(fabChatbot);
+        disableNavigationTooltips(bottomNavigationView);
 
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()
@@ -137,6 +139,18 @@ public class DashboardActivity extends AppCompatActivity {
             bottomSheetDialog.setContentView(view);
             bottomSheetDialog.show();
         });
+    }
+
+    private void disableNavigationTooltips(BottomNavigationView navigationView) {
+        Menu menu = navigationView.getMenu();
+        for (int i = 0; i < menu.size(); i++) {
+            MenuItem item = menu.getItem(i);
+            View view = navigationView.findViewById(item.getItemId());
+            if (view != null) {
+                view.setOnLongClickListener(v -> true);
+                TooltipCompat.setTooltipText(view, null);
+            }
+        }
     }
 
     private void moveIndicatorToItem(int itemId, boolean animate) {

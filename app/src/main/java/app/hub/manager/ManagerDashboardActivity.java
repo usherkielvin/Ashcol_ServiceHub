@@ -1,9 +1,12 @@
 package app.hub.manager;
 
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.TooltipCompat;
 import androidx.fragment.app.Fragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
@@ -23,6 +26,8 @@ public class ManagerDashboardActivity extends AppCompatActivity {
         bottomNav = findViewById(R.id.bottom_navigation);
         bottomNav.setOnNavigationItemSelectedListener(navListener);
 
+        disableNavigationTooltips(bottomNav);
+
         // as soon as the activity is created, we want to show the Home fragment
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,
@@ -30,6 +35,18 @@ public class ManagerDashboardActivity extends AppCompatActivity {
             
             // Set initial indicator position
             bottomNav.post(() -> moveIndicatorToItem(R.id.nav_home, false));
+        }
+    }
+
+    private void disableNavigationTooltips(BottomNavigationView navigationView) {
+        Menu menu = navigationView.getMenu();
+        for (int i = 0; i < menu.size(); i++) {
+            MenuItem item = menu.getItem(i);
+            View view = navigationView.findViewById(item.getItemId());
+            if (view != null) {
+                view.setOnLongClickListener(v -> true);
+                TooltipCompat.setTooltipText(view, null);
+            }
         }
     }
 

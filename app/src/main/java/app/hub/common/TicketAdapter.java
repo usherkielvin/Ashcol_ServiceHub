@@ -49,7 +49,7 @@ public class TicketAdapter extends RecyclerView.Adapter<TicketAdapter.TicketView
             super(itemView);
             ticketTitle = itemView.findViewById(R.id.ticketTitle);
             ticketDescription = itemView.findViewById(R.id.ticketDescription);
-            ticketStatus = itemView.findViewById(R.id.ticketStatus);
+           // ticketStatus = itemView.findViewById(R.id.ticketStatus);
         }
     }
 }
