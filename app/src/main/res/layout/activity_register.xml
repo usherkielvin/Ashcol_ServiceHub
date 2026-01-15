@@ -16,6 +16,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
+            android:overScrollMode="never"
             android:padding="24dp">
 
             <!-- Header Row -->
@@ -327,22 +328,6 @@
                 tools:visibility="visible" />
 
             <!-- Role Selection Section -->
-            <TextView
-                android:id="@+id/labelRole"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:text="Role"
-                android:textColor="#000000"
-                android:textSize="16sp" />
-
-            <Spinner
-                android:id="@+id/roleSpinner"
-                android:layout_width="match_parent"
-                android:layout_height="50dp"
-                android:layout_marginTop="8dp"
-                android:background="@drawable/bg_input_field"
-                android:padding="12dp" />
 
             <!-- Confirm Password Section -->
             <TextView
