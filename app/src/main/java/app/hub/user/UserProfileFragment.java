@@ -56,19 +56,50 @@ public class UserProfileFragment extends Fragment {
     }
 
     @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        initializeLaunchers();
+    }
+
+    @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
         tokenManager = new TokenManager(requireContext());
         initializeViews(view);
         loadCachedData();
+        loadProfileImage();
         fetchUserData();
         setupClickListeners(view);
+    }
+
+    private void initializeLaunchers() {
+        galleryLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                if (result.getResultCode() == android.app.Activity.RESULT_OK && result.getData() != null) {
+                    Uri selectedImage = result.getData().getData();
+                    if (selectedImage != null) {
+                        setProfileImage(selectedImage);
+                    }
+                }
+            }
+        );
+
+        cameraLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                if (result.getResultCode() == android.app.Activity.RESULT_OK && cameraImageUri != null) {
+                    setProfileImage(cameraImageUri);
+                }
+            }
+        );
     }
 
     private void initializeViews(View view) {
         tvName = view.findViewById(R.id.tv_name);
         tvUsername = view.findViewById(R.id.tv_username);
+        imgProfile = view.findViewById(R.id.img_profile);
     }
 
     private void loadCachedData() {
@@ -264,8 +295,7 @@ public class UserProfileFragment extends Fragment {
             showToast("Password & Privacy clicked"));
         setClickListener(view, R.id.btn_help, () -> 
             showToast("Help & Feedback clicked"));
-        setClickListener(view, R.id.btn_edit_photo, () -> 
-            showToast("Edit photo clicked"));
+        setClickListener(view, R.id.btn_edit_photo, () -> showImagePickerDialog());
         setClickListener(view, R.id.btn_appearance, () -> 
             showToast("Appearance clicked"));
         setClickListener(view, R.id.btn_notifications, () -> 
@@ -317,5 +347,119 @@ public class UserProfileFragment extends Fragment {
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
         getActivity().finish();
+    }
+
+    private void showImagePickerDialog() {
+        if (getContext() == null) return;
+
+        String[] options = {"Camera", "Gallery", "Cancel"};
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setTitle("Select Profile Photo");
+        builder.setItems(options, (dialog, which) -> {
+            if (which == 0) {
+                openCamera();
+            } else if (which == 1) {
+                openGallery();
+            }
+        });
+        builder.show();
+    }
+
+    private void openCamera() {
+        try {
+            Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+            File photoFile = createImageFile();
+            if (photoFile != null) {
+                String authority = requireContext().getPackageName() + ".fileprovider";
+                cameraImageUri = FileProvider.getUriForFile(requireContext(), authority, photoFile);
+                cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, cameraImageUri);
+                cameraIntent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                cameraLauncher.launch(cameraIntent);
+            }
+        } catch (Exception e) {
+            showToast("Error opening camera: " + e.getMessage());
+        }
+    }
+
+    private void openGallery() {
+        Intent galleryIntent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        galleryIntent.setType("image/*");
+        galleryLauncher.launch(galleryIntent);
+    }
+
+    private File createImageFile() throws IOException {
+        String imageFileName = "profile_" + System.currentTimeMillis();
+        File storageDir = requireContext().getFilesDir();
+        File imageFile = File.createTempFile(imageFileName, ".jpg", storageDir);
+        return imageFile;
+    }
+
+    private void setProfileImage(Uri imageUri) {
+        try {
+            Bitmap bitmap = getBitmapFromUri(imageUri);
+            if (bitmap != null && imgProfile != null) {
+                imgProfile.setImageBitmap(bitmap);
+                saveProfileImage(bitmap);
+                showToast("Profile photo updated");
+            }
+        } catch (Exception e) {
+            showToast("Error loading image: " + e.getMessage());
+        }
+    }
+
+    private Bitmap getBitmapFromUri(Uri uri) {
+        try {
+            InputStream inputStream = requireContext().getContentResolver().openInputStream(uri);
+            Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
+            if (inputStream != null) {
+                inputStream.close();
+            }
+            return resizeBitmap(bitmap, 500, 500);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private Bitmap resizeBitmap(Bitmap bitmap, int maxWidth, int maxHeight) {
+        if (bitmap == null) return null;
+
+        int width = bitmap.getWidth();
+        int height = bitmap.getHeight();
+
+        if (width <= maxWidth && height <= maxHeight) {
+            return bitmap;
+        }
+
+        float scale = Math.min((float) maxWidth / width, (float) maxHeight / height);
+        int newWidth = Math.round(width * scale);
+        int newHeight = Math.round(height * scale);
+
+        return Bitmap.createScaledBitmap(bitmap, newWidth, newHeight, true);
+    }
+
+    private void saveProfileImage(Bitmap bitmap) {
+        try {
+            File imageFile = new File(requireContext().getFilesDir(), "profile_image.jpg");
+            FileOutputStream fos = new FileOutputStream(imageFile);
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 90, fos);
+            fos.flush();
+            fos.close();
+        } catch (Exception e) {
+            // Handle error silently or log it
+        }
+    }
+
+    private void loadProfileImage() {
+        try {
+            File imageFile = new File(requireContext().getFilesDir(), "profile_image.jpg");
+            if (imageFile.exists() && imgProfile != null) {
+                Bitmap bitmap = BitmapFactory.decodeFile(imageFile.getAbsolutePath());
+                if (bitmap != null) {
+                    imgProfile.setImageBitmap(bitmap);
+                }
+            }
+        } catch (Exception e) {
+            // Handle error silently
+        }
     }
 }
