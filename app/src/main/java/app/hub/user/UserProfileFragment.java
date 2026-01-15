@@ -21,16 +21,11 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
 
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.imageview.ShapeableImageView;
-import com.google.android.material.textfield.TextInputEditText;
-import com.google.android.material.textfield.TextInputLayout;
 
 import app.hub.R;
 import app.hub.api.ApiClient;
 import app.hub.api.ApiService;
-import app.hub.api.ChangePasswordRequest;
-import app.hub.api.ChangePasswordResponse;
 import app.hub.api.LogoutResponse;
 import app.hub.api.UserResponse;
 import app.hub.common.MainActivity;
@@ -298,7 +293,7 @@ public class UserProfileFragment extends Fragment {
         setClickListener(view, R.id.btn_personal_info, () -> 
             showToast("Personal Information clicked"));
         setClickListener(view, R.id.btn_password_privacy, () -> 
-            showChangePasswordDialog());
+            navigateToChangePassword());
         setClickListener(view, R.id.btn_help, () -> 
             showToast("Help & Feedback clicked"));
         setClickListener(view, R.id.btn_edit_photo, () -> showImagePickerDialog());
@@ -469,146 +464,13 @@ public class UserProfileFragment extends Fragment {
         }
     }
 
-    private void showChangePasswordDialog() {
-        if (getContext() == null) return;
-
-        View dialogView = getLayoutInflater().inflate(R.layout.dialog_change_password, null);
-        
-        TextInputEditText currentPasswordInput = dialogView.findViewById(R.id.currentPasswordInput);
-        TextInputEditText newPasswordInput = dialogView.findViewById(R.id.newPasswordInput);
-        TextInputEditText confirmPasswordInput = dialogView.findViewById(R.id.confirmPasswordInput);
-        TextInputLayout currentPasswordLayout = dialogView.findViewById(R.id.currentPasswordLayout);
-        TextInputLayout newPasswordLayout = dialogView.findViewById(R.id.newPasswordLayout);
-        TextInputLayout confirmPasswordLayout = dialogView.findViewById(R.id.confirmPasswordLayout);
-
-        AlertDialog dialog = new MaterialAlertDialogBuilder(getContext())
-            .setTitle(getString(R.string.change_password))
-            .setView(dialogView)
-            .setPositiveButton(getString(R.string.save), null)
-            .setNegativeButton(getString(R.string.cancel), null)
-            .create();
-
-        dialog.setOnShowListener(d -> {
-            android.widget.Button positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
-            positiveButton.setOnClickListener(v -> {
-                String currentPassword = currentPasswordInput != null ? currentPasswordInput.getText().toString() : "";
-                String newPassword = newPasswordInput != null ? newPasswordInput.getText().toString() : "";
-                String confirmPassword = confirmPasswordInput != null ? confirmPasswordInput.getText().toString() : "";
-                
-                if (currentPasswordLayout != null) currentPasswordLayout.setError(null);
-                if (newPasswordLayout != null) newPasswordLayout.setError(null);
-                if (confirmPasswordLayout != null) confirmPasswordLayout.setError(null);
-                
-                if (validatePasswordInputs(currentPassword, newPassword, confirmPassword, 
-                        currentPasswordLayout, newPasswordLayout, confirmPasswordLayout)) {
-                    changePassword(currentPassword, newPassword);
-                    dialog.dismiss();
-                }
-            });
-        });
-
-        dialog.show();
-    }
-
-    private boolean validatePasswordInputs(String currentPassword, String newPassword, String confirmPassword,
-            TextInputLayout currentPasswordLayout, TextInputLayout newPasswordLayout, TextInputLayout confirmPasswordLayout) {
-        boolean isValid = true;
-        
-        if (currentPassword.isEmpty()) {
-            if (currentPasswordLayout != null) {
-                currentPasswordLayout.setError("Current password is required");
-            }
-            isValid = false;
+    private void navigateToChangePassword() {
+        if (getActivity() != null) {
+            ChangePasswordFragment changePasswordFragment = new ChangePasswordFragment();
+            getActivity().getSupportFragmentManager().beginTransaction()
+                .replace(R.id.fragmentContainerView, changePasswordFragment)
+                .addToBackStack(null)
+                .commit();
         }
-        
-        if (newPassword.isEmpty()) {
-            if (newPasswordLayout != null) {
-                newPasswordLayout.setError("New password is required");
-            }
-            isValid = false;
-        } else if (newPassword.length() < 8) {
-            if (newPasswordLayout != null) {
-                newPasswordLayout.setError("Password must be at least 8 characters");
-            }
-            isValid = false;
-        }
-        
-        if (!newPassword.equals(confirmPassword)) {
-            if (confirmPasswordLayout != null) {
-                confirmPasswordLayout.setError("Passwords do not match");
-            }
-            isValid = false;
-        }
-        
-        return isValid;
-    }
-
-    private void changePassword(String currentPassword, String newPassword) {
-        String token = tokenManager.getToken();
-        if (token == null) {
-            showToast("Authentication error. Please login again.");
-            return;
-        }
-
-        ChangePasswordRequest request = new ChangePasswordRequest(currentPassword, newPassword, newPassword);
-        ApiService apiService = ApiClient.getApiService();
-        Call<ChangePasswordResponse> call = apiService.changePassword(token, request);
-        
-        call.enqueue(new Callback<ChangePasswordResponse>() {
-            @Override
-            public void onResponse(@NonNull Call<ChangePasswordResponse> call, @NonNull Response<ChangePasswordResponse> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    ChangePasswordResponse changePasswordResponse = response.body();
-                    if (changePasswordResponse.isSuccess()) {
-                        showToast(changePasswordResponse.getMessage() != null ? 
-                            changePasswordResponse.getMessage() : "Password changed successfully");
-                    } else {
-                        String errorMessage = changePasswordResponse.getMessage();
-                        if (errorMessage == null || errorMessage.isEmpty()) {
-                            errorMessage = "Failed to change password";
-                        }
-                        showToast(errorMessage);
-                    }
-                } else {
-                    if (response.code() == 400 || response.code() == 422) {
-                        try {
-                            ChangePasswordResponse errorResponse = response.body();
-                            if (errorResponse != null && errorResponse.getErrors() != null) {
-                                StringBuilder errorMsg = new StringBuilder();
-                                ChangePasswordResponse.Errors errors = errorResponse.getErrors();
-                                
-                                if (errors.getCurrent_password() != null && errors.getCurrent_password().length > 0) {
-                                    errorMsg.append(errors.getCurrent_password()[0]).append("\n");
-                                }
-                                if (errors.getNew_password() != null && errors.getNew_password().length > 0) {
-                                    errorMsg.append(errors.getNew_password()[0]).append("\n");
-                                }
-                                if (errors.getNew_password_confirmation() != null && errors.getNew_password_confirmation().length > 0) {
-                                    errorMsg.append(errors.getNew_password_confirmation()[0]);
-                                }
-                                
-                                if (errorMsg.length() > 0) {
-                                    showToast(errorMsg.toString().trim());
-                                } else {
-                                    showToast(errorResponse.getMessage() != null ? errorResponse.getMessage() : "Invalid input");
-                                }
-                            } else {
-                                showToast("Invalid input. Please check your passwords.");
-                            }
-                        } catch (Exception e) {
-                            showToast("Failed to change password");
-                        }
-                    } else {
-                        showToast("Failed to change password. Please try again.");
-                    }
-                }
-            }
-
-            @Override
-            public void onFailure(@NonNull Call<ChangePasswordResponse> call, @NonNull Throwable t) {
-                Log.e("UserProfileFragment", "Change password failed: " + t.getMessage());
-                showToast("Network error. Please check your connection.");
-            }
-        });
     }
 }
