@@ -38,47 +38,25 @@ public class ProfileActivity extends AppCompatActivity {
 		setContentView(R.layout.activity_profile);
 
 		tokenManager = new TokenManager(this);
+		setupToolbar();
+		loadCachedData();
+		fetchUserData();
+		setupButtons();
+	}
 
+	private void setupToolbar() {
 		MaterialToolbar toolbar = findViewById(R.id.toolbar);
 		if (toolbar != null) {
 			setSupportActionBar(toolbar);
-			// Enable back button
 			if (getSupportActionBar() != null) {
 				getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 				getSupportActionBar().setDisplayShowHomeEnabled(true);
 			}
 			toolbar.setNavigationOnClickListener(v -> finish());
 		}
+	}
 
-		// Get email from intent or token manager
-		String email = getIntent().getStringExtra(EXTRA_EMAIL);
-		if (email == null || email.trim().isEmpty()) {
-			email = tokenManager.getEmail();
-		}
-
-		TextView nameTextView = findViewById(R.id.nameTextView);
-		TextView emailTextView = findViewById(R.id.emailTextView);
-		
-		if (nameTextView != null) {
-			String name = tokenManager.getName();
-			if (name != null && !name.trim().isEmpty()) {
-				nameTextView.setText(name.trim());
-			} else {
-				nameTextView.setText("Loading...");
-			}
-		}
-		
-		if (emailTextView != null) {
-			if (email != null && !email.trim().isEmpty()) {
-				emailTextView.setText(email.trim());
-			} else {
-				emailTextView.setText("Loading...");
-			}
-		}
-
-		// Fetch user data from API
-		fetchUserData();
-
+	private void setupButtons() {
 		MaterialButton editNameButton = findViewById(R.id.editNameButton);
 		if (editNameButton != null) {
 			editNameButton.setOnClickListener(v -> showEditNameDialog());
@@ -95,18 +73,39 @@ public class ProfileActivity extends AppCompatActivity {
 		}
 	}
 
+	private void loadCachedData() {
+		TextView nameTextView = findViewById(R.id.nameTextView);
+		TextView emailTextView = findViewById(R.id.emailTextView);
+		
+		if (nameTextView != null) {
+			String name = getCachedName();
+			if (isValidName(name)) {
+				nameTextView.setText(name);
+				currentName = name;
+			} else {
+				nameTextView.setText("Name not set");
+			}
+		}
+		
+		if (emailTextView != null) {
+			String email = getCachedEmail();
+			if (isValidEmail(email)) {
+				emailTextView.setText(email);
+				currentEmail = email;
+			} else {
+				emailTextView.setText("Email not set");
+			}
+		}
+	}
+
 	private void fetchUserData() {
 		String token = tokenManager.getToken();
 		if (token == null) {
-			Log.e("ProfileActivity", "No token available, using cached data only");
-			fallbackToCachedData();
 			return;
 		}
 
-		// Log cached data before API call
-		String cachedName = tokenManager.getName();
-		String cachedEmail = tokenManager.getEmail();
-		Log.d("ProfileActivity", "Cached data before API call - Name: " + cachedName + ", Email: " + cachedEmail);
+		final String cachedName = getCachedName();
+		final String cachedEmail = getCachedEmail();
 
 		ApiService apiService = ApiClient.getApiService();
 		Call<UserResponse> call = apiService.getUser(token);
@@ -115,147 +114,171 @@ public class ProfileActivity extends AppCompatActivity {
 			public void onResponse(Call<UserResponse> call, Response<UserResponse> response) {
 				if (response.isSuccessful() && response.body() != null) {
 					UserResponse userResponse = response.body();
-					Log.d("ProfileActivity", "API Response - Success: " + userResponse.isSuccess());
 					
 					if (userResponse.isSuccess() && userResponse.getData() != null) {
-						UserResponse.Data userData = userResponse.getData();
+						UserResponse.Data userData = response.body().getData();
+						String apiName = buildNameFromApi(userData);
+						String emailToDisplay = getEmailToDisplay(userData, cachedEmail);
 						
-						// Log the raw data from API
-						Log.d("ProfileActivity", "API Data - Name: " + userData.getName() + 
-							", FirstName: " + userData.getFirstName() + 
-							", LastName: " + userData.getLastName() + 
-							", Email: " + userData.getEmail());
-						
-						// Get name - prefer name field, fallback to firstName + lastName
-						currentName = userData.getName();
-						if (currentName == null || currentName.trim().isEmpty()) {
-							String firstName = userData.getFirstName();
-							String lastName = userData.getLastName();
-							
-							Log.d("ProfileActivity", "Name field is empty, combining firstName and lastName");
-							
-							// Build name from firstName and lastName
-							StringBuilder nameBuilder = new StringBuilder();
-							if (firstName != null && !firstName.trim().isEmpty()) {
-								nameBuilder.append(firstName.trim());
-							}
-							if (lastName != null && !lastName.trim().isEmpty()) {
-								if (nameBuilder.length() > 0) {
-									nameBuilder.append(" ");
-								}
-								nameBuilder.append(lastName.trim());
-							}
-							
-							currentName = nameBuilder.toString();
-							Log.d("ProfileActivity", "Combined name: " + currentName);
-						} else {
-							currentName = currentName.trim();
-						}
-						
-						currentEmail = userData.getEmail();
-						if (currentEmail != null) {
-							currentEmail = currentEmail.trim();
-						}
-						
-						Log.d("ProfileActivity", "Final values - Name: " + currentName + ", Email: " + currentEmail);
-						
-						// If API returned empty data, fallback to cached data
-						if ((currentName == null || currentName.isEmpty()) && 
-							(currentEmail == null || currentEmail.isEmpty())) {
-							Log.w("ProfileActivity", "API returned empty data, falling back to cached data");
-							fallbackToCachedData();
-							return;
-						}
-						
-						// If name is empty but email exists, try to get name from cache
-						if ((currentName == null || currentName.isEmpty()) && 
-							(currentEmail != null && !currentEmail.isEmpty())) {
-							String cachedName = tokenManager.getName();
-							if (cachedName != null && !cachedName.trim().isEmpty()) {
-								currentName = cachedName.trim();
-								Log.d("ProfileActivity", "Using cached name: " + currentName);
-							}
-						}
-						
-						// If email is empty but name exists, try to get email from cache
-						if ((currentEmail == null || currentEmail.isEmpty()) && 
-							(currentName != null && !currentName.isEmpty())) {
-							String cachedEmail = tokenManager.getEmail();
-							if (cachedEmail != null && !cachedEmail.trim().isEmpty()) {
-								currentEmail = cachedEmail.trim();
-								Log.d("ProfileActivity", "Using cached email: " + currentEmail);
-							}
-						}
-						
-						// Update UI on main thread
-						runOnUiThread(() -> {
-							TextView nameTextView = findViewById(R.id.nameTextView);
-							TextView emailTextView = findViewById(R.id.emailTextView);
-							
-							if (nameTextView != null) {
-								if (currentName != null && !currentName.isEmpty()) {
-									nameTextView.setText(currentName);
-								} else {
-									// Try cached data one more time
-									String cachedName = tokenManager.getName();
-									if (cachedName != null && !cachedName.trim().isEmpty()) {
-										nameTextView.setText(cachedName.trim());
-										currentName = cachedName.trim();
-									} else {
-										nameTextView.setText("No name available");
-									}
-								}
-							}
-							
-							if (emailTextView != null) {
-								if (currentEmail != null && !currentEmail.isEmpty()) {
-									emailTextView.setText(currentEmail);
-								} else {
-									// Try cached data one more time
-									String cachedEmail = tokenManager.getEmail();
-									if (cachedEmail != null && !cachedEmail.trim().isEmpty()) {
-										emailTextView.setText(cachedEmail.trim());
-										currentEmail = cachedEmail.trim();
-									} else {
-										emailTextView.setText("No email available");
-									}
-								}
-							}
-						});
-						
-						// Update token manager with latest data
-						if (currentName != null && !currentName.isEmpty()) {
-							tokenManager.saveName(currentName);
-						}
-						if (currentEmail != null && !currentEmail.isEmpty()) {
-							tokenManager.saveEmail(currentEmail);
-						}
+						updateCache(apiName, emailToDisplay, cachedName, cachedEmail);
+						updateDisplay(isValidName(apiName) ? apiName : cachedName, emailToDisplay);
 					} else {
-						// Handle case where response is not successful - fallback to cached data
-						Log.e("ProfileActivity", "API response not successful or data is null");
-						fallbackToCachedData();
+						updateDisplay(cachedName, cachedEmail);
 					}
 				} else {
-					// Handle error response - fallback to cached data
-					Log.e("ProfileActivity", "API call not successful. Code: " + response.code());
-					if (response.errorBody() != null) {
-						try {
-							Log.e("ProfileActivity", "Error body: " + response.errorBody().string());
-						} catch (java.io.IOException e) {
-							Log.e("ProfileActivity", "Error reading error body", e);
-						}
-					}
-					fallbackToCachedData();
+					updateDisplay(cachedName, cachedEmail);
 				}
 			}
 
 			@Override
 			public void onFailure(Call<UserResponse> call, Throwable t) {
-				// Show error but fallback to cached data
 				Log.e("ProfileActivity", "API call failed: " + t.getMessage());
-				fallbackToCachedData();
+				updateDisplay(cachedName, cachedEmail);
 			}
 		});
+	}
+
+	private String buildNameFromApi(UserResponse.Data userData) {
+		String name = userData.getName();
+		if (isValidName(name)) {
+			return name.trim();
+		}
+		
+		String firstName = userData.getFirstName();
+		String lastName = userData.getLastName();
+		
+		if (isValidName(firstName) || isValidName(lastName)) {
+			StringBuilder builder = new StringBuilder();
+			if (isValidName(firstName)) {
+				builder.append(firstName.trim());
+			}
+			if (isValidName(lastName)) {
+				if (builder.length() > 0) {
+					builder.append(" ");
+				}
+				builder.append(lastName.trim());
+			}
+			if (builder.length() > 0) {
+				return builder.toString();
+			}
+		}
+		
+		return null;
+	}
+
+	private String getEmailToDisplay(UserResponse.Data userData, String cachedEmail) {
+		if (isValidEmail(cachedEmail)) {
+			return cachedEmail;
+		}
+
+		String apiEmail = userData.getEmail();
+		String apiUsername = userData.getUsername();
+		String apiFirstName = userData.getFirstName();
+		
+		if (isValidApiEmail(apiEmail, apiUsername, apiFirstName)) {
+			return apiEmail.trim();
+		}
+		
+		return cachedEmail;
+	}
+
+	private boolean isValidApiEmail(String email, String username, String firstName) {
+		if (email == null || email.trim().isEmpty()) {
+			return false;
+		}
+		String trimmed = email.trim();
+		return trimmed.contains("@") 
+			&& !trimmed.equals("null")
+			&& !trimmed.equals(username)
+			&& !trimmed.equals(firstName)
+			&& trimmed.length() > 3;
+	}
+
+	private void updateCache(String apiName, String emailToDisplay, String cachedName, String cachedEmail) {
+		if (isValidName(apiName)) {
+			tokenManager.saveName(apiName);
+			currentName = apiName;
+		} else if (isValidName(cachedName)) {
+			currentName = cachedName;
+		}
+
+		if (isValidEmail(emailToDisplay) && !emailToDisplay.equals(cachedEmail)) {
+			tokenManager.saveEmail(emailToDisplay);
+			currentEmail = emailToDisplay;
+		} else if (isValidEmail(cachedEmail)) {
+			currentEmail = cachedEmail;
+		}
+	}
+
+	private void updateDisplay(String name, String email) {
+		runOnUiThread(() -> {
+			TextView nameTextView = findViewById(R.id.nameTextView);
+			TextView emailTextView = findViewById(R.id.emailTextView);
+			
+			if (nameTextView != null) {
+				String displayName = isValidName(name) ? name : getCachedName();
+				if (isValidName(displayName)) {
+					nameTextView.setText(displayName);
+					currentName = displayName;
+				} else {
+					nameTextView.setText("Name not set");
+				}
+			}
+			
+			if (emailTextView != null) {
+				String displayEmail = getCachedEmail();
+				if (!isValidEmail(displayEmail) && isValidEmail(email)) {
+					displayEmail = email;
+				}
+				
+				if (isValidEmail(displayEmail)) {
+					emailTextView.setText(displayEmail);
+					currentEmail = displayEmail;
+				} else {
+					emailTextView.setText("Email not set");
+				}
+			}
+		});
+	}
+
+	private boolean isValidName(String name) {
+		return name != null 
+			&& !name.trim().isEmpty() 
+			&& !name.trim().equals("null") 
+			&& !name.trim().contains("null");
+	}
+
+	private boolean isValidEmail(String email) {
+		if (email == null || email.trim().isEmpty()) {
+			return false;
+		}
+		String trimmed = email.trim();
+		return trimmed.contains("@") 
+			&& trimmed.length() > 3 
+			&& !trimmed.equals("null");
+	}
+
+	private String getCachedName() {
+		try {
+			String name = tokenManager.getName();
+			return isValidName(name) ? name.trim() : null;
+		} catch (Exception e) {
+			Log.e("ProfileActivity", "Error getting cached name", e);
+			return null;
+		}
+	}
+
+	private String getCachedEmail() {
+		try {
+			String email = tokenManager.getEmail();
+			if (isValidEmail(email)) {
+				return email.trim();
+			}
+			return null;
+		} catch (Exception e) {
+			Log.e("ProfileActivity", "Error getting cached email", e);
+			return null;
+		}
 	}
 
 	private void showEditNameDialog() {
@@ -293,11 +316,11 @@ public class ProfileActivity extends AppCompatActivity {
 
 		dialog.show();
 		
-		// Auto-focus and show keyboard
 		if (nameInput != null) {
 			nameInput.post(() -> {
 				nameInput.requestFocus();
-				android.view.inputmethod.InputMethodManager imm = (android.view.inputmethod.InputMethodManager) getSystemService(android.content.Context.INPUT_METHOD_SERVICE);
+				android.view.inputmethod.InputMethodManager imm = 
+					(android.view.inputmethod.InputMethodManager) getSystemService(android.content.Context.INPUT_METHOD_SERVICE);
 				if (imm != null) {
 					imm.showSoftInput(nameInput, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT);
 				}
@@ -329,46 +352,12 @@ public class ProfileActivity extends AppCompatActivity {
 				String newPassword = newPasswordInput != null ? newPasswordInput.getText().toString() : "";
 				String confirmPassword = confirmPasswordInput != null ? confirmPasswordInput.getText().toString() : "";
 				
-				// Clear previous errors
-				if (currentPasswordLayout != null) {
-					currentPasswordLayout.setError(null);
-				}
-				if (newPasswordLayout != null) {
-					newPasswordLayout.setError(null);
-				}
-				if (confirmPasswordLayout != null) {
-					confirmPasswordLayout.setError(null);
-				}
+				if (currentPasswordLayout != null) currentPasswordLayout.setError(null);
+				if (newPasswordLayout != null) newPasswordLayout.setError(null);
+				if (confirmPasswordLayout != null) confirmPasswordLayout.setError(null);
 				
-				boolean isValid = true;
-				
-				if (currentPassword.isEmpty()) {
-					if (currentPasswordLayout != null) {
-						currentPasswordLayout.setError("Current password is required");
-					}
-					isValid = false;
-				}
-				
-				if (newPassword.isEmpty()) {
-					if (newPasswordLayout != null) {
-						newPasswordLayout.setError("New password is required");
-					}
-					isValid = false;
-				} else if (newPassword.length() < 8) {
-					if (newPasswordLayout != null) {
-						newPasswordLayout.setError("Password must be at least 8 characters");
-					}
-					isValid = false;
-				}
-				
-				if (!newPassword.equals(confirmPassword)) {
-					if (confirmPasswordLayout != null) {
-						confirmPasswordLayout.setError("Passwords do not match");
-					}
-					isValid = false;
-				}
-				
-				if (isValid) {
+				if (validatePasswordInputs(currentPassword, newPassword, confirmPassword, 
+						currentPasswordLayout, newPasswordLayout, confirmPasswordLayout)) {
 					changePassword(currentPassword, newPassword);
 					dialog.dismiss();
 				}
@@ -378,9 +367,40 @@ public class ProfileActivity extends AppCompatActivity {
 		dialog.show();
 	}
 
+	private boolean validatePasswordInputs(String currentPassword, String newPassword, String confirmPassword,
+			TextInputLayout currentPasswordLayout, TextInputLayout newPasswordLayout, TextInputLayout confirmPasswordLayout) {
+		boolean isValid = true;
+		
+		if (currentPassword.isEmpty()) {
+			if (currentPasswordLayout != null) {
+				currentPasswordLayout.setError("Current password is required");
+			}
+			isValid = false;
+		}
+		
+		if (newPassword.isEmpty()) {
+			if (newPasswordLayout != null) {
+				newPasswordLayout.setError("New password is required");
+			}
+			isValid = false;
+		} else if (newPassword.length() < 8) {
+			if (newPasswordLayout != null) {
+				newPasswordLayout.setError("Password must be at least 8 characters");
+			}
+			isValid = false;
+		}
+		
+		if (!newPassword.equals(confirmPassword)) {
+			if (confirmPasswordLayout != null) {
+				confirmPasswordLayout.setError("Passwords do not match");
+			}
+			isValid = false;
+		}
+		
+		return isValid;
+	}
+
 	private void updateName(String newName) {
-		// TODO: Implement API call to update name
-		// For now, just update locally
 		currentName = newName;
 		TextView nameTextView = findViewById(R.id.nameTextView);
 		if (nameTextView != null) {
@@ -391,7 +411,6 @@ public class ProfileActivity extends AppCompatActivity {
 	}
 
 	private void changePassword(String currentPassword, String newPassword) {
-		// TODO: Implement API call to change password
 		Toast.makeText(this, "Password change functionality will be implemented soon", Toast.LENGTH_SHORT).show();
 	}
 
@@ -403,14 +422,12 @@ public class ProfileActivity extends AppCompatActivity {
 			call.enqueue(new Callback<LogoutResponse>() {
 				@Override
 				public void onResponse(Call<LogoutResponse> call, Response<LogoutResponse> response) {
-					// Clear token regardless of API response
 					tokenManager.clear();
 					navigateToLogin();
 				}
 
 				@Override
 				public void onFailure(Call<LogoutResponse> call, Throwable t) {
-					// Clear token even if API call fails
 					tokenManager.clear();
 					navigateToLogin();
 				}
@@ -426,47 +443,5 @@ public class ProfileActivity extends AppCompatActivity {
 		intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
 		startActivity(intent);
 		finish();
-	}
-
-	private String trim(String str) {
-		return str != null ? str.trim() : "";
-	}
-
-	private void fallbackToCachedData() {
-		// Fallback to cached data from TokenManager if API fails
-		runOnUiThread(() -> {
-			TextView nameTextView = findViewById(R.id.nameTextView);
-			TextView emailTextView = findViewById(R.id.emailTextView);
-			
-			// Get cached data
-			String cachedName = tokenManager.getName();
-			String cachedEmail = tokenManager.getEmail();
-			
-			Log.d("ProfileActivity", "Using cached data - Name: " + cachedName + ", Email: " + cachedEmail);
-			
-			if (nameTextView != null) {
-				if (cachedName != null && !cachedName.trim().isEmpty()) {
-					nameTextView.setText(cachedName.trim());
-					currentName = cachedName.trim();
-				} else {
-					nameTextView.setText("No name available");
-				}
-			}
-			
-			if (emailTextView != null) {
-				if (cachedEmail != null && !cachedEmail.trim().isEmpty()) {
-					emailTextView.setText(cachedEmail.trim());
-					currentEmail = cachedEmail.trim();
-				} else {
-					emailTextView.setText("No email available");
-				}
-			}
-			
-			// Show a subtle message that we're using cached data
-			if (cachedName == null || cachedName.trim().isEmpty() || 
-				cachedEmail == null || cachedEmail.trim().isEmpty()) {
-				Toast.makeText(ProfileActivity.this, "Using cached data. Please check your connection.", Toast.LENGTH_SHORT).show();
-			}
-		});
 	}
 }
