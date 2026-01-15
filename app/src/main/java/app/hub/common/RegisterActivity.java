@@ -683,8 +683,31 @@ public class RegisterActivity extends AppCompatActivity {
 		}
 		
 		String userName = nameBuilder.toString();
-		if (userName != null && !userName.isEmpty()) {
-			tokenManager.saveName(userName);
+		// Always save the name, even if only one field is provided
+		if (userName != null && !userName.trim().isEmpty()) {
+			try {
+				tokenManager.saveName(userName.trim());
+				Log.d("RegisterActivity", "Saved name to cache: " + userName.trim());
+			} catch (Exception e) {
+				Log.e("RegisterActivity", "Error saving name: " + e.getMessage());
+			}
+		} else {
+			// If both are null, try to save at least one field
+			if (firstName != null && !firstName.trim().isEmpty()) {
+				try {
+					tokenManager.saveName(firstName.trim());
+					Log.d("RegisterActivity", "Saved firstName to cache: " + firstName.trim());
+				} catch (Exception e) {
+					Log.e("RegisterActivity", "Error saving firstName: " + e.getMessage());
+				}
+			} else if (lastName != null && !lastName.trim().isEmpty()) {
+				try {
+					tokenManager.saveName(lastName.trim());
+					Log.d("RegisterActivity", "Saved lastName to cache: " + lastName.trim());
+				} catch (Exception e) {
+					Log.e("RegisterActivity", "Error saving lastName: " + e.getMessage());
+				}
+			}
 		}
 
 		// Show success and navigate (reusing firstName and lastName from above)
@@ -1152,8 +1175,31 @@ public class RegisterActivity extends AppCompatActivity {
 		}
 		
 		String userName = nameBuilder.toString();
-		if (userName != null && !userName.isEmpty()) {
-			tokenManager.saveName(userName);
+		// Always save the name, even if only one field is provided
+		if (userName != null && !userName.trim().isEmpty()) {
+			try {
+				tokenManager.saveName(userName.trim());
+				Log.d("RegisterActivity", "Saved name to cache (verification): " + userName.trim());
+			} catch (Exception e) {
+				Log.e("RegisterActivity", "Error saving name (verification): " + e.getMessage());
+			}
+		} else {
+			// If both are null, try to save at least one field
+			if (firstName != null && !firstName.trim().isEmpty()) {
+				try {
+					tokenManager.saveName(firstName.trim());
+					Log.d("RegisterActivity", "Saved firstName to cache (verification): " + firstName.trim());
+				} catch (Exception e) {
+					Log.e("RegisterActivity", "Error saving firstName (verification): " + e.getMessage());
+				}
+			} else if (lastName != null && !lastName.trim().isEmpty()) {
+				try {
+					tokenManager.saveName(lastName.trim());
+					Log.d("RegisterActivity", "Saved lastName to cache (verification): " + lastName.trim());
+				} catch (Exception e) {
+					Log.e("RegisterActivity", "Error saving lastName (verification): " + e.getMessage());
+				}
+			}
 		}
 
 		// Close dialog and show success (reusing firstName and lastName from above)
