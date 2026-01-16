@@ -29,7 +29,6 @@ import android.annotation.SuppressLint;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.ContextCompat;
 
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -132,10 +131,10 @@ public class RegisterActivity extends AppCompatActivity {
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
             public void onTextChanged(CharSequence s, int start, int before, int count) {}
             public void afterTextChanged(Editable s) {
-                validateConfirmPassword(getTextFromEditText(R.id.passwordInput), s.toString());
+                validateConfirmPassword(getTextFromEditText(R.id.Pass_val), s.toString());
             }
         });
-        TextInputEditText emailInput = findViewById(R.id.emailInput);
+        TextInputEditText emailInput = findViewById(R.id.Email_val);
         emailInput.addTextChangedListener(new TextWatcher() {
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
             public void onTextChanged(CharSequence s, int start, int before, int count) {}
@@ -328,12 +327,12 @@ public class RegisterActivity extends AppCompatActivity {
 		lastNameInputLayout = findViewById(R.id.lastNameInputLayout);
 		usernameInputLayout = findViewById(R.id.usernameInputLayout);
 		passwordInputLayout = findViewById(R.id.passwordInputLayout);
-		confirmPasswordInputLayout = findViewById(R.id.confirmPasswordInputLayout);
+		confirmPasswordInputLayout = findViewById(R.id.CPass_val);
 		phoneInputLayout = findViewById(R.id.phoneInputLayout);
         firstNameInput = findViewById(R.id.firstNameInput);
         lastNameInput = findViewById(R.id.lastNameInput);
         usernameInput = findViewById(R.id.usernameInput);
-        passwordInput = findViewById(R.id.passwordInput);
+        passwordInput = findViewById(R.id.Pass_val);
         confirmPasswordInput = findViewById(R.id.confirmPasswordInput);
         phoneInput = findViewById(R.id.etPhone);
         openOTPButton = findViewById(R.id.OpenOTP);
@@ -363,7 +362,7 @@ public class RegisterActivity extends AppCompatActivity {
 
 	// Setup real-time email validation as user types
 	private void setupEmailValidation() {
-		TextInputEditText emailInput = findViewById(R.id.emailInput);
+		TextInputEditText emailInput = findViewById(R.id.Email_val);
 		if (emailInput == null || emailInputLayout == null) {
 			return;
 		}
@@ -448,8 +447,8 @@ public class RegisterActivity extends AppCompatActivity {
             String username = getTextFromEditText(R.id.usernameInput);
             String firstName = getTextFromEditText(R.id.firstNameInput);
             String lastName = getTextFromEditText(R.id.lastNameInput);
-            String email = getTextFromEditText(R.id.emailInput);
-            String password = getTextFromEditText(R.id.passwordInput);
+            String email = getTextFromEditText(R.id.Email_val);
+            String password = getTextFromEditText(R.id.Pass_val);
             String confirmPassword = getTextFromEditText(R.id.confirmPasswordInput);
             String phone = getTextFromEditText(R.id.etPhone);
 

@@ -29,13 +29,13 @@ public class AdminAddEmployee extends AppCompatActivity {
         firstNameInput = findViewById(R.id.firstNameInput);
         lastNameInput = findViewById(R.id.lastNameInput);
         usernameInput = findViewById(R.id.usernameInput);
-        emailInput = findViewById(R.id.Email_Val);
-        passwordInput = findViewById(R.id.passwordInput);
+        emailInput = findViewById(R.id.Email_val);
+        passwordInput = findViewById(R.id.Pass_val);
 
         Button createEmployeeButton = findViewById(R.id.createEmployeeButton);
         createEmployeeButton.setOnClickListener(v -> createEmployee());
 
-        Button backButton = findViewById(R.id.backButton);
+        Button backButton = findViewById(R.id.closeButton);
         backButton.setOnClickListener(v -> finish());
     }
 

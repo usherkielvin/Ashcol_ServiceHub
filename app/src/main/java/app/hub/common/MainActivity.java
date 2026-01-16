@@ -70,8 +70,8 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        TextInputEditText emailInput = findViewById(R.id.emailInput);
-        TextInputEditText passwordInput = findViewById(R.id.passwordInput);
+        TextInputEditText emailInput = findViewById(R.id.Email_val);
+        TextInputEditText passwordInput = findViewById(R.id.Pass_val);
         TextInputLayout emailInputLayout = findViewById(R.id.emailInputLayout);
         MaterialButton loginButton = findViewById(R.id.loginButton);
         TextView registerButton = findViewById(R.id.registerButton);
@@ -152,8 +152,8 @@ public class MainActivity extends AppCompatActivity {
      * Performs login action - validates inputs and calls login method
      */
     private void performLogin() {
-        TextInputEditText emailInput = findViewById(R.id.emailInput);
-        TextInputEditText passwordInput = findViewById(R.id.passwordInput);
+        TextInputEditText emailInput = findViewById(R.id.Email_val);
+        TextInputEditText passwordInput = findViewById(R.id.Pass_val);
         
         String email = emailInput != null ? emailInput.getText().toString().trim() : "";
         String password = passwordInput != null ? passwordInput.getText().toString() : "";

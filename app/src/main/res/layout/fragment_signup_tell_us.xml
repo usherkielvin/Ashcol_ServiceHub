@@ -14,7 +14,7 @@
 
 
         <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/btnContinue"
+            android:id="@+id/verifyButton"
             android:layout_width="0dp"
             android:layout_height="56dp"
             android:layout_marginTop="56dp"
@@ -31,7 +31,7 @@
 
 
         <ImageView
-            android:id="@+id/backButton"
+            android:id="@+id/closeButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
@@ -52,11 +52,11 @@
             android:textColor="#000000"
             android:textSize="24sp"
             android:textStyle="bold"
-            app:layout_constraintStart_toEndOf="@+id/backButton"
+            app:layout_constraintStart_toEndOf="@+id/closeButton"
             app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
-            android:id="@+id/tvSubtitle"
+            android:id="@+id/verificationMessage"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="24dp"
@@ -76,7 +76,7 @@
             android:textColor="#000000"
             android:textSize="16sp"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvSubtitle" />
+            app:layout_constraintTop_toBottomOf="@id/verificationMessage" />
 
         <EditText
             android:id="@+id/etFirstName"
@@ -228,7 +228,7 @@
             app:layout_constraintBottom_toTopOf="@+id/tvFooter"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/btnContinue"
+            app:layout_constraintTop_toBottomOf="@+id/verifyButton"
             tools:ignore="ContentDescription" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>

@@ -78,7 +78,7 @@
                 android:hint="@string/enter_email_or_username">
 
                 <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/Email_Val"
+                    android:id="@+id/Email_val"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:inputType="textEmailAddress" />
@@ -95,7 +95,7 @@
                 app:passwordToggleEnabled="true">
 
                 <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/passwordInput"
+                    android:id="@+id/Pass_val"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:inputType="textPassword"

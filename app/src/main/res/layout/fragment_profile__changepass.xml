@@ -9,7 +9,7 @@
     tools:context=".ChangePasswordActivity">
 
     <ImageView
-        android:id="@+id/backButton"
+        android:id="@+id/closeButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
@@ -29,16 +29,16 @@
         android:textColor="@android:color/black"
         android:textSize="20sp"
         android:textStyle="bold"
-        app:layout_constraintBottom_toBottomOf="@id/backButton"
+        app:layout_constraintBottom_toBottomOf="@id/closeButton"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@id/backButton" />
+        app:layout_constraintTop_toTopOf="@id/closeButton" />
 
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:fillViewport="true"
-        app:layout_constraintTop_toBottomOf="@id/backButton"
+        app:layout_constraintTop_toBottomOf="@id/closeButton"
         app:layout_constraintBottom_toBottomOf="parent">
 
     <LinearLayout
@@ -161,7 +161,7 @@
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnContinue"
+            android:id="@+id/verifyButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:backgroundTint="#34A853"

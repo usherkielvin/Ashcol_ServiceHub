@@ -15,7 +15,7 @@
 
 
         <ImageButton
-            android:id="@+id/backButton"
+            android:id="@+id/closeButton"
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:layout_marginTop="8dp"
@@ -35,10 +35,10 @@
             android:textSize="20sp"
             android:textStyle="bold"
             android:fontFamily="sans-serif-medium"
-            app:layout_constraintBottom_toBottomOf="@+id/backButton"
+            app:layout_constraintBottom_toBottomOf="@+id/closeButton"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/backButton" />
+            app:layout_constraintTop_toTopOf="@+id/closeButton" />
 
         <TextView
             android:id="@+id/labelEmail"
@@ -50,10 +50,10 @@
             android:textSize="14sp"
             android:textStyle="bold"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/backButton" />
+            app:layout_constraintTop_toBottomOf="@+id/closeButton" />
 
         <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/Email_Val"
+            android:id="@+id/Email_val"
             android:layout_width="0dp"
             android:layout_height="50dp"
             android:layout_marginTop="8dp"
@@ -72,7 +72,7 @@
             app:layout_constraintTop_toBottomOf="@+id/labelEmail" />
 
         <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/btnEmail"
+            android:id="@+id/OpenOTP"
             android:layout_width="0dp"
             android:layout_height="55dp"
             android:layout_marginTop="24dp"
@@ -84,7 +84,7 @@
             android:textStyle="bold"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/Email_Val" />
+            app:layout_constraintTop_toBottomOf="@+id/Email_val" />
 
         <ImageView
             android:id="@+id/ivLogo"
@@ -97,7 +97,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.498"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/btnEmail"
+            app:layout_constraintTop_toBottomOf="@+id/OpenOTP"
             tools:ignore="ContentDescription" />
 
         <TextView

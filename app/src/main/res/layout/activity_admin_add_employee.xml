@@ -149,7 +149,7 @@
                 app:startIconDrawable="@drawable/profile_icon">
 
                 <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/Email_Val"
+                    android:id="@+id/Email_val"
                     android:layout_width="match_parent"
                     android:layout_height="50dp"
                     android:background="@drawable/bg_input_field"
@@ -294,7 +294,7 @@
                 app:startIconDrawable="@drawable/lock">
 
                 <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/passwordInput"
+                    android:id="@+id/Pass_val"
                     android:layout_width="match_parent"
                     android:layout_height="50dp"
                     android:background="@drawable/bg_input_field"
@@ -360,7 +360,7 @@
                 android:orientation="horizontal">
 
                 <androidx.appcompat.widget.AppCompatButton
-                    android:id="@+id/backButton"
+                    android:id="@+id/closeButton"
                     android:layout_width="0dp"
                     android:layout_height="55dp"
                     android:layout_marginEnd="8dp"

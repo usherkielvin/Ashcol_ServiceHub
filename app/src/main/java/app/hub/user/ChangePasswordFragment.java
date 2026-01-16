@@ -58,9 +58,9 @@ public class ChangePasswordFragment extends Fragment {
         currentPasswordLayout = view.findViewById(R.id.currentPasswordLayout);
         newPasswordLayout = view.findViewById(R.id.newPasswordLayout);
         confirmPasswordLayout = view.findViewById(R.id.confirmPasswordLayout);
-        btnContinue = view.findViewById(R.id.btnContinue);
+        btnContinue = view.findViewById(R.id.verifyButton);
 
-        ImageView btnBack = view.findViewById(R.id.backButton);
+        ImageView btnBack = view.findViewById(R.id.closeButton);
         btnBack.setOnClickListener(v -> navigateBack());
     }
 
