@@ -15,7 +15,7 @@
 
 
         <ImageButton
-            android:id="@+id/btnBack"
+            android:id="@+id/backButton"
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:layout_marginTop="8dp"
@@ -35,10 +35,10 @@
             android:textSize="20sp"
             android:textStyle="bold"
             android:fontFamily="sans-serif-medium"
-            app:layout_constraintBottom_toBottomOf="@+id/btnBack"
+            app:layout_constraintBottom_toBottomOf="@+id/backButton"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/btnBack" />
+            app:layout_constraintTop_toTopOf="@+id/backButton" />
 
         <TextView
             android:id="@+id/labelEmail"
@@ -50,10 +50,10 @@
             android:textSize="14sp"
             android:textStyle="bold"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/btnBack" />
+            app:layout_constraintTop_toBottomOf="@+id/backButton" />
 
         <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/emailInput"
+            android:id="@+id/Email_Val"
             android:layout_width="0dp"
             android:layout_height="50dp"
             android:layout_marginTop="8dp"
@@ -84,7 +84,7 @@
             android:textStyle="bold"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/emailInput" />
+            app:layout_constraintTop_toBottomOf="@+id/Email_Val" />
 
         <ImageView
             android:id="@+id/ivLogo"

@@ -1,6 +1,5 @@
 package app.hub.admin;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.Toast;
@@ -30,7 +29,7 @@ public class AdminAddEmployee extends AppCompatActivity {
         firstNameInput = findViewById(R.id.firstNameInput);
         lastNameInput = findViewById(R.id.lastNameInput);
         usernameInput = findViewById(R.id.usernameInput);
-        emailInput = findViewById(R.id.emailInput);
+        emailInput = findViewById(R.id.Email_Val);
         passwordInput = findViewById(R.id.passwordInput);
 
         Button createEmployeeButton = findViewById(R.id.createEmployeeButton);

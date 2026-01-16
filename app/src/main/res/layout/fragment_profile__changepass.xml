@@ -9,7 +9,7 @@
     tools:context=".ChangePasswordActivity">
 
     <ImageView
-        android:id="@+id/btnBack"
+        android:id="@+id/backButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
@@ -29,16 +29,16 @@
         android:textColor="@android:color/black"
         android:textSize="20sp"
         android:textStyle="bold"
-        app:layout_constraintBottom_toBottomOf="@id/btnBack"
+        app:layout_constraintBottom_toBottomOf="@id/backButton"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@id/btnBack" />
+        app:layout_constraintTop_toTopOf="@id/backButton" />
 
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:fillViewport="true"
-        app:layout_constraintTop_toBottomOf="@id/btnBack"
+        app:layout_constraintTop_toBottomOf="@id/backButton"
         app:layout_constraintBottom_toBottomOf="parent">
 
     <LinearLayout

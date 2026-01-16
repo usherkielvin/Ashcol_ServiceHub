@@ -12,7 +12,7 @@
     android:background="#FFFFFF">
 
     <ImageButton
-        android:id="@+id/btnBack"
+        android:id="@+id/backButton"
         android:layout_width="48dp"
         android:layout_height="48dp"
         android:layout_marginTop="8dp"
@@ -32,10 +32,10 @@
         android:textColor="#000000"
         android:textSize="20sp"
         android:textStyle="bold"
-        app:layout_constraintBottom_toBottomOf="@+id/btnBack"
+        app:layout_constraintBottom_toBottomOf="@+id/backButton"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/btnBack" />
+        app:layout_constraintTop_toTopOf="@+id/backButton" />
 
     <TextView
         android:id="@+id/tvSubtitle"
@@ -48,7 +48,7 @@
         android:textSize="14sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/btnBack" />
+        app:layout_constraintTop_toBottomOf="@+id/backButton" />
 
     <TextView
         android:id="@+id/tvInstruction"
