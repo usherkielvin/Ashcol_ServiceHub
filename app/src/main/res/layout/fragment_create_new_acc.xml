@@ -12,11 +12,13 @@
         android:layout_height="match_parent"
         android:padding="24dp">
 
-        <ImageView
+        <ImageButton
             android:id="@+id/btnBack"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:layout_marginTop="24dp"
+            android:backgroundTint="@color/white"
+            android:contentDescription="btnBack"
             android:padding="8dp"
             android:src="@drawable/outline_arrow_back_24"
             app:layout_constraintStart_toStartOf="parent"
