@@ -142,8 +142,8 @@
                     android:id="@+id/lname_val"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
                     android:layout_marginStart="4dp"
+                    android:layout_weight="1"
                     android:text="Invalid last name"
                     android:textColor="#FF0000"
                     android:textSize="12sp"
@@ -338,7 +338,6 @@
             android:layout_width="104dp"
             android:layout_height="60dp"
             android:layout_marginTop="24dp"
-            android:layout_marginBottom="16dp"
             android:scaleType="fitCenter"
             android:src="@drawable/ash"
             app:layout_constraintBottom_toTopOf="@+id/tvFooter"
@@ -346,22 +345,22 @@
             app:layout_constraintHorizontal_bias="0.498"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/linearLayout2"
-            app:layout_constraintVertical_bias="1.0"
             tools:ignore="ContentDescription" />
 
         <TextView
             android:id="@+id/tvFooter"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="48dp"
+            android:layout_marginBottom="24dp"
             android:gravity="center"
-            android:text="By using Ashcol, you agree to the  Terms and Privacy Policy."
+            android:text="@string/footer_terms"
             android:textColor="#3A383F"
             android:textSize="13sp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"
-            app:layout_constraintStart_toStartOf="parent" />
+            app:layout_constraintHorizontal_bias="1.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/ivLogo" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

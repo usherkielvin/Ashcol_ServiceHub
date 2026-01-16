@@ -3,4 +3,8 @@
     <string name="cleaning">Cleaning</string>
     <string name="installation">Installation</string>
     <string name="maintenance">Maintenance</string>
+    <resources>
+        <string name="footer_terms">By using Ashcol, you agree to the\n<b>Terms</b> and <b>Privacy Policy</b>.</string>
+
+    </resources>
 </resources>

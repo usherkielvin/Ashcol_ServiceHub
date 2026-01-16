@@ -1,103 +1,237 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/linearLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_marginTop="55dp"
-    android:layout_marginBottom="0dp"
-    android:background="@drawable/bg_green"
-    android:orientation="vertical">
+    tools:context=".signup_tell_us"> <androidx.constraintlayout.widget.ConstraintLayout
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="24dp"
+    android:background="#FFFFFF">
 
+    <ImageButton
+        android:id="@+id/btnBack"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginTop="8dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="Back"
+        android:padding="8dp"
+        android:src="@drawable/outline_arrow_back_24"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/tvTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="sans-serif-medium"
+        android:text="Almost There!"
+        android:textColor="#000000"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="@+id/btnBack"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/btnBack" />
+
+    <TextView
+        android:id="@+id/tvSubtitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:gravity="center"
+        android:text="We've sent a 6-digit code to your\nemail *******@example.com."
+        android:textColor="#000000"
+        android:textSize="14sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btnBack" />
+
+    <TextView
+        android:id="@+id/tvInstruction"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:gravity="center"
+        android:text="Enter the code below to confirm your account."
+        android:textColor="#000000"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tvSubtitle" />
 
     <LinearLayout
+        android:id="@+id/otpContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
-        android:gravity="center_vertical"
-        android:orientation="horizontal">
+        android:layout_marginTop="32dp"
+        android:gravity="center"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tvInstruction">
 
-        <ImageButton
-            android:id="@+id/closeButton"
+        <EditText
+            android:id="@+id/otp1"
             android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Close"
-            android:padding="8dp"
-            android:src="@android:drawable/ic_menu_close_clear_cancel" />
+            android:layout_height="50dp"
+            android:layout_margin="4dp"
+            android:background="@drawable/bg_otp_box"
+            android:gravity="center"
+            android:inputType="number"
+            android:maxLength="1"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:hint="-"
+            android:importantForAutofill="no"/>
+
+        <EditText
+            android:id="@+id/otp2"
+            android:layout_width="48dp"
+            android:layout_height="50dp"
+            android:layout_margin="4dp"
+            android:background="@drawable/bg_otp_box"
+            android:gravity="center"
+            android:inputType="number"
+            android:maxLength="1"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:hint="-"
+            android:importantForAutofill="no"/>
+
+        <EditText
+            android:id="@+id/otp3"
+            android:layout_width="48dp"
+            android:layout_height="50dp"
+            android:layout_margin="4dp"
+            android:background="@drawable/bg_otp_box"
+            android:gravity="center"
+            android:inputType="number"
+            android:maxLength="1"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:hint="-"
+            android:importantForAutofill="no"/>
+
+        <EditText
+            android:id="@+id/otp4"
+            android:layout_width="48dp"
+            android:layout_height="50dp"
+            android:layout_margin="4dp"
+            android:background="@drawable/bg_otp_box"
+            android:gravity="center"
+            android:inputType="number"
+            android:maxLength="1"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:hint="-"
+            android:importantForAutofill="no"/>
+
+        <EditText
+            android:id="@+id/otp5"
+            android:layout_width="48dp"
+            android:layout_height="50dp"
+            android:layout_margin="4dp"
+            android:background="@drawable/bg_otp_box"
+            android:gravity="center"
+            android:inputType="number"
+            android:maxLength="1"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:hint="-"
+            android:importantForAutofill="no"/>
+
+        <EditText
+            android:id="@+id/otp6"
+            android:layout_width="48dp"
+            android:layout_height="50dp"
+            android:layout_margin="4dp"
+            android:background="@drawable/bg_otp_box"
+            android:gravity="center"
+            android:inputType="number"
+            android:maxLength="1"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:hint="-"
+            android:importantForAutofill="no"/>
+
+    </LinearLayout>
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btnContinue"
+        android:layout_width="match_parent"
+        android:layout_height="55dp"
+        android:layout_marginTop="32dp"
+        android:background="@drawable/bg_button_green"
+        android:text="Continue"
+        android:textAllCaps="false"
+        android:textColor="#FFFFFF"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/otpContainer" />
+
+    <LinearLayout
+        android:id="@+id/linearLayout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btnContinue">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Verification Code        "
-            android:textAlignment="center"
-            android:textAppearance="@style/TextAppearance.Material3.HeadlineSmall" />
+            android:text="Didn't receive a code? "
+            android:textColor="#000000"
+            android:textSize="14sp" />
 
-
+        <TextView
+            android:id="@+id/btnResend"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="resend"
+            android:textColor="#000000"
+            android:textSize="14sp"
+            android:textStyle="bold" />
     </LinearLayout>
 
+    <ImageView
+        android:id="@+id/ivLogo"
+        android:layout_width="104dp"
+        android:layout_height="60dp"
+        android:layout_marginTop="300dp"
+        android:scaleType="fitCenter"
+        android:src="@drawable/ash"
+        app:layout_constraintBottom_toTopOf="@+id/tvFooter"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.498"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/linearLayout"
+        tools:ignore="ContentDescription" />
+
     <TextView
-        android:id="@+id/verificationMessage"
-        android:layout_width="match_parent"
+        android:id="@+id/tvFooter"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="-10dp"
-        android:text="To confirm your password, enter the 6-digit codewe sent to *********@gmail.com."
-        android:textAlignment="center"
-        android:textColor="#000000"
-        android:textSize="12sp"
-        android:textStyle="bold" />
+        android:layout_marginBottom="24dp"
+        android:gravity="center"
+        android:text="@string/footer_terms"
+        android:textColor="#3A383F"
+        android:textSize="13sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/ivLogo" />
 
-    <com.google.android.material.textfield.TextInputLayout
-        android:id="@+id/codeInputLayout"
-        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Verification Code"
-        app:startIconDrawable="@android:drawable/ic_lock_lock"
-        tools:ignore="TextContrastCheck">
+</androidx.constraintlayout.widget.ConstraintLayout>
 
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/codeInput"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:digits="0123456789"
-            android:inputType="number"
-            android:letterSpacing="0.2"
-            android:maxLength="6"
-            android:textAlignment="center"
-            android:textSize="24sp"
-            tools:ignore="TextContrastCheck" />
-    </com.google.android.material.textfield.TextInputLayout>
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/verifyButton"
-        android:layout_width="358dp"
-        android:layout_height="49dp"
-        android:layout_marginStart="21dp"
-        android:layout_marginTop="46dp"
-        android:layout_marginEnd="33dp"
-        android:layout_marginBottom="15dp"
-        android:background="@drawable/verify_btn"
-        android:elevation="4dp"
-        android:orientation="vertical"
-        android:text="Verify"
-        android:textColor="@color/green"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        app:backgroundTint="@null" />
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/resendCodeButton"
-        style="@style/Widget.Material3.Button.TextButton"
-        android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:layout_marginTop="15dp"
-        android:layout_marginBottom="510dp"
-        android:orientation="vertical"
-        android:text="Didn't receive code?  Resend"
-        android:textColor="@color/green" />
-
-</LinearLayout>
-
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
