@@ -30,9 +30,15 @@ public class TicketAdapter extends RecyclerView.Adapter<TicketAdapter.TicketView
     @Override
     public void onBindViewHolder(@NonNull TicketViewHolder holder, int position) {
         Ticket ticket = ticketList.get(position);
-        holder.ticketTitle.setText(ticket.getTitle());
-        holder.ticketDescription.setText(ticket.getDescription());
-        holder.ticketStatus.setText("Status: " + ticket.getStatus());
+        if (holder.ticketTitle != null) {
+            holder.ticketTitle.setText(ticket.getTitle());
+        }
+        if (holder.ticketDescription != null) {
+            holder.ticketDescription.setText(ticket.getDescription());
+        }
+        if (holder.ticketStatus != null) {
+            holder.ticketStatus.setText("Status: " + ticket.getStatus());
+        }
     }
 
     @Override
@@ -49,7 +55,7 @@ public class TicketAdapter extends RecyclerView.Adapter<TicketAdapter.TicketView
             super(itemView);
             ticketTitle = itemView.findViewById(R.id.ticketTitle);
             ticketDescription = itemView.findViewById(R.id.ticketDescription);
-           // ticketStatus = itemView.findViewById(R.id.ticketStatus);
+            ticketStatus = itemView.findViewById(R.id.statusBadge);
         }
     }
 }

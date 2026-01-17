@@ -33,14 +33,23 @@ public class UsersFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        tokenManager = new TokenManager(getContext());
+        if (getContext() != null) {
+            tokenManager = new TokenManager(getContext());
+        }
 
         Button logoutButton = view.findViewById(R.id.logoutButton);
-        logoutButton.setOnClickListener(v -> {
-            tokenManager.clear();
-            Intent intent = new Intent(getActivity(), MainActivity.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            startActivity(intent);
-        });
+        if (logoutButton != null) {
+            logoutButton.setOnClickListener(v -> {
+                if (tokenManager != null) {
+                    tokenManager.clear();
+                }
+                if (getActivity() != null) {
+                    Intent intent = new Intent(getActivity(), MainActivity.class);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    startActivity(intent);
+                    getActivity().finish();
+                }
+            });
+        }
     }
 }

@@ -314,11 +314,9 @@ public class MainActivity extends AppCompatActivity {
 		tokenManager.saveRole("admin");
 
 		// Navigate to admin dashboard
-		runOnUiThread(() -> {
-			Intent intent = new Intent(MainActivity.this, AdminDashboardActivity.class);
-			startActivity(intent);
-			finish();
-		});
+		Intent intent = new Intent(MainActivity.this, AdminDashboardActivity.class);
+		startActivity(intent);
+		finish();
 	}
 
 	private void handleStaticManagerLogin() {
@@ -335,11 +333,9 @@ public class MainActivity extends AppCompatActivity {
 		tokenManager.saveRole("manager");
 
 		// Navigate to manager dashboard
-		runOnUiThread(() -> {
-			Intent intent = new Intent(MainActivity.this, ManagerDashboardActivity.class);
-			startActivity(intent);
-			finish();
-		});
+		Intent intent = new Intent(MainActivity.this, ManagerDashboardActivity.class);
+		startActivity(intent);
+		finish();
 	}
 
 	private void showError(String title, String message) {

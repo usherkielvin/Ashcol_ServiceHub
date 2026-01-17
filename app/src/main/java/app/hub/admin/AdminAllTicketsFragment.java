@@ -33,52 +33,64 @@ public class AdminAllTicketsFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_admin_all_tickets, container, false);
+        try {
+            View view = inflater.inflate(R.layout.fragment_admin_all_tickets, container, false);
 
-        ticketsRecyclerView = view.findViewById(R.id.ticketsRecyclerView);
-        noTicketsTextView = view.findViewById(R.id.noTicketsTextView);
-        
-        if (getContext() != null) {
-            tokenManager = new TokenManager(getContext());
+            ticketsRecyclerView = view.findViewById(R.id.ticketsRecyclerView);
+            noTicketsTextView = view.findViewById(R.id.noTicketsTextView);
+            
+            if (getContext() != null) {
+                tokenManager = new TokenManager(getContext());
+            }
+
+            if (ticketsRecyclerView != null && noTicketsTextView != null) {
+                setupRecyclerView();
+                loadTickets();
+            }
+
+            return view;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
         }
-
-        if (ticketsRecyclerView != null && noTicketsTextView != null) {
-            setupRecyclerView();
-            loadTickets();
-        }
-
-        return view;
     }
 
     private void setupRecyclerView() {
-        if (ticketsRecyclerView == null || getContext() == null) {
-            return;
+        try {
+            if (ticketsRecyclerView == null || getContext() == null) {
+                return;
+            }
+            ticketAdapter = new TicketAdapter(ticketList);
+            ticketsRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+            ticketsRecyclerView.setAdapter(ticketAdapter);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        ticketAdapter = new TicketAdapter(ticketList);
-        ticketsRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        ticketsRecyclerView.setAdapter(ticketAdapter);
     }
 
     private void loadTickets() {
-        if (ticketsRecyclerView == null || noTicketsTextView == null) {
-            return;
-        }
-        
-        // This is where you would make an API call to get the tickets.
-        // For now, let's use the same sample data.
-        ticketList.add(new Ticket("Fix the printer", "The printer in the main office is jammed.", "Open"));
-        ticketList.add(new Ticket("Install new software", "Please install Photoshop on the new marketing computer.", "In Progress"));
-        ticketList.add(new Ticket("Network is down", "The entire office has lost internet connectivity.", "Open"));
+        try {
+            if (ticketsRecyclerView == null || noTicketsTextView == null || ticketAdapter == null) {
+                return;
+            }
+            
+            // This is where you would make an API call to get the tickets.
+            // For now, let's use the same sample data.
+            ticketList.clear();
+            ticketList.add(new Ticket("Fix the printer", "The printer in the main office is jammed.", "Open"));
+            ticketList.add(new Ticket("Install new software", "Please install Photoshop on the new marketing computer.", "In Progress"));
+            ticketList.add(new Ticket("Network is down", "The entire office has lost internet connectivity.", "Open"));
 
-        if (ticketList.isEmpty()) {
-            noTicketsTextView.setVisibility(View.VISIBLE);
-            ticketsRecyclerView.setVisibility(View.GONE);
-        } else {
-            noTicketsTextView.setVisibility(View.GONE);
-            ticketsRecyclerView.setVisibility(View.VISIBLE);
-            if (ticketAdapter != null) {
+            if (ticketList.isEmpty()) {
+                noTicketsTextView.setVisibility(View.VISIBLE);
+                ticketsRecyclerView.setVisibility(View.GONE);
+            } else {
+                noTicketsTextView.setVisibility(View.GONE);
+                ticketsRecyclerView.setVisibility(View.VISIBLE);
                 ticketAdapter.notifyDataSetChanged();
             }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }
