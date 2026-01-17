@@ -267,55 +267,79 @@ public class RegisterActivity extends AppCompatActivity {
 		}
 	}
 
+	// Validation helper methods
+	private void showValidationError(TextView errorView, String message) {
+		if (errorView != null) {
+			errorView.setText(message);
+			errorView.setVisibility(View.VISIBLE);
+		}
+	}
+
+	private void hideValidationError(TextView errorView) {
+		if (errorView != null) {
+			errorView.setVisibility(View.GONE);
+		}
+	}
+
+	private boolean containsNumbers(String text) {
+		return text != null && text.matches(".*\\d+.*");
+	}
+
+	private int getPhoneDigitCount(String phone) {
+		if (phone == null) return 0;
+		return phone.replaceAll("[^0-9]", "").length();
+	}
+
 	// Validation methods
 	private void validateFirstName(String firstName) {
 		if (fval == null) return;
-		if (firstName.matches(".*\\d+.*")) {
-			fval.setText("Name no numbers");
-			fval.setVisibility(View.VISIBLE);
-		} else if (firstName.length() == 1) {
-			fval.setText("Name too short");
-			fval.setVisibility(View.VISIBLE);
+
+		if (containsNumbers(firstName)) {
+			showValidationError(fval, "Name no numbers");
+		} else if (firstName != null && firstName.length() < 2) {
+			showValidationError(fval, "Name too short");
 		} else {
-			fval.setVisibility(View.GONE);
+			hideValidationError(fval);
 		}
 	}
 
 	private void validateLastName(String lastName) {
 		if (lval == null) return;
-		if (lastName.matches(".*\\d+.*")) {
-			lval.setText("Name no numbers");
-			lval.setVisibility(View.VISIBLE);
+
+		if (containsNumbers(lastName)) {
+			showValidationError(lval, "Name no numbers");
 		} else {
-			lval.setVisibility(View.GONE);
+			hideValidationError(lval);
 		}
 	}
 
 	private void validateUsername(String username) {
 		if (uval == null) return;
-		if (username.contains(" ")) {
-			uval.setText("Username no spaces");
-			uval.setVisibility(View.VISIBLE);
-		} else if (!username.isEmpty() && username.length() < 4) {
-			uval.setText("Username min 4 chars");
-			uval.setVisibility(View.VISIBLE);
+
+		if (username == null || username.isEmpty()) {
+			hideValidationError(uval);
+		} else if (username.contains(" ")) {
+			showValidationError(uval, "Username no spaces");
+		} else if (username.length() < 4) {
+			showValidationError(uval, "Username min 4 chars");
 		} else {
-			uval.setVisibility(View.GONE);
+			hideValidationError(uval);
 		}
 	}
 
 	private void validatePhone(String phone) {
 		if (phoneVal == null) return;
-		if (phone.isEmpty()) {
-			phoneVal.setVisibility(View.GONE);
+
+		if (phone == null || phone.isEmpty()) {
+			hideValidationError(phoneVal);
 			return;
 		}
-		String digitOnly = phone.replaceAll("[^0-9]", "");
-		if (digitOnly.length() >= 10 && digitOnly.length() <= 15) {
-			phoneVal.setVisibility(View.GONE);
+
+		int digitCount = getPhoneDigitCount(phone);
+		if (digitCount >= 10 && digitCount <= 15) {
+			hideValidationError(phoneVal);
 		} else {
-			phoneVal.setText("Phone 10 digits min");
-			phoneVal.setVisibility(View.VISIBLE);
+			showValidationError(phoneVal, "Phone 10 digits min");
 		}
 	}
 
@@ -329,50 +353,29 @@ public class RegisterActivity extends AppCompatActivity {
 		boolean isValid = true;
 
 		if (firstName.isEmpty()) {
-			if (fval != null) {
-				fval.setText("First name required");
-				fval.setVisibility(View.VISIBLE);
-			}
+			showValidationError(fval, "First name required");
 			isValid = false;
 		}
 
 		if (lastName.isEmpty()) {
-			if (lval != null) {
-				lval.setText("Last name required");
-				lval.setVisibility(View.VISIBLE);
-			}
+			showValidationError(lval, "Last name required");
 			isValid = false;
 		}
 
 		if (username.isEmpty()) {
-			if (uval != null) {
-				uval.setText("Username required");
-				uval.setVisibility(View.VISIBLE);
-			}
+			showValidationError(uval, "Username required");
 			isValid = false;
 		} else if (username.length() < 4) {
-			if (uval != null) {
-				uval.setText("Username min 4 chars");
-				uval.setVisibility(View.VISIBLE);
-			}
+			showValidationError(uval, "Username min 4 chars");
 			isValid = false;
 		}
 
 		if (phone.isEmpty()) {
-			if (phoneVal != null) {
-				phoneVal.setText("Phone required");
-				phoneVal.setVisibility(View.VISIBLE);
-			}
+			showValidationError(phoneVal, "Phone required");
 			isValid = false;
-		} else {
-			String digitOnly = phone.replaceAll("[^0-9]", "");
-			if (digitOnly.length() < 10) {
-				if (phoneVal != null) {
-					phoneVal.setText("Phone 10 digits min");
-					phoneVal.setVisibility(View.VISIBLE);
-				}
-				isValid = false;
-			}
+		} else if (getPhoneDigitCount(phone) < 10) {
+			showValidationError(phoneVal, "Phone 10 digits min");
+			isValid = false;
 		}
 
 		return isValid;

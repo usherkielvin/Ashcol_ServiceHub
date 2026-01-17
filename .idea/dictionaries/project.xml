@@ -2,6 +2,9 @@
   <dictionary name="project">
     <words>
       <w>dizon</w>
+      <w>fval</w>
+      <w>lval</w>
+      <w>uval</w>
     </words>
   </dictionary>
 </component>
