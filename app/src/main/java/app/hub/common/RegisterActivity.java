@@ -273,7 +273,7 @@ public class RegisterActivity extends AppCompatActivity {
 		if (firstName.matches(".*\\d+.*")) {
 			fval.setText("Name no numbers");
 			fval.setVisibility(View.VISIBLE);
-		} else if (!firstName.isEmpty() && firstName.length() < 2) {
+		} else if (firstName.length() == 1) {
 			fval.setText("Name too short");
 			fval.setVisibility(View.VISIBLE);
 		} else {
@@ -456,7 +456,7 @@ public class RegisterActivity extends AppCompatActivity {
 		VerificationRequest request = new VerificationRequest(email);
 
 		Call<VerificationResponse> call = apiService.sendVerificationCode(request);
-		call.enqueue(new Callback<VerificationResponse>() {
+		call.enqueue(new Callback<>() {
 			@Override
 			public void onResponse(@NonNull Call<VerificationResponse> call, @NonNull Response<VerificationResponse> response) {
 				if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
@@ -500,20 +500,23 @@ public class RegisterActivity extends AppCompatActivity {
 			.setCancelable(true)
 			.create();
 
-		dialog.getWindow().setLayout(android.view.WindowManager.LayoutParams.MATCH_PARENT, android.view.WindowManager.LayoutParams.MATCH_PARENT);
+		android.view.Window window = dialog.getWindow();
+		if (window != null) {
+			window.setLayout(android.view.WindowManager.LayoutParams.MATCH_PARENT, android.view.WindowManager.LayoutParams.MATCH_PARENT);
+		}
 
 		// Setup dialog components
 		setupOtpDialogCloseButton(closeButton, dialog);
 		setupOtpCodeInput(codeInput, codeInputLayout, verifyButton);
 		setupOtpVerifyButton(verifyButton, codeInput, codeInputLayout, email, dialog);
-		setupOtpResendButton(resendCodeButton, email, dialog);
+		setupOtpResendButton(resendCodeButton, email);
 
 		dialog.show();
 	}
 
 	// Mask email for display (e.g., user@example.com -> use***@example.com)
 	private String maskEmail(String email) {
-		if (email == null || email.isEmpty() || !email.contains("@")) {
+		if (email == null || !email.contains("@")) {
 			return "*******@example.com";
 		}
 		int atIndex = email.indexOf("@");
@@ -548,8 +551,7 @@ public class RegisterActivity extends AppCompatActivity {
 		});
 
 		// Enable verify button when code is entered
-		if (codeInput != null) {
-			codeInput.addTextChangedListener(new TextWatcher() {
+		codeInput.addTextChangedListener(new TextWatcher() {
 				@Override
 				public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
 
@@ -566,7 +568,6 @@ public class RegisterActivity extends AppCompatActivity {
 					}
 				}
 			});
-		}
 	}
 
 	// Setup verify button click handler
@@ -606,7 +607,7 @@ public class RegisterActivity extends AppCompatActivity {
 		VerifyEmailRequest request = new VerifyEmailRequest(email, code);
 
 		Call<VerifyEmailResponse> call = apiService.verifyEmail(request);
-		call.enqueue(new Callback<VerifyEmailResponse>() {
+		call.enqueue(new Callback<>() {
 			@Override
 			public void onResponse(@NonNull Call<VerifyEmailResponse> call, @NonNull Response<VerifyEmailResponse> response) {
 				resetVerifyButton(verifyButton);
@@ -704,7 +705,7 @@ public class RegisterActivity extends AppCompatActivity {
 
 	// Setup resend code button
 	@SuppressLint("SetTextI18n")
-	private void setupOtpResendButton(MaterialButton resendButton, String email, AlertDialog dialog) {
+	private void setupOtpResendButton(MaterialButton resendButton, String email) {
 		if (resendButton == null) return;
 
 		resendButton.setOnClickListener(v -> {
@@ -720,7 +721,7 @@ public class RegisterActivity extends AppCompatActivity {
 		VerificationRequest request = new VerificationRequest(email);
 
 		Call<VerificationResponse> call = apiService.sendVerificationCode(request);
-		call.enqueue(new Callback<VerificationResponse>() {
+		call.enqueue(new Callback<>() {
 			@Override
 			public void onResponse(@NonNull Call<VerificationResponse> call, @NonNull Response<VerificationResponse> response) {
 				resetResendButton(resendButton);
@@ -773,27 +774,33 @@ public class RegisterActivity extends AppCompatActivity {
 		Log.d(TAG, "Password set");
 	}
 
-	// Getters for registration data (used by fragments)
+	// Getters for registration data (used by fragments - may be used in future fragments)
+	@SuppressWarnings("unused")
 	public String getUserEmail() {
 		return userEmail;
 	}
 
+	@SuppressWarnings("unused")
 	public String getUserFirstName() {
 		return userFirstName;
 	}
 
+	@SuppressWarnings("unused")
 	public String getUserLastName() {
 		return userLastName;
 	}
 
+	@SuppressWarnings("unused")
 	public String getUserName() {
 		return userName;
 	}
 
+	@SuppressWarnings("unused")
 	public String getUserPhone() {
 		return userPhone;
 	}
 
+	@SuppressWarnings("unused")
 	public String getUserPassword() {
 		return userPassword;
 	}
