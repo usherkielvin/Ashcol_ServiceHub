@@ -18,6 +18,8 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
+import java.io.File;
+
 import app.hub.R;
 import app.hub.api.ApiClient;
 import app.hub.api.ApiService;
@@ -59,7 +61,7 @@ public class ManagerSettingsFragment extends Fragment {
         Button logoutButton = view.findViewById(R.id.logoutButton);
         if (logoutButton != null) {
             logoutButton.setOnClickListener(v -> {
-                tokenManager.clear();
+                clearUserData();
                 Intent intent = new Intent(getActivity(), MainActivity.class);
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                 startActivity(intent);
@@ -215,6 +217,21 @@ public class ManagerSettingsFragment extends Fragment {
             }
         } else {
             Toast.makeText(getContext(), "Failed to change password. Please try again.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void clearUserData() {
+        // Clear token manager data
+        tokenManager.clear();
+        
+        // Delete locally stored profile photo
+        try {
+            File imageFile = new File(requireContext().getFilesDir(), "profile_image.jpg");
+            if (imageFile.exists()) {
+                imageFile.delete();
+            }
+        } catch (Exception e) {
+            // Ignore errors when clearing profile photo
         }
     }
 }

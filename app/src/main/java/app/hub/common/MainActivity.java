@@ -407,7 +407,17 @@ public class MainActivity extends AppCompatActivity {
         // Save token and user data
         FacebookSignInResponse.User user = response.getData().getUser();
         tokenManager.saveToken("Bearer " + response.getData().getToken());
-        tokenManager.saveEmail(user.getEmail());
+        
+        // Save email or connection status
+        String email = user.getEmail();
+        if (email != null && email.contains("@")) {
+            tokenManager.saveEmail(email);
+            tokenManager.clearConnectionStatus();
+        } else {
+            // Facebook user without email - save connection status
+            tokenManager.saveConnectionStatus("Facebook connected");
+        }
+        
         tokenManager.saveRole(user.getRole());
 
         // Build and save name
@@ -612,18 +622,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
 	private void login(String email, String password) {
-		// Check for static admin credentials
-		if ("Admin1204".equals(email.trim()) && "@Admin1234".equals(password)) {
-			handleStaticAdminLogin();
-			return;
-		}
-
-		// Check for static manager credentials
-		if ("Manager".equals(email.trim()) && "Management1234".equals(password)) {
-			handleStaticManagerLogin();
-			return;
-		}
-
 		final MaterialButton loginButton = findViewById(R.id.loginButton);
 		if (loginButton != null) {
 			loginButton.setEnabled(false);
@@ -650,7 +648,16 @@ public class MainActivity extends AppCompatActivity {
 						// Save token and user data
 						LoginResponse.User user = loginResponse.getData().getUser();
 						tokenManager.saveToken("Bearer " + loginResponse.getData().getToken());
-						tokenManager.saveEmail(user.getEmail());
+						
+						// Save email or connection status
+						String email = user.getEmail();
+						if (email != null && email.contains("@")) {
+							tokenManager.saveEmail(email);
+							tokenManager.clearConnectionStatus();
+						} else if (user.hasFacebookAccount()) {
+							tokenManager.saveConnectionStatus("Facebook connected");
+						}
+						
                         tokenManager.saveRole(user.getRole());
 						
 						// Get name - prefer name field, fallback to firstName + lastName
@@ -743,44 +750,6 @@ public class MainActivity extends AppCompatActivity {
 				runOnUiThread(() -> showError("Connection Error", errorMsg));
 			}
 		});
-	}
-
-	private void handleStaticAdminLogin() {
-		final MaterialButton loginButton = findViewById(R.id.loginButton);
-		if (loginButton != null) {
-			loginButton.setEnabled(false);
-			loginButton.setText("Logging in...");
-		}
-
-		// Save admin credentials to TokenManager
-		tokenManager.saveToken("Bearer static_admin_token");
-		tokenManager.saveEmail("admin1204@ashcol.com");
-		tokenManager.saveName("Admin");
-		tokenManager.saveRole("admin");
-
-		// Navigate to admin dashboard
-		Intent intent = new Intent(MainActivity.this, AdminDashboardActivity.class);
-		startActivity(intent);
-		finish();
-	}
-
-	private void handleStaticManagerLogin() {
-		final MaterialButton loginButton = findViewById(R.id.loginButton);
-		if (loginButton != null) {
-			loginButton.setEnabled(false);
-			loginButton.setText("Logging in...");
-		}
-
-		// Save manager credentials to TokenManager
-		tokenManager.saveToken("Bearer static_manager_token");
-		tokenManager.saveEmail("manager@ashcol.com");
-		tokenManager.saveName("Manager");
-		tokenManager.saveRole("manager");
-
-		// Navigate to manager dashboard
-		Intent intent = new Intent(MainActivity.this, ManagerDashboardActivity.class);
-		startActivity(intent);
-		finish();
 	}
 
 	private void showError(String title, String message) {

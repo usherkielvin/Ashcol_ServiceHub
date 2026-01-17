@@ -11,6 +11,8 @@ import android.view.ViewGroup;
 
 import com.google.android.material.button.MaterialButton;
 
+import java.io.File;
+
 import app.hub.R;
 import app.hub.common.MainActivity;
 import app.hub.user.ChangePasswordFragment;
@@ -43,7 +45,7 @@ public class ManagerProfileFragment extends Fragment {
 
         MaterialButton logoutButton = view.findViewById(R.id.logoutButton);
         logoutButton.setOnClickListener(v -> {
-            tokenManager.clear();
+            clearUserData();
             Intent intent = new Intent(getActivity(), MainActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(intent);
@@ -65,6 +67,21 @@ public class ManagerProfileFragment extends Fragment {
                 .replace(R.id.fragment_container, changePasswordFragment)
                 .addToBackStack(null)
                 .commit();
+        }
+    }
+
+    private void clearUserData() {
+        // Clear token manager data
+        tokenManager.clear();
+        
+        // Delete locally stored profile photo
+        try {
+            File imageFile = new File(requireContext().getFilesDir(), "profile_image.jpg");
+            if (imageFile.exists()) {
+                imageFile.delete();
+            }
+        } catch (Exception e) {
+            // Ignore errors when clearing profile photo
         }
     }
 }

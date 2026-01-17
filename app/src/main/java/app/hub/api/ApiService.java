@@ -60,4 +60,11 @@ public interface ApiService {
             @Part("service_type") RequestBody serviceType,
             @Part MultipartBody.Part image
     );
+
+    @Multipart
+    @POST("api/v1/profile/photo")
+    Call<ProfilePhotoResponse> uploadProfilePhoto(
+            @Header("Authorization") String token,
+            @Part MultipartBody.Part photo
+    );
 }

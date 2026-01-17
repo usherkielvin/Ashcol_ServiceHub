@@ -493,19 +493,34 @@ public class ProfileActivity extends AppCompatActivity {
 			call.enqueue(new Callback<LogoutResponse>() {
 				@Override
 				public void onResponse(Call<LogoutResponse> call, Response<LogoutResponse> response) {
-					tokenManager.clear();
+					clearUserData();
 					navigateToLogin();
 				}
 
 				@Override
 				public void onFailure(Call<LogoutResponse> call, Throwable t) {
-					tokenManager.clear();
+					clearUserData();
 					navigateToLogin();
 				}
 			});
 		} else {
-			tokenManager.clear();
+			clearUserData();
 			navigateToLogin();
+		}
+	}
+
+	private void clearUserData() {
+		// Clear token manager data
+		tokenManager.clear();
+		
+		// Delete locally stored profile photo
+		try {
+			java.io.File imageFile = new java.io.File(getFilesDir(), "profile_image.jpg");
+			if (imageFile.exists()) {
+				imageFile.delete();
+			}
+		} catch (Exception e) {
+			// Ignore errors when clearing profile photo
 		}
 	}
 

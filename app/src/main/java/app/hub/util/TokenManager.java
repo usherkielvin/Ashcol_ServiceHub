@@ -9,6 +9,7 @@ public class TokenManager {
     private static final String KEY_EMAIL = "email";
     private static final String KEY_NAME = "name";
     private static final String KEY_ROLE = "role";
+    private static final String KEY_CONNECTION_STATUS = "connection_status";
 
     private final SharedPreferences sharedPreferences;
 
@@ -54,6 +55,18 @@ public class TokenManager {
 
     public boolean isLoggedIn() {
         return getToken() != null;
+    }
+
+    public void saveConnectionStatus(String status) {
+        sharedPreferences.edit().putString(KEY_CONNECTION_STATUS, status).apply();
+    }
+
+    public String getConnectionStatus() {
+        return sharedPreferences.getString(KEY_CONNECTION_STATUS, null);
+    }
+
+    public void clearConnectionStatus() {
+        sharedPreferences.edit().remove(KEY_CONNECTION_STATUS).apply();
     }
 }
 
