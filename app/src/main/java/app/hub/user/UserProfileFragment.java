@@ -184,8 +184,23 @@ public class UserProfileFragment extends Fragment {
         if (userData.getProfilePhoto() != null && !userData.getProfilePhoto().isEmpty()) {
             loadProfileImageFromUrl(userData.getProfilePhoto());
         } else {
-            // Fallback to local image
-            loadProfileImage();
+            // No profile photo - set default avatar
+            if (imgProfile != null && getActivity() != null) {
+                getActivity().runOnUiThread(() -> {
+                    if (imgProfile != null) {
+                        imgProfile.setImageResource(R.mipmap.ic_launchericons_round);
+                    }
+                });
+            }
+            // Also clear local cache
+            try {
+                File imageFile = new File(requireContext().getFilesDir(), "profile_image.jpg");
+                if (imageFile.exists()) {
+                    imageFile.delete();
+                }
+            } catch (Exception e) {
+                // Ignore errors
+            }
         }
         
         updateUI();
@@ -452,7 +467,7 @@ public class UserProfileFragment extends Fragment {
     private void showImagePickerDialog() {
         if (getContext() == null) return;
 
-        String[] options = {"Camera", "Gallery", "Cancel"};
+        String[] options = {"Camera", "Gallery", "Remove Photo", "Cancel"};
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
         builder.setTitle("Select Profile Photo");
         builder.setItems(options, (dialog, which) -> {
@@ -460,8 +475,23 @@ public class UserProfileFragment extends Fragment {
                 openCamera();
             } else if (which == 1) {
                 openGallery();
+            } else if (which == 2) {
+                showRemovePhotoConfirmation();
             }
         });
+        builder.show();
+    }
+
+    private void showRemovePhotoConfirmation() {
+        if (getContext() == null) return;
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setTitle("Remove Photo");
+        builder.setMessage("Are you sure you want to remove your profile photo?");
+        builder.setPositiveButton("Remove", (dialog, which) -> {
+            deleteProfilePhoto();
+        });
+        builder.setNegativeButton("Cancel", null);
         builder.show();
     }
 
@@ -675,6 +705,55 @@ public class UserProfileFragment extends Fragment {
                 loadProfileImage();
             }
         }).start();
+    }
+
+    private void deleteProfilePhoto() {
+        String token = tokenManager.getToken();
+        if (token == null) {
+            showToast("Not authenticated. Please login again.");
+            return;
+        }
+
+        ApiService apiService = ApiClient.getApiService();
+        Call<ProfilePhotoResponse> call = apiService.deleteProfilePhoto("Bearer " + token);
+        call.enqueue(new Callback<ProfilePhotoResponse>() {
+            @Override
+            public void onResponse(@NonNull Call<ProfilePhotoResponse> call, @NonNull Response<ProfilePhotoResponse> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                    // Photo deleted successfully
+                    showToast("Profile photo removed");
+                    
+                    // Clear local cache
+                    try {
+                        File imageFile = new File(requireContext().getFilesDir(), "profile_image.jpg");
+                        if (imageFile.exists()) {
+                            imageFile.delete();
+                        }
+                    } catch (Exception e) {
+                        // Ignore errors
+                    }
+                    
+                    // Set default avatar
+                    if (imgProfile != null && getActivity() != null) {
+                        getActivity().runOnUiThread(() -> {
+                            if (imgProfile != null) {
+                                imgProfile.setImageResource(R.mipmap.ic_launchericons_round);
+                            }
+                        });
+                    }
+                    
+                    // Reload user data to get updated profile photo (should be null now)
+                    fetchUserData();
+                } else {
+                    showToast("Failed to remove photo. Please try again.");
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<ProfilePhotoResponse> call, @NonNull Throwable t) {
+                showToast("Failed to remove photo: " + t.getMessage());
+            }
+        });
     }
 
     private void navigateToChangePassword() {
