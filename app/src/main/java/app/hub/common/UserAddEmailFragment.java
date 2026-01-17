@@ -30,7 +30,24 @@ public class UserAddEmailFragment extends Fragment {
         setupValidation();
         setupButtons(view);
         
+        // Pre-fill email if available (for Facebook/Google users)
+        prefillEmailIfAvailable();
+        
         return view;
+    }
+    
+    private void prefillEmailIfAvailable() {
+        RegisterActivity activity = (RegisterActivity) getActivity();
+        if (activity != null && emailInput != null) {
+            String prefillEmail = activity.getUserEmail();
+            if (prefillEmail != null && !prefillEmail.isEmpty()) {
+                emailInput.setText(prefillEmail);
+                // Move cursor to end
+                if (emailInput.getText() != null) {
+                    emailInput.setSelection(emailInput.getText().length());
+                }
+            }
+        }
     }
 
     private void initializeViews(View view) {

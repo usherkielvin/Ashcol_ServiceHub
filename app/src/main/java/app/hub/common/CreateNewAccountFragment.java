@@ -77,13 +77,14 @@ public class CreateNewAccountFragment extends Fragment {
                                 String firstName = object.optString("first_name");
                                 String lastName = object.optString("last_name");
                                 String name = object.optString("name");
+                                String id = object.optString("id");
                                 
-                                Log.d(TAG, "Facebook user info - Email: " + email + ", Name: " + name);
+                                Log.d(TAG, "Facebook user info - Email: " + (email != null && !email.isEmpty() ? email : "NULL") + ", Name: " + name + ", ID: " + id);
                                 
-                                // Pass Facebook account data to RegisterActivity
+                                // Pass Facebook account data to RegisterActivity (email can be null for pure FB auth)
                                 RegisterActivity activity = (RegisterActivity) getActivity();
                                 if (activity != null) {
-                                    activity.handleFacebookSignInSuccess(email, firstName, lastName, name, accessToken.getToken());
+                                    activity.handleFacebookSignInSuccess(id, email, firstName, lastName, name, accessToken.getToken());
                                 }
                             } catch (Exception e) {
                                 Log.e(TAG, "Error parsing Facebook user info", e);

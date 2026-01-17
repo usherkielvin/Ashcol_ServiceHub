@@ -2,13 +2,15 @@ package app.hub.api;
 
 public class FacebookSignInRequest {
     private String access_token;
+    private String facebook_id;
     private String email;
     private String first_name;
     private String last_name;
     private String phone;
 
-    public FacebookSignInRequest(String accessToken, String email, String firstName, String lastName, String phone) {
+    public FacebookSignInRequest(String accessToken, String facebookId, String email, String firstName, String lastName, String phone) {
         this.access_token = accessToken;
+        this.facebook_id = facebookId;
         this.email = email;
         this.first_name = firstName;
         this.last_name = lastName;
@@ -53,5 +55,13 @@ public class FacebookSignInRequest {
 
     public void setPhone(String phone) {
         this.phone = phone;
+    }
+
+    public String getFacebook_id() {
+        return facebook_id;
+    }
+
+    public void setFacebook_id(String facebook_id) {
+        this.facebook_id = facebook_id;
     }
 }

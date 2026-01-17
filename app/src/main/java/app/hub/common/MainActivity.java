@@ -202,14 +202,15 @@ public class MainActivity extends AppCompatActivity {
                                 String firstName = object.optString("first_name");
                                 String lastName = object.optString("last_name");
                                 String name = object.optString("name");
+                                String id = object.optString("id");
                                 
-                                Log.d(TAG, "Facebook user info - Email: " + email + ", Name: " + name);
+                                Log.d(TAG, "Facebook user info - ID: " + id + ", Email: " + (email != null && !email.isEmpty() ? email : "NULL") + ", Name: " + name);
                                 
-                                // Call backend API to login/register with Facebook
-                                loginWithFacebook(accessToken.getToken(), email, firstName, lastName);
+                                // Call backend API to login/register with Facebook (pass Facebook ID for pure FB auth)
+                                loginWithFacebook(accessToken.getToken(), id, email, firstName, lastName);
                             } catch (Exception e) {
                                 Log.e(TAG, "Error parsing Facebook user info", e);
-                                Toast.makeText(MainActivity.this, "Error getting Facebook user info", Toast.LENGTH_SHORT).show();
+                                runOnUiThread(() -> Toast.makeText(MainActivity.this, "Error getting Facebook user info", Toast.LENGTH_SHORT).show());
                             }
                         });
                     
@@ -294,17 +295,32 @@ public class MainActivity extends AppCompatActivity {
             java.util.Arrays.asList("public_profile"));
     }
 
-    private void loginWithFacebook(String accessToken, String email, String firstName, String lastName) {
+    private void loginWithFacebook(String accessToken, String facebookId, String email, String firstName, String lastName) {
+        // Validate Facebook ID (required for pure FB auth)
+        if (facebookId == null || facebookId.isEmpty()) {
+            Log.e(TAG, "Facebook login failed: Facebook ID is required but not available");
+            showError("Login Failed", "Facebook authentication error. Please try again.");
+            return;
+        }
+        
         MaterialButton loginButton = findViewById(R.id.loginButton);
         if (loginButton != null) {
             loginButton.setEnabled(false);
             loginButton.setText("Logging in...");
         }
 
+        Log.d(TAG, "Attempting Facebook login with:");
+        Log.d(TAG, "  - Facebook ID: " + facebookId);
+        Log.d(TAG, "  - Email: " + (email != null && !email.isEmpty() ? email : "NULL (pure FB auth)"));
+        Log.d(TAG, "  - First Name: " + firstName);
+        Log.d(TAG, "  - Last Name: " + lastName);
+        Log.d(TAG, "  - Access Token: " + (accessToken != null && !accessToken.isEmpty() ? "Present" : "Missing"));
+
         ApiService apiService = ApiClient.getApiService();
         FacebookSignInRequest request = new FacebookSignInRequest(
             accessToken != null ? accessToken : "",
-            email != null ? email : "",
+            facebookId,
+            email != null ? email : "", // Email can be empty for pure FB auth
             firstName != null ? firstName : "",
             lastName != null ? lastName : "",
             "" // No phone on login
@@ -328,11 +344,40 @@ public class MainActivity extends AppCompatActivity {
                     try {
                         if (response.errorBody() != null) {
                             String errorBody = response.errorBody().string();
-                            Log.e(TAG, "Facebook login error: " + errorBody);
+                            Log.e(TAG, "Facebook login error response (" + response.code() + "): " + errorBody);
+                            
+                            // Try to parse error message from response
+                            try {
+                                Gson gson = new Gson();
+                                JsonObject jsonObject = gson.fromJson(errorBody, JsonObject.class);
+                                if (jsonObject != null) {
+                                    if (jsonObject.has("message") && jsonObject.get("message").isJsonPrimitive()) {
+                                        errorMsg = jsonObject.get("message").getAsString();
+                                    } else if (jsonObject.has("errors") && jsonObject.get("errors").isJsonObject()) {
+                                        // Get first validation error
+                                        JsonObject errorsObj = jsonObject.getAsJsonObject("errors");
+                                        if (errorsObj.has("email") && errorsObj.get("email").isJsonArray()) {
+                                            errorMsg = errorsObj.get("email").getAsJsonArray().get(0).getAsString();
+                                        }
+                                    }
+                                }
+                            } catch (Exception e) {
+                                Log.d(TAG, "Could not parse error JSON, using default message");
+                            }
                         }
                     } catch (Exception e) {
                         Log.e(TAG, "Error reading error response", e);
                     }
+                    
+                    // Provide more specific error messages based on status code
+                    if (response.code() == 422) {
+                        errorMsg = "Invalid email or Facebook account. Please register first or use email/password login.";
+                    } else if (response.code() == 401) {
+                        errorMsg = "Authentication failed. Please try again.";
+                    } else if (response.code() == 500) {
+                        errorMsg = "Server error. Please try again later.";
+                    }
+                    
                     final String finalErrorMsg = errorMsg;
                     runOnUiThread(() -> showError("Login Failed", finalErrorMsg));
                 }
@@ -347,8 +392,8 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
                 Log.e(TAG, "Error logging in with Facebook: " + t.getMessage(), t);
-                runOnUiThread(() -> showError("Connection Error", 
-                    "Failed to login. Please check your connection and try again."));
+                String errorMsg = getConnectionErrorMessage(t);
+                runOnUiThread(() -> showError("Connection Error", errorMsg));
             }
         });
     }
