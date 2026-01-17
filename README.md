@@ -22,20 +22,54 @@ ServiceHub is an all-in-one native Android application that serves **customers**
   - Connection diagnostics for troubleshooting
 
 #### Registration System
-- **User Registration** (`RegisterActivity`)
-  - Full registration form with validation:
-    - Username
-    - First Name & Last Name
-    - Email (with real-time validation)
-    - Password & Confirm Password (strength indicator)
-    - Role selection (customer/staff/admin)
-  - **Email Verification System**:
-    - Send verification code via email
-    - 6-digit code verification
-    - Code expiration handling (10 minutes)
-    - Resend verification code functionality
-  - Form validation with visual feedback
-  - Password strength requirements
+- **Multi-Step User Registration** (`RegisterActivity`)
+  - **Step 1: Welcome Screen** (`CreateNewAccountFragment`)
+    - Welcome message and introduction
+    - Continue with email option
+    - Social login options (Facebook/Google - UI ready)
+  
+  - **Step 2: Email Input** (`UserAddEmailFragment`)
+    - Email address input with real-time validation
+    - Email format validation
+    - Stores email for use in OTP verification
+  
+  - **Step 3: Personal Information** (`activity_register.xml` - Direct Activity Layout)
+    - First Name (validates no numbers, minimum length)
+    - Last Name (validates no numbers)
+    - Username (validates no spaces, minimum 4 characters)
+    - Phone Number (validates 10-15 digits)
+    - Real-time validation with visual feedback
+    - Clean validation helper methods
+  
+  - **Step 4: Password Creation** (`UserCreatePasswordFragment`)
+    - Password input with strength indicator
+    - Confirm password validation
+    - Password requirements:
+      - Minimum 8 characters
+      - At least one uppercase letter
+      - At least one number
+      - At least one symbol
+    - Real-time strength feedback (Weak/Good/Strong)
+  
+  - **Step 5: OTP Verification** (`dialog_verification_code.xml`)
+    - Automatic OTP sent to email from Step 2
+    - 6-digit code input with auto-focus
+    - Real-time code validation
+    - Resend code functionality
+    - Email masking for privacy
+    - Full-screen dialog interface
+  
+  - **Step 6: Account Created**
+    - Success message with user name
+    - Automatic navigation to dashboard
+    - Token and user data saved
+  
+  - **Features**:
+    - Fragment-based architecture for modularity
+    - Data persistence between steps
+    - Modern back press handling with `OnBackPressedDispatcher`
+    - Comprehensive form validation
+    - Clean, maintainable code structure
 
 #### Profile Management
 - **View Profile** (`ProfileActivity`)
@@ -189,15 +223,19 @@ ServiceHub is an all-in-one native Android application that serves **customers**
 ### Security
 - **Secure token storage** using SharedPreferences (`TokenManager`)
 - **Email validation** with real-time feedback
-- **Password strength validation**
+- **Password strength validation** with visual indicators
+- **OTP verification** for email confirmation
 - **HTTPS/HTTP support** (configurable)
 - **Network security configuration**
+- **Email masking** in OTP dialog for privacy
 
 ### Data Management
 - **Token persistence** across app sessions
 - **User data caching** (email, name, role)
 - **Auto-login** functionality
 - **Session management**
+- **Multi-step form data persistence** during registration
+- **Data passing between fragments** via activity container
 
 ### Network Configuration
 - **Emulator support**: `http://10.0.2.2:8000/`
@@ -230,7 +268,9 @@ ServiceHub is an all-in-one native Android application that serves **customers**
 ## 🎯 User Roles & Capabilities
 
 ### 👤 **Customers**
+- ✅ **Multi-step registration** with guided flow
 - ✅ Register new account with email verification
+- ✅ **OTP verification** via email
 - ✅ Login to account
 - ✅ View and edit profile
 - ✅ Change password
@@ -304,12 +344,20 @@ app/src/main/java/app/hub/
 ├── api/                    # API interfaces and models
 │   ├── ApiClient.java      # Retrofit client configuration
 │   ├── ApiService.java     # API endpoint definitions
-│   └── [Request/Response models]
+│   ├── VerificationRequest.java
+│   ├── VerificationResponse.java
+│   ├── VerifyEmailRequest.java
+│   ├── VerifyEmailResponse.java
+│   └── [Other Request/Response models]
+├── common/                 # Common activities and fragments
+│   ├── RegisterActivity.java    # Multi-step registration container
+│   ├── CreateNewAccountFragment.java  # Step 1: Welcome screen
+│   ├── UserAddEmailFragment.java      # Step 2: Email input
+│   └── UserCreatePasswordFragment.java # Step 4: Password creation
 ├── util/                   # Utility classes
 │   ├── TokenManager.java   # Token storage and management
 │   └── EmailValidator.java # Email validation
 ├── MainActivity.java        # Login screen
-├── RegisterActivity.java    # Registration with email verification
 ├── DashboardActivity.java  # Customer dashboard with chatbot
 ├── ProfileActivity.java     # Profile viewing and editing
 ├── ServiceSelectActivity.java # Service selection and ticket creation
@@ -326,6 +374,21 @@ app/src/main/java/app/hub/
     └── [Other fragments...]
 ```
 
+### Registration Flow Architecture
+
+The registration system uses a **hybrid approach**:
+- **Fragment-based steps**: Steps 1, 2, and 4 use fragments for modularity
+- **Direct activity layout**: Step 3 (Tell Us) uses `activity_register.xml` directly for better control
+- **Dialog-based OTP**: Step 5 uses a full-screen dialog for OTP verification
+- **Data management**: `RegisterActivity` acts as a container, storing data between steps via setters/getters
+
+#### Registration Layout Files
+- `fragment_create_new_acc.xml` - Welcome screen (Step 1)
+- `fragment_user_add_email.xml` - Email input (Step 2)
+- `activity_register.xml` - Personal information form (Step 3)
+- `fragment_user_create_pass.xml` - Password creation (Step 4)
+- `dialog_verification_code.xml` - OTP verification dialog (Step 5)
+
 ---
 
 ## 🔐 Default Test Accounts
@@ -340,13 +403,14 @@ After running Laravel migrations and seeders:
 
 ## 🛠️ Technical Stack
 
-- **Language**: Java
+- **Language**: Java 11
 - **Minimum SDK**: 24 (Android 7.0)
 - **Target SDK**: 36 (Android 14)
-- **Architecture**: MVC (Model-View-Controller)
+- **Architecture**: MVC (Model-View-Controller) with Fragment-based UI
 - **Networking**: Retrofit 2.9.0, OkHttp 4.12.0
 - **JSON Parsing**: Gson
-- **UI Framework**: Material Design Components
+- **UI Framework**: Material Design 3 Components
+- **Navigation**: Fragment-based with `OnBackPressedDispatcher` for modern back handling
 - **Backend**: Laravel 11 with Sanctum authentication
 
 ---
@@ -403,6 +467,9 @@ After running Laravel migrations and seeders:
 - [ ] Advanced reporting and analytics
 - [ ] Branch management features
 - [ ] Employee roster management
+- [ ] Social login integration (Facebook/Google)
+- [ ] Biometric authentication
+- [ ] Remember me functionality
 
 ### Technical Improvements
 - [ ] Repository pattern implementation
@@ -411,6 +478,8 @@ After running Laravel migrations and seeders:
 - [ ] Room database for offline support
 - [ ] Unit and integration tests
 - [ ] Code documentation improvements
+- [ ] String resources externalization (i18n support)
+- [ ] Accessibility improvements
 
 ---
 
@@ -440,6 +509,19 @@ For issues or questions:
 
 ---
 
-**Last Updated**: Current as of latest implementation
+## 📝 Recent Updates
+
+### Registration System Improvements (Latest)
+- ✅ **Multi-step registration flow** with fragment-based architecture
+- ✅ **OTP verification dialog** with automatic email sending
+- ✅ **Improved validation system** with helper methods for cleaner code
+- ✅ **Modern back press handling** using `OnBackPressedDispatcher`
+- ✅ **Email masking** for privacy in OTP dialog
+- ✅ **Real-time validation** with visual feedback
+- ✅ **Code cleanup** and optimization
+
+---
+
+**Last Updated**: January 2025
 **Version**: 1.0
 **Status**: Active Development
