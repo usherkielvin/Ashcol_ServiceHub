@@ -128,11 +128,13 @@ public class UserCreatePasswordFragment extends Fragment {
     private void savePasswordAndContinue() {
         RegisterActivity activity = (RegisterActivity) getActivity();
         if (activity != null) {
-            activity.setUserPassword(getText(passwordInput));
+            String password = getText(passwordInput);
+            String confirmPassword = getText(confirmPasswordInput);
+            activity.setUserPassword(password);
             
-            // Check if Google Sign-In user - skip OTP and go to Account Created
+            // Check if Google Sign-In user - update password in backend, then go to Account Created
             if (activity.isGoogleSignInUser()) {
-                activity.showAccountCreatedFragment();
+                activity.updateGoogleUserPassword(password, confirmPassword);
             } else {
                 // Regular flow - show OTP verification
                 activity.showOtpVerification();

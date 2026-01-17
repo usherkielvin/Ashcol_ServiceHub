@@ -12,7 +12,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import app.hub.R;
-import app.hub.MainActivity;
+import app.hub.common.MainActivity;
 
 public class AccountCreatedFragment extends Fragment {
 

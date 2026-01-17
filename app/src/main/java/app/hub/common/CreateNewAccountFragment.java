@@ -42,9 +42,12 @@ public class CreateNewAccountFragment extends Fragment {
 
     private void setupGoogleSignIn() {
         // Configure Google Sign-In
+        // Note: To get ID token, you need to add .requestIdToken("YOUR_SERVER_CLIENT_ID")
+        // For now, we'll use email-based registration without ID token verification
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestEmail()
             .requestProfile()
+            // .requestIdToken("YOUR_SERVER_CLIENT_ID") // Uncomment when you have server client ID
             .build();
 
         googleSignInClient = GoogleSignIn.getClient(requireContext(), gso);
@@ -114,11 +117,12 @@ public class CreateNewAccountFragment extends Fragment {
                 String givenName = account.getGivenName();
                 String familyName = account.getFamilyName();
                 String photoUrl = account.getPhotoUrl() != null ? account.getPhotoUrl().toString() : null;
-                String idToken = account.getIdToken();
+                String idToken = account.getIdToken(); // May be null if not configured
 
                 Log.d(TAG, "Google Sign-In successful");
                 Log.d(TAG, "Email: " + email);
                 Log.d(TAG, "Name: " + displayName);
+                Log.d(TAG, "ID Token: " + (idToken != null ? "Present" : "Not available"));
 
                 // Pass Google account data to RegisterActivity
                 RegisterActivity activity = (RegisterActivity) getActivity();
@@ -129,18 +133,55 @@ public class CreateNewAccountFragment extends Fragment {
         } catch (ApiException e) {
             Log.e(TAG, "Google Sign-In failed: " + e.getStatusCode(), e);
             String errorMessage = "Google Sign-In failed";
+            String detailedMessage = "";
+            
             switch (e.getStatusCode()) {
-                case 10:
-                    errorMessage = "Developer error. Please check Google Sign-In configuration.";
+                case 10: // DEVELOPER_ERROR
+                    errorMessage = "Google Sign-In Configuration Required";
+                    detailedMessage = "Google Sign-In needs to be configured in Google Cloud Console.\n\n" +
+                        "To fix this:\n" +
+                        "1. Get SHA-1 fingerprint: Run 'gradlew signingReport' in project root\n" +
+                        "2. Go to: https://console.cloud.google.com/\n" +
+                        "3. Create OAuth 2.0 Client ID for Android\n" +
+                        "4. Package: app.hub\n" +
+                        "5. Add your SHA-1 fingerprint\n\n" +
+                        "See GOOGLE_SIGNIN_SETUP.md for details.";
+                    showDetailedError(errorMessage, detailedMessage);
                     break;
-                case 12501:
+                case 12501: // SIGN_IN_CANCELLED
                     errorMessage = "Sign-in was cancelled";
+                    showToast(errorMessage);
                     break;
-                case 7:
+                case 7: // NETWORK_ERROR
                     errorMessage = "Network error. Please check your connection.";
+                    showToast(errorMessage);
+                    break;
+                case 8: // INTERNAL_ERROR
+                    errorMessage = "Google Sign-In internal error. Please try again.";
+                    showToast(errorMessage);
+                    break;
+                default:
+                    errorMessage = "Google Sign-In failed. Error code: " + e.getStatusCode();
+                    showToast(errorMessage);
                     break;
             }
-            showToast(errorMessage);
+        }
+    }
+
+    private void showDetailedError(String title, String message) {
+        if (getContext() != null) {
+            new android.app.AlertDialog.Builder(getContext())
+                .setTitle(title)
+                .setMessage(message)
+                .setPositiveButton("OK", null)
+                .setNeutralButton("Use Email Instead", (dialog, which) -> {
+                    // Navigate to email fragment as fallback
+                    RegisterActivity activity = (RegisterActivity) getActivity();
+                    if (activity != null) {
+                        activity.showEmailFragment();
+                    }
+                })
+                .show();
         }
     }
 

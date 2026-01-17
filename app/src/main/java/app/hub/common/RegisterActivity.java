@@ -3,6 +3,10 @@ package app.hub.common;
 import app.hub.R;
 import app.hub.api.ApiClient;
 import app.hub.api.ApiService;
+import app.hub.api.GoogleSignInRequest;
+import app.hub.api.GoogleSignInResponse;
+import app.hub.api.SetInitialPasswordRequest;
+import app.hub.api.SetInitialPasswordResponse;
 import app.hub.api.VerificationRequest;
 import app.hub.api.VerificationResponse;
 import app.hub.api.VerifyEmailRequest;
@@ -392,6 +396,13 @@ public class RegisterActivity extends AppCompatActivity {
 			getText(usernameInput),
 			getText(phoneInput)
 		);
+		
+		// If Google Sign-In user, register/login with backend immediately
+		if (isGoogleSignIn) {
+			registerGoogleUser();
+			return;
+		}
+		
 		// Hide template layout, show fragment container for next step
 		if (templateLayout != null) {
 			templateLayout.setVisibility(View.GONE);
@@ -400,6 +411,123 @@ public class RegisterActivity extends AppCompatActivity {
 			fragmentContainer.setVisibility(View.VISIBLE);
 		}
 		showCreatePasswordFragment();
+	}
+	
+	// Register/Login Google user with backend
+	private void registerGoogleUser() {
+		// Ensure we have required data
+		String email = getUserEmail();
+		String firstName = getUserFirstName();
+		String lastName = getUserLastName();
+		String phone = getUserPhone();
+		
+		if (email == null || email.isEmpty()) {
+			Toast.makeText(this, "Email is required", Toast.LENGTH_SHORT).show();
+			return;
+		}
+		
+		Log.d(TAG, "Registering Google user - Email: " + email + ", Phone: " + phone);
+		Log.d(TAG, "First Name: " + firstName + ", Last Name: " + lastName);
+		
+		ApiService apiService = ApiClient.getApiService();
+		// id_token may be null if not configured, that's okay
+		String idToken = googleIdToken != null && !googleIdToken.isEmpty() ? googleIdToken : "";
+		GoogleSignInRequest request = new GoogleSignInRequest(
+			idToken,
+			email,
+			firstName != null ? firstName : "",
+			lastName != null ? lastName : "",
+			phone != null ? phone : ""
+		);
+		
+		Log.d(TAG, "Sending Google Sign-In request - Email: " + email + ", First: " + firstName + ", Last: " + lastName + ", Phone: " + phone);
+
+		Call<GoogleSignInResponse> call = apiService.googleSignIn(request);
+		call.enqueue(new Callback<>() {
+			@Override
+			public void onResponse(@NonNull Call<GoogleSignInResponse> call, @NonNull Response<GoogleSignInResponse> response) {
+				if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+					handleGoogleRegistrationSuccess(response.body());
+				} else {
+					// Log response body for debugging
+					String errorBody = "";
+					try {
+						if (response.errorBody() != null) {
+							errorBody = response.errorBody().string();
+							Log.e(TAG, "Google Sign-In error response: " + errorBody);
+						}
+					} catch (Exception e) {
+						Log.e(TAG, "Error reading error response", e);
+					}
+					handleGoogleRegistrationError(response.code(), errorBody);
+				}
+			}
+
+			@Override
+			public void onFailure(@NonNull Call<GoogleSignInResponse> call, @NonNull Throwable t) {
+				Log.e(TAG, "Error registering Google user: " + t.getMessage(), t);
+				Toast.makeText(RegisterActivity.this, 
+					"Failed to register. Please check your connection and try again.", Toast.LENGTH_SHORT).show();
+			}
+		});
+	}
+	
+	// Handle successful Google registration
+	private void handleGoogleRegistrationSuccess(GoogleSignInResponse response) {
+		if (response.getData() == null || response.getData().getUser() == null) {
+			Toast.makeText(this, "Registration failed. Please try again.", Toast.LENGTH_SHORT).show();
+			return;
+		}
+
+		// Save user data and token
+		GoogleSignInResponse.User user = response.getData().getUser();
+		tokenManager.saveToken("Bearer " + response.getData().getToken());
+		tokenManager.saveEmail(user.getEmail());
+
+		// Build and save name
+		String firstName = user.getFirstName();
+		String lastName = user.getLastName();
+		StringBuilder nameBuilder = new StringBuilder();
+		if (firstName != null && !firstName.trim().isEmpty()) {
+			nameBuilder.append(firstName.trim());
+		}
+		if (lastName != null && !lastName.trim().isEmpty()) {
+			if (nameBuilder.length() > 0) {
+				nameBuilder.append(" ");
+			}
+			nameBuilder.append(lastName.trim());
+		}
+		String fullName = nameBuilder.toString();
+		if (!fullName.isEmpty()) {
+			tokenManager.saveName(fullName);
+			Log.d(TAG, "Saved name to cache: " + fullName);
+		}
+
+		// Navigate to password creation (Google users still need to set a password)
+		if (templateLayout != null) {
+			templateLayout.setVisibility(View.GONE);
+		}
+		if (fragmentContainer != null) {
+			fragmentContainer.setVisibility(View.VISIBLE);
+		}
+		showCreatePasswordFragment();
+	}
+	
+	// Handle Google registration error
+	private void handleGoogleRegistrationError(int statusCode, String errorBody) {
+		String errorMsg;
+		if (statusCode == 422) {
+			errorMsg = "Invalid data. Please check your information.";
+			// Try to parse validation errors from response
+			if (errorBody != null && !errorBody.isEmpty()) {
+				Log.e(TAG, "Validation errors: " + errorBody);
+			}
+		} else if (statusCode == 500) {
+			errorMsg = "Server error. Please try again later.";
+		} else {
+			errorMsg = "Registration failed. Please try again.";
+		}
+		Toast.makeText(this, errorMsg, Toast.LENGTH_SHORT).show();
 	}
 
 	private String getText(TextInputEditText editText) {
@@ -843,14 +971,59 @@ public class RegisterActivity extends AppCompatActivity {
 		// Store personal info from Google
 		setUserPersonalInfo(firstName, lastName, username, "");
 		
+		// Store Google ID token for backend API call
+		googleIdToken = idToken;
+		
 		// Navigate to "Tell Us" to collect phone number
 		Toast.makeText(this, "Welcome! Please provide your phone number to continue.", Toast.LENGTH_LONG).show();
 		showTellUsFragment();
 	}
 	
+	// Store Google ID token
+	private String googleIdToken;
+	
 	// Check if user signed in with Google
 	public boolean isGoogleSignInUser() {
 		return isGoogleSignIn;
+	}
+
+	// Update password for Google user (set initial password)
+	public void updateGoogleUserPassword(String password, String confirmPassword) {
+		String token = tokenManager.getToken();
+		if (token == null || token.isEmpty()) {
+			Toast.makeText(this, "Not authenticated. Please try again.", Toast.LENGTH_SHORT).show();
+			return;
+		}
+
+		Log.d(TAG, "Updating password for Google user");
+
+		ApiService apiService = ApiClient.getApiService();
+		SetInitialPasswordRequest request = new SetInitialPasswordRequest(password, confirmPassword);
+
+		Call<SetInitialPasswordResponse> call = apiService.setInitialPassword(token, request);
+		call.enqueue(new Callback<>() {
+			@Override
+			public void onResponse(@NonNull Call<SetInitialPasswordResponse> call, @NonNull Response<SetInitialPasswordResponse> response) {
+				if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+					Log.d(TAG, "Password updated successfully for Google user");
+					// Navigate to Account Created
+					showAccountCreatedFragment();
+				} else {
+					String errorMsg = "Failed to set password. Please try again.";
+					if (response.body() != null && response.body().getMessage() != null) {
+						errorMsg = response.body().getMessage();
+					}
+					Toast.makeText(RegisterActivity.this, errorMsg, Toast.LENGTH_SHORT).show();
+				}
+			}
+
+			@Override
+			public void onFailure(@NonNull Call<SetInitialPasswordResponse> call, @NonNull Throwable t) {
+				Log.e(TAG, "Error updating password: " + t.getMessage(), t);
+				Toast.makeText(RegisterActivity.this, 
+					"Failed to set password. Please check your connection and try again.", Toast.LENGTH_SHORT).show();
+			}
+		});
 	}
 
 }

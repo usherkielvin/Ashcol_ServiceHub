@@ -20,6 +20,9 @@ public interface ApiService {
     @POST("api/v1/register")
     Call<RegisterResponse> register(@Body RegisterRequest request);
 
+    @POST("api/v1/google-signin")
+    Call<GoogleSignInResponse> googleSignIn(@Body GoogleSignInRequest request);
+
     @POST("api/v1/send-verification-code")
     Call<VerificationResponse> sendVerificationCode(@Body VerificationRequest request);
 
@@ -31,6 +34,9 @@ public interface ApiService {
 
     @POST("api/v1/change-password")
     Call<ChangePasswordResponse> changePassword(@Header("Authorization") String token, @Body ChangePasswordRequest request);
+
+    @POST("api/v1/set-initial-password")
+    Call<SetInitialPasswordResponse> setInitialPassword(@Header("Authorization") String token, @Body SetInitialPasswordRequest request);
 
     @GET("api/v1/user")
     Call<UserResponse> getUser(@Header("Authorization") String token);
