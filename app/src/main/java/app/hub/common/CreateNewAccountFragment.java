@@ -22,12 +22,30 @@ import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.tasks.Task;
 
 import app.hub.R;
+import app.hub.api.FacebookSignInRequest;
+import app.hub.api.FacebookSignInResponse;
+
+import com.facebook.AccessToken;
+import com.facebook.CallbackManager;
+import com.facebook.FacebookCallback;
+import com.facebook.FacebookException;
+import com.facebook.GraphRequest;
+import com.facebook.GraphResponse;
+import com.facebook.login.LoginManager;
+import com.facebook.login.LoginResult;
+
+import org.json.JSONObject;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class CreateNewAccountFragment extends Fragment {
 
     private static final String TAG = "CreateNewAccountFragment";
     private static final int RC_SIGN_IN = 9001;
     private GoogleSignInClient googleSignInClient;
+    private CallbackManager facebookCallbackManager;
 
     @Nullable
     @Override
@@ -35,9 +53,70 @@ public class CreateNewAccountFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_user_new_acc, container, false);
         
         setupGoogleSignIn();
+        setupFacebookLogin();
         setupButtons(view);
         
         return view;
+    }
+
+    private void setupFacebookLogin() {
+        facebookCallbackManager = CallbackManager.Factory.create();
+        LoginManager.getInstance().registerCallback(facebookCallbackManager,
+            new FacebookCallback<LoginResult>() {
+                @Override
+                public void onSuccess(LoginResult loginResult) {
+                    AccessToken accessToken = loginResult.getAccessToken();
+                    Log.d(TAG, "Facebook login successful");
+                    
+                    // Get user info from Facebook Graph API
+                    GraphRequest request = GraphRequest.newMeRequest(
+                        accessToken,
+                        (object, response) -> {
+                            try {
+                                String email = object.optString("email");
+                                String firstName = object.optString("first_name");
+                                String lastName = object.optString("last_name");
+                                String name = object.optString("name");
+                                
+                                Log.d(TAG, "Facebook user info - Email: " + email + ", Name: " + name);
+                                
+                                // Pass Facebook account data to RegisterActivity
+                                RegisterActivity activity = (RegisterActivity) getActivity();
+                                if (activity != null) {
+                                    activity.handleFacebookSignInSuccess(email, firstName, lastName, name, accessToken.getToken());
+                                }
+                            } catch (Exception e) {
+                                Log.e(TAG, "Error parsing Facebook user info", e);
+                                showToast("Error getting Facebook user info");
+                            }
+                        });
+                    
+                    android.os.Bundle parameters = new android.os.Bundle();
+                    parameters.putString("fields", "id,name,email,first_name,last_name");
+                    request.setParameters(parameters);
+                    request.executeAsync();
+                }
+
+                @Override
+                public void onCancel() {
+                    Log.d(TAG, "Facebook login cancelled");
+                    showToast("Facebook login was cancelled");
+                }
+
+                @Override
+                public void onError(FacebookException exception) {
+                    Log.e(TAG, "Facebook login error: " + exception.getMessage(), exception);
+                    String errorMsg = "Facebook login failed";
+                    if (exception.getMessage() != null) {
+                        if (exception.getMessage().contains("CONNECTION_FAILURE")) {
+                            errorMsg = "Network error. Please check your connection.";
+                        } else if (exception.getMessage().contains("INVALID_APP_ID")) {
+                            errorMsg = "Facebook login not configured. Please use email instead.";
+                        }
+                    }
+                    showToast(errorMsg);
+                }
+            });
     }
 
     private void setupGoogleSignIn() {
@@ -75,11 +154,11 @@ public class CreateNewAccountFragment extends Fragment {
             });
         }
 
-        // Facebook button (optional - implement later)
+        // Facebook button
         Button facebookButton = view.findViewById(R.id.btnFacebook);
         if (facebookButton != null) {
             facebookButton.setOnClickListener(v -> {
-                showToast("Facebook login coming soon");
+                signInWithFacebook();
             });
         }
 
@@ -97,9 +176,20 @@ public class CreateNewAccountFragment extends Fragment {
         startActivityForResult(signInIntent, RC_SIGN_IN);
     }
 
+    private void signInWithFacebook() {
+        // Use only public_profile permission - email is automatically included via Graph API
+        LoginManager.getInstance().logInWithReadPermissions(this, 
+            java.util.Arrays.asList("public_profile"));
+    }
+
     @Override
     public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+
+        // Handle Facebook callback
+        if (facebookCallbackManager != null) {
+            facebookCallbackManager.onActivityResult(requestCode, resultCode, data);
+        }
 
         if (requestCode == RC_SIGN_IN) {
             Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
