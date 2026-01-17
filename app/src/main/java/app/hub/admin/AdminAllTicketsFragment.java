@@ -37,21 +37,33 @@ public class AdminAllTicketsFragment extends Fragment {
 
         ticketsRecyclerView = view.findViewById(R.id.ticketsRecyclerView);
         noTicketsTextView = view.findViewById(R.id.noTicketsTextView);
-        tokenManager = new TokenManager(getContext());
+        
+        if (getContext() != null) {
+            tokenManager = new TokenManager(getContext());
+        }
 
-        setupRecyclerView();
-        loadTickets();
+        if (ticketsRecyclerView != null && noTicketsTextView != null) {
+            setupRecyclerView();
+            loadTickets();
+        }
 
         return view;
     }
 
     private void setupRecyclerView() {
+        if (ticketsRecyclerView == null || getContext() == null) {
+            return;
+        }
         ticketAdapter = new TicketAdapter(ticketList);
         ticketsRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         ticketsRecyclerView.setAdapter(ticketAdapter);
     }
 
     private void loadTickets() {
+        if (ticketsRecyclerView == null || noTicketsTextView == null) {
+            return;
+        }
+        
         // This is where you would make an API call to get the tickets.
         // For now, let's use the same sample data.
         ticketList.add(new Ticket("Fix the printer", "The printer in the main office is jammed.", "Open"));
@@ -64,7 +76,9 @@ public class AdminAllTicketsFragment extends Fragment {
         } else {
             noTicketsTextView.setVisibility(View.GONE);
             ticketsRecyclerView.setVisibility(View.VISIBLE);
-            ticketAdapter.notifyDataSetChanged();
+            if (ticketAdapter != null) {
+                ticketAdapter.notifyDataSetChanged();
+            }
         }
     }
 }

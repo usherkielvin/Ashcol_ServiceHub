@@ -19,9 +19,10 @@ public class AdminDashboardActivity extends AppCompatActivity {
         setContentView(R.layout.activity_admin_dashboard);
 
         BottomNavigationView bottomNav = findViewById(R.id.bottom_navigation);
-        bottomNav.setOnNavigationItemSelectedListener(navListener);
-
-        disableNavigationTooltips(bottomNav);
+        if (bottomNav != null) {
+            bottomNav.setOnNavigationItemSelectedListener(navListener);
+            disableNavigationTooltips(bottomNav);
+        }
 
         // as soon as the activity is created, we want to show the All Tickets fragment
         getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,
