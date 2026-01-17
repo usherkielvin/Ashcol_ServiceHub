@@ -1,16 +1,6 @@
 package app.hub.common;
 
 import app.hub.R;
-import app.hub.api.ApiClient;
-import app.hub.api.ApiService;
-import app.hub.api.RegisterRequest;
-import app.hub.api.RegisterResponse;
-import app.hub.api.VerificationRequest;
-import app.hub.api.VerificationResponse;
-import app.hub.api.VerifyEmailRequest;
-import app.hub.api.VerifyEmailResponse;
-import app.hub.user.DashboardActivity;
-import app.hub.util.EmailValidator;
 import app.hub.util.TokenManager;
 
 import android.content.Intent;
@@ -19,1336 +9,467 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.annotation.SuppressLint;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 
 import com.google.android.material.button.MaterialButton;
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-
-// Activity for user registration
+// Activity for user registration - Multi-step flow container
 public class RegisterActivity extends AppCompatActivity {
 
-	// UI Components
-	private ProgressBar progressBar;
-
-    private MaterialButton registerButton;
-	private TextInputLayout emailInputLayout, firstNameInputLayout, lastNameInputLayout, usernameInputLayout, passwordInputLayout, confirmPasswordInputLayout, phoneInputLayout;
-
-    private TextView fval, lval, uval, pval, cval, eval, passrate, phoneVal;
-    private TextInputEditText firstNameInput, lastNameInput, usernameInput, passwordInput, confirmPasswordInput, phoneInput;
-    private Button openOTPButton;
-	// Data
+	private static final String TAG = "RegisterActivity";
 	private TokenManager tokenManager;
+	private FragmentManager fragmentManager;
+
+	// Registration data to pass between steps
+	private String userEmail;
+	private String userFirstName;
+	private String userLastName;
+	private String userName;
+	private String userPhone;
+	private String userPassword;
+
+	// Views for activity_register.xml (Tell us step)
+	private View fragmentContainer;
+	private ConstraintLayout templateLayout;
+	private TextInputLayout firstNameInputLayout, lastNameInputLayout, usernameInputLayout, phoneInputLayout;
+	private TextInputEditText firstNameInput, lastNameInput, usernameInput, phoneInput;
+	private TextView fval, lval, uval, phoneVal;
+	private MaterialButton registerButton;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_register);
 
-		// Initialize components
-		tokenManager = new TokenManager(this);
-        initializeViews();
-     //   setupEmailValidation(); // You already have this
-        setupRealTimeValidationListeners(); // <-- ADD THIS NEW METHOD CALL
-        setupRegisterButton();
-        setupBackToLoginButton();
+		try {
+			tokenManager = new TokenManager(this);
+			fragmentManager = getSupportFragmentManager();
 
-        setupOpenOTPButton();
-    }
-    private void setupOpenOTPButton() {
-        // The button is initially hidden. We will set the listener later
-        // when we have the email, but we can find the view now.
-        openOTPButton = findViewById(R.id.OpenOTP);
-        if (openOTPButton != null) {
-            openOTPButton.setVisibility(View.GONE); // Ensure it's hidden at start
-        }
-    }
-    /**
-     * Sets up real-time validation listeners for all relevant input fields.
-     */
-    // Add these new methods to RegisterActivity.java
+			// Start with Step 1: Create New Account welcome screen
+			if (savedInstanceState == null) {
+				showCreateNewAccountFragment();
+			}
+		} catch (Exception e) {
+			Log.e(TAG, "Error in onCreate: " + e.getMessage(), e);
+			Toast.makeText(this, "Error loading registration", Toast.LENGTH_SHORT).show();
+			finish();
+		}
+	}
 
-    /**
-     * Sets up real-time validation listeners for all relevant input fields.
-     */
-    // In RegisterActivity.java
+	// Step 1: Show create new account welcome fragment
+	public void showCreateNewAccountFragment() {
+		try {
+			Log.d(TAG, "Showing CreateNewAccountFragment");
+			// Hide template layout, show fragment container
+			hideTemplateLayout();
+			Fragment fragment = new CreateNewAccountFragment();
+			FragmentTransaction transaction = fragmentManager.beginTransaction();
+			transaction.replace(R.id.fragment_container, fragment);
+			transaction.commit();
+		} catch (Exception e) {
+			Log.e(TAG, "Error showing create new account fragment: " + e.getMessage(), e);
+			Toast.makeText(this, "Error loading screen", Toast.LENGTH_SHORT).show();
+		}
+	}
 
-    private void setupRealTimeValidationListeners() {
-        // First Name Listener
-        firstNameInput.addTextChangedListener(new TextWatcher() {
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-            public void onTextChanged(CharSequence s, int start, int before, int count) {}
-            public void afterTextChanged(Editable s) {
-                validateFirstName(s.toString());
-            }
-        });
+	// Step 2: Show email input fragment
+	public void showEmailFragment() {
+		try {
+			Log.d(TAG, "Showing UserAddEmailFragment");
+			// Hide template layout, show fragment container
+			hideTemplateLayout();
+			Fragment fragment = new UserAddEmailFragment();
+			FragmentTransaction transaction = fragmentManager.beginTransaction();
+			transaction.replace(R.id.fragment_container, fragment);
+			transaction.addToBackStack("email");
+			transaction.commit();
+		} catch (Exception e) {
+			Log.e(TAG, "Error showing email fragment: " + e.getMessage(), e);
+			Toast.makeText(this, "Error loading form", Toast.LENGTH_SHORT).show();
+		}
+	}
 
-        // Last Name Listener
-        lastNameInput.addTextChangedListener(new TextWatcher() {
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-            public void onTextChanged(CharSequence s, int start, int before, int count) {}
-            public void afterTextChanged(Editable s) {
-                validateLastName(s.toString());
-            }
-        });
+	// Step 3: Show personal info using activity_register.xml directly (Tell us about yourself)
+	public void showTellUsFragment() {
+		try {
+			Log.d(TAG, "Showing Tell Us form using activity_register.xml");
+			// Hide fragment container, show template layout
+			if (fragmentContainer != null) {
+				fragmentContainer.setVisibility(View.GONE);
+			}
+			if (templateLayout != null) {
+				templateLayout.setVisibility(View.VISIBLE);
+			}
+			initializeTellUsViews();
+			setupTellUsValidation();
+			setupTellUsButtons();
+		} catch (Exception e) {
+			Log.e(TAG, "Error showing tell us form: " + e.getMessage(), e);
+			Toast.makeText(this, "Error loading form", Toast.LENGTH_SHORT).show();
+		}
+	}
 
-        // Username Listener
-        usernameInput.addTextChangedListener(new TextWatcher() {
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-            public void onTextChanged(CharSequence s, int start, int before, int count) {}
-            public void afterTextChanged(Editable s) {
-                validateUsername(s.toString());
-            }
-        });
+	// Initialize views from activity_register.xml
+	private void initializeTellUsViews() {
+		fragmentContainer = findViewById(R.id.fragment_container);
+		templateLayout = findViewById(R.id.template_layout);
 
-        // Password Listener
-        passwordInput.addTextChangedListener(new TextWatcher() {
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-            public void onTextChanged(CharSequence s, int start, int before, int count) {}
-            public void afterTextChanged(Editable s) {
-                validatePasswordAndStrength(s.toString());
-                // Also validate confirm password whenever password changes
-                validateConfirmPassword(s.toString(), getTextFromEditText(R.id.confirmPasswordInput));
-            }
-        });
-
-        // Confirm Password Listener (MOVED TO THE CORRECT LOCATION)
-        confirmPasswordInput.addTextChangedListener(new TextWatcher() {
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-            public void onTextChanged(CharSequence s, int start, int before, int count) {}
-            public void afterTextChanged(Editable s) {
-                validateConfirmPassword(getTextFromEditText(R.id.Pass_val), s.toString());
-            }
-        });
-        TextInputEditText emailInput = findViewById(R.id.Email_val);
-        emailInput.addTextChangedListener(new TextWatcher() {
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-            public void onTextChanged(CharSequence s, int start, int before, int count) {}
-            public void afterTextChanged(Editable s) {
-                validateEmail(s.toString());
-            }
-        });
-        
-        // Phone Listener
-        phoneInput.addTextChangedListener(new TextWatcher() {
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-            public void onTextChanged(CharSequence s, int start, int before, int count) {}
-            public void afterTextChanged(Editable s) {
-                validatePhone(s.toString());
-            }
-        });
-    }
-
-// Add this new method to RegisterActivity.java
-
-    /**
-     * Validates the email address in real-time as the user types.
-     * Updates the 'eval' TextView.
-     *
-     * @param email The current text in the email input field.
-     */
-    private void validateEmail(String email) {
-        if (eval == null) return; // 'eval' is the TextView with ID R.id.Email_val
-
-        // Hide the validation message if the field is empty
-        if (email.isEmpty()) {
-            eval.setVisibility(View.GONE);
-            return;
-        }
-
-        // Use Android's built-in pattern to check for a valid email format
-        // This will correctly flag "d" as invalid but "d@g" as potentially valid
-        if (android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            // The format is valid, so hide the error message
-            eval.setVisibility(View.GONE);
-        } else {
-            // The format is invalid, show the error message
-            eval.setText("Email format invalid");
-            eval.setVisibility(View.VISIBLE);
-        }
-    }
-
-    private void validatePasswordAndStrength(java.lang.String password) {
-        if (pval == null || passrate == null) return;
-    
-        // Define regex patterns for each requirement
-        boolean hasUppercase = password.matches(".*[A-Z].*");
-        boolean hasNumber = password.matches(".*\\d.*");
-        boolean hasSymbol = password.matches(".*[!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>/\\?].*");
-    
-        if (password.isEmpty()) {
-            pval.setVisibility(View.GONE); // Hide validation requirements if empty
-            passrate.setVisibility(View.GONE); // Hide strength when empty
-            return;
-        }
-    
-        // --- Part 1: Display validation requirements in pval (one at a time) ---
-        String requirement = "";
-                
-        // Check requirements in priority order and show only the first unmet one
-        if (password.length() < 8) {
-            requirement = "At least 8 characters";
-        } else if (!hasUppercase) {
-            requirement = "One uppercase letter";
-        } else if (!hasNumber) {
-            requirement = "One number";
-        } else if (!hasSymbol) {
-            requirement = "One symbol";
-        }
-                
-        // Display or hide the single requirement (pval)
-        if (!requirement.isEmpty()) {
-            pval.setText(requirement);
-            pval.setVisibility(View.VISIBLE);
-        } else {
-            // All requirements are met, hide the validation message
-            pval.setVisibility(View.GONE);
-        }
-    
-        // --- Part 2: Calculate and Display Strength Score only in passrate (no validation errors) ---
-        int strengthScore = 0;
-        if (password.length() >= 8) strengthScore++;
-        if (password.length() > 10) strengthScore++; // Bonus for longer passwords
-        if (hasUppercase) strengthScore++;
-        if (hasNumber) strengthScore++;
-        if (hasSymbol) strengthScore++;
-    
-        // Always show the strength meter
-        passrate.setVisibility(View.VISIBLE);
-    
-        // Set the text and color based on the score (only strength, no validation errors)
-        if (strengthScore < 3) {
-            passrate.setText("Weak");
-            passrate.setTextColor(getResources().getColor(android.R.color.holo_red_dark)); // Red for weak
-        } else if (strengthScore < 5) {
-            passrate.setText("Good");
-            passrate.setTextColor(getResources().getColor(android.R.color.holo_orange_dark)); // Orange for good
-        } else {
-            passrate.setText("Strong");
-            passrate.setTextColor(getResources().getColor(android.R.color.holo_green_dark)); // Green for strong
-        }
-    }
-
-
-
-
-
-
-
-// --- Validation Logic Methods ---
-
-    private void validateFirstName(String firstName) {
-        if (firstName.matches(".*\\d+.*")) {
-            fval.setText("Name no numbers");
-            fval.setVisibility(View.VISIBLE);
-        } else if (!firstName.isEmpty() && firstName.length() < 2) {
-            fval.setText("Name too short");
-            fval.setVisibility(View.VISIBLE);
-        } else {
-            fval.setVisibility(View.GONE);
-        }
-    }
-
-    private void validateLastName(String lastName) {
-        if (lastName.matches(".*\\d+.*")) {
-            lval.setText("Name no numbers");
-            lval.setVisibility(View.VISIBLE);
-        } else {
-            lval.setVisibility(View.GONE);
-        }
-    }
-
-    private void validateUsername(String username) {
-        if (username.contains(" ")) {
-            uval.setText("Username no spaces");
-            uval.setVisibility(View.VISIBLE);
-        } else if (!username.isEmpty() && username.length() < 4) {
-            uval.setText("Username min 4 chars");
-            uval.setVisibility(View.VISIBLE);
-        } else {
-            uval.setVisibility(View.GONE);
-        }
-    }
-
-
-
-    private void validateConfirmPassword(String password, String confirmPassword) {
-        if (!confirmPassword.isEmpty() && !password.equals(confirmPassword)) {
-            cval.setText("Passwords mismatch");
-            cval.setVisibility(View.VISIBLE);
-        } else {
-            cval.setVisibility(View.GONE);
-        }
-    }
-
-    private void validatePhone(String phone) {
-        if (phoneVal == null) return;
-
-        // Hide the validation message if the field is empty
-        if (phone.isEmpty()) {
-            phoneVal.setVisibility(View.GONE);
-            return;
-        }
-
-        // Basic phone number validation - at least 10 digits, can include common separators
-        // This pattern allows for various phone number formats like: 1234567890, 123-456-7890, (123) 456-7890, etc.
-        String phoneRegex = "^\\(?([0-9]{3})\\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})$";
-        
-        // Also check for a simpler pattern that just checks if it has at least 10 digits
-        String digitOnly = phone.replaceAll("[^0-9]", "");
-        
-        if (digitOnly.length() >= 10 && digitOnly.length() <= 15) { // Reasonable phone number length
-            phoneVal.setVisibility(View.GONE);
-        } else {
-            phoneVal.setText("Phone 10 digits min");
-            phoneVal.setVisibility(View.VISIBLE);
-        }
-    }
-
-    // Initialize all view components
-	private void initializeViews() {
-		progressBar = findViewById(R.id.progressBar);
-		emailInputLayout = findViewById(R.id.emailInputLayout);
 		firstNameInputLayout = findViewById(R.id.firstNameInputLayout);
 		lastNameInputLayout = findViewById(R.id.lastNameInputLayout);
 		usernameInputLayout = findViewById(R.id.usernameInputLayout);
-		passwordInputLayout = findViewById(R.id.passwordInputLayout);
-		confirmPasswordInputLayout = findViewById(R.id.CPass_val);
 		phoneInputLayout = findViewById(R.id.phoneInputLayout);
-        firstNameInput = findViewById(R.id.firstNameInput);
-        lastNameInput = findViewById(R.id.lastNameInput);
-        usernameInput = findViewById(R.id.usernameInput);
-        passwordInput = findViewById(R.id.Pass_val);
-        confirmPasswordInput = findViewById(R.id.confirmPasswordInput);
-        phoneInput = findViewById(R.id.etPhone);
-        openOTPButton = findViewById(R.id.OpenOTP);
-        registerButton = findViewById(R.id.registerButton);
 
-        // Initialize Validation TextViews
-        fval = findViewById(R.id.fname_val);
-        lval = findViewById(R.id.lname_val);
-        uval = findViewById(R.id.Uname_val);
-        pval = findViewById(R.id.Pass_val);
-        cval = findViewById(R.id.CPass_val);
-        eval = findViewById(R.id.Email_val); // You already had an 'eval'
-        passrate = findViewById(R.id.passrate);
-        phoneVal = findViewById(R.id.phone_val);
+		firstNameInput = findViewById(R.id.firstNameInput);
+		lastNameInput = findViewById(R.id.lastNameInput);
+		usernameInput = findViewById(R.id.usernameInput);
+		phoneInput = findViewById(R.id.etPhone);
 
-        // Hide all validation text views by default
-        fval.setVisibility(View.GONE);
-        lval.setVisibility(View.GONE);
-        uval.setVisibility(View.GONE);
-        pval.setVisibility(View.GONE);
-        cval.setVisibility(View.GONE);
-        eval.setVisibility(View.GONE);
-        phoneVal.setVisibility(View.GONE);
+		registerButton = findViewById(R.id.registerButton);
 
+		fval = findViewById(R.id.fname_val);
+		lval = findViewById(R.id.lname_val);
+		uval = findViewById(R.id.Uname_val);
+		phoneVal = findViewById(R.id.phone_val);
 
+		// Hide validation messages initially
+		if (fval != null) fval.setVisibility(View.GONE);
+		if (lval != null) lval.setVisibility(View.GONE);
+		if (uval != null) uval.setVisibility(View.GONE);
+		if (phoneVal != null) phoneVal.setVisibility(View.GONE);
 	}
 
-	// Setup real-time email validation as user types
-	private void setupEmailValidation() {
-		TextInputEditText emailInput = findViewById(R.id.Email_val);
-		if (emailInput == null || emailInputLayout == null) {
-			return;
+	// Setup validation listeners for Tell Us form
+	private void setupTellUsValidation() {
+		if (firstNameInput != null) {
+			firstNameInput.addTextChangedListener(new TextWatcher() {
+				@Override
+				public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+				@Override
+				public void onTextChanged(CharSequence s, int start, int before, int count) {}
+				@Override
+				public void afterTextChanged(Editable s) {
+					validateFirstName(s.toString());
+				}
+			});
 		}
 
-		emailInput.addTextChangedListener(new TextWatcher() {
-			@Override
-			public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+		if (lastNameInput != null) {
+			lastNameInput.addTextChangedListener(new TextWatcher() {
+				@Override
+				public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+				@Override
+				public void onTextChanged(CharSequence s, int start, int before, int count) {}
+				@Override
+				public void afterTextChanged(Editable s) {
+					validateLastName(s.toString());
+				}
+			});
+		}
 
-			@Override
-			public void onTextChanged(CharSequence s, int start, int before, int count) {
-				clearEmailErrorIfNeeded();
-			}
+		if (usernameInput != null) {
+			usernameInput.addTextChangedListener(new TextWatcher() {
+				@Override
+				public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+				@Override
+				public void onTextChanged(CharSequence s, int start, int before, int count) {}
+				@Override
+				public void afterTextChanged(Editable s) {
+					validateUsername(s.toString());
+				}
+			});
+		}
 
-			@Override
-			public void afterTextChanged(Editable s) {
-				validateEmailInRealTime(s.toString().trim());
-			}
-		});
+		if (phoneInput != null) {
+			phoneInput.addTextChangedListener(new TextWatcher() {
+				@Override
+				public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+				@Override
+				public void onTextChanged(CharSequence s, int start, int before, int count) {}
+				@Override
+				public void afterTextChanged(Editable s) {
+					validatePhone(s.toString());
+				}
+			});
+		}
 	}
 
-	// Clear email error if it's an "already used" error (user is fixing it)
-	private void clearEmailErrorIfNeeded() {
-		if (emailInputLayout == null || emailInputLayout.getError() == null) {
-			return;
-		}
-
-		String error = emailInputLayout.getError().toString();
-		boolean isEmailTakenError = error.contains("already") || 
-		                           error.contains("taken") || 
-		                           error.contains("exists");
-
-		if (isEmailTakenError) {
-			eval.setVisibility(View.GONE); // Hide our custom TextView instead
-		}
-	}
-
-	// Validate email format in real-time as user types
-    // In RegisterActivity.java, modify this method
-
-    private void validateEmailInRealTime(String email) {
-        // Use your 'eval' TextView instead of the TextInputLayout's error
-        if (email.isEmpty()) {
-            eval.setVisibility(View.GONE); // Hide when empty
-            return;
-        }
-
-        EmailValidator.ValidationResult result = EmailValidator.validate(email);
-
-        // Check for "already used" error on the layout first
-        String currentLayoutError = emailInputLayout.getError() != null ? emailInputLayout.getError().toString() : "";
-        boolean isEmailTakenError = currentLayoutError.contains("already") || currentLayoutError.contains("taken");
-
-        if (!result.isValid() && email.length() > 5) {
-            // Use simplified messages without punctuation
-            String simpleMessage = result.getMessage();
-            if (simpleMessage.contains("Invalid email format")) {
-                simpleMessage = "Email format invalid";
-            } else if (simpleMessage.contains("Invalid email domain")) {
-                simpleMessage = "Email domain invalid";
-            } else if (simpleMessage.contains("Please use a real email address")) {
-                simpleMessage = "Use real email";
-            }
-            eval.setText(simpleMessage);
-            eval.setVisibility(View.VISIBLE);
-        } else if (isEmailTakenError) {
-            // If the email format is now valid, but it's still "taken", hide our custom TextView
-            eval.setVisibility(View.GONE);
-        } else {
-            // If valid, hide our custom TextView
-            eval.setVisibility(View.GONE);
-        }
-    }
-
-	// Setup register button click listener
-    private void setupRegisterButton() {
-        if (registerButton == null) {return;
-        }
-
-        registerButton.setOnClickListener(v -> {
-
-            // Get input values
-            String username = getTextFromEditText(R.id.usernameInput);
-            String firstName = getTextFromEditText(R.id.firstNameInput);
-            String lastName = getTextFromEditText(R.id.lastNameInput);
-            String email = getTextFromEditText(R.id.Email_val);
-            String password = getTextFromEditText(R.id.Pass_val);
-            String confirmPassword = getTextFromEditText(R.id.confirmPasswordInput);
-            String phone = getTextFromEditText(R.id.etPhone);
-
-            // Validate and register
-            if (validateInput(username, firstName, lastName, email, password, confirmPassword, phone)) {
-                // ---> KEY CHANGE: Disable the button right before making the API call <---
-                registerButton.setEnabled(false);
-                registerUser(username, firstName, lastName, email, password, confirmPassword, phone);
-            }
-        });
-    }
-
-	// Setup back to login button
-	private void setupBackToLoginButton() {
+	// Setup buttons for Tell Us form
+	private void setupTellUsButtons() {
 		ImageButton backButton = findViewById(R.id.backToLoginButton);
-		if (backButton == null) {
-			return;
+		if (backButton != null) {
+			backButton.setOnClickListener(v -> {
+				if (fragmentManager.getBackStackEntryCount() > 0) {
+					fragmentManager.popBackStack();
+				} else {
+					Intent intent = new Intent(this, MainActivity.class);
+					startActivity(intent);
+					finish();
+				}
+			});
 		}
 
-		backButton.setOnClickListener(v -> {
-			Intent intent = new Intent(this, MainActivity.class);
-			startActivity(intent);
-			finish();
-		});
+		if (registerButton != null) {
+			registerButton.setOnClickListener(v -> {
+				if (validateTellUsForm()) {
+					savePersonalInfoAndContinue();
+				}
+			});
+		}
 	}
 
-	// Helper method to get text from EditText
-	private String getTextFromEditText(int viewId) {
-		TextInputEditText editText = findViewById(viewId);
+	// Validation methods
+	private void validateFirstName(String firstName) {
+		if (fval == null) return;
+		if (firstName.matches(".*\\d+.*")) {
+			fval.setText("Name no numbers");
+			fval.setVisibility(View.VISIBLE);
+		} else if (!firstName.isEmpty() && firstName.length() < 2) {
+			fval.setText("Name too short");
+			fval.setVisibility(View.VISIBLE);
+		} else {
+			fval.setVisibility(View.GONE);
+		}
+	}
+
+	private void validateLastName(String lastName) {
+		if (lval == null) return;
+		if (lastName.matches(".*\\d+.*")) {
+			lval.setText("Name no numbers");
+			lval.setVisibility(View.VISIBLE);
+		} else {
+			lval.setVisibility(View.GONE);
+		}
+	}
+
+	private void validateUsername(String username) {
+		if (uval == null) return;
+		if (username.contains(" ")) {
+			uval.setText("Username no spaces");
+			uval.setVisibility(View.VISIBLE);
+		} else if (!username.isEmpty() && username.length() < 4) {
+			uval.setText("Username min 4 chars");
+			uval.setVisibility(View.VISIBLE);
+		} else {
+			uval.setVisibility(View.GONE);
+		}
+	}
+
+	private void validatePhone(String phone) {
+		if (phoneVal == null) return;
+		if (phone.isEmpty()) {
+			phoneVal.setVisibility(View.GONE);
+			return;
+		}
+		String digitOnly = phone.replaceAll("[^0-9]", "");
+		if (digitOnly.length() >= 10 && digitOnly.length() <= 15) {
+			phoneVal.setVisibility(View.GONE);
+		} else {
+			phoneVal.setText("Phone 10 digits min");
+			phoneVal.setVisibility(View.VISIBLE);
+		}
+	}
+
+	// Validate all fields in Tell Us form
+	private boolean validateTellUsForm() {
+		String firstName = getText(firstNameInput);
+		String lastName = getText(lastNameInput);
+		String username = getText(usernameInput);
+		String phone = getText(phoneInput);
+
+		boolean isValid = true;
+
+		if (firstName.isEmpty()) {
+			if (fval != null) {
+				fval.setText("First name required");
+				fval.setVisibility(View.VISIBLE);
+			}
+			isValid = false;
+		}
+
+		if (lastName.isEmpty()) {
+			if (lval != null) {
+				lval.setText("Last name required");
+				lval.setVisibility(View.VISIBLE);
+			}
+			isValid = false;
+		}
+
+		if (username.isEmpty()) {
+			if (uval != null) {
+				uval.setText("Username required");
+				uval.setVisibility(View.VISIBLE);
+			}
+			isValid = false;
+		} else if (username.length() < 4) {
+			if (uval != null) {
+				uval.setText("Username min 4 chars");
+				uval.setVisibility(View.VISIBLE);
+			}
+			isValid = false;
+		}
+
+		if (phone.isEmpty()) {
+			if (phoneVal != null) {
+				phoneVal.setText("Phone required");
+				phoneVal.setVisibility(View.VISIBLE);
+			}
+			isValid = false;
+		} else {
+			String digitOnly = phone.replaceAll("[^0-9]", "");
+			if (digitOnly.length() < 10) {
+				if (phoneVal != null) {
+					phoneVal.setText("Phone 10 digits min");
+					phoneVal.setVisibility(View.VISIBLE);
+				}
+				isValid = false;
+			}
+		}
+
+		return isValid;
+	}
+
+	// Save personal info and continue to password step
+	private void savePersonalInfoAndContinue() {
+		setUserPersonalInfo(
+			getText(firstNameInput),
+			getText(lastNameInput),
+			getText(usernameInput),
+			getText(phoneInput)
+		);
+		// Hide template layout, show fragment container for next step
+		if (templateLayout != null) {
+			templateLayout.setVisibility(View.GONE);
+		}
+		if (fragmentContainer != null) {
+			fragmentContainer.setVisibility(View.VISIBLE);
+		}
+		showCreatePasswordFragment();
+	}
+
+	private String getText(TextInputEditText editText) {
 		if (editText == null || editText.getText() == null) {
 			return "";
 		}
 		return editText.getText().toString().trim();
 	}
 
-	// Validate all input fields before registration
-	private boolean validateInput(String username, String firstName, String lastName, String email, String password, String confirmPassword, String phone) {
-		boolean isValid = true;
-
-		// Clear previous errors from TextViews (not setError)
-		uval.setVisibility(View.GONE);
-		fval.setVisibility(View.GONE);
-		lval.setVisibility(View.GONE);
-		eval.setVisibility(View.GONE);
-		pval.setVisibility(View.GONE);
-		cval.setVisibility(View.GONE);
-		phoneVal.setVisibility(View.GONE);
-
-		// Validate username
-		if (username.isEmpty()) {
-			uval.setText("Username required");
-			uval.setVisibility(View.VISIBLE);
-			isValid = false;
-		}
-
-		// Validate first name
-		if (firstName.isEmpty()) {
-			fval.setText("First name required");
-			fval.setVisibility(View.VISIBLE);
-			isValid = false;
-		}
-
-		// Validate last name
-		if (lastName.isEmpty()) {
-			lval.setText("Last name required");
-			lval.setVisibility(View.VISIBLE);
-			isValid = false;
-		}
-
-		// Validate email
-		if (email.isEmpty()) {
-			eval.setText("Email required");
-			eval.setVisibility(View.VISIBLE);
-			isValid = false;
-		} else {
-			EmailValidator.ValidationResult result = EmailValidator.validate(email);
-			if (!result.isValid()) {
-				// Use simplified messages without punctuation
-				String simpleMessage = result.getMessage();
-				if (simpleMessage.contains("Invalid email format")) {
-					simpleMessage = "Email format invalid";
-				} else if (simpleMessage.contains("Invalid email domain")) {
-					simpleMessage = "Email domain invalid";
-				} else if (simpleMessage.contains("Please use a real email address")) {
-					simpleMessage = "Use real email";
-				} else if (simpleMessage.contains("Email is required")) {
-					simpleMessage = "Email required";
-				}
-				eval.setText(simpleMessage);
-				eval.setVisibility(View.VISIBLE);
-				isValid = false;
-			}
-		}
-
-		// Validate password
-		if (password.isEmpty()) {
-			pval.setText("Password required");
-			pval.setVisibility(View.VISIBLE);
-			isValid = false;
-		} else if (password.length() < 8) {
-			pval.setText("Password 8 chars min");
-			pval.setVisibility(View.VISIBLE);
-			isValid = false;
-		}
-
-		// Validate password confirmation
-		if (confirmPassword.isEmpty()) {
-			cval.setText("Confirm password");
-			cval.setVisibility(View.VISIBLE);
-			isValid = false;
-		} else if (!password.equals(confirmPassword)) {
-			cval.setText("Passwords mismatch");
-			cval.setVisibility(View.VISIBLE);
-			isValid = false;
-		}
-
-		// Validate phone number
-		if (phone.isEmpty()) {
-			phoneVal.setText("Phone required");
-			phoneVal.setVisibility(View.VISIBLE);
-			isValid = false;
-		} else {
-            // Basic phone number validation - check if it has at least 10 digits
-            String digitOnly = phone.replaceAll("[^0-9]", "");
-            if (digitOnly.length() < 10) {
-                phoneVal.setText("Phone 10 digits min");
-                phoneVal.setVisibility(View.VISIBLE);
-                isValid = false;
-            }
-        }
-
-		return isValid;
-	}
-
-
-	// Register a new user with the API
-	private void registerUser(String username, String firstName, String lastName, String email, String password, String confirmPassword, String phone) {
-		setLoadingState(true);
-
-		// Create API request
-		ApiService apiService = ApiClient.getApiService();
-		RegisterRequest request = new RegisterRequest(username, firstName, lastName, email, phone, password, confirmPassword, "customer");
-
-		// Make API call
-		Call<RegisterResponse> call = apiService.register(request);
-        call.enqueue(new Callback<RegisterResponse>() {
-            @Override
-            public void onResponse(@NonNull Call<RegisterResponse> call, @NonNull Response<RegisterResponse> response) {
-                setLoadingState(false);
-                // Note: We don't re-enable the button on success here because we want it to stay disabled.
-                handleRegisterResponse(response, email);
-            }
-
-            @Override
-            public void onFailure(@NonNull Call<RegisterResponse> call, @NonNull Throwable t) {
-                setLoadingState(false);
-                // ---> KEY CHANGE: Re-enable on failure <---
-                registerButton.setEnabled(true);
-                handleRegisterFailure(t);
-            }
-        });
-	}
-
-	// Handle successful registration response
-    private void handleRegisterResponse(Response<RegisterResponse> response, String email) {
-        if (response.isSuccessful() && response.body() != null) {
-            RegisterResponse registerResponse = response.body();
-            handleSuccessfulRegistration(registerResponse, email);
-        } else {
-            // ---> KEY CHANGE: Re-enable on error <---
-            registerButton.setEnabled(true);
-            handleRegistrationError(response);
-        }
-    }
-
-	// Handle successful registration (with or without verification)
-    private void handleSuccessfulRegistration(RegisterResponse response, String email) {
-        if (!response.isSuccess() || response.getData() == null) {
-            handleRegistrationErrors(response);
-            return;
-        }
-
-        // Check if email verification is required
-        if (response.getData().isRequires_verification()) {
-            // --- KEY CHANGES START HERE ---
-
-            // 1. Show the OTP dialog for the first time
-            showVerificationDialog(email);
-
-            // 2. Make the "Re-open OTP" button visible on the main screen
-            if (openOTPButton != null) {
-                openOTPButton.setVisibility(View.VISIBLE);
-
-                // 3. Set its click listener so it can re-open the dialog
-                openOTPButton.setOnClickListener(v -> {
-                    // When clicked, simply show the verification dialog again
-                    showVerificationDialog(email);
-                });
-            }
-            // --- KEY CHANGES END HERE ---
-
-        } else {
-            // Auto-login if verification not required
-            saveUserDataAndNavigate(response);
-        }
-    }
-
-	// Save user data and navigate to dashboard
-	private void saveUserDataAndNavigate(RegisterResponse response) {
-		if (response.getData().getToken() == null) {
-			return;
-		}
-
-		// Save user data
-		RegisterResponse.User user = response.getData().getUser();
-		tokenManager.saveToken("Bearer " + response.getData().getToken());
-		tokenManager.saveEmail(user.getEmail());
-		
-		// Build name from firstName and lastName (RegisterResponse.User doesn't have getName())
-		String firstName = user.getFirstName();
-		String lastName = user.getLastName();
-		StringBuilder nameBuilder = new StringBuilder();
-		if (firstName != null && !firstName.trim().isEmpty()) {
-			nameBuilder.append(firstName.trim());
-		}
-		if (lastName != null && !lastName.trim().isEmpty()) {
-			if (nameBuilder.length() > 0) {
-				nameBuilder.append(" ");
-			}
-			nameBuilder.append(lastName.trim());
-		}
-		
-		String userName = nameBuilder.toString();
-		// Always save the name, even if only one field is provided
-		if (userName != null && !userName.trim().isEmpty()) {
-			try {
-				tokenManager.saveName(userName.trim());
-				Log.d("RegisterActivity", "Saved name to cache: " + userName.trim());
-			} catch (Exception e) {
-				Log.e("RegisterActivity", "Error saving name: " + e.getMessage());
-			}
-		} else {
-			// If both are null, try to save at least one field
-			if (firstName != null && !firstName.trim().isEmpty()) {
-				try {
-					tokenManager.saveName(firstName.trim());
-					Log.d("RegisterActivity", "Saved firstName to cache: " + firstName.trim());
-				} catch (Exception e) {
-					Log.e("RegisterActivity", "Error saving firstName: " + e.getMessage());
-				}
-			} else if (lastName != null && !lastName.trim().isEmpty()) {
-				try {
-					tokenManager.saveName(lastName.trim());
-					Log.d("RegisterActivity", "Saved lastName to cache: " + lastName.trim());
-				} catch (Exception e) {
-					Log.e("RegisterActivity", "Error saving lastName: " + e.getMessage());
-				}
-			}
-		}
-
-		// Show success and navigate (reusing firstName and lastName from above)
-		String userEmail = user.getEmail();
-		String message = String.format("Welcome %s %s! You have been registered successfully.", firstName, lastName);
-		
-		runOnUiThread(() -> showSuccess("Registration Successful", message, userEmail));
-	}
-
-	// Handle registration errors from backend
-	private void handleRegistrationError(Response<RegisterResponse> response) {
-        String errorBody = null;
-        try {
-            if (response.errorBody() != null) {
-                errorBody = response.errorBody().string();
-                Log.e("RegistrationError", "Response code: " + response.code() + ", Error body: " + errorBody);
-            } else {
-                Log.e("RegistrationError", "Response code: " + response.code() + ", No error body");
-            }
-        } catch (java.io.IOException e) {
-            Log.e("RegistrationError", "Error parsing error body", e);
-        }
-		String errorMessage = getErrorMessage(response, errorBody);
-		showErrorMessage(errorMessage, response.code());
-	}
-
-	// Handle errors in successful response body
-	private void handleRegistrationErrors(RegisterResponse response) {
-		// Check for email-specific errors first
-		if (response.getErrors() != null && response.getErrors().getEmail() != null) {
-			String[] emailErrors = response.getErrors().getEmail();
-			if (emailErrors.length > 0) {
-				String emailError = normalizeEmailError(emailErrors[0]);
-				runOnUiThread(() -> {
-					if (emailInputLayout != null) {
-						eval.setText(emailError);
-						eval.setVisibility(View.VISIBLE);
-					}
-				});
-				return;
-			}
-		}
-
-		// Show general error message
-		String errorMsg = response.getMessage();
-		if (response.getErrors() != null) {
-			String formattedErrors = formatErrors(response.getErrors());
-			if (!formattedErrors.isEmpty()) {
-				errorMsg = formattedErrors;
-			}
-		}
-
-		final String finalMessage = errorMsg != null ? errorMsg : "Registration failed";
-		runOnUiThread(() -> {
-			if (emailInputLayout != null) {
-				eval.setText(finalMessage);
-				eval.setVisibility(View.VISIBLE);
-			}
-		});
-	}
-
-	// Get error message from HTTP error response
-	private String getErrorMessage(Response<RegisterResponse> response, String errorBody) {
-		int statusCode = response.code();
-
-		// Try to parse error message from response body first
-		if (errorBody != null && !errorBody.isEmpty()) {
-			try {
-				com.google.gson.Gson gson = new com.google.gson.Gson();
-				RegisterResponse errorResponse = gson.fromJson(errorBody, RegisterResponse.class);
-				
-				// Check if there's a message in the response
-				if (errorResponse != null && errorResponse.getMessage() != null && !errorResponse.getMessage().isEmpty()) {
-					String serverMessage = errorResponse.getMessage();
-					Log.d("RegistrationError", "Server message: " + serverMessage);
-					
-					// Check for email errors in the response
-					if (errorResponse.getErrors() != null && errorResponse.getErrors().getEmail() != null) {
-						String[] emailErrors = errorResponse.getErrors().getEmail();
-						if (emailErrors.length > 0) {
-							String emailError = normalizeEmailError(emailErrors[0]);
-							runOnUiThread(() -> {
-								if (emailInputLayout != null) {
-									eval.setText(emailError);
-									eval.setVisibility(View.VISIBLE);
-								}
-							});
-							return emailError;
-						}
-					}
-					
-					// Return the server's error message
-					return serverMessage;
-				}
-			} catch (Exception e) {
-				Log.e("RegistrationError", "Failed to parse error body: " + errorBody, e);
-			}
-		}
-
-		// Handle validation errors (422)
-		if (statusCode == 422) {
-			return parseValidationError(response);
-		}
-
-		// Handle email conflict (409)
-		if (statusCode == 409) {
-			runOnUiThread(() -> {
-				if (emailInputLayout != null) {
-					eval.setText("Email already used");
-					eval.setVisibility(View.VISIBLE);
-				}
-			});
-			return "Email already exists. Please use a different email.";
-		}
-
-		// Handle server errors (500)
-		if (statusCode == 500) {
-			return "Server error. Please check your Laravel server logs and try again.";
-		}
-
-		// Handle other errors
-		if (statusCode >= 400 && statusCode < 500) {
-			return "Invalid request. Please check your input and try again.";
-		}
-
-		return "Registration failed. Please try again.";
-	}
-
-	// Parse validation error from error response body
-	@SuppressWarnings("resource")
-	private String parseValidationError(Response<RegisterResponse> response) {
-		okhttp3.ResponseBody errorBody = response.errorBody();
-		if (errorBody == null) {
-			return "Validation error. Please check your input.";
-		}
-
+	// Step 4: Show password creation fragment
+	public void showCreatePasswordFragment() {
 		try {
-			com.google.gson.Gson gson = new com.google.gson.Gson();
-			// ResponseBody.string() consumes the body, so we can't use try-with-resources here
-			// The Retrofit library handles cleanup automatically
-			String errorJson = errorBody.string();
-			RegisterResponse errorResponse = gson.fromJson(errorJson, RegisterResponse.class);
-
-			// Check for email errors
-			if (errorResponse.getErrors() != null && errorResponse.getErrors().getEmail() != null) {
-				String[] emailErrors = errorResponse.getErrors().getEmail();
-				if (emailErrors.length > 0) {
-					String emailError = normalizeEmailError(emailErrors[0]);
-					runOnUiThread(() -> {
-						if (emailInputLayout != null) {
-							eval.setText(emailError);
-							eval.setVisibility(View.VISIBLE);
-						}
-					});
-					return emailError;
-				}
-			}
-
-			// Format other errors
-			if (errorResponse.getErrors() != null) {
-				String formattedErrors = formatErrors(errorResponse.getErrors());
-				if (!formattedErrors.isEmpty()) {
-					return formattedErrors;
-				}
-			}
-
-			return errorResponse.getMessage() != null ? 
-				errorResponse.getMessage() : 
-				"Validation error. Please check your input.";
-
+			Log.d(TAG, "Showing UserCreatePasswordFragment");
+			// Hide template layout, show fragment container
+			hideTemplateLayout();
+			Fragment fragment = new UserCreatePasswordFragment();
+			FragmentTransaction transaction = fragmentManager.beginTransaction();
+			transaction.replace(R.id.fragment_container, fragment);
+			transaction.addToBackStack("password");
+			transaction.commit();
 		} catch (Exception e) {
-			return "Validation error. Please check your input.";
+			Log.e(TAG, "Error showing password fragment: " + e.getMessage(), e);
+			Toast.makeText(this, "Error loading form", Toast.LENGTH_SHORT).show();
 		}
 	}
 
-	// Normalize email error message to a standard format
-	private String normalizeEmailError(String error) {
-		if (error.contains("already") || error.contains("taken") || error.contains("unique")) {
-			return "Email already used";
+	// Helper method to hide template layout and show fragment container
+	private void hideTemplateLayout() {
+		if (fragmentContainer == null) {
+			fragmentContainer = findViewById(R.id.fragment_container);
 		}
-		// Remove punctuation from error messages
-		return error.replace(".", "").replace(":", "").replace("!", "").replace(";", "").trim();
-	}
-	// Show error message to user
-	private void showErrorMessage(String message, int statusCode) {
-		runOnUiThread(() -> {
-			if (emailInputLayout != null) {
-				eval.setText(message);
-				eval.setVisibility(View.VISIBLE);
-			}
-			showError("Registration Failed", message);
-		});
-	}
-
-	// Handle registration failure (network errors, etc.)
-	private void handleRegisterFailure(Throwable t) {
-		Log.e("RegistrationError", "Registration failed with exception", t);
-		String errorMsg = getConnectionErrorMessage(t);
-		runOnUiThread(() -> {
-			if (emailInputLayout != null) {
-				eval.setText(errorMsg);
-				eval.setVisibility(View.VISIBLE);
-			}
-			showError("Connection Error", errorMsg);
-		});
-	}
-
-	// Get user-friendly connection error message with diagnostics
-	private String getConnectionErrorMessage(Throwable t) {
-		if (t.getMessage() == null) {
-			return "Connection error. Please try again.";
+		if (templateLayout == null) {
+			templateLayout = findViewById(R.id.template_layout);
 		}
-
-		String message = t.getMessage();
-		String baseUrl = ApiClient.getBaseUrl();
-		StringBuilder errorMsg = new StringBuilder();
-		
-		if (message.contains("Failed to connect") || message.contains("Unable to resolve host")) {
-			errorMsg.append("❌ Cannot connect to server\n\n");
-			errorMsg.append("Trying to reach: ").append(baseUrl).append("/api/v1/register\n\n");
-			errorMsg.append("Please check:\n");
-			errorMsg.append("1. Laravel server is running: php artisan serve\n");
-			errorMsg.append("2. Server is on port 8000 (default)\n");
-			errorMsg.append("3. For emulator, use: http://10.0.2.2:8000\n");
-			errorMsg.append("4. For physical device, use your computer's IP\n");
-			errorMsg.append("5. Check ApiClient.java BASE_URL setting\n");
-			errorMsg.append("6. Verify network_security_config.xml allows cleartext\n\n");
-			errorMsg.append("Test in browser: ").append(baseUrl).append("/api/v1/register");
-		} else if (message.contains("timeout")) {
-			errorMsg.append("⏱ Connection timeout\n\n");
-			errorMsg.append("Server may be slow or unreachable.\n");
-			errorMsg.append("Check if Laravel server is running and accessible.");
-		} else if (message.contains("Connection refused")) {
-			errorMsg.append("🔌 Connection refused\n\n");
-			errorMsg.append("Server is not running or not accessible.\n");
-			errorMsg.append("Please start Laravel server: php artisan serve\n");
-			errorMsg.append("Expected URL: ").append(baseUrl);
-		} else {
-			errorMsg.append("❌ Connection error\n\n");
-			errorMsg.append("Details: ").append(message);
+		if (fragmentContainer != null) {
+			fragmentContainer.setVisibility(View.VISIBLE);
 		}
-
-		return errorMsg.toString();
-	}
-
-	// Show or hide loading state during registration
-	private void setLoadingState(boolean isLoading) {
-		runOnUiThread(() -> {
-		MaterialButton registerButton = findViewById(R.id.registerButton);
-		if (registerButton != null) {
-			registerButton.setEnabled(!isLoading);
-			String buttonText = isLoading ? 
-				getString(R.string.registering) : 
-				getString(R.string.register);
-			registerButton.setText(buttonText);
-		}
-
-			if (progressBar != null) {
-				progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE);
-			}
-
-
-		});
-	}
-
-	// Show email verification dialog
-	private void showVerificationDialog(String email) {
-		android.view.View dialogView = getLayoutInflater().inflate(R.layout.dialog_verification_code, null);
-		
-		// Initialize dialog views
-		TextInputEditText codeInput = dialogView.findViewById(R.id.codeInput);
-		TextInputLayout codeInputLayout = dialogView.findViewById(R.id.codeInputLayout);
-		MaterialButton verifyButton = dialogView.findViewById(R.id.verifyButton);
-		MaterialButton resendCodeButton = dialogView.findViewById(R.id.resendCodeButton);
-		android.widget.TextView messageTextView = dialogView.findViewById(R.id.verificationMessage);
-		android.widget.ImageButton closeButton = dialogView.findViewById(R.id.closeButton);
-		
-		// Set dialog message
-		if (messageTextView != null) {
-			// Email is dynamic, so we format the string
-			String message = String.format("Enter the 6-digit code sent to\n%s", email);
-			messageTextView.setText(message);
-		}
-
-		// Create and show dialog
-		AlertDialog dialog = new MaterialAlertDialogBuilder(this)
-			.setView(dialogView)
-			.setCancelable(true)
-			.create();
-		
-		// Setup dialog components
-		setupVerificationDialogCloseButton(closeButton, dialog);
-		setupVerificationCodeInput(codeInput, codeInputLayout, verifyButton);
-		setupVerifyButton(verifyButton, codeInput, codeInputLayout, email, dialog);
-		setupResendButton(resendCodeButton, email);
-
-		dialog.show();
-	}
-
-	// Setup close button for verification dialog
-	private void setupVerificationDialogCloseButton(android.widget.ImageButton closeButton, AlertDialog dialog) {
-		if (closeButton != null) {
-			closeButton.setOnClickListener(v -> dialog.dismiss());
+		if (templateLayout != null) {
+			templateLayout.setVisibility(View.GONE);
 		}
 	}
 
-	// Setup code input field with real-time validation
-	private void setupVerificationCodeInput(TextInputEditText codeInput, 
-	                                       TextInputLayout codeInputLayout, 
-	                                       MaterialButton verifyButton) {
-		if (codeInput == null) {
-			return;
-		}
-
-		// Clear any previous errors
-		if (codeInputLayout != null) {
-			codeInputLayout.setError(null);
-		}
-
-		// Auto-focus and show keyboard
-		codeInput.post(() -> {
-			codeInput.requestFocus();
-			android.view.inputmethod.InputMethodManager imm = 
-				(android.view.inputmethod.InputMethodManager) getSystemService(android.content.Context.INPUT_METHOD_SERVICE);
-			if (imm != null) {
-				imm.showSoftInput(codeInput, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT);
-			}
-		});
-		
-		// Enable verify button when code is entered
-		codeInput.addTextChangedListener(new TextWatcher() {
-			@Override
-			public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-
-			@Override
-			public void onTextChanged(CharSequence s, int start, int before, int count) {}
-
-			@Override
-			public void afterTextChanged(Editable s) {
-				if (codeInputLayout != null) {
-					codeInputLayout.setError(null);
-				}
-				if (verifyButton != null) {
-					verifyButton.setEnabled(s.length() > 0);
-				}
-			}
-		});
+	// Step 5: Show OTP verification (Almost there)
+	public void showOtpVerification() {
+		// TODO: Implement OTP verification UI
+		Toast.makeText(this, "Show OTP verification", Toast.LENGTH_SHORT).show();
 	}
 
-	// Setup verify button click handler
-	@SuppressLint("SetTextI18n")
-	private void setupVerifyButton(MaterialButton verifyButton, 
-	                              TextInputEditText codeInput, 
-	                              TextInputLayout codeInputLayout,
-	                              String email, 
-	                              AlertDialog dialog) {
-		if (verifyButton == null) {
-			return;
-		}
-
-		verifyButton.setEnabled(false);
-		verifyButton.setOnClickListener(v -> {
-			String code = "";
-			if (codeInput != null && codeInput.getText() != null) {
-				code = codeInput.getText().toString().trim();
-			}
-			
-			// Validate code length
-			if (code.length() != 6) {
-				if (codeInputLayout != null) {
-					codeInputLayout.setError("Enter 6-digit code");
-				}
-				return;
-			}
-
-			// Clear error and verify
-			if (codeInputLayout != null) {
-				codeInputLayout.setError(null);
-			}
-			verifyButton.setEnabled(false);
-			verifyButton.setText("Verifying..."); // Temporary loading state
-			verifyEmail(email, code, dialog, verifyButton);
-		});
-	}
-
-	// Setup resend code button
-	@SuppressLint("SetTextI18n")
-	private void setupResendButton(MaterialButton resendButton, String email) {
-		if (resendButton == null) {
-			return;
-		}
-
-		resendButton.setOnClickListener(v -> {
-			resendButton.setEnabled(false);
-			resendButton.setText("Sending..."); // Temporary loading state
-			resendVerificationCode(email, resendButton);
-		});
-	}
-
-	// Verify email with verification code
-	private void verifyEmail(String email, String code, AlertDialog dialog, MaterialButton verifyButton) {
-		ApiService apiService = ApiClient.getApiService();
-		VerifyEmailRequest request = new VerifyEmailRequest(email, code);
-
-		Call<VerifyEmailResponse> call = apiService.verifyEmail(request);
-		call.enqueue(new Callback<VerifyEmailResponse>() {
-			@Override
-			public void onResponse(@NonNull Call<VerifyEmailResponse> call, @NonNull Response<VerifyEmailResponse> response) {
-				resetVerifyButton(verifyButton);
-
-				if (response.isSuccessful() && response.body() != null) {
-					handleVerificationSuccess(response.body(), dialog);
-				} else {
-					handleVerificationError(response.code());
-			}
-			}
-
-			@Override
-			public void onFailure(@NonNull Call<VerifyEmailResponse> call, @NonNull Throwable t) {
-				resetVerifyButton(verifyButton);
-				showError("Connection Error", 
-					"Failed to verify code. Please check your connection and try again.");
-			}
-		});
-	}
-
-	// Reset verify button to original state
-	@SuppressLint("SetTextI18n")
-	private void resetVerifyButton(MaterialButton verifyButton) {
-		runOnUiThread(() -> {
-			if (verifyButton != null) {
-				verifyButton.setEnabled(true);
-				verifyButton.setText("Verify"); // Button label
-			}
-		});
-	}
-
-	// Handle successful verification response
-	private void handleVerificationSuccess(VerifyEmailResponse response, AlertDialog dialog) {
-		if (!response.isSuccess() || response.getData() == null) {
-			String errorMsg = response.getMessage() != null ? 
-				response.getMessage() : 
-				"Invalid verification code";
-			showError("Verification Failed", errorMsg);
-			return;
-		}
-
-		// Save user data
-		VerifyEmailResponse.User user = response.getData().getUser();
-		tokenManager.saveToken("Bearer " + response.getData().getToken());
-		tokenManager.saveEmail(user.getEmail());
-		
-		// Build name from firstName and lastName
-		String firstName = user.getFirstName();
-		String lastName = user.getLastName();
-		StringBuilder nameBuilder = new StringBuilder();
-		if (firstName != null && !firstName.trim().isEmpty()) {
-			nameBuilder.append(firstName.trim());
-		}
-		if (lastName != null && !lastName.trim().isEmpty()) {
-			if (nameBuilder.length() > 0) {
-				nameBuilder.append(" ");
-			}
-			nameBuilder.append(lastName.trim());
-		}
-		
-		String userName = nameBuilder.toString();
-		// Always save the name, even if only one field is provided
-		if (userName != null && !userName.trim().isEmpty()) {
-			try {
-				tokenManager.saveName(userName.trim());
-				Log.d("RegisterActivity", "Saved name to cache (verification): " + userName.trim());
-			} catch (Exception e) {
-				Log.e("RegisterActivity", "Error saving name (verification): " + e.getMessage());
-			}
-		} else {
-			// If both are null, try to save at least one field
-			if (firstName != null && !firstName.trim().isEmpty()) {
-				try {
-					tokenManager.saveName(firstName.trim());
-					Log.d("RegisterActivity", "Saved firstName to cache (verification): " + firstName.trim());
-				} catch (Exception e) {
-					Log.e("RegisterActivity", "Error saving firstName (verification): " + e.getMessage());
-				}
-			} else if (lastName != null && !lastName.trim().isEmpty()) {
-				try {
-					tokenManager.saveName(lastName.trim());
-					Log.d("RegisterActivity", "Saved lastName to cache (verification): " + lastName.trim());
-				} catch (Exception e) {
-					Log.e("RegisterActivity", "Error saving lastName (verification): " + e.getMessage());
-				}
-			}
-		}
-
-		// Close dialog and show success (reusing firstName and lastName from above)
-		dialog.dismiss();
-		String userEmail = user.getEmail();
-		String message = String.format("Welcome %s %s! Your email has been verified successfully.", firstName, lastName);
-		
-		runOnUiThread(() -> showSuccess("Email Verified", message, userEmail));
-	}
-
-	// Handle verification error
-	private void handleVerificationError(int statusCode) {
-		String errorMsg = (statusCode == 400) ? 
-			"Invalid/expired code" :
-			"Invalid verification code";
-		
-		showError("Verification Failed", errorMsg);
-	}
-
-	// Resend verification code
-	private void resendVerificationCode(String email, MaterialButton resendButton) {
-		ApiService apiService = ApiClient.getApiService();
-		VerificationRequest request = new VerificationRequest(email);
-
-		Call<VerificationResponse> call = apiService.sendVerificationCode(request);
-		call.enqueue(new Callback<VerificationResponse>() {
-			@Override
-			public void onResponse(@NonNull Call<VerificationResponse> call, @NonNull Response<VerificationResponse> response) {
-				resetResendButton(resendButton);
-
-				if (response.isSuccessful() && response.body() != null) {
-					handleResendSuccess(response.body());
-				} else {
-					showError("Error", "Send failed");
-				}
-			}
-
-			@Override
-			public void onFailure(@NonNull Call<VerificationResponse> call, @NonNull Throwable t) {
-				resetResendButton(resendButton);
-				String errorMsg = getConnectionErrorMessage(t);
-				showError("Connection Error", errorMsg);
-			}
-		});
-	}
-
-	// Reset resend button to original state
-	@SuppressLint("SetTextI18n")
-	private void resetResendButton(MaterialButton resendButton) {
-		runOnUiThread(() -> {
-			if (resendButton != null) {
-				resendButton.setEnabled(true);
-				resendButton.setText("Resend Code"); // Button label
-			}
-		});
-	}
-
-	// Handle successful resend response
-	private void handleResendSuccess(VerificationResponse response) {
-		if (response.isSuccess()) {
-			String message = response.getMessage() != null ? 
-				response.getMessage() : 
-				"Verification code sent to your email";
-			
-			runOnUiThread(() -> Toast.makeText(this, message, Toast.LENGTH_LONG).show());
-		} else {
-			String errorMsg = response.getMessage() != null ? 
-				response.getMessage() : 
-				"Failed to send code";
-			showError("Error", errorMsg);
-		}
-	}
-
-	// Format errors into a readable string
-	private String formatErrors(RegisterResponse.Errors errors) {
-		if (errors == null) {
-			return "Check input";
-		}
-
-		StringBuilder errorMessage = new StringBuilder();
-		
-		// Format email errors
-		if (errors.getEmail() != null && errors.getEmail().length > 0) {
-			String emailError = errors.getEmail()[0];
-			// Simplify and remove punctuation
-			if (emailError.toLowerCase().contains("already") || emailError.toLowerCase().contains("taken")) {
-				emailError = "Email taken";
-			} else {
-				emailError = emailError.replace(".", "").replace(":", "").replace("!", "").replace(";", "").trim();
-			}
-			errorMessage.append(emailError).append("\n");
-		}
-		
-		// Format password errors
-		if (errors.getPassword() != null && errors.getPassword().length > 0) {
-			String passwordError = errors.getPassword()[0];
-			passwordError = passwordError.replace(".", "").replace(":", "").replace("!", "").replace(";", "").trim();
-			errorMessage.append(passwordError).append("\n");
-		}
-		
-		// Format username errors
-		if (errors.getUsername() != null && errors.getUsername().length > 0) {
-			String usernameError = errors.getUsername()[0];
-			usernameError = usernameError.replace(".", "").replace(":", "").replace("!", "").replace(";", "").trim();
-			errorMessage.append(usernameError).append("\n");
-		}
-
-		// Format first name errors
-		if (errors.getFirstName() != null && errors.getFirstName().length > 0) {
-			String firstNameError = errors.getFirstName()[0];
-			firstNameError = firstNameError.replace(".", "").replace(":", "").replace("!", "").replace(";", "").trim();
-			errorMessage.append(firstNameError).append("\n");
-		}
-
-		// Format last name errors
-		if (errors.getLastName() != null && errors.getLastName().length > 0) {
-			String lastNameError = errors.getLastName()[0];
-			lastNameError = lastNameError.replace(".", "").replace(":", "").replace("!", "").replace(";", "").trim();
-			errorMessage.append(lastNameError).append("\n");
-		}
-		
-		return errorMessage.length() > 0 ? 
-			errorMessage.toString().trim() : 
-			"Check input";
-	}
-
-	// Show error dialog to user
-	private void showError(String title, String message) {
-		new AlertDialog.Builder(this)
-			.setTitle(title)
-			.setMessage(message)
-			.setPositiveButton("OK", null)
-			.show();
-	}
-
-	// Show success dialog to user
-	private void showSuccess(String title, String message, String email) {
-		new AlertDialog.Builder(this)
-			.setTitle(title)
-			.setMessage(message)
-			.setPositiveButton("OK", (dialog, which) -> navigateToDashboard(email))
-			.setCancelable(false)
-			.show();
-	}
-
-	// Navigate to dashboard activity
-	private void navigateToDashboard(String email) {
-		Intent intent = new Intent(this, DashboardActivity.class);
-		intent.putExtra(DashboardActivity.EXTRA_EMAIL, email);
-		startActivity(intent);
+	// Step 6: Account created - navigate to dashboard
+	public void showAccountCreated() {
+		Toast.makeText(this, "Account created successfully!", Toast.LENGTH_LONG).show();
+		// TODO: Navigate to appropriate dashboard based on user role
 		finish();
+	}
+
+	// Setters for registration data (called by fragments)
+	public void setUserEmail(String email) {
+		this.userEmail = email;
+		Log.d(TAG, "Email set: " + email);
+	}
+
+	public void setUserPersonalInfo(String firstName, String lastName, String username, String phone) {
+		this.userFirstName = firstName;
+		this.userLastName = lastName;
+		this.userName = username;
+		this.userPhone = phone;
+		Log.d(TAG, "Personal info set - Name: " + firstName + " " + lastName);
+	}
+
+	public void setUserPassword(String password) {
+		this.userPassword = password;
+		Log.d(TAG, "Password set");
+	}
+
+	// Getters for registration data (used by fragments)
+	public String getUserEmail() {
+		return userEmail;
+	}
+
+	public String getUserFirstName() {
+		return userFirstName;
+	}
+
+	public String getUserLastName() {
+		return userLastName;
+	}
+
+	public String getUserName() {
+		return userName;
+	}
+
+	public String getUserPhone() {
+		return userPhone;
+	}
+
+	public String getUserPassword() {
+		return userPassword;
+	}
+
+	@Override
+	public void onBackPressed() {
+		// If template layout is visible (Tell Us step), go back to email fragment
+		if (templateLayout != null && templateLayout.getVisibility() == View.VISIBLE) {
+			showEmailFragment();
+			return;
+		}
+
+		// Otherwise handle fragment back stack
+		if (fragmentManager.getBackStackEntryCount() > 0) {
+			fragmentManager.popBackStack();
+		} else {
+			// If at first fragment, go back to login
+			Intent intent = new Intent(this, MainActivity.class);
+			startActivity(intent);
+			finish();
+		}
 	}
 }

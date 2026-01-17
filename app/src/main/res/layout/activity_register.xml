@@ -4,11 +4,20 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".signup_tell_us">
+    tools:context=".common.RegisterActivity">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <!-- Fragment container for multi-step registration -->
+    <FrameLayout
+        android:id="@+id/fragment_container"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent" />
+
+    <!-- Keep the original content as fallback/template -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/template_layout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone">
 
         <LinearLayout
             android:id="@+id/linearLayout2"
@@ -330,14 +339,6 @@
                 android:textSize="16sp"
                 android:textStyle="bold"
                 app:cornerRadius="8dp" />
-
-            <ProgressBar
-                android:id="@+id/progressBar"
-                style="?android:attr/progressBarStyle"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent" />
 
         </LinearLayout>
 
