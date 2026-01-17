@@ -3,6 +3,8 @@ package app.hub.common;
 import app.hub.R;
 import app.hub.api.ApiClient;
 import app.hub.api.ApiService;
+import app.hub.api.FacebookSignInRequest;
+import app.hub.api.FacebookSignInResponse;
 import app.hub.api.GoogleSignInRequest;
 import app.hub.api.GoogleSignInResponse;
 import app.hub.api.SetInitialPasswordRequest;
@@ -513,6 +515,117 @@ public class RegisterActivity extends AppCompatActivity {
 		showCreatePasswordFragment();
 	}
 	
+	// Register/login Facebook user
+	private void registerFacebookUser(String accessToken, String email, String firstName, String lastName) {
+		String phone = getUserPhone();
+
+		if (email == null || email.isEmpty()) {
+			Toast.makeText(this, "Email is required", Toast.LENGTH_SHORT).show();
+			return;
+		}
+
+		Log.d(TAG, "Registering Facebook user - Email: " + email + ", Phone: " + phone);
+		Log.d(TAG, "First Name: " + firstName + ", Last Name: " + lastName);
+
+		ApiService apiService = ApiClient.getApiService();
+		String token = accessToken != null && !accessToken.isEmpty() ? accessToken : "";
+		FacebookSignInRequest request = new FacebookSignInRequest(
+			token,
+			email,
+			firstName != null ? firstName : "",
+			lastName != null ? lastName : "",
+			phone != null ? phone : ""
+		);
+
+		Log.d(TAG, "Sending Facebook Sign-In request - Email: " + email + ", First: " + firstName + ", Last: " + lastName + ", Phone: " + phone);
+
+		Call<FacebookSignInResponse> call = apiService.facebookSignIn(request);
+		call.enqueue(new Callback<>() {
+			@Override
+			public void onResponse(@NonNull Call<FacebookSignInResponse> call, @NonNull Response<FacebookSignInResponse> response) {
+				if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+					handleFacebookRegistrationSuccess(response.body());
+				} else {
+					String errorBody = "";
+					try {
+						if (response.errorBody() != null) {
+							errorBody = response.errorBody().string();
+							Log.e(TAG, "Facebook Sign-In error response: " + errorBody);
+						}
+					} catch (Exception e) {
+						Log.e(TAG, "Error reading error response", e);
+					}
+					handleFacebookRegistrationError(response.code(), errorBody);
+				}
+			}
+
+			@Override
+			public void onFailure(@NonNull Call<FacebookSignInResponse> call, @NonNull Throwable t) {
+				Log.e(TAG, "Error registering Facebook user: " + t.getMessage(), t);
+				Toast.makeText(RegisterActivity.this,
+					"Failed to register. Please check your connection and try again.", Toast.LENGTH_SHORT).show();
+			}
+		});
+	}
+
+	// Handle successful Facebook registration
+	private void handleFacebookRegistrationSuccess(FacebookSignInResponse response) {
+		if (response.getData() == null || response.getData().getUser() == null) {
+			Toast.makeText(this, "Registration failed. Please try again.", Toast.LENGTH_SHORT).show();
+			return;
+		}
+
+		// Save user data and token
+		FacebookSignInResponse.User user = response.getData().getUser();
+		tokenManager.saveToken("Bearer " + response.getData().getToken());
+		tokenManager.saveEmail(user.getEmail());
+
+		// Build and save name
+		String firstName = user.getFirstName();
+		String lastName = user.getLastName();
+		StringBuilder nameBuilder = new StringBuilder();
+		if (firstName != null && !firstName.trim().isEmpty()) {
+			nameBuilder.append(firstName.trim());
+		}
+		if (lastName != null && !lastName.trim().isEmpty()) {
+			if (nameBuilder.length() > 0) {
+				nameBuilder.append(" ");
+			}
+			nameBuilder.append(lastName.trim());
+		}
+		String fullName = nameBuilder.toString();
+		if (!fullName.isEmpty()) {
+			tokenManager.saveName(fullName);
+			Log.d(TAG, "Saved name to cache: " + fullName);
+		}
+
+		// Navigate to password creation (Facebook users still need to set a password)
+		if (templateLayout != null) {
+			templateLayout.setVisibility(View.GONE);
+		}
+		if (fragmentContainer != null) {
+			fragmentContainer.setVisibility(View.VISIBLE);
+		}
+		showCreatePasswordFragment();
+	}
+
+	// Handle Facebook registration error
+	private void handleFacebookRegistrationError(int statusCode, String errorBody) {
+		String errorMsg;
+		if (statusCode == 422) {
+			errorMsg = "Invalid data. Please check your information.";
+			// Try to parse validation errors from response
+			if (errorBody != null && !errorBody.isEmpty()) {
+				Log.e(TAG, "Validation errors: " + errorBody);
+			}
+		} else if (statusCode == 500) {
+			errorMsg = "Server error. Please try again later.";
+		} else {
+			errorMsg = "Registration failed. Please try again.";
+		}
+		Toast.makeText(this, errorMsg, Toast.LENGTH_SHORT).show();
+	}
+
 	// Handle Google registration error
 	private void handleGoogleRegistrationError(int statusCode, String errorBody) {
 		String errorMsg;
@@ -975,6 +1088,39 @@ public class RegisterActivity extends AppCompatActivity {
 		googleIdToken = idToken;
 		
 		// Navigate to "Tell Us" to collect phone number
+		Toast.makeText(this, "Welcome! Please provide your phone number to continue.", Toast.LENGTH_LONG).show();
+		showTellUsFragment();
+	}
+
+	// Handle Facebook Sign-In success
+	public void handleFacebookSignInSuccess(String email, String firstName, String lastName, 
+	                                       String displayName, String accessToken) {
+		Log.d(TAG, "Handling Facebook Sign-In success");
+		
+		// Mark as Google Sign-In user (same flow - skip OTP)
+		isGoogleSignIn = true;
+		
+		// Store Facebook account data
+		setUserEmail(email);
+		
+		// Use Facebook name if available, otherwise use display name
+		String finalFirstName = firstName != null && !firstName.isEmpty() ? firstName : 
+			(displayName != null && displayName.contains(" ") ? displayName.split(" ")[0] : displayName);
+		String finalLastName = lastName != null && !lastName.isEmpty() ? lastName : 
+			(displayName != null && displayName.contains(" ") ? 
+				displayName.substring(displayName.indexOf(" ") + 1) : "");
+		
+		// Generate username from email (before @)
+		String username = email != null && email.contains("@") ? 
+			email.substring(0, email.indexOf("@")) : "user_" + System.currentTimeMillis();
+		
+		// Store personal info from Facebook
+		setUserPersonalInfo(finalFirstName, finalLastName, username, "");
+		
+		// Store Facebook access token for backend API call (we'll use it later in registerFacebookUser)
+		googleIdToken = accessToken;
+		
+		// Navigate to "Tell Us" to collect phone number first (same flow as Google)
 		Toast.makeText(this, "Welcome! Please provide your phone number to continue.", Toast.LENGTH_LONG).show();
 		showTellUsFragment();
 	}

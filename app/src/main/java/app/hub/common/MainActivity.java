@@ -3,6 +3,10 @@ package app.hub.common;
 import app.hub.R;
 import app.hub.api.ApiClient;
 import app.hub.api.ApiService;
+import app.hub.api.FacebookSignInRequest;
+import app.hub.api.FacebookSignInResponse;
+import app.hub.api.GoogleSignInRequest;
+import app.hub.api.GoogleSignInResponse;
 import app.hub.api.LoginRequest;
 import app.hub.api.LoginResponse;
 import app.hub.admin.AdminDashboardActivity;
@@ -18,14 +22,33 @@ import android.text.TextWatcher;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.inputmethod.EditorInfo;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.splashscreen.SplashScreen;
 
+import com.facebook.AccessToken;
+import com.facebook.CallbackManager;
+import com.facebook.FacebookCallback;
+import com.facebook.FacebookException;
+import com.facebook.GraphRequest;
+import com.facebook.GraphResponse;
+import com.facebook.login.LoginManager;
+import com.facebook.login.LoginResult;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.tasks.Task;
 import com.google.android.material.button.MaterialButton;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.gson.Gson;
@@ -40,7 +63,11 @@ import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
 
+	private static final String TAG = "MainActivity";
+	private static final int RC_SIGN_IN = 9001;
 	private TokenManager tokenManager;
+	private GoogleSignInClient googleSignInClient;
+	private CallbackManager facebookCallbackManager;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -146,6 +173,379 @@ public class MainActivity extends AppCompatActivity {
         if (loginButton != null) {
             loginButton.setOnClickListener(v -> performLogin());
         }
+
+        // Setup Google Sign-In
+        setupGoogleSignIn();
+        
+        // Setup Facebook Login
+        setupFacebookLogin();
+        
+        // Setup social login buttons
+        setupSocialLoginButtons();
+    }
+
+    private void setupFacebookLogin() {
+        facebookCallbackManager = CallbackManager.Factory.create();
+        LoginManager.getInstance().registerCallback(facebookCallbackManager,
+            new FacebookCallback<LoginResult>() {
+                @Override
+                public void onSuccess(LoginResult loginResult) {
+                    AccessToken accessToken = loginResult.getAccessToken();
+                    Log.d(TAG, "Facebook login successful");
+                    
+                    // Get user info from Facebook Graph API
+                    GraphRequest request = GraphRequest.newMeRequest(
+                        accessToken,
+                        (object, response) -> {
+                            try {
+                                String email = object.optString("email");
+                                String firstName = object.optString("first_name");
+                                String lastName = object.optString("last_name");
+                                String name = object.optString("name");
+                                
+                                Log.d(TAG, "Facebook user info - Email: " + email + ", Name: " + name);
+                                
+                                // Call backend API to login/register with Facebook
+                                loginWithFacebook(accessToken.getToken(), email, firstName, lastName);
+                            } catch (Exception e) {
+                                Log.e(TAG, "Error parsing Facebook user info", e);
+                                Toast.makeText(MainActivity.this, "Error getting Facebook user info", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    
+                    Bundle parameters = new Bundle();
+                    parameters.putString("fields", "id,name,email,first_name,last_name");
+                    request.setParameters(parameters);
+                    request.executeAsync();
+                }
+
+                @Override
+                public void onCancel() {
+                    Log.d(TAG, "Facebook login cancelled");
+                    Toast.makeText(MainActivity.this, "Facebook login was cancelled", Toast.LENGTH_SHORT).show();
+                }
+
+                @Override
+                public void onError(FacebookException exception) {
+                    Log.e(TAG, "Facebook login error: " + exception.getMessage(), exception);
+                    String errorMsg = "Facebook login failed";
+                    if (exception.getMessage() != null) {
+                        if (exception.getMessage().contains("CONNECTION_FAILURE")) {
+                            errorMsg = "Network error. Please check your connection.";
+                        } else if (exception.getMessage().contains("INVALID_APP_ID")) {
+                            errorMsg = "Facebook login not configured. Please contact support.";
+                        }
+                    }
+                    Toast.makeText(MainActivity.this, errorMsg, Toast.LENGTH_SHORT).show();
+                }
+            });
+    }
+
+    private void setupGoogleSignIn() {
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestEmail()
+            .requestProfile()
+            .build();
+
+        googleSignInClient = GoogleSignIn.getClient(this, gso);
+    }
+
+    private void setupSocialLoginButtons() {
+        // Facebook button
+        Button facebookButton = findViewById(R.id.btnFacebook);
+        if (facebookButton != null) {
+            facebookButton.setOnClickListener(v -> {
+                signInWithFacebook();
+            });
+        }
+
+        // Google Sign-In button
+        Button googleButton = findViewById(R.id.btnGoogle);
+        if (googleButton != null) {
+            googleButton.setOnClickListener(v -> {
+                signInWithGoogle();
+            });
+        }
+    }
+
+    private void signInWithGoogle() {
+        Intent signInIntent = googleSignInClient.getSignInIntent();
+        startActivityForResult(signInIntent, RC_SIGN_IN);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        
+        // Handle Facebook callback
+        if (facebookCallbackManager != null) {
+            facebookCallbackManager.onActivityResult(requestCode, resultCode, data);
+        }
+
+        if (requestCode == RC_SIGN_IN) {
+            Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
+            handleGoogleSignInResult(task);
+        }
+    }
+
+    private void signInWithFacebook() {
+        // Use only public_profile permission - email is automatically included via Graph API
+        LoginManager.getInstance().logInWithReadPermissions(this, 
+            java.util.Arrays.asList("public_profile"));
+    }
+
+    private void loginWithFacebook(String accessToken, String email, String firstName, String lastName) {
+        MaterialButton loginButton = findViewById(R.id.loginButton);
+        if (loginButton != null) {
+            loginButton.setEnabled(false);
+            loginButton.setText("Logging in...");
+        }
+
+        ApiService apiService = ApiClient.getApiService();
+        FacebookSignInRequest request = new FacebookSignInRequest(
+            accessToken != null ? accessToken : "",
+            email != null ? email : "",
+            firstName != null ? firstName : "",
+            lastName != null ? lastName : "",
+            "" // No phone on login
+        );
+
+        Call<FacebookSignInResponse> call = apiService.facebookSignIn(request);
+        call.enqueue(new Callback<>() {
+            @Override
+            public void onResponse(@NonNull Call<FacebookSignInResponse> call, @NonNull Response<FacebookSignInResponse> response) {
+                runOnUiThread(() -> {
+                    if (loginButton != null) {
+                        loginButton.setEnabled(true);
+                        loginButton.setText("Login");
+                    }
+                });
+
+                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                    handleFacebookLoginSuccess(response.body());
+                } else {
+                    String errorMsg = "Login failed. Please try again.";
+                    try {
+                        if (response.errorBody() != null) {
+                            String errorBody = response.errorBody().string();
+                            Log.e(TAG, "Facebook login error: " + errorBody);
+                        }
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error reading error response", e);
+                    }
+                    final String finalErrorMsg = errorMsg;
+                    runOnUiThread(() -> showError("Login Failed", finalErrorMsg));
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<FacebookSignInResponse> call, @NonNull Throwable t) {
+                runOnUiThread(() -> {
+                    if (loginButton != null) {
+                        loginButton.setEnabled(true);
+                        loginButton.setText("Login");
+                    }
+                });
+                Log.e(TAG, "Error logging in with Facebook: " + t.getMessage(), t);
+                runOnUiThread(() -> showError("Connection Error", 
+                    "Failed to login. Please check your connection and try again."));
+            }
+        });
+    }
+
+    private void handleFacebookLoginSuccess(FacebookSignInResponse response) {
+        if (response.getData() == null || response.getData().getUser() == null) {
+            showError("Login Failed", "Invalid response from server.");
+            return;
+        }
+
+        // Save token and user data
+        FacebookSignInResponse.User user = response.getData().getUser();
+        tokenManager.saveToken("Bearer " + response.getData().getToken());
+        tokenManager.saveEmail(user.getEmail());
+        tokenManager.saveRole(user.getRole());
+
+        // Build and save name
+        String firstName = user.getFirstName();
+        String lastName = user.getLastName();
+        StringBuilder nameBuilder = new StringBuilder();
+        if (firstName != null && !firstName.trim().isEmpty()) {
+            nameBuilder.append(firstName.trim());
+        }
+        if (lastName != null && !lastName.trim().isEmpty()) {
+            if (nameBuilder.length() > 0) {
+                nameBuilder.append(" ");
+            }
+            nameBuilder.append(lastName.trim());
+        }
+        String fullName = nameBuilder.toString();
+        if (!fullName.isEmpty()) {
+            tokenManager.saveName(fullName);
+        }
+
+        // Navigate to dashboard
+        runOnUiThread(() -> {
+            final Intent intent;
+            if ("admin".equals(user.getRole())) {
+                intent = new Intent(MainActivity.this, AdminDashboardActivity.class);
+            } else if ("manager".equals(user.getRole())) {
+                intent = new Intent(MainActivity.this, ManagerDashboardActivity.class);
+            } else if ("employee".equals(user.getRole()) || "staff".equals(user.getRole())) {
+                intent = new Intent(MainActivity.this, EmployeeDashboardActivity.class);
+            } else {
+                intent = new Intent(MainActivity.this, DashboardActivity.class);
+                intent.putExtra(DashboardActivity.EXTRA_EMAIL, user.getEmail());
+            }
+            startActivity(intent);
+            finish();
+        });
+    }
+
+    private void handleGoogleSignInResult(Task<GoogleSignInAccount> completedTask) {
+        try {
+            GoogleSignInAccount account = completedTask.getResult(ApiException.class);
+            if (account != null) {
+                String email = account.getEmail();
+                String displayName = account.getDisplayName();
+                String givenName = account.getGivenName();
+                String familyName = account.getFamilyName();
+                String idToken = account.getIdToken();
+
+                Log.d(TAG, "Google Sign-In successful - Email: " + email);
+
+                // Call backend API to login/register with Google
+                loginWithGoogle(email, givenName, familyName, idToken);
+            }
+        } catch (ApiException e) {
+            Log.e(TAG, "Google Sign-In failed: " + e.getStatusCode(), e);
+            String errorMessage = "Google Sign-In failed";
+            
+            switch (e.getStatusCode()) {
+                case 10: // DEVELOPER_ERROR
+                    errorMessage = "Google Sign-In not configured. Please contact support.";
+                    break;
+                case 12501: // SIGN_IN_CANCELLED
+                    errorMessage = "Sign-in was cancelled";
+                    break;
+                case 7: // NETWORK_ERROR
+                    errorMessage = "Network error. Please check your connection.";
+                    break;
+                case 8: // INTERNAL_ERROR
+                    errorMessage = "Google Sign-In error. Please try again.";
+                    break;
+                default:
+                    errorMessage = "Google Sign-In failed. Error code: " + e.getStatusCode();
+                    break;
+            }
+            Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void loginWithGoogle(String email, String firstName, String lastName, String idToken) {
+        MaterialButton loginButton = findViewById(R.id.loginButton);
+        if (loginButton != null) {
+            loginButton.setEnabled(false);
+            loginButton.setText("Logging in...");
+        }
+
+        ApiService apiService = ApiClient.getApiService();
+        GoogleSignInRequest request = new GoogleSignInRequest(
+            idToken != null ? idToken : "",
+            email,
+            firstName != null ? firstName : "",
+            lastName != null ? lastName : "",
+            "" // No phone on login
+        );
+
+        Call<GoogleSignInResponse> call = apiService.googleSignIn(request);
+        call.enqueue(new Callback<>() {
+            @Override
+            public void onResponse(@NonNull Call<GoogleSignInResponse> call, @NonNull Response<GoogleSignInResponse> response) {
+                runOnUiThread(() -> {
+                    if (loginButton != null) {
+                        loginButton.setEnabled(true);
+                        loginButton.setText("Login");
+                    }
+                });
+
+                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                    handleGoogleLoginSuccess(response.body());
+                } else {
+                    String errorMsg = "Login failed. Please try again.";
+                    try {
+                        if (response.errorBody() != null) {
+                            String errorBody = response.errorBody().string();
+                            Log.e(TAG, "Google login error: " + errorBody);
+                        }
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error reading error response", e);
+                    }
+                    final String finalErrorMsg = errorMsg;
+                    runOnUiThread(() -> showError("Login Failed", finalErrorMsg));
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<GoogleSignInResponse> call, @NonNull Throwable t) {
+                runOnUiThread(() -> {
+                    if (loginButton != null) {
+                        loginButton.setEnabled(true);
+                        loginButton.setText("Login");
+                    }
+                });
+                Log.e(TAG, "Error logging in with Google: " + t.getMessage(), t);
+                runOnUiThread(() -> showError("Connection Error", 
+                    "Failed to login. Please check your connection and try again."));
+            }
+        });
+    }
+
+    private void handleGoogleLoginSuccess(GoogleSignInResponse response) {
+        if (response.getData() == null || response.getData().getUser() == null) {
+            showError("Login Failed", "Invalid response from server.");
+            return;
+        }
+
+        // Save token and user data
+        GoogleSignInResponse.User user = response.getData().getUser();
+        tokenManager.saveToken("Bearer " + response.getData().getToken());
+        tokenManager.saveEmail(user.getEmail());
+        tokenManager.saveRole(user.getRole());
+
+        // Build and save name
+        String firstName = user.getFirstName();
+        String lastName = user.getLastName();
+        StringBuilder nameBuilder = new StringBuilder();
+        if (firstName != null && !firstName.trim().isEmpty()) {
+            nameBuilder.append(firstName.trim());
+        }
+        if (lastName != null && !lastName.trim().isEmpty()) {
+            if (nameBuilder.length() > 0) {
+                nameBuilder.append(" ");
+            }
+            nameBuilder.append(lastName.trim());
+        }
+        String fullName = nameBuilder.toString();
+        if (!fullName.isEmpty()) {
+            tokenManager.saveName(fullName);
+        }
+
+        // Navigate to dashboard
+        runOnUiThread(() -> {
+            final Intent intent;
+            if ("admin".equals(user.getRole())) {
+                intent = new Intent(MainActivity.this, AdminDashboardActivity.class);
+            } else if ("manager".equals(user.getRole())) {
+                intent = new Intent(MainActivity.this, ManagerDashboardActivity.class);
+            } else if ("employee".equals(user.getRole()) || "staff".equals(user.getRole())) {
+                intent = new Intent(MainActivity.this, EmployeeDashboardActivity.class);
+            } else {
+                intent = new Intent(MainActivity.this, DashboardActivity.class);
+                intent.putExtra(DashboardActivity.EXTRA_EMAIL, user.getEmail());
+            }
+            startActivity(intent);
+            finish();
+        });
     }
 
     /**
