@@ -55,6 +55,9 @@ public class RegisterActivity extends AppCompatActivity {
 	private String userName;
 	private String userPhone;
 	private String userPassword;
+	
+	// Track if user signed in with Google (skip OTP for Google users)
+	private boolean isGoogleSignIn = false;
 
 	// Views for activity_register.xml (Tell us step)
 	private View fragmentContainer;
@@ -441,6 +444,13 @@ public class RegisterActivity extends AppCompatActivity {
 
 	// Step 5: Show OTP verification (Almost there)
 	public void showOtpVerification() {
+		// Skip OTP for Google Sign-In users
+		if (isGoogleSignIn) {
+			Log.d(TAG, "Skipping OTP for Google Sign-In user");
+			showAccountCreatedFragment();
+			return;
+		}
+		
 		// Get email from stored data (from email fragment)
 		String email = getUserEmail();
 		if (email == null || email.isEmpty()) {
@@ -451,6 +461,23 @@ public class RegisterActivity extends AppCompatActivity {
 
 		// Send OTP to the email first
 		sendOtpToEmail(email);
+	}
+	
+	// Step 6: Show Account Created fragment
+	public void showAccountCreatedFragment() {
+		try {
+			Log.d(TAG, "Showing AccountCreatedFragment");
+			// Hide template layout, show fragment container
+			hideTemplateLayout();
+			Fragment fragment = new AccountCreatedFragment();
+			FragmentTransaction transaction = fragmentManager.beginTransaction();
+			transaction.replace(R.id.fragment_container, fragment);
+			transaction.addToBackStack("account_created");
+			transaction.commit();
+		} catch (Exception e) {
+			Log.e(TAG, "Error showing account created fragment: " + e.getMessage(), e);
+			Toast.makeText(this, "Error loading screen", Toast.LENGTH_SHORT).show();
+		}
 	}
 
 	// Send OTP to email and show verification dialog
@@ -666,28 +693,11 @@ public class RegisterActivity extends AppCompatActivity {
 			Log.d(TAG, "Saved name to cache: " + fullName);
 		}
 
-		// Close dialog and navigate to dashboard
+		// Close dialog and navigate to Account Created fragment
 		dialog.dismiss();
-		String userEmail = user.getEmail();
-		String message = String.format("Welcome %s %s! Your account has been created successfully.", firstName, lastName);
-
-		showAccountCreatedSuccess(message, userEmail);
+		showAccountCreatedFragment();
 	}
 
-	// Show account created success and navigate
-	private void showAccountCreatedSuccess(String message, String email) {
-		new AlertDialog.Builder(this)
-			.setTitle("Account Created")
-			.setMessage(message)
-			.setPositiveButton("OK", (dialog, which) -> {
-				Intent intent = new Intent(this, DashboardActivity.class);
-				intent.putExtra(DashboardActivity.EXTRA_EMAIL, email);
-				startActivity(intent);
-				finish();
-			})
-			.setCancelable(false)
-			.show();
-	}
 
 	// Handle OTP verification error
 	private void handleOtpVerificationError(int statusCode) {
@@ -806,6 +816,41 @@ public class RegisterActivity extends AppCompatActivity {
 	@SuppressWarnings("unused")
 	public String getUserPassword() {
 		return userPassword;
+	}
+
+	// Handle Google Sign-In success
+	public void handleGoogleSignInSuccess(String email, String givenName, String familyName, 
+	                                     String displayName, String idToken) {
+		Log.d(TAG, "Handling Google Sign-In success");
+		
+		// Mark as Google Sign-In user (skip OTP)
+		isGoogleSignIn = true;
+		
+		// Store Google account data
+		setUserEmail(email);
+		
+		// Use Google name if available, otherwise use display name
+		String firstName = givenName != null && !givenName.isEmpty() ? givenName : 
+			(displayName != null && displayName.contains(" ") ? displayName.split(" ")[0] : displayName);
+		String lastName = familyName != null && !familyName.isEmpty() ? familyName : 
+			(displayName != null && displayName.contains(" ") ? 
+				displayName.substring(displayName.indexOf(" ") + 1) : "");
+		
+		// Generate username from email (before @)
+		String username = email != null && email.contains("@") ? 
+			email.substring(0, email.indexOf("@")) : "user_" + System.currentTimeMillis();
+		
+		// Store personal info from Google
+		setUserPersonalInfo(firstName, lastName, username, "");
+		
+		// Navigate to "Tell Us" to collect phone number
+		Toast.makeText(this, "Welcome! Please provide your phone number to continue.", Toast.LENGTH_LONG).show();
+		showTellUsFragment();
+	}
+	
+	// Check if user signed in with Google
+	public boolean isGoogleSignInUser() {
+		return isGoogleSignIn;
 	}
 
 }

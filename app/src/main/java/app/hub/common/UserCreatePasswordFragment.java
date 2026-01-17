@@ -129,8 +129,14 @@ public class UserCreatePasswordFragment extends Fragment {
         RegisterActivity activity = (RegisterActivity) getActivity();
         if (activity != null) {
             activity.setUserPassword(getText(passwordInput));
-            // TODO: Now make API call with all collected data or show OTP
-            activity.showOtpVerification();
+            
+            // Check if Google Sign-In user - skip OTP and go to Account Created
+            if (activity.isGoogleSignInUser()) {
+                activity.showAccountCreatedFragment();
+            } else {
+                // Regular flow - show OTP verification
+                activity.showOtpVerification();
+            }
         }
     }
 
