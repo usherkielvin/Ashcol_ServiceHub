@@ -56,11 +56,11 @@ public class AdminDashboardActivity extends AppCompatActivity {
             if (item.getItemId() == R.id.nav_all_tickets) {
                 selectedFragment = new AdminAllTicketsFragment();
             } else if (item.getItemId() == R.id.nav_branches) {
-                selectedFragment = new BranchesFragment();
+                selectedFragment = new AdminBranchesFragment();
             } else if (item.getItemId() == R.id.nav_assignments) {
                 selectedFragment = new AssignmentsFragment();
             } else if (item.getItemId() == R.id.nav_reports) {
-                selectedFragment = new ReportsFragment();
+                selectedFragment = new AdminReportsFragment();
             } else if (item.getItemId() == R.id.nav_users) {
                 selectedFragment = new UsersFragment();
             }

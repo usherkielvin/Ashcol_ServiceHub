@@ -8,9 +8,9 @@ import android.view.ViewGroup;
 
 import app.hub.R;
 
-public class BranchesFragment extends Fragment {
+public class AdminReportsFragment extends Fragment {
 
-    public BranchesFragment() {
+    public AdminReportsFragment() {
         // Required empty public constructor
     }
 
@@ -19,7 +19,7 @@ public class BranchesFragment extends Fragment {
                              Bundle savedInstanceState) {
         try {
             // Inflate the layout for this fragment
-            return inflater.inflate(R.layout.fragment_branches, container, false);
+            return inflater.inflate(R.layout.fragment_reports, container, false);
         } catch (Exception e) {
             e.printStackTrace();
             return null;
