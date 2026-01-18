@@ -20,6 +20,15 @@
         <item name="cornerSize">50%</item>
     </style>
 
+    <!-- Bottom Navigation Text Styles -->
+    <style name="BottomNavText" parent="TextAppearance.MaterialComponents.Caption">
+        <item name="android:textSize">10sp</item>
+    </style>
+
+    <style name="BottomNavText.Active" parent="BottomNavText">
+        <item name="android:textSize">11sp</item>
+    </style>
+
     <!-- Splash Screen Theme -->
     <style name="Theme.App.Starting" parent="Theme.SplashScreen">
         <!-- The background color of the splash screen -->

@@ -44,7 +44,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:menu="@menu/branch_navbar" />
+        app:menu="@menu/manager_menu" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

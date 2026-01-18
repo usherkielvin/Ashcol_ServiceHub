@@ -8,9 +8,9 @@ import android.view.ViewGroup;
 
 import app.hub.R;
 
-public class ReportsFragment extends Fragment {
+public class AdminReportsFragment extends Fragment {
 
-    public ReportsFragment() {
+    public AdminReportsFragment() {
         // Required empty public constructor
     }
 

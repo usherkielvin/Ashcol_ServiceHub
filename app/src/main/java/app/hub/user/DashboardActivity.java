@@ -303,13 +303,13 @@ public class DashboardActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.dashboard_menu, menu);
+        getMenuInflater().inflate(R.menu.admin_menu, menu);
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        if (item.getItemId() == R.id.action_profile) {
+        if (item.getItemId() == R.id.admin_profile) {
             getSupportFragmentManager().beginTransaction()
                     .replace(R.id.fragmentContainerView, new UserProfileFragment())
                     .setReorderingAllowed(true)
