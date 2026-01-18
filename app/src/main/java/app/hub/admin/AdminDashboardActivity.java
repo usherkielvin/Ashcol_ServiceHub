@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.animation.AccelerateDecelerateInterpolator;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.TooltipCompat;
 import androidx.fragment.app.Fragment;
@@ -13,24 +14,32 @@ import app.hub.R;
 
 public class AdminDashboardActivity extends AppCompatActivity {
 
+    private View navIndicator;
+    private BottomNavigationView bottomNav;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         try {
             setContentView(R.layout.activity_admin_dashboard);
 
-            BottomNavigationView bottomNav = findViewById(R.id.bottom_navigation);
+            navIndicator = findViewById(R.id.navIndicator);
+            bottomNav = findViewById(R.id.bottom_navigation);
+            
             if (bottomNav != null) {
                 bottomNav.setOnNavigationItemSelectedListener(navListener);
                 disableNavigationTooltips(bottomNav);
             }
 
-            // as soon as the activity is created, we want to show the All Tickets fragment
-            try {
+            // Default fragment
+            if (savedInstanceState == null) {
                 getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,
-                        new AdminAllTicketsFragment()).commit();
-            } catch (Exception e) {
-                e.printStackTrace();
+                        new AdminHomeFragment()).commit();
+                
+                // Set initial indicator position
+                if (bottomNav != null) {
+                    bottomNav.post(() -> moveIndicatorToItem(R.id.admin_home, false));
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -44,35 +53,54 @@ public class AdminDashboardActivity extends AppCompatActivity {
             MenuItem item = menu.getItem(i);
             View view = navigationView.findViewById(item.getItemId());
             if (view != null) {
+                view.setOnLongClickListener(v -> true);
                 TooltipCompat.setTooltipText(view, null);
             }
         }
     }
 
     private BottomNavigationView.OnNavigationItemSelectedListener navListener = item -> {
-        try {
-            Fragment selectedFragment = null;
+        Fragment selectedFragment = null;
+        int itemId = item.getItemId();
 
-            if (item.getItemId() == R.id.admin_home) {
-                selectedFragment = new AdminAllTicketsFragment();
-            } else if (item.getItemId() == R.id.admin_employees) {
-                selectedFragment = new AdminBranchesFragment();
-            } else if (item.getItemId() == R.id.admin_branches) {
-                selectedFragment = new AdminAssignmentsFragment();
-            } else if (item.getItemId() == R.id.admin_operations) {
-                selectedFragment = new AdminReportsFragment();
-            } else if (item.getItemId() == R.id.admin_reports) {
-                selectedFragment = new AdminUsersFragment();
-            }
-
-            if (selectedFragment != null) {
-                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,
-                        selectedFragment).commit();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (itemId == R.id.admin_home) {
+            selectedFragment = new AdminHomeFragment();
+        }  else if (itemId == R.id.admin_operations) {
+            selectedFragment = new AdminOperationsFragment();
+        } else if (itemId == R.id.admin_reports) {
+            selectedFragment = new AdminReportsFragment();
+        } else if (itemId == R.id.admin_profile) {
+            selectedFragment = new AdminProfileFragment();
         }
 
-        return true;
+        if (selectedFragment != null) {
+            moveIndicatorToItem(itemId, true);
+            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,
+                    selectedFragment).commit();
+            return true;
+        }
+        return false;
     };
+
+    private void moveIndicatorToItem(int itemId, boolean animate) {
+        View itemView = bottomNav.findViewById(itemId);
+        if (itemView == null || navIndicator == null) return;
+
+        int itemWidth = itemView.getWidth();
+        int indicatorWidth = navIndicator.getWidth();
+        float targetX = itemView.getLeft() + (itemWidth / 2f) - (indicatorWidth / 2f);
+        float targetY = 0f;
+
+        if (animate) {
+            navIndicator.animate()
+                    .translationX(targetX)
+                    .translationY(targetY)
+                    .setDuration(300)
+                    .setInterpolator(new AccelerateDecelerateInterpolator())
+                    .start();
+        } else {
+            navIndicator.setTranslationX(targetX);
+            navIndicator.setTranslationY(targetY);
+        }
+    }
 }
