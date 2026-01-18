@@ -8,7 +8,7 @@ import android.view.ViewGroup;
 
 import app.hub.R;
 
-public class CompletedFragment extends Fragment {
+public class    CompletedFragment extends Fragment {
 
     public CompletedFragment() {
         // Required empty public constructor

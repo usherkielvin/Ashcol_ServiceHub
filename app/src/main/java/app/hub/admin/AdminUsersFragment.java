@@ -14,11 +14,11 @@ import app.hub.R;
 import app.hub.common.MainActivity;
 import app.hub.util.TokenManager;
 
-public class UsersFragment extends Fragment {
+public class AdminUsersFragment extends Fragment {
 
     private TokenManager tokenManager;
 
-    public UsersFragment() {
+    public AdminUsersFragment() {
         // Required empty public constructor
     }
 

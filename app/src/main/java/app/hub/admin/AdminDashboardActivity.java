@@ -53,16 +53,16 @@ public class AdminDashboardActivity extends AppCompatActivity {
         try {
             Fragment selectedFragment = null;
 
-            if (item.getItemId() == R.id.nav_all_tickets) {
+            if (item.getItemId() == R.id.admin_home) {
                 selectedFragment = new AdminAllTicketsFragment();
-            } else if (item.getItemId() == R.id.nav_branches) {
+            } else if (item.getItemId() == R.id.admin_employees) {
                 selectedFragment = new AdminBranchesFragment();
-            } else if (item.getItemId() == R.id.nav_assignments) {
-                selectedFragment = new AssignmentsFragment();
-            } else if (item.getItemId() == R.id.nav_reports) {
+            } else if (item.getItemId() == R.id.admin_branches) {
+                selectedFragment = new AdminAssignmentsFragment();
+            } else if (item.getItemId() == R.id.admin_operations) {
                 selectedFragment = new AdminReportsFragment();
-            } else if (item.getItemId() == R.id.nav_users) {
-                selectedFragment = new UsersFragment();
+            } else if (item.getItemId() == R.id.admin_reports) {
+                selectedFragment = new AdminUsersFragment();
             }
 
             if (selectedFragment != null) {
