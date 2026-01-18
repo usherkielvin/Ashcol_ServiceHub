@@ -9,29 +9,23 @@ import app.hub.api.GoogleSignInRequest;
 import app.hub.api.GoogleSignInResponse;
 import app.hub.api.SetInitialPasswordRequest;
 import app.hub.api.SetInitialPasswordResponse;
-import app.hub.api.VerificationRequest;
-import app.hub.api.VerificationResponse;
-import app.hub.api.VerifyEmailRequest;
+import app.hub.api.RegisterRequest;
+import app.hub.api.RegisterResponse;
 import app.hub.api.VerifyEmailResponse;
-import app.hub.user.DashboardActivity;
+import app.hub.user_emailOtp;
 import app.hub.util.TokenManager;
-
-import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.fragment.app.Fragment;
@@ -39,9 +33,7 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
 import com.google.android.material.button.MaterialButton;
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.textfield.TextInputEditText;
-import com.google.android.material.textfield.TextInputLayout;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -739,8 +731,20 @@ public class RegisterActivity extends AppCompatActivity {
 			return;
 		}
 
-		// Send OTP to the email first
-		sendOtpToEmail(email);
+		// Show OTP fragment instead of dialog
+		try {
+			Log.d(TAG, "Showing user_emailOtp fragment");
+			// Hide template layout, show fragment container
+			hideTemplateLayout();
+			Fragment fragment = new user_emailOtp();
+			FragmentTransaction transaction = fragmentManager.beginTransaction();
+			transaction.replace(R.id.fragment_container, fragment);
+			transaction.addToBackStack("otp_verification");
+			transaction.commit();
+		} catch (Exception e) {
+			Log.e(TAG, "Error showing OTP fragment: " + e.getMessage(), e);
+			Toast.makeText(this, "Error loading OTP screen", Toast.LENGTH_SHORT).show();
+		}
 	}
 	
 	// Step 6: Show Account Created fragment
@@ -760,187 +764,8 @@ public class RegisterActivity extends AppCompatActivity {
 		}
 	}
 
-	// Send OTP to email and show verification dialog
-	private void sendOtpToEmail(String email) {
-		ApiService apiService = ApiClient.getApiService();
-		VerificationRequest request = new VerificationRequest(email);
-
-		Call<VerificationResponse> call = apiService.sendVerificationCode(request);
-		call.enqueue(new Callback<>() {
-			@Override
-			public void onResponse(@NonNull Call<VerificationResponse> call, @NonNull Response<VerificationResponse> response) {
-				if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
-					// OTP sent successfully, show dialog
-					showVerificationDialog(email);
-				} else {
-					Toast.makeText(RegisterActivity.this, "Failed to send OTP. Please try again.", Toast.LENGTH_SHORT).show();
-				}
-			}
-
-			@Override
-			public void onFailure(@NonNull Call<VerificationResponse> call, @NonNull Throwable t) {
-				Log.e(TAG, "Error sending OTP: " + t.getMessage(), t);
-				Toast.makeText(RegisterActivity.this, "Network error. Please check your connection.", Toast.LENGTH_SHORT).show();
-			}
-		});
-	}
-
-	// Show OTP verification dialog
-	private void showVerificationDialog(String email) {
-		View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_verification_code, null);
-
-		// Initialize dialog views
-		TextInputEditText codeInput = dialogView.findViewById(R.id.codeInput);
-		TextInputLayout codeInputLayout = dialogView.findViewById(R.id.codeInputLayout);
-		Button verifyButton = dialogView.findViewById(R.id.verifyButton);
-		MaterialButton resendCodeButton = dialogView.findViewById(R.id.resendCodeButton);
-		TextView messageTextView = dialogView.findViewById(R.id.verificationMessage);
-		ImageButton closeButton = dialogView.findViewById(R.id.closeButton);
-
-		// Set email message (mask email for privacy)
-		if (messageTextView != null && email != null) {
-			String maskedEmail = maskEmail(email);
-			String message = String.format("We've sent a 6-digit code to your\nemail %s.", maskedEmail);
-			messageTextView.setText(message);
-		}
-
-		// Create and show dialog (as full screen)
-		AlertDialog dialog = new MaterialAlertDialogBuilder(this)
-			.setView(dialogView)
-			.setCancelable(true)
-			.create();
-
-		android.view.Window window = dialog.getWindow();
-		if (window != null) {
-			window.setLayout(android.view.WindowManager.LayoutParams.MATCH_PARENT, android.view.WindowManager.LayoutParams.MATCH_PARENT);
-		}
-
-		// Setup dialog components
-		setupOtpDialogCloseButton(closeButton, dialog);
-		setupOtpCodeInput(codeInput, codeInputLayout, verifyButton);
-		setupOtpVerifyButton(verifyButton, codeInput, codeInputLayout, email, dialog);
-		setupOtpResendButton(resendCodeButton, email);
-
-		dialog.show();
-	}
-
-	// Mask email for display (e.g., user@example.com -> use***@example.com)
-	private String maskEmail(String email) {
-		if (email == null || !email.contains("@")) {
-			return "*******@example.com";
-		}
-		int atIndex = email.indexOf("@");
-		String localPart = email.substring(0, Math.min(3, atIndex));
-		String domain = email.substring(atIndex);
-		return localPart + "***" + domain;
-	}
-
-	// Setup close button for OTP dialog
-	private void setupOtpDialogCloseButton(ImageButton closeButton, AlertDialog dialog) {
-		if (closeButton != null) {
-			closeButton.setOnClickListener(v -> dialog.dismiss());
-		}
-	}
-
-	// Setup code input field with real-time validation
-	private void setupOtpCodeInput(TextInputEditText codeInput, TextInputLayout codeInputLayout, Button verifyButton) {
-		if (codeInput == null) return;
-
-		if (codeInputLayout != null) {
-			codeInputLayout.setError(null);
-		}
-
-		// Auto-focus and show keyboard
-		codeInput.post(() -> {
-			codeInput.requestFocus();
-			android.view.inputmethod.InputMethodManager imm =
-				(android.view.inputmethod.InputMethodManager) getSystemService(android.content.Context.INPUT_METHOD_SERVICE);
-			if (imm != null) {
-				imm.showSoftInput(codeInput, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT);
-			}
-		});
-
-		// Enable verify button when code is entered
-		codeInput.addTextChangedListener(new TextWatcher() {
-				@Override
-				public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-
-				@Override
-				public void onTextChanged(CharSequence s, int start, int before, int count) {}
-
-				@Override
-				public void afterTextChanged(Editable s) {
-					if (codeInputLayout != null) {
-						codeInputLayout.setError(null);
-					}
-					if (verifyButton != null) {
-						verifyButton.setEnabled(s.length() == 6);
-					}
-				}
-			});
-	}
-
-	// Setup verify button click handler
-	@SuppressLint("SetTextI18n")
-	private void setupOtpVerifyButton(Button verifyButton, TextInputEditText codeInput,
-	                                 TextInputLayout codeInputLayout, String email, AlertDialog dialog) {
-		if (verifyButton == null) return;
-
-		verifyButton.setEnabled(false);
-		verifyButton.setOnClickListener(v -> {
-			String code = "";
-			if (codeInput != null && codeInput.getText() != null) {
-				code = codeInput.getText().toString().trim();
-			}
-
-			// Validate code length
-			if (code.length() != 6) {
-				if (codeInputLayout != null) {
-					codeInputLayout.setError("Enter 6-digit code");
-				}
-				return;
-			}
-
-			// Clear error and verify
-			if (codeInputLayout != null) {
-				codeInputLayout.setError(null);
-			}
-			verifyButton.setEnabled(false);
-			verifyButton.setText("Verifying...");
-			verifyOtpCode(email, code, dialog, verifyButton);
-		});
-	}
-
-	// Verify OTP code
-	private void verifyOtpCode(String email, String code, AlertDialog dialog, Button verifyButton) {
-		ApiService apiService = ApiClient.getApiService();
-		VerifyEmailRequest request = new VerifyEmailRequest(email, code);
-
-		Call<VerifyEmailResponse> call = apiService.verifyEmail(request);
-		call.enqueue(new Callback<>() {
-			@Override
-			public void onResponse(@NonNull Call<VerifyEmailResponse> call, @NonNull Response<VerifyEmailResponse> response) {
-				resetVerifyButton(verifyButton);
-
-				if (response.isSuccessful() && response.body() != null) {
-					handleOtpVerificationSuccess(response.body(), dialog);
-				} else {
-					handleOtpVerificationError(response.code());
-				}
-			}
-
-			@Override
-			public void onFailure(@NonNull Call<VerifyEmailResponse> call, @NonNull Throwable t) {
-				resetVerifyButton(verifyButton);
-				Log.e(TAG, "Error verifying OTP: " + t.getMessage(), t);
-				Toast.makeText(RegisterActivity.this,
-					"Failed to verify code. Please check your connection and try again.", Toast.LENGTH_SHORT).show();
-			}
-		});
-	}
-
-	// Handle successful OTP verification
-	private void handleOtpVerificationSuccess(VerifyEmailResponse response, AlertDialog dialog) {
+	// Handle successful OTP verification (called from fragment)
+	public void handleOtpVerificationSuccess(VerifyEmailResponse response) {
 		if (!response.isSuccess() || response.getData() == null) {
 			String errorMsg = response.getMessage() != null ?
 				response.getMessage() :
@@ -949,102 +774,168 @@ public class RegisterActivity extends AppCompatActivity {
 			return;
 		}
 
-		// Save user data and navigate
+		// Check if user exists (for resend scenario) or is being created (registration)
 		VerifyEmailResponse.User user = response.getData().getUser();
-		tokenManager.saveToken("Bearer " + response.getData().getToken());
-		tokenManager.saveEmail(user.getEmail());
+		
+		if (user != null) {
+			// User exists - save user data and token
+			tokenManager.saveToken("Bearer " + response.getData().getToken());
+			tokenManager.saveEmail(user.getEmail());
 
-		// Build and save name
-		String firstName = user.getFirstName();
-		String lastName = user.getLastName();
-		StringBuilder nameBuilder = new StringBuilder();
-		if (firstName != null && !firstName.trim().isEmpty()) {
-			nameBuilder.append(firstName.trim());
-		}
-		if (lastName != null && !lastName.trim().isEmpty()) {
-			if (nameBuilder.length() > 0) {
-				nameBuilder.append(" ");
+			// Build and save name
+			String firstName = user.getFirstName();
+			String lastName = user.getLastName();
+			StringBuilder nameBuilder = new StringBuilder();
+			if (firstName != null && !firstName.trim().isEmpty()) {
+				nameBuilder.append(firstName.trim());
 			}
-			nameBuilder.append(lastName.trim());
-		}
-		String fullName = nameBuilder.toString();
-		if (!fullName.isEmpty()) {
-			tokenManager.saveName(fullName);
-			Log.d(TAG, "Saved name to cache: " + fullName);
+			if (lastName != null && !lastName.trim().isEmpty()) {
+				if (nameBuilder.length() > 0) {
+					nameBuilder.append(" ");
+				}
+				nameBuilder.append(lastName.trim());
+			}
+			String fullName = nameBuilder.toString();
+			if (!fullName.isEmpty()) {
+				tokenManager.saveName(fullName);
+				Log.d(TAG, "Saved name to cache: " + fullName);
+			}
+		} else {
+			// User doesn't exist yet (registration flow) - OTP verified, now create account
+			Log.d(TAG, "OTP verified for registration, creating account...");
+			createAccountAfterOtpVerification();
+			return; // Don't navigate yet, wait for account creation
 		}
 
-		// Close dialog and navigate to Account Created fragment
-		dialog.dismiss();
+		// Navigate to Account Created fragment
 		showAccountCreatedFragment();
 	}
+	
+	// Create account after OTP verification
+	private void createAccountAfterOtpVerification() {
+		// Get all collected user data
+		String email = getUserEmail();
+		String firstName = getUserFirstName();
+		String lastName = getUserLastName();
+		String username = getUserName();
+		String password = getUserPassword();
+		String phone = getUserPhone() != null ? getUserPhone() : "";
 
-
-	// Handle OTP verification error
-	private void handleOtpVerificationError(int statusCode) {
-		String errorMsg = (statusCode == 400) ?
-			"Invalid or expired code" :
-			"Invalid verification code";
-		Toast.makeText(this, errorMsg, Toast.LENGTH_SHORT).show();
-	}
-
-	// Reset verify button to original state
-	@SuppressLint("SetTextI18n")
-	private void resetVerifyButton(Button verifyButton) {
-		if (verifyButton != null) {
-			verifyButton.setEnabled(true);
-			verifyButton.setText("Continue");
+		// Validate required fields
+		if (email == null || email.isEmpty()) {
+			Toast.makeText(this, "Email is required", Toast.LENGTH_SHORT).show();
+			return;
 		}
-	}
+		if (firstName == null || firstName.isEmpty()) {
+			Toast.makeText(this, "First name is required", Toast.LENGTH_SHORT).show();
+			return;
+		}
+		if (lastName == null || lastName.isEmpty()) {
+			Toast.makeText(this, "Last name is required", Toast.LENGTH_SHORT).show();
+			return;
+		}
+		if (username == null || username.isEmpty()) {
+			Toast.makeText(this, "Username is required", Toast.LENGTH_SHORT).show();
+			return;
+		}
+		if (password == null || password.isEmpty()) {
+			Toast.makeText(this, "Password is required", Toast.LENGTH_SHORT).show();
+			return;
+		}
 
-	// Setup resend code button
-	@SuppressLint("SetTextI18n")
-	private void setupOtpResendButton(MaterialButton resendButton, String email) {
-		if (resendButton == null) return;
+		// Default role to "customer" for regular registration
+		String role = "customer";
 
-		resendButton.setOnClickListener(v -> {
-			resendButton.setEnabled(false);
-			resendButton.setText("Sending...");
-			resendOtpCode(email, resendButton);
-		});
-	}
-
-	// Resend OTP code
-	private void resendOtpCode(String email, MaterialButton resendButton) {
+		Log.d(TAG, "Creating account with - Email: " + email + ", Username: " + username + ", Role: " + role);
+		
 		ApiService apiService = ApiClient.getApiService();
-		VerificationRequest request = new VerificationRequest(email);
+		RegisterRequest request = new RegisterRequest(username, firstName, lastName, email, phone, password, password, role);
 
-		Call<VerificationResponse> call = apiService.sendVerificationCode(request);
+		Call<RegisterResponse> call = apiService.register(request);
 		call.enqueue(new Callback<>() {
 			@Override
-			public void onResponse(@NonNull Call<VerificationResponse> call, @NonNull Response<VerificationResponse> response) {
-				resetResendButton(resendButton);
-
-				if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
-					String message = response.body().getMessage() != null ?
-						response.body().getMessage() :
-						"Verification code sent to your email";
-					Toast.makeText(RegisterActivity.this, message, Toast.LENGTH_LONG).show();
+			public void onResponse(@NonNull Call<RegisterResponse> call, @NonNull Response<RegisterResponse> response) {
+				if (response.isSuccessful() && response.body() != null) {
+					RegisterResponse body = response.body();
+					if (body.isSuccess() && body.getData() != null) {
+						// Account created successfully
+						RegisterResponse.User user = body.getData().getUser();
+						String token = body.getData().getToken();
+						
+						// Save user data and token
+						if (token != null) {
+							tokenManager.saveToken("Bearer " + token);
+						}
+						tokenManager.saveEmail(user != null ? user.getEmail() : email);
+						
+						// Build and save name
+						if (user != null) {
+							String userFirstName = user.getFirstName();
+							String userLastName = user.getLastName();
+							StringBuilder nameBuilder = new StringBuilder();
+							if (userFirstName != null && !userFirstName.trim().isEmpty()) {
+								nameBuilder.append(userFirstName.trim());
+							}
+							if (userLastName != null && !userLastName.trim().isEmpty()) {
+								if (nameBuilder.length() > 0) {
+									nameBuilder.append(" ");
+								}
+								nameBuilder.append(userLastName.trim());
+							}
+							String fullName = nameBuilder.toString();
+							if (!fullName.isEmpty()) {
+								tokenManager.saveName(fullName);
+								Log.d(TAG, "Saved name to cache: " + fullName);
+							}
+						}
+						
+						Log.d(TAG, "Account created successfully");
+						// Navigate to Account Created fragment
+						showAccountCreatedFragment();
+					} else {
+						// Registration failed
+						String errorMsg = body.getMessage() != null ? body.getMessage() : "Failed to create account";
+						Log.e(TAG, "Account creation failed: " + errorMsg);
+						Toast.makeText(RegisterActivity.this, errorMsg, Toast.LENGTH_LONG).show();
+					}
 				} else {
-					Toast.makeText(RegisterActivity.this, "Failed to send code", Toast.LENGTH_SHORT).show();
+					// Response not successful
+					String errorMsg = "Failed to create account. Please try again.";
+					try {
+						if (response.errorBody() != null) {
+							com.google.gson.Gson gson = new com.google.gson.Gson();
+							java.io.BufferedReader reader = new java.io.BufferedReader(
+								new java.io.InputStreamReader(response.errorBody().byteStream()));
+							String errorJson = reader.readLine();
+							if (errorJson != null) {
+								RegisterResponse errorResponse = gson.fromJson(errorJson, RegisterResponse.class);
+								if (errorResponse != null && errorResponse.getMessage() != null) {
+									errorMsg = errorResponse.getMessage();
+								}
+							}
+						}
+					} catch (Exception e) {
+						Log.e(TAG, "Error parsing error response: " + e.getMessage(), e);
+					}
+					Log.e(TAG, "Account creation failed with status: " + response.code() + ", message: " + errorMsg);
+					Toast.makeText(RegisterActivity.this, errorMsg, Toast.LENGTH_LONG).show();
 				}
 			}
 
 			@Override
-			public void onFailure(@NonNull Call<VerificationResponse> call, @NonNull Throwable t) {
-				resetResendButton(resendButton);
-				Log.e(TAG, "Error resending OTP: " + t.getMessage(), t);
-				Toast.makeText(RegisterActivity.this, "Network error. Please try again.", Toast.LENGTH_SHORT).show();
+			public void onFailure(@NonNull Call<RegisterResponse> call, @NonNull Throwable t) {
+				Log.e(TAG, "Error creating account: " + t.getMessage(), t);
+				String errorMsg = "Network error. Please check your connection and try again.";
+				if (t.getMessage() != null) {
+					if (t.getMessage().contains("timeout") || t.getMessage().contains("Timeout")) {
+						errorMsg = "Request timeout. Please check your connection and try again.";
+					} else if (t.getMessage().contains("Unable to resolve host")) {
+						errorMsg = "Cannot reach server. Please check your internet connection.";
+					}
+				}
+				Toast.makeText(RegisterActivity.this, errorMsg, Toast.LENGTH_LONG).show();
 			}
 		});
-	}
-
-	// Reset resend button to original state
-	@SuppressLint("SetTextI18n")
-	private void resetResendButton(MaterialButton resendButton) {
-		if (resendButton != null) {
-			resendButton.setEnabled(true);
-			resendButton.setText("resend");
-		}
 	}
 
 
