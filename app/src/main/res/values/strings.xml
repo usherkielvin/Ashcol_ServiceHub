@@ -176,4 +176,11 @@
     <string name="desc_union">direct debit</string>
     <string name="icon_wallet_desc">Wallet Icon</string>
 
+    <string name="title_work_status">Work Status Report</string>
+    <string name="legend_today">Today</string>
+    <string name="legend_this_week">This week</string>
+    <string name="legend_this_month">This month</string>
+    <string name="legend_last_month">Last month</string>
+    <string name="desc_logo" />
+
 </resources>
