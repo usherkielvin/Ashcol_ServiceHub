@@ -65,11 +65,7 @@ public class AdminDashboardActivity extends AppCompatActivity {
 
         if (itemId == R.id.admin_home) {
             selectedFragment = new AdminHomeFragment();
-        } else if (itemId == R.id.admin_employees) {
-            selectedFragment = new AdminEmployeesFragment();
-        } else if (itemId == R.id.admin_branches) {
-            selectedFragment = new AdminBranchesFragment();
-        } else if (itemId == R.id.admin_operations) {
+        }  else if (itemId == R.id.admin_operations) {
             selectedFragment = new AdminOperationsFragment();
         } else if (itemId == R.id.admin_reports) {
             selectedFragment = new AdminReportsFragment();

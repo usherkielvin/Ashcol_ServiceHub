@@ -4,14 +4,6 @@
         android:icon="@drawable/ic_home"
         android:title="Home" />
     <item
-        android:id="@+id/admin_employees"
-        android:icon="@drawable/employee"
-        android:title="Employee" />
-    <item
-        android:id="@+id/admin_branches"
-        android:icon="@drawable/ic_branches"
-        android:title="Branches" />
-    <item
         android:id="@+id/admin_operations"
         android:icon="@drawable/ic_operations"
         android:title="Operation" />
