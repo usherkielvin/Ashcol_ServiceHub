@@ -9,8 +9,9 @@
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@color/white">
+        android:layout_height="wrap_content"
+        android:background="@color/white"
+        android:paddingBottom="24dp">
 
         <FrameLayout
             android:id="@+id/frameLayout3"
@@ -24,6 +25,8 @@
                 android:id="@+id/imageView5"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:importantForAccessibility="no"
+                android:contentDescription="@null"
                 android:scaleType="fitXY"
                 android:src="@drawable/header_green" />
 
@@ -33,62 +36,78 @@
                 android:layout_height="94dp"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="16dp"
+                android:contentDescription="@string/desc_app_logo"
                 android:src="@drawable/ash" />
 
         </FrameLayout>
 
         <SearchView
             android:id="@+id/searchViewWork"
-            android:layout_width="354dp"
+            android:layout_width="0dp"
             android:layout_height="40dp"
+            android:layout_marginStart="24dp"
             android:layout_marginTop="-20dp"
+            android:layout_marginEnd="24dp"
             android:background="@drawable/rounded_white_bg"
             android:elevation="10dp"
             app:iconifiedByDefault="false"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/frameLayout3"
-            app:queryHint="Search" />
+            app:queryHint="@string/search_hint" />
 
         <androidx.cardview.widget.CardView
             android:id="@+id/cardView"
             android:layout_width="0dp"
-            android:layout_height="95dp"
+            android:layout_height="wrap_content"
             app:cardCornerRadius="0dp"
             app:cardElevation="0dp"
-            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="0.28">
+            app:layout_constraintTop_toBottomOf="@+id/searchViewWork">
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:paddingTop="10dp"
+                android:layout_height="wrap_content"
+                android:paddingTop="20dp"
                 android:paddingBottom="10dp">
+
+                <TextView
+                    android:id="@+id/quickserve"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="20dp"
+                    android:text="@string/quick_services"
+                    android:textColor="#215531"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
 
                 <com.google.android.material.floatingactionbutton.FloatingActionButton
                     android:id="@+id/QSCleaning"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
                     android:clickable="true"
+                    android:contentDescription="@string/service_cleaning"
+                    android:focusable="true"
                     android:src="@drawable/ic_home"
-                    android:tint="@color/light_green"
                     app:backgroundTint="@color/white"
                     app:fabSize="normal"
                     app:layout_constraintEnd_toStartOf="@+id/QSRepair"
                     app:layout_constraintHorizontal_chainStyle="spread"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    app:layout_constraintTop_toBottomOf="@+id/quickserve"
+                    app:tint="@color/light_green"
+                    tools:ignore="AccessibilityViewType" />
 
                 <TextView
                     android:id="@+id/textClean"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:text="Cleaning"
+                    android:text="@string/service_cleaning"
                     android:textSize="12sp"
                     app:layout_constraintEnd_toEndOf="@+id/QSCleaning"
                     app:layout_constraintStart_toStartOf="@+id/QSCleaning"
@@ -99,19 +118,22 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:clickable="true"
+                    android:contentDescription="@string/service_repair"
+                    android:focusable="true"
                     android:src="@drawable/wrench"
                     app:backgroundTint="@color/white"
                     app:fabSize="normal"
                     app:layout_constraintEnd_toStartOf="@+id/QSInstallation"
                     app:layout_constraintStart_toEndOf="@+id/QSCleaning"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    app:layout_constraintTop_toTopOf="@+id/QSCleaning"
+                    tools:ignore="AccessibilityViewType" />
 
                 <TextView
                     android:id="@+id/textRepair"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:text="Repair"
+                    android:text="@string/service_repair"
                     android:textSize="12sp"
                     app:layout_constraintEnd_toEndOf="@+id/QSRepair"
                     app:layout_constraintStart_toStartOf="@+id/QSRepair"
@@ -122,19 +144,22 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:clickable="true"
+                    android:contentDescription="@string/service_installation"
+                    android:focusable="true"
                     android:src="@drawable/wind"
                     app:backgroundTint="@color/white"
                     app:fabSize="normal"
                     app:layout_constraintEnd_toStartOf="@+id/QSMaintenance"
                     app:layout_constraintStart_toEndOf="@+id/QSRepair"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    app:layout_constraintTop_toTopOf="@+id/QSCleaning"
+                    tools:ignore="AccessibilityViewType" />
 
                 <TextView
                     android:id="@+id/textInstall"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:text="Installation"
+                    android:text="@string/service_installation"
                     android:textSize="12sp"
                     app:layout_constraintEnd_toEndOf="@+id/QSInstallation"
                     app:layout_constraintStart_toStartOf="@+id/QSInstallation"
@@ -145,19 +170,22 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:clickable="true"
+                    android:contentDescription="@string/service_maintenance"
+                    android:focusable="true"
                     android:src="@drawable/nut"
                     app:backgroundTint="@color/white"
                     app:fabSize="normal"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toEndOf="@+id/QSInstallation"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    app:layout_constraintTop_toTopOf="@+id/QSCleaning"
+                    tools:ignore="AccessibilityViewType" />
 
                 <TextView
                     android:id="@+id/textMaintenance"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:text="Maintenance"
+                    android:text="@string/service_maintenance"
                     android:textSize="12sp"
                     app:layout_constraintEnd_toEndOf="@+id/QSMaintenance"
                     app:layout_constraintStart_toStartOf="@+id/QSMaintenance"
@@ -167,27 +195,12 @@
         </androidx.cardview.widget.CardView>
 
         <TextView
-            android:id="@+id/quickserve"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Quick Services"
-            android:textColor="#215531"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.058"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="0.226" />
-
-        <TextView
             android:id="@+id/workloadTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="20dp"
             android:layout_marginTop="20dp"
-            android:text="Workload Status"
+            android:text="@string/workload_status"
             android:textColor="#215531"
             android:textSize="20sp"
             android:textStyle="bold"
@@ -198,7 +211,7 @@
             android:id="@+id/workloadSubtitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Overview of service activity"
+            android:text="@string/workload_subtitle"
             android:textColor="#000000"
             android:textSize="12sp"
             android:textStyle="italic"
@@ -227,7 +240,7 @@
                     android:id="@+id/recentHeader"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Recent Activity"
+                    android:text="@string/recent_activity"
                     android:textColor="#000000"
                     android:textSize="18sp"
                     android:textStyle="bold"
@@ -249,10 +262,11 @@
                 <TextView
                     android:id="@+id/seeMore"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_height="48dp"
+                    android:gravity="center_vertical"
                     android:layout_marginTop="8dp"
-                    android:text="See more"
-                    android:textColor="#BDBDBD"
+                    android:text="@string/see_more"
+                    android:textColor="#616161"
                     android:textSize="12sp"
                     android:textStyle="italic"
                     app:layout_constraintBottom_toBottomOf="parent"
@@ -268,7 +282,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="20dp"
             android:layout_marginTop="26dp"
-            android:text="Employee Overview"
+            android:text="@string/employee_overview"
             android:textColor="#215531"
             android:textSize="20sp"
             android:textStyle="bold"
@@ -280,7 +294,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="20dp"
-            android:text="Key Metrics"
+            android:text="@string/key_metrics"
             android:textColor="#000000"
             android:textSize="12sp"
             android:textStyle="italic"
@@ -303,7 +317,7 @@
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
-                android:layout_height="249dp"
+                android:layout_height="wrap_content"
                 android:background="@color/white"
                 android:padding="16dp">
 
@@ -311,7 +325,7 @@
                     android:id="@+id/chartMonth"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="December 2025"
+                    android:text="@string/chart_month"
                     android:textColor="#000000"
                     android:textSize="14sp"
                     android:textStyle="bold"
@@ -319,7 +333,6 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
 
-                <!-- Donut Chart UI -->
                 <FrameLayout
                     android:id="@+id/chartContainer"
                     android:layout_width="150dp"
@@ -343,7 +356,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center"
-                        android:text="75%"
+                        android:text="@string/chart_percentage"
                         android:textColor="#000000"
                         android:textSize="20sp"
                         android:textStyle="bold" />
@@ -361,8 +374,8 @@
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_columnWeight="1"
                         android:layout_margin="4dp"
+                        android:layout_columnWeight="1"
                         android:gravity="center_vertical"
                         android:orientation="horizontal">
 
@@ -375,15 +388,15 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="8dp"
-                            android:text="Total Employees"
+                            android:text="@string/legend_total_emp"
                             android:textSize="11sp" />
                     </LinearLayout>
 
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_columnWeight="1"
                         android:layout_margin="4dp"
+                        android:layout_columnWeight="1"
                         android:gravity="center_vertical"
                         android:orientation="horizontal">
 
@@ -396,15 +409,15 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="8dp"
-                            android:text="On Duty"
+                            android:text="@string/legend_on_duty"
                             android:textSize="11sp" />
                     </LinearLayout>
 
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_columnWeight="1"
                         android:layout_margin="4dp"
+                        android:layout_columnWeight="1"
                         android:gravity="center_vertical"
                         android:orientation="horizontal">
 
@@ -417,15 +430,15 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="8dp"
-                            android:text="New This Month"
+                            android:text="@string/legend_new"
                             android:textSize="11sp" />
                     </LinearLayout>
 
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_columnWeight="1"
                         android:layout_margin="4dp"
+                        android:layout_columnWeight="1"
                         android:gravity="center_vertical"
                         android:orientation="horizontal">
 
@@ -438,7 +451,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="8dp"
-                            android:text="On Leave"
+                            android:text="@string/legend_on_leave"
                             android:textSize="11sp" />
                     </LinearLayout>
 
@@ -446,7 +459,6 @@
 
             </androidx.constraintlayout.widget.ConstraintLayout>
         </androidx.cardview.widget.CardView>
-
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
