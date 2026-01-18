@@ -1,5 +1,6 @@
 package app.hub.common;
 
+import app.hub.ForgotPasswordActivity;
 import app.hub.R;
 import app.hub.api.ApiClient;
 import app.hub.api.ApiService;
@@ -174,6 +175,9 @@ public class MainActivity extends AppCompatActivity {
             loginButton.setOnClickListener(v -> performLogin());
         }
 
+        // Setup Forgot Password button
+        setupForgotPasswordButton();
+        
         // Setup Google Sign-In
         setupGoogleSignIn();
         
@@ -759,6 +763,16 @@ public class MainActivity extends AppCompatActivity {
 			.setPositiveButton("OK", null)
 			.show();
 	}
+
+    private void setupForgotPasswordButton() {
+        TextView forgotPasswordBtn = findViewById(R.id.forgotpassbtn);
+        if (forgotPasswordBtn != null) {
+            forgotPasswordBtn.setOnClickListener(v -> {
+                Intent intent = new Intent(this, ForgotPasswordActivity.class);
+                startActivity(intent);
+            });
+        }
+    }
 
 	/**
 	 * Parse error response from server

@@ -59,6 +59,9 @@
         <activity
             android:name=".common.RegisterActivity"
             android:exported="false" />
+        <activity
+            android:name=".ForgotPasswordActivity"
+            android:exported="false" />
         
         <!-- Facebook Login -->
         <meta-data 

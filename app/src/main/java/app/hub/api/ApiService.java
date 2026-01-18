@@ -42,6 +42,9 @@ public interface ApiService {
     @POST("api/v1/set-initial-password")
     Call<SetInitialPasswordResponse> setInitialPassword(@Header("Authorization") String token, @Body SetInitialPasswordRequest request);
 
+    @POST("api/v1/reset-password")
+    Call<ResetPasswordResponse> resetPassword(@Body ResetPasswordRequest request);
+
     @GET("api/v1/user")
     Call<UserResponse> getUser(@Header("Authorization") String token);
 
