@@ -21,7 +21,7 @@ public class ApiClient {
     // Example: http://192.168.1.100:8000/
     // Note: Trailing slash is required when endpoints don't start with /
     // Online backend on Railway - works from anywhere without PC connection
-    private static final String BASE_URL = "https://k0cn5non.up.railway.app/api/v1/";
+    private static final String BASE_URL = "https://ashcolweb-production.up.railway.app/";
     
     private static Retrofit retrofit = null;
 
