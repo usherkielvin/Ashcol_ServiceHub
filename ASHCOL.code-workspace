@@ -10,6 +10,7 @@
 	"settings": {
 		"java.import.gradle.wrapper.enabled": true,
 		"java.import.gradle.enabled": true,
-		"java.configuration.updateBuildConfiguration": "interactive"
+		"java.configuration.updateBuildConfiguration": "interactive",
+		"powershell.cwd": "Ashcol_Web"
 	}
 }
