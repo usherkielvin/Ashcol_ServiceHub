@@ -31,11 +31,12 @@ public class ApiClient {
             HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor();
             loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
             
-            // Create OkHttpClient with increased timeouts and logging
+            // Create OkHttpClient with increased timeouts for Railway proxy + Brevo delays
             OkHttpClient okHttpClient = new OkHttpClient.Builder()
-                    .connectTimeout(30, TimeUnit.SECONDS)      // Connection timeout: 30 seconds
-                    .readTimeout(30, TimeUnit.SECONDS)         // Read timeout: 30 seconds
-                    .writeTimeout(30, TimeUnit.SECONDS)        // Write timeout: 30 seconds
+                    .connectTimeout(60, TimeUnit.SECONDS)      // Connection timeout: 60 seconds (Railway proxy can be slow)
+                    .readTimeout(60, TimeUnit.SECONDS)         // Read timeout: 60 seconds (Railway + Brevo response time)
+                    .writeTimeout(60, TimeUnit.SECONDS)        // Write timeout: 60 seconds
+                    .retryOnConnectionFailure(true)            // Auto-retry on connection failure
                     .addInterceptor(loggingInterceptor)
                     .build();
             
