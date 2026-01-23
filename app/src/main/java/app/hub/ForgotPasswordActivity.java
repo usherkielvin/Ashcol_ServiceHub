@@ -97,7 +97,7 @@ public class ForgotPasswordActivity extends AppCompatActivity {
 
         ApiService apiService = ApiClient.getApiService();
         VerificationRequest request = new VerificationRequest(email);
-        Call<VerificationResponse> call = apiService.sendVerificationCode(request);
+        Call<VerificationResponse> call = apiService.forgotPassword(request);
 
         call.enqueue(new Callback<VerificationResponse>() {
             @Override
