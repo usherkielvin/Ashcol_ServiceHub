@@ -181,7 +181,7 @@
             android:insetBottom="0dp"
             android:minHeight="48dp"
             android:paddingStart="8dp"
-            android:text="@string/profile_personal_info"
+            android:text="Account Management"
             android:textAlignment="viewStart"
             android:textAllCaps="false"
             android:textColor="#000000"

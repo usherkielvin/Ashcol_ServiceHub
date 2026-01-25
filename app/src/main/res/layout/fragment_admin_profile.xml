@@ -20,9 +20,9 @@
             android:layout_gravity="center_horizontal"
             android:layout_marginBottom="32dp"
             android:fontFamily="sans-serif-black"
-            android:text="@string/profile_title"
+            android:text="Profile"
             android:textColor="#1A4330"
-            android:textSize="24sp"
+            android:textSize="28sp"
             android:textStyle="bold" />
 
         <androidx.constraintlayout.widget.ConstraintLayout
@@ -35,30 +35,16 @@
                 android:id="@+id/img_profile"
                 android:layout_width="120dp"
                 android:layout_height="120dp"
-                android:contentDescription="@string/desc_profile_picture"
-                android:padding="4dp"
+                android:padding="2dp"
                 android:scaleType="centerCrop"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:shapeAppearanceOverlay="@style/CircleImage"
-                app:srcCompat="@mipmap/ic_launchericons_round"
-                tools:background="#DDDDDD" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_edit_photo"
-                style="@style/Widget.Material3.Button.IconButton"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:contentDescription="@string/desc_edit_photo"
-                app:backgroundTint="#00B050"
-                app:icon="@android:drawable/ic_menu_edit"
-                app:iconSize="20dp"
-                app:iconTint="#FFFFFF"
-                app:layout_constraintBottom_toBottomOf="@id/img_profile"
-                app:layout_constraintEnd_toEndOf="@id/img_profile"
-                app:shapeAppearanceOverlay="@style/CircleImage" />
+                app:srcCompat="@drawable/ash"
+                app:strokeColor="#E0E0E0"
+                app:strokeWidth="1dp" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -68,33 +54,43 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:fontFamily="sans-serif-medium"
-            android:text="@string/profile_default_name"
+            android:text="Sakura"
             android:textColor="#1A4330"
-            android:textSize="20sp"
+            android:textSize="22sp"
             android:textStyle="bold" />
 
         <TextView
-            android:id="@+id/tv_username"
+            android:id="@+id/tv_role"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:text="Admin"
+            android:textColor="#1A4330"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tv_location"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:layout_marginBottom="32dp"
-            android:text="email@mail.com"
-            android:textColor="#666666"
-            android:textSize="14sp" />
+            android:text="Silang, Cavite"
+            android:textColor="#A0A0A0"
+            android:textSize="12sp" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
-            android:text="@string/profile_preferences"
+            android:layout_marginBottom="12dp"
+            android:text="Preferences"
             android:textColor="#386A4E"
             android:textSize="14sp"
             android:textStyle="bold" />
 
-        <!-- Appearance Button -->
+        <!-- Display Button -->
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_appearance"
+            android:id="@+id/btn_display"
             style="@style/Widget.Material3.Button.TextButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -102,12 +98,12 @@
             android:insetBottom="0dp"
             android:minHeight="48dp"
             android:paddingStart="8dp"
-            android:text="@string/profile_appearance"
+            android:text="Display"
             android:textAlignment="viewStart"
             android:textAllCaps="false"
-            android:textColor="#000000"
+            android:textColor="#1A4330"
             android:textSize="16sp"
-            app:icon="@drawable/ic_palette"
+            app:icon="@drawable/appeaar"
             app:iconGravity="start"
             app:iconPadding="16dp"
             app:iconSize="24dp"
@@ -123,10 +119,10 @@
             android:insetBottom="0dp"
             android:minHeight="48dp"
             android:paddingStart="8dp"
-            android:text="@string/profile_notifications"
+            android:text="Notifications"
             android:textAlignment="viewStart"
             android:textAllCaps="false"
-            android:textColor="#000000"
+            android:textColor="#1A4330"
             android:textSize="16sp"
             app:icon="@drawable/ic_notifications"
             app:iconGravity="start"
@@ -144,10 +140,10 @@
             android:insetBottom="0dp"
             android:minHeight="48dp"
             android:paddingStart="8dp"
-            android:text="@string/profile_language"
+            android:text="Language"
             android:textAlignment="viewStart"
             android:textAllCaps="false"
-            android:textColor="#000000"
+            android:textColor="#1A4330"
             android:textSize="16sp"
             app:icon="@drawable/ic_language"
             app:iconGravity="start"
@@ -158,15 +154,15 @@
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="16dp"
             android:layout_marginBottom="16dp"
             android:background="#E0E0E0" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
-            android:text="@string/profile_general"
+            android:layout_marginBottom="12dp"
+            android:text="General"
             android:textColor="#386A4E"
             android:textSize="14sp"
             android:textStyle="bold" />
@@ -181,10 +177,10 @@
             android:insetBottom="0dp"
             android:minHeight="48dp"
             android:paddingStart="8dp"
-            android:text="@string/profile_personal_info"
+            android:text="Personal Information"
             android:textAlignment="viewStart"
             android:textAllCaps="false"
-            android:textColor="#000000"
+            android:textColor="#1A4330"
             android:textSize="16sp"
             app:icon="@drawable/ic_person"
             app:iconGravity="start"
@@ -194,7 +190,7 @@
 
         <!-- Password Button -->
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_password_privacy"
+            android:id="@+id/btn_password"
             style="@style/Widget.Material3.Button.TextButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -202,10 +198,10 @@
             android:insetBottom="0dp"
             android:minHeight="48dp"
             android:paddingStart="8dp"
-            android:text="@string/profile_password_privacy"
+            android:text="Password"
             android:textAlignment="viewStart"
             android:textAllCaps="false"
-            android:textColor="#000000"
+            android:textColor="#1A4330"
             android:textSize="16sp"
             app:icon="@drawable/ic_lock"
             app:iconGravity="start"
@@ -213,9 +209,9 @@
             app:iconSize="24dp"
             app:iconTint="#1A4330" />
 
-        <!-- Payroll Button -->
+        <!-- History Button -->
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_payroll"
+            android:id="@+id/btn_history"
             style="@style/Widget.Material3.Button.TextButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -223,12 +219,12 @@
             android:insetBottom="0dp"
             android:minHeight="48dp"
             android:paddingStart="8dp"
-            android:text="@string/profile_payroll"
+            android:text="History"
             android:textAlignment="viewStart"
             android:textAllCaps="false"
-            android:textColor="#000000"
+            android:textColor="#1A4330"
             android:textSize="16sp"
-            app:icon="@drawable/ic_wallet"
+            app:icon="@drawable/records"
             app:iconGravity="start"
             app:iconPadding="16dp"
             app:iconSize="24dp"
@@ -237,13 +233,13 @@
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="16dp"
             android:layout_marginBottom="16dp"
             android:background="#E0E0E0" />
 
-        <!-- Help Button -->
+        <!-- About us Button -->
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_help"
+            android:id="@+id/btn_about"
             style="@style/Widget.Material3.Button.TextButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -251,10 +247,10 @@
             android:insetBottom="0dp"
             android:minHeight="48dp"
             android:paddingStart="8dp"
-            android:text="@string/profile_help_feedback"
+            android:text="About us"
             android:textAlignment="viewStart"
             android:textAllCaps="false"
-            android:textColor="#000000"
+            android:textColor="#1A4330"
             android:textSize="16sp"
             app:icon="@drawable/ic_help"
             app:iconGravity="start"
@@ -272,10 +268,10 @@
             android:insetBottom="0dp"
             android:minHeight="48dp"
             android:paddingStart="8dp"
-            android:text="@string/profile_sign_out"
+            android:text="Sign Out"
             android:textAlignment="viewStart"
             android:textAllCaps="false"
-            android:textColor="#000000"
+            android:textColor="#1A4330"
             android:textSize="16sp"
             app:icon="@drawable/ic_exit"
             app:iconGravity="start"

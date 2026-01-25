@@ -33,6 +33,9 @@ public interface ApiService {
     @POST("api/v1/verify-email")
     Call<VerifyEmailResponse> verifyEmail(@Body VerifyEmailRequest request);
 
+    @POST("api/v1/forgot-password")
+    Call<VerificationResponse> forgotPassword(@Body VerificationRequest request);
+
     @POST("api/v1/logout")
     Call<LogoutResponse> logout(@Header("Authorization") String token);
 
