@@ -20,8 +20,9 @@ public class ApiClient {
     // For physical device: http://YOUR_COMPUTER_IP:8000/
     // Example: http://192.168.1.100:8000/
     // Note: Trailing slash is required when endpoints don't start with /
-    // Online backend on Railway - works from anywhere without PC connection
-    private static final String BASE_URL = "https://ashcolweb-production.up.railway.app/";
+    // LOCAL DEVELOPMENT - Using local Laravel server
+    // Make sure to run: php artisan serve --host=0.0.0.0 --port=8000
+    private static final String BASE_URL = "http://10.0.2.2:8000/";
     
     private static Retrofit retrofit = null;
 
@@ -31,11 +32,11 @@ public class ApiClient {
             HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor();
             loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
             
-            // Create OkHttpClient with increased timeouts for Railway proxy + Brevo delays
+            // Create OkHttpClient with timeouts for local development
             OkHttpClient okHttpClient = new OkHttpClient.Builder()
-                    .connectTimeout(60, TimeUnit.SECONDS)      // Connection timeout: 60 seconds (Railway proxy can be slow)
-                    .readTimeout(60, TimeUnit.SECONDS)         // Read timeout: 60 seconds (Railway + Brevo response time)
-                    .writeTimeout(60, TimeUnit.SECONDS)        // Write timeout: 60 seconds
+                    .connectTimeout(30, TimeUnit.SECONDS)      // Connection timeout: 30 seconds
+                    .readTimeout(30, TimeUnit.SECONDS)         // Read timeout: 30 seconds
+                    .writeTimeout(30, TimeUnit.SECONDS)        // Write timeout: 30 seconds
                     .retryOnConnectionFailure(true)            // Auto-retry on connection failure
                     .addInterceptor(loggingInterceptor)
                     .build();
