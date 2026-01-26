@@ -188,6 +188,15 @@ public class MainActivity extends AppCompatActivity {
         setupSocialLoginButtons();
     }
 
+    private void signOutFromGoogle() {
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestEmail()
+                .requestProfile()
+                .build();
+        GoogleSignInClient googleSignInClient = GoogleSignIn.getClient(this, gso);
+        googleSignInClient.signOut();
+    }
+
     private void setupFacebookLogin() {
         facebookCallbackManager = CallbackManager.Factory.create();
         LoginManager.getInstance().registerCallback(facebookCallbackManager,

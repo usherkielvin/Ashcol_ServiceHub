@@ -45,6 +45,10 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+
 public class UserProfileFragment extends Fragment {
 
     private TokenManager tokenManager;
@@ -424,19 +428,33 @@ public class UserProfileFragment extends Fragment {
             call.enqueue(new Callback<LogoutResponse>() {
                 @Override
                	public void onResponse(@NonNull Call<LogoutResponse> call, @NonNull Response<LogoutResponse> response) {
+                    signOutFromGoogle();
                     clearUserData();
                     navigateToLogin();
                 }
 
                 @Override
                 public void onFailure(@NonNull Call<LogoutResponse> call, @NonNull Throwable t) {
+                    signOutFromGoogle();
                     clearUserData();
                     navigateToLogin();
                 }
             });
         } else {
+            signOutFromGoogle();
             clearUserData();
             navigateToLogin();
+        }
+    }
+
+    private void signOutFromGoogle() {
+        if (getActivity() != null) {
+            GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                    .requestEmail()
+                    .requestProfile()
+                    .build();
+            GoogleSignInClient googleSignInClient = GoogleSignIn.getClient(getActivity(), gso);
+            googleSignInClient.signOut();
         }
     }
 

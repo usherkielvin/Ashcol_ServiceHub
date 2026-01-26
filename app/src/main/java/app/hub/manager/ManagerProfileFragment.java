@@ -18,6 +18,17 @@ import app.hub.common.MainActivity;
 import app.hub.user.ChangePasswordFragment;
 import app.hub.util.TokenManager;
 
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+
+import app.hub.api.ApiClient;
+import app.hub.api.ApiService;
+import app.hub.api.LogoutResponse;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
 public class ManagerProfileFragment extends Fragment {
 
     private TokenManager tokenManager;
@@ -45,13 +56,7 @@ public class ManagerProfileFragment extends Fragment {
 
         MaterialButton logoutButton = view.findViewById(R.id.logoutButton);
         logoutButton.setOnClickListener(v -> {
-            clearUserData();
-            Intent intent = new Intent(getActivity(), MainActivity.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            startActivity(intent);
-            if (getActivity() != null) {
-                getActivity().finish();
-            }
+            logout();
         });
 
         MaterialButton passwordPrivacyButton = view.findViewById(R.id.btn_password_privacy);
@@ -68,6 +73,52 @@ public class ManagerProfileFragment extends Fragment {
                 .addToBackStack(null)
                 .commit();
         }
+    }
+
+    private void logout() {
+        String token = tokenManager.getToken();
+        if (token != null) {
+            ApiService apiService = ApiClient.getApiService();
+            Call<LogoutResponse> call = apiService.logout(token);
+            call.enqueue(new Callback<LogoutResponse>() {
+                @Override
+                public void onResponse(@NonNull Call<LogoutResponse> call, @NonNull Response<LogoutResponse> response) {
+                    signOutFromGoogle();
+                    clearUserData();
+                    navigateToLogin();
+                }
+
+                @Override
+                public void onFailure(@NonNull Call<LogoutResponse> call, @NonNull Throwable t) {
+                    signOutFromGoogle();
+                    clearUserData();
+                    navigateToLogin();
+                }
+            });
+        } else {
+            signOutFromGoogle();
+            clearUserData();
+            navigateToLogin();
+        }
+    }
+
+    private void signOutFromGoogle() {
+        if (getActivity() != null) {
+            GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                    .requestEmail()
+                    .requestProfile()
+                    .build();
+            GoogleSignInClient googleSignInClient = GoogleSignIn.getClient(getActivity(), gso);
+            googleSignInClient.signOut();
+        }
+    }
+
+    private void navigateToLogin() {
+        if (getActivity() == null) return;
+        Intent intent = new Intent(getActivity(), MainActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        getActivity().finish();
     }
 
     private void clearUserData() {

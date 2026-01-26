@@ -32,6 +32,12 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+
+import app.hub.api.LogoutResponse;
+
 public class ManagerSettingsFragment extends Fragment {
 
     private TokenManager tokenManager;
@@ -61,10 +67,7 @@ public class ManagerSettingsFragment extends Fragment {
         Button logoutButton = view.findViewById(R.id.logoutButton);
         if (logoutButton != null) {
             logoutButton.setOnClickListener(v -> {
-                clearUserData();
-                Intent intent = new Intent(getActivity(), MainActivity.class);
-                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                startActivity(intent);
+                logout();
             });
         }
     }
@@ -218,6 +221,52 @@ public class ManagerSettingsFragment extends Fragment {
         } else {
             Toast.makeText(getContext(), "Failed to change password. Please try again.", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    private void logout() {
+        String token = tokenManager.getToken();
+        if (token != null) {
+            ApiService apiService = ApiClient.getApiService();
+            Call<LogoutResponse> call = apiService.logout(token);
+            call.enqueue(new Callback<LogoutResponse>() {
+                @Override
+                public void onResponse(@NonNull Call<LogoutResponse> call, @NonNull Response<LogoutResponse> response) {
+                    signOutFromGoogle();
+                    clearUserData();
+                    navigateToLogin();
+                }
+
+                @Override
+                public void onFailure(@NonNull Call<LogoutResponse> call, @NonNull Throwable t) {
+                    signOutFromGoogle();
+                    clearUserData();
+                    navigateToLogin();
+                }
+            });
+        } else {
+            signOutFromGoogle();
+            clearUserData();
+            navigateToLogin();
+        }
+    }
+
+    private void signOutFromGoogle() {
+        if (getActivity() != null) {
+            GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                    .requestEmail()
+                    .requestProfile()
+                    .build();
+            GoogleSignInClient googleSignInClient = GoogleSignIn.getClient(getActivity(), gso);
+            googleSignInClient.signOut();
+        }
+    }
+
+    private void navigateToLogin() {
+        if (getActivity() == null) return;
+        Intent intent = new Intent(getActivity(), MainActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        getActivity().finish();
     }
 
     private void clearUserData() {
