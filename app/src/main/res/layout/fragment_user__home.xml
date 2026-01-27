@@ -28,7 +28,7 @@
             android:layout_marginTop="32dp"
             android:padding="2dp"
             android:scaleType="centerCrop"
-       
+            android:src="@drawable/ic_profile"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:shapeAppearanceOverlay="@style/ShapeAppearance.ServiceHub.Circle"
@@ -40,14 +40,14 @@
             android:layout_width="120dp"
             android:layout_height="50dp"
             android:layout_marginTop="32dp"
-            android:src="@drawable/ashcol_logo"
+            android:src="@drawable/ash"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnNotification"
-            style="@style/Widget.Material3.Button.Icon"
+            style="@style/BottomNavText"
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:layout_marginTop="32dp"

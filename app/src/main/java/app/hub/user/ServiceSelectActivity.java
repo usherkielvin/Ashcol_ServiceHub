@@ -54,23 +54,23 @@ public class ServiceSelectActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_service_select);
+        setContentView(R.layout.fragment_user_create_ticket);
 
-        descriptionInput = findViewById(R.id.descriptionInput);
-        addressInput = findViewById(R.id.addressInput);
-        contactInput = findViewById(R.id.contactInput);
-        createTicketButton = findViewById(R.id.createTicketButton);
-        uploadImageButton = findViewById(R.id.uploadImageButton);
-        imagePreview = findViewById(R.id.imagePreview);
-        serviceTypeHeader = findViewById(R.id.serviceTypeHeader);
+//        descriptionInput = findViewById(R.id.descriptionInput);
+//        addressInput = findViewById(R.id.addressInput);
+//        contactInput = findViewById(R.id.contactInput);
+//        createTicketButton = findViewById(R.id.createTicketButton);
+//        uploadImageButton = findViewById(R.id.uploadImageButton);
+//        imagePreview = findViewById(R.id.imagePreview);
+//        serviceTypeHeader = findViewById(R.id.serviceTypeHeader);
         tokenManager = new TokenManager(this);
-
-        // Get the selected service type from the intent
-        String serviceType = getIntent().getStringExtra("SERVICE_TYPE");
-        serviceTypeHeader.setText("Service Type: " + serviceType);
-
-        uploadImageButton.setOnClickListener(v -> selectImage());
-        createTicketButton.setOnClickListener(v -> createTicket());
+//
+//        // Get the selected service type from the intent
+//        String serviceType = getIntent().getStringExtra("SERVICE_TYPE");
+//        serviceTypeHeader.setText("Service Type: " + serviceType);
+//
+//        uploadImageButton.setOnClickListener(v -> selectImage());
+//        createTicketButton.setOnClickListener(v -> createTicket());
     }
 
     private void selectImage() {

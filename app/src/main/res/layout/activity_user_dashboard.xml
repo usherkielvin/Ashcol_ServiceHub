@@ -11,6 +11,26 @@
         android:layout_height="match_parent">
 
         <!-- Floating Indicator View -->
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fab_chatbot"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="26dp"
+            android:background="#FD0000"
+            android:contentDescription="@string/chatbot_button_description"
+            android:src="@drawable/ic_aichatbot"
+            app:backgroundTint="#00FF4141"
+            app:layout_constraintBottom_toBottomOf="@+id/fragmentContainerView"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_dodgeInsetEdges="bottom"
+            app:layout_gravity="bottom|end"
+            app:maxImageSize="56dp"
+            app:tint="@null"
+            app:elevation="0dp"
+            app:pressedTranslationZ="0dp"
+         />
+
         <androidx.fragment.app.FragmentContainerView
             android:id="@+id/fragmentContainerView"
             android:layout_width="0dp"
@@ -43,8 +63,8 @@
             android:paddingBottom="8dp"
             app:elevation="0dp"
             app:itemActiveIndicatorStyle="@null"
-            app:itemIconTint="@color/nav_item_color_state"
             app:itemIconSize="24dp"
+            app:itemIconTint="@color/nav_item_color_state"
             app:itemRippleColor="#00FFFFFF"
             app:itemTextColor="@color/nav_item_color_state"
             app:labelVisibilityMode="labeled"
@@ -74,16 +94,5 @@
 
         app:shapeAppearanceOverlay="@style/ShapeAppearance.ServiceHub.Circle"
         app:tint="@color/white" />
-
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fab_chatbot"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="16dp"
-        android:contentDescription="@string/chatbot_button_description"
-        android:src="@drawable/ic_chat"
-        app:layout_dodgeInsetEdges="bottom"
-        app:layout_gravity="bottom|end"
-        android:layout_marginBottom="90dp" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

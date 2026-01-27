@@ -50,16 +50,7 @@ public class UserCreateTicketFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        titleInput = view.findViewById(R.id.titleInput);
-        descriptionInput = view.findViewById(R.id.descriptionInput);
-        addressInput = view.findViewById(R.id.addressInput);
-        contactInput = view.findViewById(R.id.contactInput);
-        titleInputLayout = view.findViewById(R.id.titleInputLayout);
-        descriptionInputLayout = view.findViewById(R.id.descriptionInputLayout);
-        addressInputLayout = view.findViewById(R.id.addressInputLayout);
-        contactInputLayout = view.findViewById(R.id.contactInputLayout);
-        serviceTypeSpinner = view.findViewById(R.id.serviceTypeSpinner);
-        createTicketButton = view.findViewById(R.id.createTicketButton);
+
         tokenManager = new TokenManager(getContext());
 
         // Create an ArrayAdapter using the string array and a default spinner layout

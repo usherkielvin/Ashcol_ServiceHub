@@ -177,45 +177,45 @@ public class DashboardActivity extends AppCompatActivity {
 
     private void setupFab(FloatingActionButton fab) {
         if (fab == null) return;
-        fab.setOnTouchListener(new View.OnTouchListener() {
-            private float initialX, initialY;
-            private float initialTouchX, initialTouchY;
-
-            @Override
-            public boolean onTouch(View view, MotionEvent event) {
-                ViewGroup parentView = (ViewGroup) view.getParent();
-                switch (event.getActionMasked()) {
-                    case MotionEvent.ACTION_DOWN:
-                        initialX = view.getX();
-                        initialY = view.getY();
-                        initialTouchX = event.getRawX();
-                        initialTouchY = event.getRawY();
-                        return true;
-
-                    case MotionEvent.ACTION_MOVE:
-                        float newX = initialX + (event.getRawX() - initialTouchX);
-                        float newY = initialY + (event.getRawY() - initialTouchY);
-                        newX = Math.max(0, Math.min(newX, parentView.getWidth() - view.getWidth()));
-                        newY = Math.max(0, Math.min(newY, parentView.getHeight() - view.getHeight()));
-                        view.setY(newY);
-                        view.setX(newX);
-                        return true;
-
-                    case MotionEvent.ACTION_UP:
-                        float endX = event.getRawX();
-                        float endY = event.getRawY();
-                        if (isAClick(initialTouchX, endX, initialTouchY, endY)) {
-                            view.performClick();
-                        } else {
-                            float center = parentView.getWidth() / 2f;
-                            float finalX = view.getX() < center - view.getWidth() / 2f ? 0 : parentView.getWidth() - view.getWidth();
-                            ObjectAnimator.ofFloat(view, "x", view.getX(), finalX).setDuration(200).start();
-                        }
-                        return true;
-                }
-                return false;
-            }
-        });
+//        fab.setOnTouchListener(new View.OnTouchListener() {
+//            private float initialX, initialY;
+//            private float initialTouchX, initialTouchY;
+//
+//            @Override
+//            public boolean onTouch(View view, MotionEvent event) {
+//                ViewGroup parentView = (ViewGroup) view.getParent();
+//                switch (event.getActionMasked()) {
+//                    case MotionEvent.ACTION_DOWN:
+//                        initialX = view.getX();
+//                        initialY = view.getY();
+//                        initialTouchX = event.getRawX();
+//                        initialTouchY = event.getRawY();
+//                        return true;
+//
+//                    case MotionEvent.ACTION_MOVE:
+//                        float newX = initialX + (event.getRawX() - initialTouchX);
+//                        float newY = initialY + (event.getRawY() - initialTouchY);
+//                        newX = Math.max(0, Math.min(newX, parentView.getWidth() - view.getWidth()));
+//                        newY = Math.max(0, Math.min(newY, parentView.getHeight() - view.getHeight()));
+//                        view.setY(newY);
+//                        view.setX(newX);
+//                        return true;
+//
+//                    case MotionEvent.ACTION_UP:
+//                        float endX = event.getRawX();
+//                        float endY = event.getRawY();
+//                        if (isAClick(initialTouchX, endX, initialTouchY, endY)) {
+//                            view.performClick();
+//                        } else {
+//                            float center = parentView.getWidth() / 2f;
+//                            float finalX = view.getX() < center - view.getWidth() / 2f ? 0 : parentView.getWidth() - view.getWidth();
+//                            ObjectAnimator.ofFloat(view, "x", view.getX(), finalX).setDuration(200).start();
+//                        }
+//                        return true;
+//                }
+//                return false;
+//            }
+//        });
 
         fab.setOnClickListener(v -> showChatbotDialog());
     }
