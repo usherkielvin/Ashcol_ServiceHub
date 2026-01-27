@@ -7,8 +7,8 @@ Ashcol ServiceHub is a comprehensive service management platform with Android an
 ## Features
 
 ### Android App (Ashcol_ServiceHub)
-- User registration with location field
-- **Automatic location detection on app start**
+- User registration with automatic location detection
+- **Location auto-detected after splash screen** (no manual input)
 - Google Sign-In (requires configuration)
 - Facebook Sign-In (requires configuration)
 - Email verification
@@ -52,9 +52,9 @@ Ashcol ServiceHub is a comprehensive service management platform with Android an
 
 ### How Location Detection Works
 
-1. **When app starts:** MainActivity automatically requests location permission from the user
+1. **After splash screen:** MainActivity automatically requests location permission from the user
 2. **Permission Granted:** The app retrieves your current location
-3. **Auto Fill:** The location field in the registration form is automatically populated with the detected city
+3. **Auto Fill:** The location field in the registration form is automatically populated with the detected city (no manual input)
 4. **Location Storage:** Detected location is stored in SharedPreferences for future use
 
 ### Location Detection Logic
@@ -83,16 +83,16 @@ php artisan migrate
 
 This will add a `location` column to the `users` table.
 
-## API Endpoints
+### API Endpoints
 
 ### Authentication
-- `POST /api/v1/register` - User registration (now includes location field)
+- `POST /api/v1/register` - User registration (includes auto-detected location)
 - `POST /api/v1/login` - User login
 - `POST /api/v1/google-signin` - Google Sign-In
 - `POST /api/v1/facebook-signin` - Facebook Sign-In
 
 ### User Management
-- `GET /api/v1/user` - Get user profile (includes location)
+- `GET /api/v1/user` - Get user profile (includes auto-detected location)
 - `POST /api/v1/change-password` - Change password
 - `POST /api/v1/set-initial-password` - Set initial password for Google users
 
@@ -117,7 +117,7 @@ This will add a `location` column to the `users` table.
 - `email` - Email address
 - `password` - Hashed password
 - `role` - User role (admin, manager, staff, customer)
-- `location` - User location (optional)
+- `location` - Auto-detected user location (optional)
 - `phone` - Phone number (optional)
 - `profile_photo` - Profile photo path (optional)
 - `email_verified_at` - Email verification timestamp

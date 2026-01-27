@@ -52,7 +52,6 @@ public class RegisterActivity extends AppCompatActivity {
 	private String userLastName;
 	private String userName;
 	private String userPhone;
-	private String userLocation;
 	private String userPassword;
 	
 	// Track if user signed in with Google (skip OTP for Google users)
@@ -65,8 +64,8 @@ public class RegisterActivity extends AppCompatActivity {
 	// Views for activity_register.xml (Tell us step)
 	private View fragmentContainer;
 	private ConstraintLayout templateLayout;
-	private TextInputEditText firstNameInput, lastNameInput, usernameInput, phoneInput, locationInput;
-	private TextView fval, lval, uval, phoneVal, locationVal;
+	private TextInputEditText firstNameInput, lastNameInput, usernameInput, phoneInput;
+	private TextView fval, lval, uval, phoneVal;
 	private MaterialButton registerButton;
 
 	@Override
@@ -179,7 +178,6 @@ public class RegisterActivity extends AppCompatActivity {
 		lastNameInput = findViewById(R.id.lastNameInput);
 		usernameInput = findViewById(R.id.usernameInput);
 		phoneInput = findViewById(R.id.etPhone);
-		locationInput = findViewById(R.id.etLocation);
 
 		registerButton = findViewById(R.id.registerButton);
 
@@ -187,14 +185,6 @@ public class RegisterActivity extends AppCompatActivity {
 		lval = findViewById(R.id.lname_val);
 		uval = findViewById(R.id.Uname_val);
 		phoneVal = findViewById(R.id.phone_val);
-		locationVal = findViewById(R.id.location_val);
-
-		// Pre-fill location if detected
-		String detectedCity = tokenManager.getCurrentCity();
-		if (detectedCity != null && !detectedCity.isEmpty() && locationInput != null) {
-			locationInput.setText(detectedCity);
-			// Silent auto-fill - no toast to avoid interrupting user experience
-		}
 
 		// Hide validation messages initially
 		if (fval != null) fval.setVisibility(View.GONE);
@@ -253,19 +243,6 @@ public class RegisterActivity extends AppCompatActivity {
 				@Override
 				public void afterTextChanged(Editable s) {
 					validatePhone(s.toString());
-				}
-			});
-		}
-
-		if (locationInput != null) {
-			locationInput.addTextChangedListener(new TextWatcher() {
-				@Override
-				public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-				@Override
-				public void onTextChanged(CharSequence s, int start, int before, int count) {}
-				@Override
-				public void afterTextChanged(Editable s) {
-					validateLocation(s.toString());
 				}
 			});
 		}
@@ -371,25 +348,12 @@ public class RegisterActivity extends AppCompatActivity {
 		}
 	}
 
-	private void validateLocation(String location) {
-		if (locationVal == null) return;
-
-		if (location == null || location.isEmpty()) {
-			hideValidationError(locationVal);
-		} else if (location.length() < 2) {
-			showValidationError(locationVal, "Location too short");
-		} else {
-			hideValidationError(locationVal);
-		}
-	}
-
 	// Validate all fields in Tell Us form
 	private boolean validateTellUsForm() {
 		String firstName = getText(firstNameInput);
 		String lastName = getText(lastNameInput);
 		String username = getText(usernameInput);
 		String phone = getText(phoneInput);
-		String location = getText(locationInput);
 
 		boolean isValid = true;
 
@@ -416,14 +380,6 @@ public class RegisterActivity extends AppCompatActivity {
 			isValid = false;
 		} else if (getPhoneDigitCount(phone) < 10) {
 			showValidationError(phoneVal, "Phone 10 digits min");
-			isValid = false;
-		}
-
-		if (location.isEmpty()) {
-			showValidationError(locationVal, "Location required");
-			isValid = false;
-		} else if (location.length() < 2) {
-			showValidationError(locationVal, "Location too short");
 			isValid = false;
 		}
 
@@ -865,7 +821,6 @@ public class RegisterActivity extends AppCompatActivity {
 		String username = getUserName();
 		String password = getUserPassword();
 		String phone = getUserPhone() != null ? getUserPhone() : "";
-		String location = getUserLocation() != null ? getUserLocation() : "";
 
 		// Validate required fields
 		if (email == null || email.isEmpty()) {
@@ -892,10 +847,10 @@ public class RegisterActivity extends AppCompatActivity {
 		// Default role to "customer" for regular registration
 		String role = "customer";
 
-		Log.d(TAG, "Creating account with - Email: " + email + ", Username: " + username + ", Role: " + role + ", Location: " + location);
+		Log.d(TAG, "Creating account with - Email: " + email + ", Username: " + username + ", Role: " + role);
 		
 		ApiService apiService = ApiClient.getApiService();
-		RegisterRequest request = new RegisterRequest(username, firstName, lastName, email, phone, location, password, password, role);
+		RegisterRequest request = new RegisterRequest(username, firstName, lastName, email, phone, "", password, password, role); // Empty location - auto-detected by backend
 
 		Call<RegisterResponse> call = apiService.register(request);
 		call.enqueue(new Callback<>() {
@@ -997,8 +952,7 @@ public class RegisterActivity extends AppCompatActivity {
 		this.userLastName = lastName;
 		this.userName = username;
 		this.userPhone = phone;
-		this.userLocation = location;
-		Log.d(TAG, "Personal info set - Name: " + firstName + " " + lastName + ", Location: " + location);
+		Log.d(TAG, "Personal info set - Name: " + firstName + " " + lastName);
 	}
 
 	public void setUserPassword(String password) {
@@ -1033,10 +987,7 @@ public class RegisterActivity extends AppCompatActivity {
 		return userPhone;
 	}
 
-	@SuppressWarnings("unused")
-	public String getUserLocation() {
-		return userLocation;
-	}
+
 
 	@SuppressWarnings("unused")
 	public String getUserPassword() {
