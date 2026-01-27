@@ -11,6 +11,8 @@ import app.hub.api.SetInitialPasswordRequest;
 import app.hub.api.SetInitialPasswordResponse;
 import app.hub.api.RegisterRequest;
 import app.hub.api.RegisterResponse;
+import app.hub.api.UpdateProfileRequest;
+import app.hub.api.UserResponse;
 import app.hub.api.VerifyEmailResponse;
 import app.hub.user_emailOtp;
 import app.hub.util.TokenManager;
@@ -919,6 +921,11 @@ public class RegisterActivity extends AppCompatActivity {
 						}
 						
 						Log.d(TAG, "Account created successfully");
+						// Update location if detected
+						String detectedLocation = tokenManager.getCurrentCity();
+						if (detectedLocation != null && !detectedLocation.isEmpty()) {
+							updateLocation(detectedLocation);
+						}
 						// Navigate to Account Created fragment
 						showAccountCreatedFragment();
 					} else {
@@ -1161,4 +1168,58 @@ public class RegisterActivity extends AppCompatActivity {
 		});
 	}
 
+	private void updateLocation(String location) {
+		String token = tokenManager.getToken();
+		if (token == null || token.isEmpty()) {
+			Log.e(TAG, "No token available for location update");
+			return;
+		}
+		
+		// Get current user data to preserve other fields
+		ApiService apiService = ApiClient.getApiService();
+		Call<UserResponse> getUserCall = apiService.getUser(token);
+		getUserCall.enqueue(new Callback<UserResponse>() {
+			@Override
+			public void onResponse(@NonNull Call<UserResponse> call, @NonNull Response<UserResponse> response) {
+				if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
+					UserResponse.User currentUser = response.body().getData().getUser();
+					if (currentUser != null) {
+						// Update user profile with new location
+						UpdateProfileRequest updateRequest = new UpdateProfileRequest(
+								currentUser.getFirstName(),
+								currentUser.getLastName(),
+								currentUser.getPhone(),
+								location
+						);
+						
+						Call<UserResponse> updateCall = apiService.updateUser(token, updateRequest);
+						updateCall.enqueue(new Callback<UserResponse>() {
+							@Override
+							public void onResponse(@NonNull Call<UserResponse> call, @NonNull Response<UserResponse> response) {
+								if (response.isSuccessful() && response.body() != null) {
+									Log.d(TAG, "Location updated successfully: " + location);
+								} else {
+									Log.e(TAG, "Failed to update location: " + response.code() + " - " + (response.message() != null ? response.message() : "Unknown error"));
+								}
+							}
+
+							@Override
+							public void onFailure(@NonNull Call<UserResponse> call, @NonNull Throwable t) {
+								Log.e(TAG, "Failed to update location", t);
+							}
+						});
+					} else {
+						Log.e(TAG, "Current user data is null");
+					}
+				} else {
+					Log.e(TAG, "Failed to get current user data: " + response.code() + " - " + (response.message() != null ? response.message() : "Unknown error"));
+				}
+			}
+
+			@Override
+			public void onFailure(@NonNull Call<UserResponse> call, @NonNull Throwable t) {
+				Log.e(TAG, "Failed to get current user data", t);
+			}
+		});
+	}
 }

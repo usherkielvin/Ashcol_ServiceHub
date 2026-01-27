@@ -10,6 +10,8 @@ import app.hub.api.GoogleSignInRequest;
 import app.hub.api.GoogleSignInResponse;
 import app.hub.api.LoginRequest;
 import app.hub.api.LoginResponse;
+import app.hub.api.UpdateProfileRequest;
+import app.hub.api.UserResponse;
 import app.hub.admin.AdminDashboardActivity;
 import app.hub.employee.EmployeeDashboardActivity;
 import app.hub.manager.ManagerDashboardActivity;
@@ -1010,7 +1012,8 @@ public class MainActivity extends AppCompatActivity {
                         // Store in SharedPreferences
                         tokenManager.saveCurrentCity(city);
                         Log.d(TAG, "Detected city: " + city);
-                        // Silent success - no toast to avoid interrupting user experience
+                        // Update user's location in database
+                        updateLocation(city);
                     } else {
                         Log.d(TAG, "Reverse geocoding returned null or empty");
                     }
@@ -1025,6 +1028,64 @@ public class MainActivity extends AppCompatActivity {
         } catch (Exception e) {
             Log.e(TAG, "Error getting location", e);
         }
+    }
+    
+    private void updateLocation(String location) {
+        if (!tokenManager.isLoggedIn()) {
+            Log.d(TAG, "User not logged in, skipping location update");
+            return;
+        }
+        
+        String token = tokenManager.getToken();
+        if (token == null || token.isEmpty()) {
+            Log.e(TAG, "No token available for location update");
+            return;
+        }
+        
+        // Get current user data to preserve other fields
+        ApiService apiService = ApiClient.getApiService();
+        Call<UserResponse> getUserCall = apiService.getUser(token);
+        getUserCall.enqueue(new Callback<UserResponse>() {
+            @Override
+            public void onResponse(@NonNull Call<UserResponse> call, @NonNull Response<UserResponse> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
+                    UserResponse.User currentUser = response.body().getData().getUser();
+                    if (currentUser != null) {
+                        // Update user profile with new location
+                        UpdateProfileRequest updateRequest = new UpdateProfileRequest(
+                            currentUser.getFirstName(),
+                            currentUser.getLastName(),
+                            currentUser.getPhone(),
+                            location
+                        );
+                        
+                        Call<UserResponse> updateCall = apiService.updateUser(token, updateRequest);
+                        updateCall.enqueue(new Callback<UserResponse>() {
+                            @Override
+                            public void onResponse(@NonNull Call<UserResponse> call, @NonNull Response<UserResponse> response) {
+                                if (response.isSuccessful() && response.body() != null) {
+                                    Log.d(TAG, "Location updated successfully: " + location);
+                                } else {
+                                    Log.e(TAG, "Failed to update location: " + response.code() + " - " + (response.message() != null ? response.message() : "Unknown error"));
+                                }
+                            }
+
+                            @Override
+                            public void onFailure(@NonNull Call<UserResponse> call, @NonNull Throwable t) {
+                                Log.e(TAG, "Failed to update location", t);
+                            }
+                        });
+                    }
+                } else {
+                    Log.e(TAG, "Failed to get current user data: " + response.code() + " - " + (response.message() != null ? response.message() : "Unknown error"));
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<UserResponse> call, @NonNull Throwable t) {
+                Log.e(TAG, "Failed to get current user data", t);
+            }
+        });
     }
 
     // Reverse geocode latitude and longitude to get city name

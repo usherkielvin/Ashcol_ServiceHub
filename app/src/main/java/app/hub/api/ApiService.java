@@ -51,6 +51,9 @@ public interface ApiService {
     @GET("api/v1/user")
     Call<UserResponse> getUser(@Header("Authorization") String token);
 
+    @POST("api/v1/user/update")
+    Call<UserResponse> updateUser(@Header("Authorization") String token, @Body UpdateProfileRequest request);
+
     @POST("api/v1/chatbot")
     Call<ChatResponse> sendMessage(@Body ChatRequest request);
 
