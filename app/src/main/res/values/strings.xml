@@ -183,4 +183,9 @@
     <string name="legend_last_month">Last month</string>
     <string name="desc_logo" />
 
+    <string name="notifications_title">Notifications</string>
+    <string name="label_push_notification">Push Notification</string>
+    <string name="label_email_notification">Email Notification</string>
+    <string name="label_sms_notification">SMS Notification</string>
+
 </resources>

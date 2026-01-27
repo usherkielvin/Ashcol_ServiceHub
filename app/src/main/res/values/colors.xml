@@ -22,6 +22,8 @@
     <color name="app_green">#4CAF50</color> <color name="dark_gray_text">#212121</color>
     <color name="sub_text_gray">#757575</color>
 
+    <color name="apps_green">#1A4330</color> <color name="switch_thumb_green">#1A4330</color>
+    <color name="switch_track_green">#4D1A4330</color>
 
 
 </resources>
