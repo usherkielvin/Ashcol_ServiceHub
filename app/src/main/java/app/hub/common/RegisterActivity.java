@@ -189,10 +189,14 @@ public class RegisterActivity extends AppCompatActivity {
 		phoneVal = findViewById(R.id.phone_val);
 
 		// Auto-fill location if detected
-		String detectedCity = tokenManager.getCurrentCity();
-		if (detectedCity != null && !detectedCity.isEmpty() && locationInput != null) {
-			locationInput.setText(detectedCity);
-			Toast.makeText(this, "Location auto-detected: " + detectedCity, Toast.LENGTH_SHORT).show();
+		try {
+			String detectedCity = tokenManager.getCurrentCity();
+			if (detectedCity != null && !detectedCity.isEmpty() && locationInput != null) {
+				locationInput.setText(detectedCity);
+				Toast.makeText(this, "Location auto-detected: " + detectedCity, Toast.LENGTH_SHORT).show();
+			}
+		} catch (Exception e) {
+			Log.e(TAG, "Error auto-filling location", e);
 		}
 
 		// Hide validation messages initially
@@ -399,13 +403,25 @@ public class RegisterActivity extends AppCompatActivity {
 
 	// Save personal info and continue to password step
 	private void savePersonalInfoAndContinue() {
-		setUserPersonalInfo(
-			getText(firstNameInput),
-			getText(lastNameInput),
-			getText(usernameInput),
-			getText(phoneInput),
-			getText(locationInput)
-		);
+		try {
+			setUserPersonalInfo(
+				getText(firstNameInput),
+				getText(lastNameInput),
+				getText(usernameInput),
+				getText(phoneInput),
+				getText(locationInput)
+			);
+		} catch (Exception e) {
+			Log.e(TAG, "Error saving personal info", e);
+			// Continue anyway with empty location
+			setUserPersonalInfo(
+				getText(firstNameInput),
+				getText(lastNameInput),
+				getText(usernameInput),
+				getText(phoneInput),
+				""
+			);
+		}
 		
 		// If Google or Facebook Sign-In user, register/login with backend immediately
 		if (isGoogleSignIn || isFacebookSignIn) {

@@ -56,6 +56,7 @@ Ashcol ServiceHub is a comprehensive service management platform with Android an
 2. **Permission Granted:** The app retrieves your current location
 3. **Auto Fill:** A hidden location field is automatically populated with the detected city (with toast notification)
 4. **Location Storage:** Detected location is stored in SharedPreferences and sent to database during registration
+5. **Social Login:** Location is also detected and stored when signing in with Google or Facebook
 
 ### Location Detection Logic
 

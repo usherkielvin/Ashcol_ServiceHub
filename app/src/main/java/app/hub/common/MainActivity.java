@@ -16,10 +16,6 @@ import app.hub.manager.ManagerDashboardActivity;
 import app.hub.user.DashboardActivity;
 import app.hub.util.EmailValidator;
 import app.hub.util.TokenManager;
-import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.location.Location;
-import android.location.LocationManager;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -436,6 +432,9 @@ public class MainActivity extends AppCompatActivity {
         FacebookSignInResponse.User user = response.getData().getUser();
         tokenManager.saveToken("Bearer " + response.getData().getToken());
         
+        // Detect and save location for Facebook Sign-In user
+        detectLocation();
+        
         // Save email or connection status
         String email = user.getEmail();
         if (email != null && email.contains("@")) {
@@ -594,6 +593,9 @@ public class MainActivity extends AppCompatActivity {
         tokenManager.saveToken("Bearer " + response.getData().getToken());
         tokenManager.saveEmail(user.getEmail());
         tokenManager.saveRole(user.getRole());
+        
+        // Detect and save location for Google Sign-In user
+        detectLocation();
 
         // Build and save name
         String firstName = user.getFirstName();
@@ -975,32 +977,53 @@ public class MainActivity extends AppCompatActivity {
     private void detectLocation() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) 
                 != PackageManager.PERMISSION_GRANTED) {
+            Log.d(TAG, "Location permission not granted");
             return;
         }
         
-        LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
-        if (locationManager != null) {
-            try {
-                // Get last known location (fast)
-                Location location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-                if (location == null) {
+        try {
+            LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+            if (locationManager != null) {
+                // Check if providers are enabled
+                boolean isGPSEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+                boolean isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+                
+                if (!isGPSEnabled && !isNetworkEnabled) {
+                    Log.d(TAG, "Location providers disabled");
+                    return;
+                }
+                
+                Location location = null;
+                // Try network provider first (faster)
+                if (isNetworkEnabled) {
+                    location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+                }
+                // Fall back to GPS
+                if (location == null && isGPSEnabled) {
                     location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
                 }
                 
                 if (location != null) {
+                    Log.d(TAG, "Location detected - Lat: " + location.getLatitude() + ", Lng: " + location.getLongitude());
                     String city = reverseGeocodeLocation(location.getLatitude(), location.getLongitude());
-                    if (city != null) {
+                    if (city != null && !city.isEmpty()) {
                         // Store in SharedPreferences
                         tokenManager.saveCurrentCity(city);
                         Log.d(TAG, "Detected city: " + city);
                         // Silent success - no toast to avoid interrupting user experience
+                    } else {
+                        Log.d(TAG, "Reverse geocoding returned null or empty");
                     }
                 } else {
                     Log.d(TAG, "Could not get current location");
                 }
-            } catch (Exception e) {
-                Log.e(TAG, "Error getting location", e);
+            } else {
+                Log.e(TAG, "LocationManager is null");
             }
+        } catch (SecurityException e) {
+            Log.e(TAG, "Location permission denied at runtime", e);
+        } catch (Exception e) {
+            Log.e(TAG, "Error getting location", e);
         }
     }
 
@@ -1008,6 +1031,8 @@ public class MainActivity extends AppCompatActivity {
     private String reverseGeocodeLocation(double latitude, double longitude) {
         // Improved coordinate mapping for Metro Manila cities
         try {
+            Log.d(TAG, "Reverse geocoding - Lat: " + latitude + ", Lng: " + longitude);
+            
             // More precise coordinate ranges for Metro Manila cities
             if (latitude > 0 && longitude > 0) {
                 // Manila City (14.5995° N, 120.9842° E)
@@ -1081,6 +1106,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
             
+            Log.d(TAG, "Using default location: Philippines");
             return "Philippines";  // Default fallback
         } catch (Exception e) {
             Log.e(TAG, "Reverse geocoding failed", e);
