@@ -1006,30 +1006,82 @@ public class MainActivity extends AppCompatActivity {
 
     // Reverse geocode latitude and longitude to get city name
     private String reverseGeocodeLocation(double latitude, double longitude) {
-        // Simplified implementation - normally use Google Maps API for precise reverse geocoding
+        // Improved coordinate mapping for Metro Manila cities
         try {
-            // Basic reverse geocoding (would typically use a service like Google Maps)
-            String locationName = "";
-            
-            // For now, use manual lookup or default logic
+            // More precise coordinate ranges for Metro Manila cities
             if (latitude > 0 && longitude > 0) {
-                // Manually check against known locations (replace with proper API call)
-                if (latitude > 14.0 && latitude < 15.0 && longitude > 120.0 && longitude < 121.0) {
-                    return "Manila City";  // Metro Manila coordinates
+                // Manila City (14.5995° N, 120.9842° E)
+                if (latitude >= 14.55 && latitude <= 14.65 && longitude >= 120.95 && longitude <= 121.05) {
+                    return "Manila City";
                 }
-                if (latitude > 14.5 && latitude < 14.7 && longitude > 120.8 && longitude < 121.1) {
-                    return "Mandaluyong City";  // Taguig/Paranaque/Makati coordinates
+                // Makati City (14.5547° N, 121.0244° E)
+                else if (latitude >= 14.52 && latitude <= 14.58 && longitude >= 121.00 && longitude <= 121.05) {
+                    return "Makati City";
                 }
-                if (latitude > 14.2 && latitude < 14.5 && longitude > 121.0 && longitude < 121.3) {
-                    return "Taguig City";  // Sample: Taguig
+                // Taguig City (14.5176° N, 121.0509° E)
+                else if (latitude >= 14.48 && latitude <= 14.55 && longitude >= 121.03 && longitude <= 121.10) {
+                    return "Taguig City";
                 }
-                if (latitude > 14.5 && latitude < 14.6 && longitude > 121.0 && longitude < 121.2) {
-                    return "San Juan City";  // Sample: San Juan
+                // Pasay City (14.5378° N, 121.0016° E)
+                else if (latitude >= 14.50 && latitude <= 14.55 && longitude >= 120.98 && longitude <= 121.02) {
+                    return "Pasay City";
                 }
-                return "Manila Metropolitan Area"; // Fallback for metro areas
+                // Mandaluyong City (14.5832° N, 121.0409° E)
+                else if (latitude >= 14.56 && latitude <= 14.60 && longitude >= 121.02 && longitude <= 121.06) {
+                    return "Mandaluyong City";
+                }
+                // San Juan City (14.5995° N, 121.0359° E)
+                else if (latitude >= 14.58 && latitude <= 14.62 && longitude >= 121.02 && longitude <= 121.05) {
+                    return "San Juan City";
+                }
+                // Quezon City (14.6312° N, 121.0325° E)
+                else if (latitude >= 14.60 && latitude <= 14.70 && longitude >= 121.00 && longitude <= 121.10) {
+                    return "Quezon City";
+                }
+                // Pasig City (14.5832° N, 121.0832° E)
+                else if (latitude >= 14.55 && latitude <= 14.60 && longitude >= 121.05 && longitude <= 121.12) {
+                    return "Pasig City";
+                }
+                // Marikina City (14.6488° N, 121.1022° E)
+                else if (latitude >= 14.62 && latitude <= 14.68 && longitude >= 121.08 && longitude <= 121.15) {
+                    return "Marikina City";
+                }
+                // Caloocan City (14.7583° N, 120.9869° E)
+                else if (latitude >= 14.70 && latitude <= 14.80 && longitude >= 120.95 && longitude <= 121.02) {
+                    return "Caloocan City";
+                }
+                // Valenzuela City (14.6942° N, 120.9683° E)
+                else if (latitude >= 14.65 && latitude <= 14.72 && longitude >= 120.93 && longitude <= 121.00) {
+                    return "Valenzuela City";
+                }
+                // Las Piñas City (14.4496° N, 120.9986° E)
+                else if (latitude >= 14.42 && latitude <= 14.48 && longitude >= 120.97 && longitude <= 121.02) {
+                    return "Las Piñas City";
+                }
+                // Parañaque City (14.4611° N, 121.0176° E)
+                else if (latitude >= 14.43 && latitude <= 14.48 && longitude >= 121.00 && longitude <= 121.04) {
+                    return "Parañaque City";
+                }
+                // Muntinlupa City (14.3909° N, 121.0479° E)
+                else if (latitude >= 14.35 && latitude <= 14.42 && longitude >= 121.02 && longitude <= 121.08) {
+                    return "Muntinlupa City";
+                }
+                // Navotas City (14.6488° N, 120.9489° E)
+                else if (latitude >= 14.62 && latitude <= 14.67 && longitude >= 120.92 && longitude <= 120.97) {
+                    return "Navotas City";
+                }
+                // Malabon City (14.6686° N, 120.9489° E)
+                else if (latitude >= 14.64 && latitude <= 14.69 && longitude >= 120.92 && longitude <= 120.97) {
+                    return "Malabon City";
+                }
+                
+                // Metro Manila area fallback
+                if (latitude >= 14.3 && latitude <= 14.8 && longitude >= 120.9 && longitude <= 121.2) {
+                    return "Metro Manila Area";
+                }
             }
             
-            return "Manila, Philippines";  // Default for now
+            return "Philippines";  // Default fallback
         } catch (Exception e) {
             Log.e(TAG, "Reverse geocoding failed", e);
             return "Metro Manila Area"; // Default fallback
