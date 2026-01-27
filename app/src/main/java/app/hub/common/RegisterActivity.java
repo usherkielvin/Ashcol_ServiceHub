@@ -348,6 +348,8 @@ public class RegisterActivity extends AppCompatActivity {
 		}
 	}
 
+
+
 	// Validate all fields in Tell Us form
 	private boolean validateTellUsForm() {
 		String firstName = getText(firstNameInput);
@@ -393,7 +395,7 @@ public class RegisterActivity extends AppCompatActivity {
 			getText(lastNameInput),
 			getText(usernameInput),
 			getText(phoneInput),
-			"" // Location auto-detected, not manually entered
+			"" // Location auto-detected
 		);
 		
 		// If Google or Facebook Sign-In user, register/login with backend immediately

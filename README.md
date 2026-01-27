@@ -54,7 +54,7 @@ Ashcol ServiceHub is a comprehensive service management platform with Android an
 
 1. **After splash screen:** MainActivity automatically requests location permission from the user
 2. **Permission Granted:** The app retrieves your current location
-3. **Auto Fill:** The location field in the registration form is automatically populated with the detected city (no manual input)
+3. **Auto Fill:** The location field in the registration form is automatically populated with the detected city
 4. **Location Storage:** Detected location is stored in SharedPreferences for future use
 
 ### Location Detection Logic
