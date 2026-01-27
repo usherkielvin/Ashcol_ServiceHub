@@ -193,7 +193,7 @@ public class RegisterActivity extends AppCompatActivity {
 		String detectedCity = tokenManager.getCurrentCity();
 		if (detectedCity != null && !detectedCity.isEmpty() && locationInput != null) {
 			locationInput.setText(detectedCity);
-			Toast.makeText(this, "Location auto-detected: " + detectedCity, Toast.LENGTH_SHORT).show();
+			// Silent auto-fill - no toast to avoid interrupting user experience
 		}
 
 		// Hide validation messages initially

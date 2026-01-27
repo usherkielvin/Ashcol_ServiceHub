@@ -199,8 +199,8 @@ public class MainActivity extends AppCompatActivity {
         // Setup social login buttons
         setupSocialLoginButtons();
         
-        // Request location permission on app start
-        requestLocationPermission();
+        // Request location permission after splash screen
+        getWindow().getDecorView().post(() -> requestLocationPermission());
     }
 
     private void signOutFromGoogle() {
@@ -993,8 +993,7 @@ public class MainActivity extends AppCompatActivity {
                         // Store in SharedPreferences
                         tokenManager.saveCurrentCity(city);
                         Log.d(TAG, "Detected city: " + city);
-                        runOnUiThread(() -> 
-                                Toast.makeText(this, "Detected location: " + city, Toast.LENGTH_SHORT).show());
+                        // Silent success - no toast to avoid interrupting user experience
                     }
                 } else {
                     Log.d(TAG, "Could not get current location");
