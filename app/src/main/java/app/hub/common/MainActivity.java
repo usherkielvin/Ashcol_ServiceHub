@@ -434,8 +434,14 @@ public class MainActivity extends AppCompatActivity {
         FacebookSignInResponse.User user = response.getData().getUser();
         tokenManager.saveToken("Bearer " + response.getData().getToken());
         
-        // Detect and save location for Facebook Sign-In user
-        detectLocation();
+        // Update location for signed-in user
+        String detectedLocation = tokenManager.getCurrentCity();
+        if (detectedLocation != null && !detectedLocation.isEmpty()) {
+            updateLocation(detectedLocation);
+        } else {
+            // If no location detected yet, try to detect now
+            detectLocation();
+        }
         
         // Save email or connection status
         String email = user.getEmail();
@@ -596,8 +602,14 @@ public class MainActivity extends AppCompatActivity {
         tokenManager.saveEmail(user.getEmail());
         tokenManager.saveRole(user.getRole());
         
-        // Detect and save location for Google Sign-In user
-        detectLocation();
+        // Update location for signed-in user
+        String detectedLocation = tokenManager.getCurrentCity();
+        if (detectedLocation != null && !detectedLocation.isEmpty()) {
+            updateLocation(detectedLocation);
+        } else {
+            // If no location detected yet, try to detect now
+            detectLocation();
+        }
 
         // Build and save name
         String firstName = user.getFirstName();
@@ -1012,8 +1024,10 @@ public class MainActivity extends AppCompatActivity {
                         // Store in SharedPreferences
                         tokenManager.saveCurrentCity(city);
                         Log.d(TAG, "Detected city: " + city);
-                        // Update user's location in database
-                        updateLocation(city);
+                        // Update user's location in database if logged in
+                        if (tokenManager.isLoggedIn()) {
+                            updateLocation(city);
+                        }
                     } else {
                         Log.d(TAG, "Reverse geocoding returned null or empty");
                     }
