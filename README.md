@@ -55,10 +55,10 @@ Ashcol ServiceHub is a comprehensive service management platform with Android an
 1. **After splash screen:** MainActivity automatically requests location permission from the user
 2. **Permission Granted:** The app retrieves your current location and stores it in SharedPreferences
 3. **Auto Fill:** A hidden location field is automatically populated with the detected city (with toast notification)
-4. **Location Storage:** Detected location is stored in SharedPreferences and used for all subsequent sign-ins
+4. **Location Storage:** Detected location is stored in SharedPreferences for the device
 5. **Registration:** New registrations use the detected location from SharedPreferences
-6. **Social Login:** Existing users (Google/Facebook) get their location updated from the detected location stored on the device
-7. **Database Sync:** All signed-in users have their location updated in the database automatically
+6. **Social Login:** After successful Google/Facebook sign-in, the user's location is updated in the database from the device-stored location
+7. **Database Sync:** All signed-in users have their location updated in the database automatically after authentication is complete
 
 ### Location Detection Logic
 

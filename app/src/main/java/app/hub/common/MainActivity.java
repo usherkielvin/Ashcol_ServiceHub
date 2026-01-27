@@ -434,15 +434,6 @@ public class MainActivity extends AppCompatActivity {
         FacebookSignInResponse.User user = response.getData().getUser();
         tokenManager.saveToken("Bearer " + response.getData().getToken());
         
-        // Update location for signed-in user
-        String detectedLocation = tokenManager.getCurrentCity();
-        if (detectedLocation != null && !detectedLocation.isEmpty()) {
-            updateLocation(detectedLocation);
-        } else {
-            // If no location detected yet, try to detect now
-            detectLocation();
-        }
-        
         // Save email or connection status
         String email = user.getEmail();
         if (email != null && email.contains("@")) {
@@ -473,6 +464,17 @@ public class MainActivity extends AppCompatActivity {
             tokenManager.saveName(fullName);
         }
 
+        // Update location for signed-in user
+        runOnUiThread(() -> {
+            String detectedLocation = tokenManager.getCurrentCity();
+            if (detectedLocation != null && !detectedLocation.isEmpty()) {
+                updateLocation(detectedLocation);
+            } else {
+                // If no location detected yet, try to detect now
+                detectLocation();
+            }
+        });
+        
         // Navigate to dashboard
         runOnUiThread(() -> {
             final Intent intent;
@@ -601,15 +603,6 @@ public class MainActivity extends AppCompatActivity {
         tokenManager.saveToken("Bearer " + response.getData().getToken());
         tokenManager.saveEmail(user.getEmail());
         tokenManager.saveRole(user.getRole());
-        
-        // Update location for signed-in user
-        String detectedLocation = tokenManager.getCurrentCity();
-        if (detectedLocation != null && !detectedLocation.isEmpty()) {
-            updateLocation(detectedLocation);
-        } else {
-            // If no location detected yet, try to detect now
-            detectLocation();
-        }
 
         // Build and save name
         String firstName = user.getFirstName();
@@ -629,6 +622,17 @@ public class MainActivity extends AppCompatActivity {
             tokenManager.saveName(fullName);
         }
 
+        // Update location for signed-in user
+        runOnUiThread(() -> {
+            String detectedLocation = tokenManager.getCurrentCity();
+            if (detectedLocation != null && !detectedLocation.isEmpty()) {
+                updateLocation(detectedLocation);
+            } else {
+                // If no location detected yet, try to detect now
+                detectLocation();
+            }
+        });
+        
         // Navigate to dashboard
         runOnUiThread(() -> {
             final Intent intent;
