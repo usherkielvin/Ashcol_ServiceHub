@@ -183,4 +183,30 @@
     <string name="legend_last_month">Last month</string>
     <string name="desc_logo" />
 
+    <string name="notifications_title">Notifications</string>
+    <string name="label_push_notification">Push Notification</string>
+    <string name="label_email_notification">Email Notification</string>
+    <string name="label_sms_notification">SMS Notification</string>
+
+
+    <string name="title_about_us">About us</string>
+    <string name="label_company_name">Company name</string>
+    <string name="text_company_name">ASCHOL AIRCONDITIONING SERVICES CORPORATION</string>
+    <string name="label_address">Address</string>
+    <string name="text_address">Units 4D, 4E and 4F Genesis Building 182-A 19th Avenue Brgy East Rembo Makati City 1216.</string>
+
+    <string name="label_customer_hotline">Customer Hotline</string>
+    <string name="text_hotline">+63 (2) 77291293</string>
+    <string name="label_service_dept">Service / Technical Department</string>
+    <string name="text_service_dept">+63 (2) 77541418</string>
+    <string name="label_mobile">Mobile Numbers</string>
+    <string name="text_mobile_globe">+63 (917) 7143810 (Globe)</string>
+    <string name="text_mobile_smart">+63 (908) 8950849 (Smart)</string>
+    <string name="label_email">Email</string>
+    <string name="text_email">headoffice@ashcol.com.ph</string>
+    <string name="label_website">Website</string>
+    <string name="text_website">ashcol.com.ph</string>
+    <string name="text_follow_fb">Follow us on Facebook</string>
+    <string name="desc_back">Go back</string>
+
 </resources>
