@@ -19,17 +19,18 @@
             android:layout_margin="26dp"
             android:background="#FD0000"
             android:contentDescription="@string/chatbot_button_description"
+            android:forceHasOverlappingRendering="false"
             android:src="@drawable/ic_aichatbot"
+            android:translationZ="99999999dp"
             app:backgroundTint="#00FF4141"
+            app:elevation="0dp"
             app:layout_constraintBottom_toBottomOf="@+id/fragmentContainerView"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_dodgeInsetEdges="bottom"
             app:layout_gravity="bottom|end"
             app:maxImageSize="56dp"
-            app:tint="@null"
-            app:elevation="0dp"
             app:pressedTranslationZ="0dp"
-         />
+            app:tint="@null" />
 
         <androidx.fragment.app.FragmentContainerView
             android:id="@+id/fragmentContainerView"

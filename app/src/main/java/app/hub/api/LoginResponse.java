@@ -58,6 +58,7 @@ public class LoginResponse {
         private String name;
         private String email;
         private String role;
+        private String location;
         private boolean has_facebook_account;
 
         public int getId() {
@@ -122,6 +123,14 @@ public class LoginResponse {
 
         public void setHas_facebook_account(boolean has_facebook_account) {
             this.has_facebook_account = has_facebook_account;
+        }
+
+        public String getLocation() {
+            return location;
+        }
+
+        public void setLocation(String location) {
+            this.location = location;
         }
     }
 }

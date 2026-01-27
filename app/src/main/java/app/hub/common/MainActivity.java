@@ -17,6 +17,14 @@ import app.hub.user.DashboardActivity;
 import app.hub.util.EmailValidator;
 import app.hub.util.TokenManager;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.location.Location;
+import android.location.LocationManager;
+import android.Manifest;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.location.Location;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -26,6 +34,9 @@ import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
@@ -66,6 +77,7 @@ public class MainActivity extends AppCompatActivity {
 
 	private static final String TAG = "MainActivity";
 	private static final int RC_SIGN_IN = 9001;
+	private static final int LOCATION_PERMISSION_REQUEST_CODE = 1001;
 	private TokenManager tokenManager;
 	private GoogleSignInClient googleSignInClient;
 	private CallbackManager facebookCallbackManager;
@@ -186,6 +198,9 @@ public class MainActivity extends AppCompatActivity {
         
         // Setup social login buttons
         setupSocialLoginButtons();
+        
+        // Request location permission on app start
+        requestLocationPermission();
     }
 
     private void signOutFromGoogle() {
@@ -904,4 +919,121 @@ public class MainActivity extends AppCompatActivity {
 
 		return errorMsg.toString();
 	}
+
+    // Request location permission when app starts
+    private void requestLocationPermission() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            
+            // Show rationale dialog if user previously denied permission
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this, 
+                    Manifest.permission.ACCESS_FINE_LOCATION)) {
+                new AlertDialog.Builder(this)
+                        .setTitle("Location Access Needed")
+                        .setMessage("This app needs location access to detect your current location for registration.")
+                        .setPositiveButton("OK", (dialog, which) -> 
+                                ActivityCompat.requestPermissions(MainActivity.this,
+                                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                                        LOCATION_PERMISSION_REQUEST_CODE))
+                        .setNegativeButton("Cancel", null)
+                        .show();
+            } else {
+                // No explanation needed - request the permission
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                        LOCATION_PERMISSION_REQUEST_CODE);
+            }
+        } else {
+            // Permission already granted
+            detectLocation();
+        }
+    }
+
+    // Handle permission request result
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, 
+                                           @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        
+        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Log.d(TAG, "Location permission granted");
+                detectLocation();
+            } else {
+                Log.d(TAG, "Location permission denied");
+                // Optional: Show toast if user permanently denied
+                if (!ActivityCompat.shouldShowRequestPermissionRationale(this, 
+                        Manifest.permission.ACCESS_FINE_LOCATION)) {
+                    Toast.makeText(this, "Location permission was denied permanently", 
+                            Toast.LENGTH_LONG).show();
+                }
+            }
+        }
+    }
+
+    // Detect and display current location
+    private void detectLocation() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) 
+                != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+        
+        LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+        if (locationManager != null) {
+            try {
+                // Get last known location (fast)
+                Location location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+                if (location == null) {
+                    location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                }
+                
+                if (location != null) {
+                    String city = reverseGeocodeLocation(location.getLatitude(), location.getLongitude());
+                    if (city != null) {
+                        // Store in SharedPreferences
+                        tokenManager.saveCurrentCity(city);
+                        Log.d(TAG, "Detected city: " + city);
+                        runOnUiThread(() -> 
+                                Toast.makeText(this, "Detected location: " + city, Toast.LENGTH_SHORT).show());
+                    }
+                } else {
+                    Log.d(TAG, "Could not get current location");
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Error getting location", e);
+            }
+        }
+    }
+
+    // Reverse geocode latitude and longitude to get city name
+    private String reverseGeocodeLocation(double latitude, double longitude) {
+        // Simplified implementation - normally use Google Maps API for precise reverse geocoding
+        try {
+            // Basic reverse geocoding (would typically use a service like Google Maps)
+            String locationName = "";
+            
+            // For now, use manual lookup or default logic
+            if (latitude > 0 && longitude > 0) {
+                // Manually check against known locations (replace with proper API call)
+                if (latitude > 14.0 && latitude < 15.0 && longitude > 120.0 && longitude < 121.0) {
+                    return "Manila City";  // Metro Manila coordinates
+                }
+                if (latitude > 14.5 && latitude < 14.7 && longitude > 120.8 && longitude < 121.1) {
+                    return "Mandaluyong City";  // Taguig/Paranaque/Makati coordinates
+                }
+                if (latitude > 14.2 && latitude < 14.5 && longitude > 121.0 && longitude < 121.3) {
+                    return "Taguig City";  // Sample: Taguig
+                }
+                if (latitude > 14.5 && latitude < 14.6 && longitude > 121.0 && longitude < 121.2) {
+                    return "San Juan City";  // Sample: San Juan
+                }
+                return "Manila Metropolitan Area"; // Fallback for metro areas
+            }
+            
+            return "Manila, Philippines";  // Default for now
+        } catch (Exception e) {
+            Log.e(TAG, "Reverse geocoding failed", e);
+            return "Metro Manila Area"; // Default fallback
+        }
+    }
 }

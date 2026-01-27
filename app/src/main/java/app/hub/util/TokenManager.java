@@ -10,6 +10,7 @@ public class TokenManager {
     private static final String KEY_NAME = "name";
     private static final String KEY_ROLE = "role";
     private static final String KEY_CONNECTION_STATUS = "connection_status";
+    private static final String KEY_CURRENT_CITY = "current_city";
 
     private final SharedPreferences sharedPreferences;
 
@@ -67,6 +68,14 @@ public class TokenManager {
 
     public void clearConnectionStatus() {
         sharedPreferences.edit().remove(KEY_CONNECTION_STATUS).apply();
+    }
+
+    public void saveCurrentCity(String city) {
+        sharedPreferences.edit().putString(KEY_CURRENT_CITY, city).apply();
+    }
+
+    public String getCurrentCity() {
+        return sharedPreferences.getString(KEY_CURRENT_CITY, null);
     }
 }
 

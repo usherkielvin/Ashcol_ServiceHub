@@ -52,7 +52,7 @@ public class AdminAddEmployee extends AppCompatActivity {
         }
 
         // The role is hardcoded to "employee"
-        RegisterRequest registerRequest = new RegisterRequest(username, firstName, lastName, email, "", password, password, "employee");
+        RegisterRequest registerRequest = new RegisterRequest(username, firstName, lastName, email, "", "", password, password, "employee");
 
         ApiService apiService = ApiClient.getApiService();
         Call<RegisterResponse> call = apiService.register(registerRequest);

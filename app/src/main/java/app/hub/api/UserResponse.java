@@ -29,6 +29,7 @@ public class UserResponse {
         private String email;
         private String role;
         private String profile_photo;
+        private String location;
         private boolean has_facebook_account;
 
         public int getId() {
@@ -101,6 +102,14 @@ public class UserResponse {
 
         public void setProfilePhoto(String profile_photo) {
             this.profile_photo = profile_photo;
+        }
+
+        public String getLocation() {
+            return location;
+        }
+
+        public void setLocation(String location) {
+            this.location = location;
         }
     }
 }
