@@ -1049,13 +1049,13 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onResponse(@NonNull Call<UserResponse> call, @NonNull Response<UserResponse> response) {
                 if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
-                    UserResponse.User currentUser = response.body().getData().getUser();
+                    UserResponse.Data currentUser = response.body().getData();
                     if (currentUser != null) {
                         // Update user profile with new location
                         UpdateProfileRequest updateRequest = new UpdateProfileRequest(
                             currentUser.getFirstName(),
                             currentUser.getLastName(),
-                            currentUser.getPhone(),
+                            "", // Phone not available in current user data
                             location
                         );
                         
