@@ -52,6 +52,7 @@ public class RegisterActivity extends AppCompatActivity {
 	private String userLastName;
 	private String userName;
 	private String userPhone;
+	private String userLocation;
 	private String userPassword;
 	
 	// Track if user signed in with Google (skip OTP for Google users)
@@ -64,7 +65,7 @@ public class RegisterActivity extends AppCompatActivity {
 	// Views for activity_register.xml (Tell us step)
 	private View fragmentContainer;
 	private ConstraintLayout templateLayout;
-	private TextInputEditText firstNameInput, lastNameInput, usernameInput, phoneInput;
+	private TextInputEditText firstNameInput, lastNameInput, usernameInput, phoneInput, locationInput;
 	private TextView fval, lval, uval, phoneVal;
 	private MaterialButton registerButton;
 
@@ -178,6 +179,7 @@ public class RegisterActivity extends AppCompatActivity {
 		lastNameInput = findViewById(R.id.lastNameInput);
 		usernameInput = findViewById(R.id.usernameInput);
 		phoneInput = findViewById(R.id.etPhone);
+		locationInput = findViewById(R.id.etLocation);
 
 		registerButton = findViewById(R.id.registerButton);
 
@@ -185,6 +187,13 @@ public class RegisterActivity extends AppCompatActivity {
 		lval = findViewById(R.id.lname_val);
 		uval = findViewById(R.id.Uname_val);
 		phoneVal = findViewById(R.id.phone_val);
+
+		// Auto-fill location if detected
+		String detectedCity = tokenManager.getCurrentCity();
+		if (detectedCity != null && !detectedCity.isEmpty() && locationInput != null) {
+			locationInput.setText(detectedCity);
+			Toast.makeText(this, "Location auto-detected: " + detectedCity, Toast.LENGTH_SHORT).show();
+		}
 
 		// Hide validation messages initially
 		if (fval != null) fval.setVisibility(View.GONE);
@@ -395,7 +404,7 @@ public class RegisterActivity extends AppCompatActivity {
 			getText(lastNameInput),
 			getText(usernameInput),
 			getText(phoneInput),
-			"" // Location auto-detected
+			getText(locationInput)
 		);
 		
 		// If Google or Facebook Sign-In user, register/login with backend immediately
@@ -823,6 +832,7 @@ public class RegisterActivity extends AppCompatActivity {
 		String username = getUserName();
 		String password = getUserPassword();
 		String phone = getUserPhone() != null ? getUserPhone() : "";
+		String location = getUserLocation() != null ? getUserLocation() : "";
 
 		// Validate required fields
 		if (email == null || email.isEmpty()) {
@@ -849,10 +859,10 @@ public class RegisterActivity extends AppCompatActivity {
 		// Default role to "customer" for regular registration
 		String role = "customer";
 
-		Log.d(TAG, "Creating account with - Email: " + email + ", Username: " + username + ", Role: " + role);
+		Log.d(TAG, "Creating account with - Email: " + email + ", Username: " + username + ", Role: " + role + ", Location: " + location);
 		
 		ApiService apiService = ApiClient.getApiService();
-		RegisterRequest request = new RegisterRequest(username, firstName, lastName, email, phone, "", password, password, role); // Empty location - auto-detected by backend
+		RegisterRequest request = new RegisterRequest(username, firstName, lastName, email, phone, location, password, password, role);
 
 		Call<RegisterResponse> call = apiService.register(request);
 		call.enqueue(new Callback<>() {
@@ -954,7 +964,8 @@ public class RegisterActivity extends AppCompatActivity {
 		this.userLastName = lastName;
 		this.userName = username;
 		this.userPhone = phone;
-		Log.d(TAG, "Personal info set - Name: " + firstName + " " + lastName);
+		this.userLocation = location;
+		Log.d(TAG, "Personal info set - Name: " + firstName + " " + lastName + ", Location: " + location);
 	}
 
 	public void setUserPassword(String password) {
@@ -990,6 +1001,11 @@ public class RegisterActivity extends AppCompatActivity {
 	}
 
 
+
+	@SuppressWarnings("unused")
+	public String getUserLocation() {
+		return userLocation;
+	}
 
 	@SuppressWarnings("unused")
 	public String getUserPassword() {

@@ -242,6 +242,14 @@
                 android:visibility="gone"
                 tools:visibility="visible" />
 
+            <!-- Hidden location field for automatic detection -->
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etLocation"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:visibility="gone"
+                android:text="" />
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

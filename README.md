@@ -8,7 +8,7 @@ Ashcol ServiceHub is a comprehensive service management platform with Android an
 
 ### Android App (Ashcol_ServiceHub)
 - User registration with automatic location detection
-- **Location auto-detected after splash screen** (no manual input)
+- **Hidden location field auto-filled after splash screen**
 - Google Sign-In (requires configuration)
 - Facebook Sign-In (requires configuration)
 - Email verification
@@ -54,8 +54,8 @@ Ashcol ServiceHub is a comprehensive service management platform with Android an
 
 1. **After splash screen:** MainActivity automatically requests location permission from the user
 2. **Permission Granted:** The app retrieves your current location
-3. **Auto Fill:** The location field in the registration form is automatically populated with the detected city
-4. **Location Storage:** Detected location is stored in SharedPreferences for future use
+3. **Auto Fill:** A hidden location field is automatically populated with the detected city (with toast notification)
+4. **Location Storage:** Detected location is stored in SharedPreferences and sent to database during registration
 
 ### Location Detection Logic
 
