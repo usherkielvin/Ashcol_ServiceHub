@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FFFFFF">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/headerLayout"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <ImageButton
+            android:id="@+id/btnBack"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/desc_back"
+            android:src="@drawable/outline_arrow_back_24"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:tint="@android:color/black"
+            tools:ignore="TouchTargetSizeCheck" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/title_about_us"
+            android:textColor="@android:color/black"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <LinearLayout
+        android:id="@+id/footerLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#E0E0E0"
+            android:layout_marginBottom="16dp"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/text_follow_fb"
+            android:textColor="@android:color/black"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:gravity="center" />
+    </LinearLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:fillViewport="true"
+        app:layout_constraintTop_toBottomOf="@+id/headerLayout"
+        app:layout_constraintBottom_toTopOf="@+id/footerLayout"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="24dp">
+
+            <TextView
+                style="@style/LabelText"
+                android:text="@string/label_company_name" />
+            <TextView
+                style="@style/ValueText"
+                android:text="@string/text_company_name" />
+
+            <TextView
+                style="@style/LabelText"
+                android:layout_marginTop="24dp"
+                android:text="@string/label_address" />
+            <TextView
+                style="@style/ValueText"
+                android:text="@string/text_address" />
+
+            <TextView
+                style="@style/LabelText"
+                android:layout_marginTop="24dp"
+                android:text="@string/label_customer_hotline" />
+            <TextView
+                style="@style/ValueText"
+                android:text="@string/text_hotline"
+                android:autoLink="phone"
+                android:textColorLink="@android:color/black"/>
+
+            <TextView
+                style="@style/LabelText"
+                android:layout_marginTop="24dp"
+                android:text="@string/label_service_dept" />
+            <TextView
+                style="@style/ValueText"
+                android:text="@string/text_service_dept"
+                android:autoLink="phone"
+                android:textColorLink="@android:color/black"/>
+
+            <TextView
+                style="@style/LabelText"
+                android:layout_marginTop="24dp"
+                android:text="@string/label_mobile" />
+            <TextView
+                style="@style/ValueText"
+                android:text="@string/text_mobile_globe"
+                android:autoLink="phone"
+                android:textColorLink="@android:color/black"/>
+            <TextView
+                style="@style/ValueText"
+                android:text="@string/text_mobile_smart"
+                android:autoLink="phone"
+                android:textColorLink="@android:color/black"/>
+
+            <TextView
+                style="@style/LabelText"
+                android:layout_marginTop="24dp"
+                android:text="@string/label_email" />
+            <TextView
+                style="@style/ValueText"
+                android:text="@string/text_email"
+                android:autoLink="email"
+                android:textColorLink="@android:color/black"
+                android:layout_marginBottom="4dp"/> <TextView
+            style="@style/LabelText"
+            android:layout_marginTop="24dp"
+            android:text="@string/label_website" />
+            <TextView
+                style="@style/ValueText"
+                android:text="@string/text_website"
+                android:autoLink="web"
+                android:textColorLink="@android:color/black"/>
+
+        </LinearLayout>
+    </ScrollView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
