@@ -393,7 +393,7 @@ public class RegisterActivity extends AppCompatActivity {
 			getText(lastNameInput),
 			getText(usernameInput),
 			getText(phoneInput),
-			getText(locationInput)
+			"" // Location auto-detected, not manually entered
 		);
 		
 		// If Google or Facebook Sign-In user, register/login with backend immediately
