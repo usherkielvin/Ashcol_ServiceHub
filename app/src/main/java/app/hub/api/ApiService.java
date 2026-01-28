@@ -82,4 +82,7 @@ public interface ApiService {
     Call<ProfilePhotoResponse> deleteProfilePhoto(
             @Header("Authorization") String token
     );
+
+    @GET("api/v1/employees")
+    Call<EmployeeResponse> getEmployees(@Header("Authorization") String token);
 }
