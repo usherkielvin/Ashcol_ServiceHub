@@ -1050,9 +1050,13 @@ public class MainActivity extends AppCompatActivity {
             locationToUpdate = cachedLocation;
         }
         
+        // Final variables for use in inner classes
+        final String finalLocationToUpdate = locationToUpdate;
+        final String finalToken = token;
+        
         // Get current user data to preserve other fields
         ApiService apiService = ApiClient.getApiService();
-        Call<UserResponse> getUserCall = apiService.getUser(token);
+        Call<UserResponse> getUserCall = apiService.getUser(finalToken);
         getUserCall.enqueue(new Callback<UserResponse>() {
             @Override
             public void onResponse(@NonNull Call<UserResponse> call, @NonNull Response<UserResponse> response) {
@@ -1064,15 +1068,15 @@ public class MainActivity extends AppCompatActivity {
                             currentUser.getFirstName(),
                             currentUser.getLastName(),
                             "", // Phone not available in current user data
-                            locationToUpdate
+                            finalLocationToUpdate
                         );
                         
-                        Call<UserResponse> updateCall = apiService.updateUser(token, updateRequest);
+                        Call<UserResponse> updateCall = apiService.updateUser(finalToken, updateRequest);
                         updateCall.enqueue(new Callback<UserResponse>() {
                             @Override
                             public void onResponse(@NonNull Call<UserResponse> call, @NonNull Response<UserResponse> response) {
                                 if (response.isSuccessful() && response.body() != null) {
-                                    Log.d(TAG, "Location updated successfully: " + locationToUpdate);
+                                    Log.d(TAG, "Location updated successfully: " + finalLocationToUpdate);
                                 } else {
                                     Log.e(TAG, "Failed to update location: " + response.code() + " - " + (response.message() != null ? response.message() : "Unknown error"));
                                 }
@@ -1228,9 +1232,14 @@ public class MainActivity extends AppCompatActivity {
         
         Log.d(TAG, "Updating location to: " + locationToUpdate);
         
+        // Final variables for use in inner classes
+        final String finalLocationToUpdate = locationToUpdate;
+        final String finalToken = token;
+        final Runnable finalOnComplete = onComplete;
+        
         // Get current user data to preserve other fields
         ApiService apiService = ApiClient.getApiService();
-        Call<UserResponse> getUserCall = apiService.getUser(token);
+        Call<UserResponse> getUserCall = apiService.getUser(finalToken);
         getUserCall.enqueue(new Callback<UserResponse>() {
             @Override
             public void onResponse(@NonNull Call<UserResponse> call, @NonNull Response<UserResponse> response) {
@@ -1242,43 +1251,43 @@ public class MainActivity extends AppCompatActivity {
                             currentUser.getFirstName(),
                             currentUser.getLastName(),
                             "", // Phone not available in current user data
-                            locationToUpdate
+                            finalLocationToUpdate
                         );
                         
-                        Call<UserResponse> updateCall = apiService.updateUser(token, updateRequest);
+                        Call<UserResponse> updateCall = apiService.updateUser(finalToken, updateRequest);
                         updateCall.enqueue(new Callback<UserResponse>() {
                             @Override
                             public void onResponse(@NonNull Call<UserResponse> call, @NonNull Response<UserResponse> response) {
                                 if (response.isSuccessful() && response.body() != null) {
-                                    Log.d(TAG, "Location updated successfully: " + locationToUpdate);
+                                    Log.d(TAG, "Location updated successfully: " + finalLocationToUpdate);
                                 } else {
                                     Log.e(TAG, "Failed to update location: " + response.code() + " - " + (response.message() != null ? response.message() : "Unknown error"));
                                 }
                                 // Always proceed to navigation regardless of location update success
-                                onComplete.run();
+                                finalOnComplete.run();
                             }
 
                             @Override
                             public void onFailure(@NonNull Call<UserResponse> call, @NonNull Throwable t) {
                                 Log.e(TAG, "Failed to update location", t);
                                 // Still navigate even if location update fails
-                                onComplete.run();
+                                finalOnComplete.run();
                             }
                         });
                     } else {
                         Log.e(TAG, "Current user data is null");
-                        onComplete.run();
+                        finalOnComplete.run();
                     }
                 } else {
                     Log.e(TAG, "Failed to get current user data: " + response.code() + " - " + (response.message() != null ? response.message() : "Unknown error"));
-                    onComplete.run();
+                    finalOnComplete.run();
                 }
             }
 
             @Override
             public void onFailure(@NonNull Call<UserResponse> call, @NonNull Throwable t) {
                 Log.e(TAG, "Failed to get current user data", t);
-                onComplete.run();
+                finalOnComplete.run();
             }
         });
     }
