@@ -557,6 +557,9 @@ public class RegisterActivity extends AppCompatActivity {
 			Log.d(TAG, "Saved name to cache: " + fullName);
 		}
 
+		// Force immediate token persistence
+		tokenManager.forceCommit();
+
 		// Navigate to password creation (Google users still need to set a password)
 		if (templateLayout != null) {
 			templateLayout.setVisibility(View.GONE);
@@ -663,6 +666,15 @@ public class RegisterActivity extends AppCompatActivity {
 		if (!fullName.isEmpty()) {
 			tokenManager.saveName(fullName);
 			Log.d(TAG, "Saved name to cache: " + fullName);
+		}
+
+		// Force immediate token persistence
+		tokenManager.forceCommit();
+
+		// Update location if detected
+		String detectedLocation = tokenManager.getCurrentCity();
+		if (detectedLocation != null && !detectedLocation.isEmpty()) {
+			updateLocation(detectedLocation);
 		}
 
 		// Navigate directly to Account Created (skip password creation for Facebook users)
@@ -920,6 +932,9 @@ public class RegisterActivity extends AppCompatActivity {
 							}
 						}
 						
+						// Force immediate token persistence
+						tokenManager.forceCommit();
+						
 						Log.d(TAG, "Account created successfully");
 						// Update location if detected
 						String detectedLocation = tokenManager.getCurrentCity();
@@ -1148,6 +1163,13 @@ public class RegisterActivity extends AppCompatActivity {
 			public void onResponse(@NonNull Call<SetInitialPasswordResponse> call, @NonNull Response<SetInitialPasswordResponse> response) {
 				if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
 					Log.d(TAG, "Password updated successfully for Google user");
+					
+					// Update location if detected
+					String detectedLocation = tokenManager.getCurrentCity();
+					if (detectedLocation != null && !detectedLocation.isEmpty()) {
+						updateLocation(detectedLocation);
+					}
+					
 					// Navigate to Account Created
 					showAccountCreatedFragment();
 				} else {
@@ -1175,9 +1197,20 @@ public class RegisterActivity extends AppCompatActivity {
 			return;
 		}
 		
+		// Use cached location if available, otherwise use the passed location
+		String locationToUpdate = location;
+		String cachedLocation = tokenManager.getCurrentCity();
+		if (cachedLocation != null && !cachedLocation.isEmpty()) {
+			locationToUpdate = cachedLocation;
+		}
+		
+		// Final variables for use in inner classes
+		final String finalLocationToUpdate = locationToUpdate;
+		final String finalToken = token;
+		
 		// Get current user data to preserve other fields
 		ApiService apiService = ApiClient.getApiService();
-		Call<UserResponse> getUserCall = apiService.getUser(token);
+		Call<UserResponse> getUserCall = apiService.getUser(finalToken);
 		getUserCall.enqueue(new Callback<UserResponse>() {
 			@Override
 			public void onResponse(@NonNull Call<UserResponse> call, @NonNull Response<UserResponse> response) {
@@ -1189,15 +1222,15 @@ public class RegisterActivity extends AppCompatActivity {
 								currentUser.getFirstName(),
 								currentUser.getLastName(),
 								"", // Phone not available in current user data
-								location
+								finalLocationToUpdate
 						);
 						
-						Call<UserResponse> updateCall = apiService.updateUser(token, updateRequest);
+						Call<UserResponse> updateCall = apiService.updateUser(finalToken, updateRequest);
 						updateCall.enqueue(new Callback<UserResponse>() {
 							@Override
 							public void onResponse(@NonNull Call<UserResponse> call, @NonNull Response<UserResponse> response) {
 								if (response.isSuccessful() && response.body() != null) {
-									Log.d(TAG, "Location updated successfully: " + location);
+									Log.d(TAG, "Location updated successfully: " + finalLocationToUpdate);
 								} else {
 									Log.e(TAG, "Failed to update location: " + response.code() + " - " + (response.message() != null ? response.message() : "Unknown error"));
 								}

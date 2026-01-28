@@ -988,6 +988,8 @@ public class MainActivity extends AppCompatActivity {
                         tokenManager.saveCurrentCity(city);
                         Log.d(TAG, "Detected city: " + city);
                         // Update user's location in database if logged in
+                        // For app startup, this will be saved for later use when user logs in
+                        // For active sessions, this will update the current user
                         if (tokenManager.isLoggedIn()) {
                             updateLocation(city);
                         }
@@ -1333,14 +1335,9 @@ public class MainActivity extends AppCompatActivity {
                         // Store in SharedPreferences
                         tokenManager.saveCurrentCity(city);
                         Log.d(TAG, "Detected city: " + city);
-                        // Update user's location in database if logged in
-                        if (tokenManager.isLoggedIn()) {
-                            updateLocationWithCallback(city, onComplete);
-                        } else {
-                            // Just save for later use when user logs in
-                            Log.d(TAG, "Location saved for later use when user logs in");
-                            onComplete.run();
-                        }
+                        // Update user's location in database - always try since user just logged in
+                        // The token should be available since we're in the sign-in flow
+                        updateLocationWithCallback(city, onComplete);
                     } else {
                         Log.d(TAG, "Reverse geocoding returned null or empty, proceeding without location update");
                         onComplete.run();
