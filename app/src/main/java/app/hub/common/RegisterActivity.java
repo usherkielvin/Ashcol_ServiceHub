@@ -480,12 +480,75 @@ public class RegisterActivity extends AppCompatActivity {
 			return;
 		}
 		
-		Log.d(TAG, "Registering Google user - Email: " + email + ", Phone: " + phone);
+		Log.d(TAG, "Checking if Google user exists - Email: " + email);
 		Log.d(TAG, "First Name: " + firstName + ", Last Name: " + lastName);
 		
+		// Check if account already exists
+		checkGoogleAccountExistsForRegistration(email, firstName, lastName, phone);
+	}
+
+	private void checkGoogleAccountExistsForRegistration(String email, String firstName, String lastName, String phone) {
 		ApiService apiService = ApiClient.getApiService();
 		// id_token may be null if not configured, that's okay
 		String idToken = googleIdToken != null && !googleIdToken.isEmpty() ? googleIdToken : "";
+		GoogleSignInRequest request = new GoogleSignInRequest(
+			idToken,
+			email,
+			firstName != null ? firstName : "",
+			lastName != null ? lastName : "",
+			phone != null ? phone : ""
+		);
+		
+		Log.d(TAG, "Checking Google account existence - Email: " + email + ", First: " + firstName + ", Last: " + lastName + ", Phone: " + phone);
+
+		Call<GoogleSignInResponse> call = apiService.googleSignIn(request);
+		call.enqueue(new Callback<>() {
+			@Override
+			public void onResponse(@NonNull Call<GoogleSignInResponse> call, @NonNull Response<GoogleSignInResponse> response) {
+				if (response.isSuccessful() && response.body() != null) {
+					GoogleSignInResponse signInResponse = response.body();
+					if (signInResponse.isSuccess()) {
+						// Account already exists - show error message
+						String message = signInResponse.getMessage() != null ? 
+							signInResponse.getMessage() : "Account already exists. Please login instead.";
+						Toast.makeText(RegisterActivity.this, message, Toast.LENGTH_LONG).show();
+						// Navigate back to login screen
+						Intent intent = new Intent(RegisterActivity.this, MainActivity.class);
+						startActivity(intent);
+						finish();
+					} else {
+						// Account doesn't exist - proceed with registration
+						proceedWithGoogleRegistration(email, firstName, lastName, phone, idToken);
+					}
+				} else {
+					// Handle error response
+					String errorMsg = "Registration check failed. Please try again.";
+					try {
+						if (response.errorBody() != null) {
+							String errorBody = response.errorBody().string();
+							Log.e(TAG, "Google registration check error: " + errorBody);
+						}
+					} catch (Exception e) {
+						Log.e(TAG, "Error reading error response", e);
+					}
+					Toast.makeText(RegisterActivity.this, errorMsg, Toast.LENGTH_SHORT).show();
+				}
+			}
+
+			@Override
+			public void onFailure(@NonNull Call<GoogleSignInResponse> call, @NonNull Throwable t) {
+				Log.e(TAG, "Error checking Google account existence: " + t.getMessage(), t);
+				Toast.makeText(RegisterActivity.this, 
+					"Failed to check account. Please check your connection and try again.", Toast.LENGTH_SHORT).show();
+			}
+		});
+	}
+
+	private void proceedWithGoogleRegistration(String email, String firstName, String lastName, String phone, String idToken) {
+		Log.d(TAG, "Proceeding with Google registration - Email: " + email + ", Phone: " + phone);
+		Log.d(TAG, "First Name: " + firstName + ", Last Name: " + lastName);
+		
+		ApiService apiService = ApiClient.getApiService();
 		GoogleSignInRequest request = new GoogleSignInRequest(
 			idToken,
 			email,
@@ -590,7 +653,72 @@ public class RegisterActivity extends AppCompatActivity {
 		Log.d(TAG, "  - Phone: " + phone);
 		Log.d(TAG, "  - Access Token: " + (accessToken != null && !accessToken.isEmpty() ? "Present" : "Missing"));
 
-		Log.d(TAG, "Registering Facebook user - Facebook ID: " + facebookId + ", Email: " + (email != null ? email : "NULL") + ", Phone: " + phone);
+		Log.d(TAG, "Checking if Facebook user exists - Facebook ID: " + facebookId + ", Email: " + (email != null ? email : "NULL"));
+		Log.d(TAG, "First Name: " + firstName + ", Last Name: " + lastName);
+
+		// Check if account already exists
+		checkFacebookAccountExistsForRegistration(accessToken, facebookId, email, firstName, lastName, phone);
+	}
+
+	private void checkFacebookAccountExistsForRegistration(String accessToken, String facebookId, String email, String firstName, String lastName, String phone) {
+		ApiService apiService = ApiClient.getApiService();
+		String token = accessToken != null && !accessToken.isEmpty() ? accessToken : "";
+		FacebookSignInRequest request = new FacebookSignInRequest(
+			token,
+			facebookId,
+			email != null ? email : "", // Email can be empty for pure FB auth
+			firstName != null ? firstName : "",
+			lastName != null ? lastName : "",
+			phone != null ? phone : ""
+		);
+
+		Log.d(TAG, "Checking Facebook account existence - Facebook ID: " + facebookId + ", Email: " + (email != null ? email : "NULL") + ", First: " + firstName + ", Last: " + lastName + ", Phone: " + phone);
+
+		Call<FacebookSignInResponse> call = apiService.facebookSignIn(request);
+		call.enqueue(new Callback<>() {
+			@Override
+			public void onResponse(@NonNull Call<FacebookSignInResponse> call, @NonNull Response<FacebookSignInResponse> response) {
+				if (response.isSuccessful() && response.body() != null) {
+					FacebookSignInResponse signInResponse = response.body();
+					if (signInResponse.isSuccess()) {
+						// Account already exists - show error message
+						String message = signInResponse.getMessage() != null ? 
+							signInResponse.getMessage() : "Account already exists. Please login instead.";
+						Toast.makeText(RegisterActivity.this, message, Toast.LENGTH_LONG).show();
+						// Navigate back to login screen
+						Intent intent = new Intent(RegisterActivity.this, MainActivity.class);
+						startActivity(intent);
+						finish();
+					} else {
+						// Account doesn't exist - proceed with registration
+						proceedWithFacebookRegistration(accessToken, facebookId, email, firstName, lastName, phone);
+					}
+				} else {
+					// Handle error response
+					String errorMsg = "Registration check failed. Please try again.";
+					try {
+						if (response.errorBody() != null) {
+							String errorBody = response.errorBody().string();
+							Log.e(TAG, "Facebook registration check error: " + errorBody);
+						}
+					} catch (Exception e) {
+						Log.e(TAG, "Error reading error response", e);
+					}
+					Toast.makeText(RegisterActivity.this, errorMsg, Toast.LENGTH_SHORT).show();
+				}
+			}
+
+			@Override
+			public void onFailure(@NonNull Call<FacebookSignInResponse> call, @NonNull Throwable t) {
+				Log.e(TAG, "Error checking Facebook account existence: " + t.getMessage(), t);
+				Toast.makeText(RegisterActivity.this,
+					"Failed to check account. Please check your connection and try again.", Toast.LENGTH_SHORT).show();
+			}
+		});
+	}
+
+	private void proceedWithFacebookRegistration(String accessToken, String facebookId, String email, String firstName, String lastName, String phone) {
+		Log.d(TAG, "Proceeding with Facebook registration - Facebook ID: " + facebookId + ", Email: " + (email != null ? email : "NULL") + ", Phone: " + phone);
 		Log.d(TAG, "First Name: " + firstName + ", Last Name: " + lastName);
 
 		ApiService apiService = ApiClient.getApiService();

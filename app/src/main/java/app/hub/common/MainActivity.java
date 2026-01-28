@@ -506,8 +506,8 @@ public class MainActivity extends AppCompatActivity {
 
                 Log.d(TAG, "Google Sign-In successful - Email: " + email);
 
-                // Call backend API to login/register with Google
-                loginWithGoogle(email, givenName, familyName, idToken);
+                // Check if account exists before attempting login
+                checkGoogleAccountExists(email, givenName, familyName, idToken);
             }
         } catch (ApiException e) {
             Log.e(TAG, "Google Sign-In failed: " + e.getStatusCode(), e);
@@ -532,6 +532,75 @@ public class MainActivity extends AppCompatActivity {
             }
             Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show();
         }
+    }
+
+    private void checkGoogleAccountExists(String email, String firstName, String lastName, String idToken) {
+        MaterialButton loginButton = findViewById(R.id.loginButton);
+        if (loginButton != null) {
+            loginButton.setEnabled(false);
+            loginButton.setText("Checking account...");
+        }
+
+        ApiService apiService = ApiClient.getApiService();
+        GoogleSignInRequest request = new GoogleSignInRequest(
+            idToken != null ? idToken : "",
+            email,
+            firstName != null ? firstName : "",
+            lastName != null ? lastName : "",
+            "" // No phone on login
+        );
+
+        Call<GoogleSignInResponse> call = apiService.googleSignIn(request);
+        call.enqueue(new Callback<>() {
+            @Override
+            public void onResponse(@NonNull Call<GoogleSignInResponse> call, @NonNull Response<GoogleSignInResponse> response) {
+                runOnUiThread(() -> {
+                    if (loginButton != null) {
+                        loginButton.setEnabled(true);
+                        loginButton.setText("Login");
+                    }
+                });
+
+                if (response.isSuccessful() && response.body() != null) {
+                    GoogleSignInResponse signInResponse = response.body();
+                    if (signInResponse.isSuccess()) {
+                        // Account exists and login successful
+                        handleGoogleLoginSuccess(signInResponse);
+                    } else {
+                        // Account doesn't exist - show error message
+                        String message = signInResponse.getMessage() != null ? 
+                            signInResponse.getMessage() : "Account not found. Please register first.";
+                        runOnUiThread(() -> showError("Login Failed", message));
+                    }
+                } else {
+                    // Handle error response
+                    String errorMsg = "Login failed. Please try again.";
+                    try {
+                        if (response.errorBody() != null) {
+                            String errorBody = response.errorBody().string();
+                            Log.e(TAG, "Google login error: " + errorBody);
+                        }
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error reading error response", e);
+                    }
+                    final String finalErrorMsg = errorMsg;
+                    runOnUiThread(() -> showError("Login Failed", finalErrorMsg));
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<GoogleSignInResponse> call, @NonNull Throwable t) {
+                runOnUiThread(() -> {
+                    if (loginButton != null) {
+                        loginButton.setEnabled(true);
+                        loginButton.setText("Login");
+                    }
+                });
+                Log.e(TAG, "Error checking Google account: " + t.getMessage(), t);
+                runOnUiThread(() -> showError("Connection Error", 
+                    "Failed to check account. Please check your connection and try again."));
+            }
+        });
     }
 
     private void loginWithGoogle(String email, String firstName, String lastName, String idToken) {
