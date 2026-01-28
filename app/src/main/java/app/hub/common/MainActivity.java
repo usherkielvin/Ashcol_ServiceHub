@@ -370,28 +370,30 @@ public class MainActivity extends AppCompatActivity {
                     FacebookSignInResponse signInResponse = response.body();
                     
                     if (signInResponse.isSuccess()) {
-                        // Check if it's a new account (we want to block auto-registration during login)
-                        String message = signInResponse.getMessage();
-                        boolean isNewAccount = false;
-                        if (message != null) {
-                            String lowerMessage = message.toLowerCase();
-                            if (lowerMessage.contains("created") || lowerMessage.contains("registered") || lowerMessage.contains("welcome")) {
-                                isNewAccount = true;
-                            }
-                        }
-
-                        // Also check if user data is missing which might imply failure or new account in some API designs
-                        if (isNewAccount || signInResponse.getData() == null || signInResponse.getData().getUser() == null) {
+                        // Check if user data exists
+                        if (signInResponse.getData() == null || signInResponse.getData().getUser() == null) {
                             runOnUiThread(() -> showError("Account Not Found", 
                                 "Account not found. Please register first before signing in with Facebook."));
                             LoginManager.getInstance().logOut();
                             return;
                         }
+
+                        // Check message for registration indicator
+                        String message = signInResponse.getMessage();
+                        if (message != null) {
+                            String lowerMessage = message.toLowerCase();
+                            if (lowerMessage.contains("created") || lowerMessage.contains("registered") || lowerMessage.contains("welcome")) {
+                                runOnUiThread(() -> showError("Account Not Found", 
+                                    "Account not found. Please register first before signing in with Facebook."));
+                                LoginManager.getInstance().logOut();
+                                return;
+                            }
+                        }
                         
                         handleFacebookLoginSuccess(signInResponse);
                     } else {
-                        // Success = false from API
-                        String errorMsg = signInResponse.getMessage() != null ? signInResponse.getMessage() : "Login failed. Please try again.";
+                        // Success = false from API (likely account doesn't exist)
+                        String errorMsg = signInResponse.getMessage() != null ? signInResponse.getMessage() : "Account not found. Please register first.";
                         runOnUiThread(() -> showError("Login Failed", errorMsg));
                         LoginManager.getInstance().logOut();
                     }
@@ -411,6 +413,12 @@ public class MainActivity extends AppCompatActivity {
                                 }
                             } catch (Exception e) {
                                 Log.d(TAG, "Could not parse error JSON");
+                            }
+                            
+                            // Check for account existence keywords in error body
+                            String lowerError = errorBody.toLowerCase();
+                            if (lowerError.contains("not found") || lowerError.contains("does not exist") || lowerError.contains("account")) {
+                                errorMsg = "Account not found. Please register first.";
                             }
                         }
                     } catch (Exception e) {
@@ -556,41 +564,48 @@ public class MainActivity extends AppCompatActivity {
                 if (response.isSuccessful() && response.body() != null) {
                     GoogleSignInResponse signInResponse = response.body();
                     
+                    // IF SUCCESS: Backend might have found the user OR just created them.
                     if (signInResponse.isSuccess()) {
-                        // Check if it's a new account (we want to block auto-registration during login)
+                        // DETECT LEAK: Check if the message implies a NEW user was created
                         String message = signInResponse.getMessage();
-                        boolean isNewAccount = false;
+                        boolean isActuallyNewRegistration = false;
                         if (message != null) {
-                            String lowerMessage = message.toLowerCase();
-                            if (lowerMessage.contains("created") || lowerMessage.contains("registered") || lowerMessage.contains("welcome")) {
-                                isNewAccount = true;
+                            String lowerMsg = message.toLowerCase();
+                            if (lowerMsg.contains("created") || lowerMsg.contains("registered") || lowerMsg.contains("welcome")) {
+                                isActuallyNewRegistration = true;
                             }
                         }
 
-                        // Check if user data exists
-                        if (isNewAccount || signInResponse.getData() == null || signInResponse.getData().getUser() == null) {
+                        // DETECT LEAK: Check if we have valid user data. 
+                        // If it's a "login" and the user is NOT in our database yet, 
+                        // we should block it even if the server auto-created it.
+                        if (isActuallyNewRegistration || signInResponse.getData() == null || signInResponse.getData().getUser() == null) {
+                            Log.w(TAG, "Blocking suspected auto-registration: " + message);
                             runOnUiThread(() -> showError("Account Not Found", 
                                 "Account not found. Please register first before signing in with Google."));
                             signOutFromGoogle();
                             return;
                         }
                         
+                        // If we got here, it's a truly existing user
                         handleGoogleLoginSuccess(signInResponse);
                     } else {
-                        // Success = false from API
-                        String errorMsg = signInResponse.getMessage() != null ? signInResponse.getMessage() : "Login failed. Please try again.";
+                        // API returned success: false
+                        String errorMsg = signInResponse.getMessage() != null ? signInResponse.getMessage() : "Account not found. Please register first.";
                         runOnUiThread(() -> showError("Login Failed", errorMsg));
                         signOutFromGoogle();
                     }
                 } else {
+                    // API returned error code (e.g. 401, 404, 500)
                     String errorMsg = "Login failed. Please try again.";
                     try {
                         if (response.errorBody() != null) {
                             String errorBody = response.errorBody().string();
                             Log.e(TAG, "Google login error: " + errorBody);
                             
-                            // Check for specific error message indicating account doesn't exist
-                            if (errorBody.toLowerCase().contains("not found") || errorBody.toLowerCase().contains("does not exist")) {
+                            // Check for account existence keywords in error body
+                            String lowerError = errorBody.toLowerCase();
+                            if (lowerError.contains("not found") || lowerError.contains("does not exist") || lowerError.contains("account")) {
                                 errorMsg = "Account not found. Please register first.";
                             }
                         }
