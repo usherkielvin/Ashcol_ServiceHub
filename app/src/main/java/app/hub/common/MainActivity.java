@@ -89,7 +89,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_login);
 
         tokenManager = new TokenManager(this);
-
+        
         // Check if already logged in
         if (tokenManager.isLoggedIn()) {
             final Intent intent;
@@ -107,9 +107,6 @@ public class MainActivity extends AppCompatActivity {
             finish();
             return;
         }
-
-        // Get location when app starts (before any login)
-        requestLocationPermissionAndDetect();
 
         TextInputEditText emailInput = findViewById(R.id.Email_val);
         TextInputEditText passwordInput = findViewById(R.id.Pass_val);
@@ -299,8 +296,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void signInWithGoogle() {
-        Intent signInIntent = googleSignInClient.getSignInIntent();
-        startActivityForResult(signInIntent, RC_SIGN_IN);
+        // Sign out first to ensure the user can select an account every time
+        googleSignInClient.signOut().addOnCompleteListener(task -> {
+            Intent signInIntent = googleSignInClient.getSignInIntent();
+            startActivityForResult(signInIntent, RC_SIGN_IN);
+        });
     }
 
     @Override
@@ -366,8 +366,35 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
 
-                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
-                    handleFacebookLoginSuccess(response.body());
+                if (response.isSuccessful() && response.body() != null) {
+                    FacebookSignInResponse signInResponse = response.body();
+                    
+                    if (signInResponse.isSuccess()) {
+                        // Check if it's a new account (we want to block auto-registration during login)
+                        String message = signInResponse.getMessage();
+                        boolean isNewAccount = false;
+                        if (message != null) {
+                            String lowerMessage = message.toLowerCase();
+                            if (lowerMessage.contains("created") || lowerMessage.contains("registered") || lowerMessage.contains("welcome")) {
+                                isNewAccount = true;
+                            }
+                        }
+
+                        // Also check if user data is missing which might imply failure or new account in some API designs
+                        if (isNewAccount || signInResponse.getData() == null || signInResponse.getData().getUser() == null) {
+                            runOnUiThread(() -> showError("Account Not Found", 
+                                "Account not found. Please register first before signing in with Facebook."));
+                            LoginManager.getInstance().logOut();
+                            return;
+                        }
+                        
+                        handleFacebookLoginSuccess(signInResponse);
+                    } else {
+                        // Success = false from API
+                        String errorMsg = signInResponse.getMessage() != null ? signInResponse.getMessage() : "Login failed. Please try again.";
+                        runOnUiThread(() -> showError("Login Failed", errorMsg));
+                        LoginManager.getInstance().logOut();
+                    }
                 } else {
                     String errorMsg = "Login failed. Please try again.";
                     try {
@@ -379,36 +406,20 @@ public class MainActivity extends AppCompatActivity {
                             try {
                                 Gson gson = new Gson();
                                 JsonObject jsonObject = gson.fromJson(errorBody, JsonObject.class);
-                                if (jsonObject != null) {
-                                    if (jsonObject.has("message") && jsonObject.get("message").isJsonPrimitive()) {
-                                        errorMsg = jsonObject.get("message").getAsString();
-                                    } else if (jsonObject.has("errors") && jsonObject.get("errors").isJsonObject()) {
-                                        // Get first validation error
-                                        JsonObject errorsObj = jsonObject.getAsJsonObject("errors");
-                                        if (errorsObj.has("email") && errorsObj.get("email").isJsonArray()) {
-                                            errorMsg = errorsObj.get("email").getAsJsonArray().get(0).getAsString();
-                                        }
-                                    }
+                                if (jsonObject != null && jsonObject.has("message")) {
+                                    errorMsg = jsonObject.get("message").getAsString();
                                 }
                             } catch (Exception e) {
-                                Log.d(TAG, "Could not parse error JSON, using default message");
+                                Log.d(TAG, "Could not parse error JSON");
                             }
                         }
                     } catch (Exception e) {
                         Log.e(TAG, "Error reading error response", e);
                     }
                     
-                    // Provide more specific error messages based on status code
-                    if (response.code() == 422) {
-                        errorMsg = "Invalid email or Facebook account. Please register first or use email/password login.";
-                    } else if (response.code() == 401) {
-                        errorMsg = "Authentication failed. Please try again.";
-                    } else if (response.code() == 500) {
-                        errorMsg = "Server error. Please try again later.";
-                    }
-                    
                     final String finalErrorMsg = errorMsg;
                     runOnUiThread(() -> showError("Login Failed", finalErrorMsg));
+                    LoginManager.getInstance().logOut();
                 }
             }
 
@@ -423,6 +434,7 @@ public class MainActivity extends AppCompatActivity {
                 Log.e(TAG, "Error logging in with Facebook: " + t.getMessage(), t);
                 String errorMsg = getConnectionErrorMessage(t);
                 runOnUiThread(() -> showError("Connection Error", errorMsg));
+                LoginManager.getInstance().logOut();
             }
         });
     }
@@ -470,28 +482,8 @@ public class MainActivity extends AppCompatActivity {
         // Force immediate token persistence
         tokenManager.forceCommit();
 
-        // Update location if detected (using the same logic as RegisterActivity)
-        String detectedLocation = tokenManager.getCurrentCity();
-        if (detectedLocation != null && !detectedLocation.isEmpty()) {
-            updateLocation(detectedLocation);
-        }
-
-        // Navigate to dashboard
-        runOnUiThread(() -> {
-            final Intent intent;
-            if ("admin".equals(user.getRole())) {
-                intent = new Intent(MainActivity.this, AdminDashboardActivity.class);
-            } else if ("manager".equals(user.getRole())) {
-                intent = new Intent(MainActivity.this, ManagerDashboardActivity.class);
-            } else if ("employee".equals(user.getRole()) || "staff".equals(user.getRole())) {
-                intent = new Intent(MainActivity.this, EmployeeDashboardActivity.class);
-            } else {
-                intent = new Intent(MainActivity.this, DashboardActivity.class);
-                intent.putExtra(DashboardActivity.EXTRA_EMAIL, user.getEmail());
-            }
-            startActivity(intent);
-            finish();
-        });
+        // Update location for signed-in user and navigate after completion
+        updateLocationAndNavigate(user);
     }
 
     private void handleGoogleSignInResult(Task<GoogleSignInAccount> completedTask) {
@@ -506,8 +498,8 @@ public class MainActivity extends AppCompatActivity {
 
                 Log.d(TAG, "Google Sign-In successful - Email: " + email);
 
-                // Check if account exists before attempting login
-                checkGoogleAccountExists(email, givenName, familyName, idToken);
+                // Call backend API to login with Google
+                loginWithGoogle(email, givenName, familyName, idToken);
             }
         } catch (ApiException e) {
             Log.e(TAG, "Google Sign-In failed: " + e.getStatusCode(), e);
@@ -532,75 +524,6 @@ public class MainActivity extends AppCompatActivity {
             }
             Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show();
         }
-    }
-
-    private void checkGoogleAccountExists(String email, String firstName, String lastName, String idToken) {
-        MaterialButton loginButton = findViewById(R.id.loginButton);
-        if (loginButton != null) {
-            loginButton.setEnabled(false);
-            loginButton.setText("Checking account...");
-        }
-
-        ApiService apiService = ApiClient.getApiService();
-        GoogleSignInRequest request = new GoogleSignInRequest(
-            idToken != null ? idToken : "",
-            email,
-            firstName != null ? firstName : "",
-            lastName != null ? lastName : "",
-            "" // No phone on login
-        );
-
-        Call<GoogleSignInResponse> call = apiService.googleSignIn(request);
-        call.enqueue(new Callback<>() {
-            @Override
-            public void onResponse(@NonNull Call<GoogleSignInResponse> call, @NonNull Response<GoogleSignInResponse> response) {
-                runOnUiThread(() -> {
-                    if (loginButton != null) {
-                        loginButton.setEnabled(true);
-                        loginButton.setText("Login");
-                    }
-                });
-
-                if (response.isSuccessful() && response.body() != null) {
-                    GoogleSignInResponse signInResponse = response.body();
-                    if (signInResponse.isSuccess()) {
-                        // Account exists and login successful
-                        handleGoogleLoginSuccess(signInResponse);
-                    } else {
-                        // Account doesn't exist - show error message
-                        String message = signInResponse.getMessage() != null ? 
-                            signInResponse.getMessage() : "Account not found. Please register first.";
-                        runOnUiThread(() -> showError("Login Failed", message));
-                    }
-                } else {
-                    // Handle error response
-                    String errorMsg = "Login failed. Please try again.";
-                    try {
-                        if (response.errorBody() != null) {
-                            String errorBody = response.errorBody().string();
-                            Log.e(TAG, "Google login error: " + errorBody);
-                        }
-                    } catch (Exception e) {
-                        Log.e(TAG, "Error reading error response", e);
-                    }
-                    final String finalErrorMsg = errorMsg;
-                    runOnUiThread(() -> showError("Login Failed", finalErrorMsg));
-                }
-            }
-
-            @Override
-            public void onFailure(@NonNull Call<GoogleSignInResponse> call, @NonNull Throwable t) {
-                runOnUiThread(() -> {
-                    if (loginButton != null) {
-                        loginButton.setEnabled(true);
-                        loginButton.setText("Login");
-                    }
-                });
-                Log.e(TAG, "Error checking Google account: " + t.getMessage(), t);
-                runOnUiThread(() -> showError("Connection Error", 
-                    "Failed to check account. Please check your connection and try again."));
-            }
-        });
     }
 
     private void loginWithGoogle(String email, String firstName, String lastName, String idToken) {
@@ -630,20 +553,53 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
 
-                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
-                    handleGoogleLoginSuccess(response.body());
+                if (response.isSuccessful() && response.body() != null) {
+                    GoogleSignInResponse signInResponse = response.body();
+                    
+                    if (signInResponse.isSuccess()) {
+                        // Check if it's a new account (we want to block auto-registration during login)
+                        String message = signInResponse.getMessage();
+                        boolean isNewAccount = false;
+                        if (message != null) {
+                            String lowerMessage = message.toLowerCase();
+                            if (lowerMessage.contains("created") || lowerMessage.contains("registered") || lowerMessage.contains("welcome")) {
+                                isNewAccount = true;
+                            }
+                        }
+
+                        // Check if user data exists
+                        if (isNewAccount || signInResponse.getData() == null || signInResponse.getData().getUser() == null) {
+                            runOnUiThread(() -> showError("Account Not Found", 
+                                "Account not found. Please register first before signing in with Google."));
+                            signOutFromGoogle();
+                            return;
+                        }
+                        
+                        handleGoogleLoginSuccess(signInResponse);
+                    } else {
+                        // Success = false from API
+                        String errorMsg = signInResponse.getMessage() != null ? signInResponse.getMessage() : "Login failed. Please try again.";
+                        runOnUiThread(() -> showError("Login Failed", errorMsg));
+                        signOutFromGoogle();
+                    }
                 } else {
                     String errorMsg = "Login failed. Please try again.";
                     try {
                         if (response.errorBody() != null) {
                             String errorBody = response.errorBody().string();
                             Log.e(TAG, "Google login error: " + errorBody);
+                            
+                            // Check for specific error message indicating account doesn't exist
+                            if (errorBody.toLowerCase().contains("not found") || errorBody.toLowerCase().contains("does not exist")) {
+                                errorMsg = "Account not found. Please register first.";
+                            }
                         }
                     } catch (Exception e) {
                         Log.e(TAG, "Error reading error response", e);
                     }
                     final String finalErrorMsg = errorMsg;
                     runOnUiThread(() -> showError("Login Failed", finalErrorMsg));
+                    signOutFromGoogle();
                 }
             }
 
@@ -658,6 +614,7 @@ public class MainActivity extends AppCompatActivity {
                 Log.e(TAG, "Error logging in with Google: " + t.getMessage(), t);
                 runOnUiThread(() -> showError("Connection Error", 
                     "Failed to login. Please check your connection and try again."));
+                signOutFromGoogle();
             }
         });
     }
@@ -695,28 +652,8 @@ public class MainActivity extends AppCompatActivity {
         // Force immediate token persistence
         tokenManager.forceCommit();
 
-        // Update location if detected (using the same logic as RegisterActivity)
-        String detectedLocation = tokenManager.getCurrentCity();
-        if (detectedLocation != null && !detectedLocation.isEmpty()) {
-            updateLocation(detectedLocation);
-        }
-
-        // Navigate to dashboard
-        runOnUiThread(() -> {
-            final Intent intent;
-            if ("admin".equals(user.getRole())) {
-                intent = new Intent(MainActivity.this, AdminDashboardActivity.class);
-            } else if ("manager".equals(user.getRole())) {
-                intent = new Intent(MainActivity.this, ManagerDashboardActivity.class);
-            } else if ("employee".equals(user.getRole()) || "staff".equals(user.getRole())) {
-                intent = new Intent(MainActivity.this, EmployeeDashboardActivity.class);
-            } else {
-                intent = new Intent(MainActivity.this, DashboardActivity.class);
-                intent.putExtra(DashboardActivity.EXTRA_EMAIL, user.getEmail());
-            }
-            startActivity(intent);
-            finish();
-        });
+        // Update location for signed-in user and navigate after completion
+        updateLocationAndNavigate(user);
     }
 
     /**
@@ -1097,8 +1034,6 @@ public class MainActivity extends AppCompatActivity {
                         tokenManager.saveCurrentCity(city);
                         Log.d(TAG, "Detected city: " + city);
                         // Update user's location in database if logged in
-                        // For app startup, this will be saved for later use when user logs in
-                        // For active sessions, this will update the current user
                         if (tokenManager.isLoggedIn()) {
                             updateLocation(city);
                         }
@@ -1118,30 +1053,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
     
-    /**
-     * Request location permission and detect location when app starts
-     */
-    private void requestLocationPermissionAndDetect() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) 
-                != PackageManager.PERMISSION_GRANTED) {
-            // Should we show an explanation?
-            if (ActivityCompat.shouldShowRequestPermissionRationale(this, 
-                    Manifest.permission.ACCESS_FINE_LOCATION)) {
-                // Show an explanation to the user *asynchronously* - this is just for info
-                // We'll request the permission anyway
-                Log.d(TAG, "Location permission needed for location services");
-            }
-            
-            // Request the permission
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                    LOCATION_PERMISSION_REQUEST_CODE);
-        } else {
-            // Permission already granted, detect location
-            detectLocation();
-        }
-    }
-    
     private void updateLocation(String location) {
         if (!tokenManager.isLoggedIn()) {
             Log.d(TAG, "User not logged in, skipping location update");
@@ -1154,20 +1065,9 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
         
-        // Use cached location if available, otherwise use the passed location
-        String locationToUpdate = location;
-        String cachedLocation = tokenManager.getCurrentCity();
-        if (cachedLocation != null && !cachedLocation.isEmpty()) {
-            locationToUpdate = cachedLocation;
-        }
-        
-        // Final variables for use in inner classes
-        final String finalLocationToUpdate = locationToUpdate;
-        final String finalToken = token;
-        
         // Get current user data to preserve other fields
         ApiService apiService = ApiClient.getApiService();
-        Call<UserResponse> getUserCall = apiService.getUser(finalToken);
+        Call<UserResponse> getUserCall = apiService.getUser(token);
         getUserCall.enqueue(new Callback<UserResponse>() {
             @Override
             public void onResponse(@NonNull Call<UserResponse> call, @NonNull Response<UserResponse> response) {
@@ -1179,15 +1079,15 @@ public class MainActivity extends AppCompatActivity {
                             currentUser.getFirstName(),
                             currentUser.getLastName(),
                             "", // Phone not available in current user data
-                            finalLocationToUpdate
+                            location
                         );
                         
-                        Call<UserResponse> updateCall = apiService.updateUser(finalToken, updateRequest);
+                        Call<UserResponse> updateCall = apiService.updateUser(token, updateRequest);
                         updateCall.enqueue(new Callback<UserResponse>() {
                             @Override
                             public void onResponse(@NonNull Call<UserResponse> call, @NonNull Response<UserResponse> response) {
                                 if (response.isSuccessful() && response.body() != null) {
-                                    Log.d(TAG, "Location updated successfully: " + finalLocationToUpdate);
+                                    Log.d(TAG, "Location updated successfully: " + location);
                                 } else {
                                     Log.e(TAG, "Failed to update location: " + response.code() + " - " + (response.message() != null ? response.message() : "Unknown error"));
                                 }
@@ -1298,10 +1198,200 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Update user's location and then navigate to dashboard
+     * Ensures location update completes before navigation
+     */
+    private void updateLocationAndNavigate(Object user) {
+        // First, try to get cached location
+        String detectedLocation = tokenManager.getCurrentCity();
+        
+        if (detectedLocation != null && !detectedLocation.isEmpty()) {
+            Log.d(TAG, "Using cached location: " + detectedLocation);
+            // Update location with callback to navigate after completion
+            updateLocationWithCallback(detectedLocation, () -> navigateToDashboard(user));
+        } else {
+            Log.d(TAG, "No cached location, detecting now...");
+            // Detect location and update, then navigate
+            detectLocationWithCallback(() -> navigateToDashboard(user));
+        }
+    }
 
+    /**
+     * Update location with callback after completion
+     */
+    private void updateLocationWithCallback(String location, Runnable onComplete) {
+        if (!tokenManager.isLoggedIn()) {
+            Log.d(TAG, "User not logged in, skipping location update");
+            onComplete.run();
+            return;
+        }
+        
+        String token = tokenManager.getToken();
+        if (token == null || token.isEmpty()) {
+            Log.e(TAG, "No token available for location update");
+            onComplete.run();
+            return;
+        }
+        
+        Log.d(TAG, "Updating location to: " + location);
+        
+        // Get current user data to preserve other fields
+        ApiService apiService = ApiClient.getApiService();
+        Call<UserResponse> getUserCall = apiService.getUser(token);
+        getUserCall.enqueue(new Callback<UserResponse>() {
+            @Override
+            public void onResponse(@NonNull Call<UserResponse> call, @NonNull Response<UserResponse> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
+                    UserResponse.Data currentUser = response.body().getData();
+                    if (currentUser != null) {
+                        // Update user profile with new location
+                        UpdateProfileRequest updateRequest = new UpdateProfileRequest(
+                            currentUser.getFirstName(),
+                            currentUser.getLastName(),
+                            "", // Phone not available in current user data
+                            location
+                        );
+                        
+                        Call<UserResponse> updateCall = apiService.updateUser(token, updateRequest);
+                        updateCall.enqueue(new Callback<UserResponse>() {
+                            @Override
+                            public void onResponse(@NonNull Call<UserResponse> call, @NonNull Response<UserResponse> response) {
+                                if (response.isSuccessful() && response.body() != null) {
+                                    Log.d(TAG, "Location updated successfully: " + location);
+                                } else {
+                                    Log.e(TAG, "Failed to update location: " + response.code() + " - " + (response.message() != null ? response.message() : "Unknown error"));
+                                }
+                                // Always proceed to navigation regardless of location update success
+                                onComplete.run();
+                            }
 
+                            @Override
+                            public void onFailure(@NonNull Call<UserResponse> call, @NonNull Throwable t) {
+                                Log.e(TAG, "Failed to update location", t);
+                                // Still navigate even if location update fails
+                                onComplete.run();
+                            }
+                        });
+                    } else {
+                        Log.e(TAG, "Current user data is null");
+                        onComplete.run();
+                    }
+                } else {
+                    Log.e(TAG, "Failed to get current user data: " + response.code() + " - " + (response.message() != null ? response.message() : "Unknown error"));
+                    onComplete.run();
+                }
+            }
 
+            @Override
+            public void onFailure(@NonNull Call<UserResponse> call, @NonNull Throwable t) {
+                Log.e(TAG, "Failed to get current user data", t);
+                onComplete.run();
+            }
+        });
+    }
 
+    /**
+     * Detect location with callback after completion
+     */
+    private void detectLocationWithCallback(Runnable onComplete) {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) 
+                != PackageManager.PERMISSION_GRANTED) {
+            Log.d(TAG, "Location permission not granted, proceeding without location update");
+            onComplete.run();
+            return;
+        }
+        
+        try {
+            LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+            if (locationManager != null) {
+                // Check if providers are enabled
+                boolean isGPSEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+                boolean isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+                
+                if (!isGPSEnabled && !isNetworkEnabled) {
+                    Log.d(TAG, "Location providers disabled, proceeding without location update");
+                    onComplete.run();
+                    return;
+                }
+                
+                Location location = null;
+                // Try network provider first (faster)
+                if (isNetworkEnabled) {
+                    location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+                }
+                // Fall back to GPS
+                if (location == null && isGPSEnabled) {
+                    location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                }
+                
+                if (location != null) {
+                    Log.d(TAG, "Location detected - Lat: " + location.getLatitude() + ", Lng: " + location.getLongitude());
+                    String city = reverseGeocodeLocation(location.getLatitude(), location.getLongitude());
+                    if (city != null && !city.isEmpty()) {
+                        // Store in SharedPreferences
+                        tokenManager.saveCurrentCity(city);
+                        Log.d(TAG, "Detected city: " + city);
+                        // Update user's location in database
+                        updateLocationWithCallback(city, onComplete);
+                    } else {
+                        Log.d(TAG, "Reverse geocoding returned null or empty, proceeding without location update");
+                        onComplete.run();
+                    }
+                } else {
+                    Log.d(TAG, "Could not get current location, proceeding without location update");
+                    onComplete.run();
+                }
+            } else {
+                Log.e(TAG, "LocationManager is null");
+                onComplete.run();
+            }
+        } catch (SecurityException e) {
+            Log.e(TAG, "Location permission denied at runtime", e);
+            onComplete.run();
+        } catch (Exception e) {
+            Log.e(TAG, "Error getting location", e);
+            onComplete.run();
+        }
+    }
 
-
+    /**
+     * Navigate to appropriate dashboard based on user role
+     */
+    private void navigateToDashboard(Object user) {
+        runOnUiThread(() -> {
+            final Intent intent;
+            
+            // Handle both GoogleSignInResponse.User and FacebookSignInResponse.User
+            String role = null;
+            String email = null;
+            
+            if (user instanceof GoogleSignInResponse.User) {
+                GoogleSignInResponse.User googleUser = (GoogleSignInResponse.User) user;
+                role = googleUser.getRole();
+                email = googleUser.getEmail();
+            } else if (user instanceof FacebookSignInResponse.User) {
+                FacebookSignInResponse.User fbUser = (FacebookSignInResponse.User) user;
+                role = fbUser.getRole();
+                email = fbUser.getEmail();
+            }
+            
+            if ("admin".equals(role)) {
+                intent = new Intent(MainActivity.this, AdminDashboardActivity.class);
+            } else if ("manager".equals(role)) {
+                intent = new Intent(MainActivity.this, ManagerDashboardActivity.class);
+            } else if ("employee".equals(role) || "staff".equals(role)) {
+                intent = new Intent(MainActivity.this, EmployeeDashboardActivity.class);
+            } else {
+                intent = new Intent(MainActivity.this, DashboardActivity.class);
+                if (email != null) {
+                    intent.putExtra(DashboardActivity.EXTRA_EMAIL, email);
+                }
+            }
+            
+            Log.d(TAG, "Navigating to dashboard for role: " + role);
+            startActivity(intent);
+            finish();
+        });
+    }
 }

@@ -3,6 +3,8 @@ package app.hub.util;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import java.util.Map;
+
 public class TokenManager {
     private static final String PREF_NAME = "auth_pref";
     private static final String KEY_TOKEN = "token";
@@ -11,6 +13,7 @@ public class TokenManager {
     private static final String KEY_ROLE = "role";
     private static final String KEY_CONNECTION_STATUS = "connection_status";
     private static final String KEY_CURRENT_CITY = "current_city";
+    private static final String KEY_FAILED_GOOGLE_LOGIN_PREFIX = "failed_google_login_";
     
     // Notification Settings
     private static final String KEY_PUSH_NOTIF = "push_notifications";
@@ -81,6 +84,64 @@ public class TokenManager {
 
     public String getCurrentCity() {
         return sharedPreferences.getString(KEY_CURRENT_CITY, null);
+    }
+    
+    /**
+     * Check if a Google login has failed for a specific email
+     */
+    public boolean hasFailedGoogleLogin(String email) {
+        if (email == null) return false;
+        String key = KEY_FAILED_GOOGLE_LOGIN_PREFIX + sanitizeKey(email);
+        return sharedPreferences.getBoolean(key, false);
+    }
+    
+    /**
+     * Mark a Google login as failed for a specific email
+     */
+    public void markFailedGoogleLogin(String email) {
+        if (email == null) return;
+        String key = KEY_FAILED_GOOGLE_LOGIN_PREFIX + sanitizeKey(email);
+        sharedPreferences.edit().putBoolean(key, true).apply();
+    }
+    
+    /**
+     * Clear the failed Google login flag for a specific email
+     */
+    public void clearFailedGoogleLogin(String email) {
+        if (email == null) return;
+        String key = KEY_FAILED_GOOGLE_LOGIN_PREFIX + sanitizeKey(email);
+        sharedPreferences.edit().remove(key).apply();
+    }
+    
+    /**
+     * Clear all failed Google login flags
+     */
+    public void clearAllFailedGoogleLogins() {
+        // Get all keys that start with the failed login prefix
+        Map<String, ?> allEntries = sharedPreferences.getAll();
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        
+        for (Map.Entry<String, ?> entry : allEntries.entrySet()) {
+            if (entry.getKey().startsWith(KEY_FAILED_GOOGLE_LOGIN_PREFIX)) {
+                editor.remove(entry.getKey());
+            }
+        }
+        editor.apply();
+    }
+    
+    /**
+     * Reset Google login tracking completely
+     */
+    public void resetGoogleLoginTracking() {
+        clearAllFailedGoogleLogins();
+    }
+    
+    /**
+     * Sanitize email to be used as a SharedPreferences key
+     */
+    private String sanitizeKey(String key) {
+        // Replace characters that are not allowed in SharedPreferences keys
+        return key.replaceAll("[^a-zA-Z0-9_]", "_");
     }
     
     // Notification Settings Methods
