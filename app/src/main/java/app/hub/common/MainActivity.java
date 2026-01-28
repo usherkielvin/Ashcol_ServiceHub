@@ -17,6 +17,8 @@ import app.hub.employee.EmployeeDashboardActivity;
 import app.hub.manager.ManagerDashboardActivity;
 import app.hub.user.DashboardActivity;
 import app.hub.util.EmailValidator;
+import app.hub.util.LocationConfig;
+import app.hub.util.UserLocationManager;
 import app.hub.util.TokenManager;
 import android.Manifest;
 import android.content.Intent;
@@ -79,6 +81,7 @@ public class MainActivity extends AppCompatActivity {
 	private TokenManager tokenManager;
 	private GoogleSignInClient googleSignInClient;
 	private CallbackManager facebookCallbackManager;
+	private UserLocationManager userLocationManager;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -89,6 +92,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_login);
 
         tokenManager = new TokenManager(this);
+        userLocationManager = new UserLocationManager(this);
         
         // Check if already logged in
         if (tokenManager.isLoggedIn()) {
@@ -757,19 +761,8 @@ public class MainActivity extends AppCompatActivity {
 
 						// Navigate to dashboard
 						runOnUiThread(() -> {
-                            final Intent intent;
-                            if ("admin".equals(user.getRole())) {
-                                intent = new Intent(MainActivity.this, AdminDashboardActivity.class);
-                            } else if ("manager".equals(user.getRole())) {
-                                intent = new Intent(MainActivity.this, ManagerDashboardActivity.class);
-                            } else if ("employee".equals(user.getRole()) || "staff".equals(user.getRole())) {
-                                intent = new Intent(MainActivity.this, EmployeeDashboardActivity.class);
-                            } else {
-                                intent = new Intent(MainActivity.this, DashboardActivity.class);
-                                intent.putExtra(DashboardActivity.EXTRA_EMAIL, user.getEmail());
-                            }
-                            startActivity(intent);
-                            finish();
+                            // Update location and then navigate
+                            updateLocationAndNavigate(user.getRole(), user.getEmail());
 						});
 					} else {
 						final String message = loginResponse != null && loginResponse.getMessage() != null 
@@ -1019,194 +1012,30 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
         
-        try {
-            LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
-            if (locationManager != null) {
-                // Check if providers are enabled
-                boolean isGPSEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
-                boolean isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
-                
-                if (!isGPSEnabled && !isNetworkEnabled) {
-                    Log.d(TAG, "Location providers disabled");
-                    return;
-                }
-                
-                Location location = null;
-                // Try network provider first (faster)
-                if (isNetworkEnabled) {
-                    location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-                }
-                // Fall back to GPS
-                if (location == null && isGPSEnabled) {
-                    location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-                }
-                
-                if (location != null) {
-                    Log.d(TAG, "Location detected - Lat: " + location.getLatitude() + ", Lng: " + location.getLongitude());
-                    String city = reverseGeocodeLocation(location.getLatitude(), location.getLongitude());
-                    if (city != null && !city.isEmpty()) {
-                        // Store in SharedPreferences
-                        tokenManager.saveCurrentCity(city);
-                        Log.d(TAG, "Detected city: " + city);
-                        // Update user's location in database if logged in
-                        if (tokenManager.isLoggedIn()) {
-                            updateLocation(city);
-                        }
-                    } else {
-                        Log.d(TAG, "Reverse geocoding returned null or empty");
-                    }
-                } else {
-                    Log.d(TAG, "Could not get current location");
-                }
-            } else {
-                Log.e(TAG, "LocationManager is null");
-            }
-        } catch (SecurityException e) {
-            Log.e(TAG, "Location permission denied at runtime", e);
-        } catch (Exception e) {
-            Log.e(TAG, "Error getting location", e);
-        }
-    }
-    
-    private void updateLocation(String location) {
-        if (!tokenManager.isLoggedIn()) {
-            Log.d(TAG, "User not logged in, skipping location update");
-            return;
-        }
-        
-        String token = tokenManager.getToken();
-        if (token == null || token.isEmpty()) {
-            Log.e(TAG, "No token available for location update");
-            return;
-        }
-        
-        // Get current user data to preserve other fields
-        ApiService apiService = ApiClient.getApiService();
-        Call<UserResponse> getUserCall = apiService.getUser(token);
-        getUserCall.enqueue(new Callback<UserResponse>() {
+        // Use the new UserLocationManager for location detection
+        userLocationManager.updateUserLocation(new UserLocationManager.LocationUpdateCallback() {
             @Override
-            public void onResponse(@NonNull Call<UserResponse> call, @NonNull Response<UserResponse> response) {
-                if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
-                    UserResponse.Data currentUser = response.body().getData();
-                    if (currentUser != null) {
-                        // Update user profile with new location
-                        UpdateProfileRequest updateRequest = new UpdateProfileRequest(
-                            currentUser.getFirstName(),
-                            currentUser.getLastName(),
-                            "", // Phone not available in current user data
-                            location
-                        );
-                        
-                        Call<UserResponse> updateCall = apiService.updateUser(token, updateRequest);
-                        updateCall.enqueue(new Callback<UserResponse>() {
-                            @Override
-                            public void onResponse(@NonNull Call<UserResponse> call, @NonNull Response<UserResponse> response) {
-                                if (response.isSuccessful() && response.body() != null) {
-                                    Log.d(TAG, "Location updated successfully: " + location);
-                                } else {
-                                    Log.e(TAG, "Failed to update location: " + response.code() + " - " + (response.message() != null ? response.message() : "Unknown error"));
-                                }
-                            }
-
-                            @Override
-                            public void onFailure(@NonNull Call<UserResponse> call, @NonNull Throwable t) {
-                                Log.e(TAG, "Failed to update location", t);
-                            }
-                        });
-                    }
-                } else {
-                    Log.e(TAG, "Failed to get current user data: " + response.code() + " - " + (response.message() != null ? response.message() : "Unknown error"));
-                }
+            public void onLocationUpdated(String location) {
+                Log.d(TAG, "Location detected and updated: " + location);
             }
 
             @Override
-            public void onFailure(@NonNull Call<UserResponse> call, @NonNull Throwable t) {
-                Log.e(TAG, "Failed to get current user data", t);
+            public void onLocationUpdateFailed(String error) {
+                Log.e(TAG, "Location detection failed: " + error);
             }
         });
     }
-
+    
     // Reverse geocode latitude and longitude to get city name
     private String reverseGeocodeLocation(double latitude, double longitude) {
-        // Improved coordinate mapping for Metro Manila cities
         try {
             Log.d(TAG, "Reverse geocoding - Lat: " + latitude + ", Lng: " + longitude);
             
-            // More precise coordinate ranges for Metro Manila cities
-            if (latitude > 0 && longitude > 0) {
-                // Manila City (14.5995° N, 120.9842° E)
-                if (latitude >= 14.55 && latitude <= 14.65 && longitude >= 120.95 && longitude <= 121.05) {
-                    return "Manila City";
-                }
-                // Makati City (14.5547° N, 121.0244° E)
-                else if (latitude >= 14.52 && latitude <= 14.58 && longitude >= 121.00 && longitude <= 121.05) {
-                    return "Makati City";
-                }
-                // Taguig City (14.5176° N, 121.0509° E)
-                else if (latitude >= 14.48 && latitude <= 14.55 && longitude >= 121.03 && longitude <= 121.10) {
-                    return "Taguig City";
-                }
-                // Pasay City (14.5378° N, 121.0016° E)
-                else if (latitude >= 14.50 && latitude <= 14.55 && longitude >= 120.98 && longitude <= 121.02) {
-                    return "Pasay City";
-                }
-                // Mandaluyong City (14.5832° N, 121.0409° E)
-                else if (latitude >= 14.56 && latitude <= 14.60 && longitude >= 121.02 && longitude <= 121.06) {
-                    return "Mandaluyong City";
-                }
-                // San Juan City (14.5995° N, 121.0359° E)
-                else if (latitude >= 14.58 && latitude <= 14.62 && longitude >= 121.02 && longitude <= 121.05) {
-                    return "San Juan City";
-                }
-                // Quezon City (14.6312° N, 121.0325° E)
-                else if (latitude >= 14.60 && latitude <= 14.70 && longitude >= 121.00 && longitude <= 121.10) {
-                    return "Quezon City";
-                }
-                // Pasig City (14.5832° N, 121.0832° E)
-                else if (latitude >= 14.55 && latitude <= 14.60 && longitude >= 121.05 && longitude <= 121.12) {
-                    return "Pasig City";
-                }
-                // Marikina City (14.6488° N, 121.1022° E)
-                else if (latitude >= 14.62 && latitude <= 14.68 && longitude >= 121.08 && longitude <= 121.15) {
-                    return "Marikina City";
-                }
-                // Caloocan City (14.7583° N, 120.9869° E)
-                else if (latitude >= 14.70 && latitude <= 14.80 && longitude >= 120.95 && longitude <= 121.02) {
-                    return "Caloocan City";
-                }
-                // Valenzuela City (14.6942° N, 120.9683° E)
-                else if (latitude >= 14.65 && latitude <= 14.72 && longitude >= 120.93 && longitude <= 121.00) {
-                    return "Valenzuela City";
-                }
-                // Las Piñas City (14.4496° N, 120.9986° E)
-                else if (latitude >= 14.42 && latitude <= 14.48 && longitude >= 120.97 && longitude <= 121.02) {
-                    return "Las Piñas City";
-                }
-                // Parañaque City (14.4611° N, 121.0176° E)
-                else if (latitude >= 14.43 && latitude <= 14.48 && longitude >= 121.00 && longitude <= 121.04) {
-                    return "Parañaque City";
-                }
-                // Muntinlupa City (14.3909° N, 121.0479° E)
-                else if (latitude >= 14.35 && latitude <= 14.42 && longitude >= 121.02 && longitude <= 121.08) {
-                    return "Muntinlupa City";
-                }
-                // Navotas City (14.6488° N, 120.9489° E)
-                else if (latitude >= 14.62 && latitude <= 14.67 && longitude >= 120.92 && longitude <= 120.97) {
-                    return "Navotas City";
-                }
-                // Malabon City (14.6686° N, 120.9489° E)
-                else if (latitude >= 14.64 && latitude <= 14.69 && longitude >= 120.92 && longitude <= 120.97) {
-                    return "Malabon City";
-                }
-                
-                // Metro Manila area fallback
-                if (latitude >= 14.3 && latitude <= 14.8 && longitude >= 120.9 && longitude <= 121.2) {
-                    return "Metro Manila Area";
-                }
-            }
+            // Use the LocationConfig to find the location name
+            String locationName = LocationConfig.findLocationName(latitude, longitude);
+            Log.d(TAG, "Found location: " + locationName);
+            return locationName;
             
-            Log.d(TAG, "Using default location: Philippines");
-            return "Philippines";  // Default fallback
         } catch (Exception e) {
             Log.e(TAG, "Reverse geocoding failed", e);
             return "Metro Manila Area"; // Default fallback
@@ -1218,156 +1047,66 @@ public class MainActivity extends AppCompatActivity {
      * Ensures location update completes before navigation
      */
     private void updateLocationAndNavigate(Object user) {
-        // First, try to get cached location
-        String detectedLocation = tokenManager.getCurrentCity();
-        
-        if (detectedLocation != null && !detectedLocation.isEmpty()) {
-            Log.d(TAG, "Using cached location: " + detectedLocation);
-            // Update location with callback to navigate after completion
-            updateLocationWithCallback(detectedLocation, () -> navigateToDashboard(user));
-        } else {
-            Log.d(TAG, "No cached location, detecting now...");
-            // Detect location and update, then navigate
-            detectLocationWithCallback(() -> navigateToDashboard(user));
-        }
-    }
-
-    /**
-     * Update location with callback after completion
-     */
-    private void updateLocationWithCallback(String location, Runnable onComplete) {
-        if (!tokenManager.isLoggedIn()) {
-            Log.d(TAG, "User not logged in, skipping location update");
-            onComplete.run();
-            return;
-        }
-        
-        String token = tokenManager.getToken();
-        if (token == null || token.isEmpty()) {
-            Log.e(TAG, "No token available for location update");
-            onComplete.run();
-            return;
-        }
-        
-        Log.d(TAG, "Updating location to: " + location);
-        
-        // Get current user data to preserve other fields
-        ApiService apiService = ApiClient.getApiService();
-        Call<UserResponse> getUserCall = apiService.getUser(token);
-        getUserCall.enqueue(new Callback<UserResponse>() {
+        userLocationManager.updateUserLocation(new UserLocationManager.LocationUpdateCallback() {
             @Override
-            public void onResponse(@NonNull Call<UserResponse> call, @NonNull Response<UserResponse> response) {
-                if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
-                    UserResponse.Data currentUser = response.body().getData();
-                    if (currentUser != null) {
-                        // Update user profile with new location
-                        UpdateProfileRequest updateRequest = new UpdateProfileRequest(
-                            currentUser.getFirstName(),
-                            currentUser.getLastName(),
-                            "", // Phone not available in current user data
-                            location
-                        );
-                        
-                        Call<UserResponse> updateCall = apiService.updateUser(token, updateRequest);
-                        updateCall.enqueue(new Callback<UserResponse>() {
-                            @Override
-                            public void onResponse(@NonNull Call<UserResponse> call, @NonNull Response<UserResponse> response) {
-                                if (response.isSuccessful() && response.body() != null) {
-                                    Log.d(TAG, "Location updated successfully: " + location);
-                                } else {
-                                    Log.e(TAG, "Failed to update location: " + response.code() + " - " + (response.message() != null ? response.message() : "Unknown error"));
-                                }
-                                // Always proceed to navigation regardless of location update success
-                                onComplete.run();
-                            }
-
-                            @Override
-                            public void onFailure(@NonNull Call<UserResponse> call, @NonNull Throwable t) {
-                                Log.e(TAG, "Failed to update location", t);
-                                // Still navigate even if location update fails
-                                onComplete.run();
-                            }
-                        });
-                    } else {
-                        Log.e(TAG, "Current user data is null");
-                        onComplete.run();
-                    }
-                } else {
-                    Log.e(TAG, "Failed to get current user data: " + response.code() + " - " + (response.message() != null ? response.message() : "Unknown error"));
-                    onComplete.run();
-                }
+            public void onLocationUpdated(String location) {
+                Log.d(TAG, "Location updated successfully: " + location);
+                navigateToDashboard(user);
             }
 
             @Override
-            public void onFailure(@NonNull Call<UserResponse> call, @NonNull Throwable t) {
-                Log.e(TAG, "Failed to get current user data", t);
-                onComplete.run();
+            public void onLocationUpdateFailed(String error) {
+                Log.e(TAG, "Location update failed: " + error);
+                // Still navigate even if location update fails
+                navigateToDashboard(user);
             }
         });
     }
 
     /**
-     * Detect location with callback after completion
+     * Update user's location and then navigate to dashboard (for regular login)
+     * Overloaded method for role and email parameters
      */
-    private void detectLocationWithCallback(Runnable onComplete) {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) 
-                != PackageManager.PERMISSION_GRANTED) {
-            Log.d(TAG, "Location permission not granted, proceeding without location update");
-            onComplete.run();
-            return;
-        }
-        
-        try {
-            LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
-            if (locationManager != null) {
-                // Check if providers are enabled
-                boolean isGPSEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
-                boolean isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
-                
-                if (!isGPSEnabled && !isNetworkEnabled) {
-                    Log.d(TAG, "Location providers disabled, proceeding without location update");
-                    onComplete.run();
-                    return;
-                }
-                
-                Location location = null;
-                // Try network provider first (faster)
-                if (isNetworkEnabled) {
-                    location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-                }
-                // Fall back to GPS
-                if (location == null && isGPSEnabled) {
-                    location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-                }
-                
-                if (location != null) {
-                    Log.d(TAG, "Location detected - Lat: " + location.getLatitude() + ", Lng: " + location.getLongitude());
-                    String city = reverseGeocodeLocation(location.getLatitude(), location.getLongitude());
-                    if (city != null && !city.isEmpty()) {
-                        // Store in SharedPreferences
-                        tokenManager.saveCurrentCity(city);
-                        Log.d(TAG, "Detected city: " + city);
-                        // Update user's location in database
-                        updateLocationWithCallback(city, onComplete);
-                    } else {
-                        Log.d(TAG, "Reverse geocoding returned null or empty, proceeding without location update");
-                        onComplete.run();
-                    }
-                } else {
-                    Log.d(TAG, "Could not get current location, proceeding without location update");
-                    onComplete.run();
-                }
-            } else {
-                Log.e(TAG, "LocationManager is null");
-                onComplete.run();
+    private void updateLocationAndNavigate(String role, String email) {
+        userLocationManager.updateUserLocation(new UserLocationManager.LocationUpdateCallback() {
+            @Override
+            public void onLocationUpdated(String location) {
+                Log.d(TAG, "Location updated successfully: " + location);
+                navigateToRoleDashboard(role, email);
             }
-        } catch (SecurityException e) {
-            Log.e(TAG, "Location permission denied at runtime", e);
-            onComplete.run();
-        } catch (Exception e) {
-            Log.e(TAG, "Error getting location", e);
-            onComplete.run();
-        }
+
+            @Override
+            public void onLocationUpdateFailed(String error) {
+                Log.e(TAG, "Location update failed: " + error);
+                // Still navigate even if location update fails
+                navigateToRoleDashboard(role, email);
+            }
+        });
+    }
+
+    /**
+     * Navigate to dashboard based on role and email
+     */
+    private void navigateToRoleDashboard(String role, String email) {
+        runOnUiThread(() -> {
+            final Intent intent;
+            if ("admin".equals(role)) {
+                intent = new Intent(MainActivity.this, AdminDashboardActivity.class);
+            } else if ("manager".equals(role)) {
+                intent = new Intent(MainActivity.this, ManagerDashboardActivity.class);
+            } else if ("employee".equals(role) || "staff".equals(role)) {
+                intent = new Intent(MainActivity.this, EmployeeDashboardActivity.class);
+            } else {
+                intent = new Intent(MainActivity.this, DashboardActivity.class);
+                if (email != null) {
+                    intent.putExtra(DashboardActivity.EXTRA_EMAIL, email);
+                }
+            }
+            
+            Log.d(TAG, "Navigating to dashboard for role: " + role);
+            startActivity(intent);
+            finish();
+        });
     }
 
     /**
@@ -1408,5 +1147,13 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
             finish();
         });
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (userLocationManager != null) {
+            userLocationManager.cleanup();
+        }
     }
 }

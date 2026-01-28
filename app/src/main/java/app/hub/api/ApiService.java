@@ -85,4 +85,7 @@ public interface ApiService {
 
     @GET("api/v1/employees")
     Call<EmployeeResponse> getEmployees(@Header("Authorization") String token);
+
+    @POST("api/v1/update-location")
+    Call<UpdateLocationResponse> updateLocation(@Header("Authorization") String token, @Body UpdateLocationRequest request);
 }

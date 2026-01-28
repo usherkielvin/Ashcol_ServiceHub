@@ -16,6 +16,7 @@ import app.hub.api.UserResponse;
 import app.hub.api.VerifyEmailResponse;
 import app.hub.user_emailOtp;
 import app.hub.util.TokenManager;
+import app.hub.util.UserLocationManager;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
@@ -46,6 +47,7 @@ public class RegisterActivity extends AppCompatActivity {
 
 	private static final String TAG = "RegisterActivity";
 	private TokenManager tokenManager;
+	private UserLocationManager userLocationManager;
 	private FragmentManager fragmentManager;
 
 	// Registration data to pass between steps
@@ -78,6 +80,7 @@ public class RegisterActivity extends AppCompatActivity {
 
 		try {
 			tokenManager = new TokenManager(this);
+			userLocationManager = new UserLocationManager(this);
 			fragmentManager = getSupportFragmentManager();
 
 			// Setup back press handling using OnBackPressedDispatcher
@@ -799,12 +802,6 @@ public class RegisterActivity extends AppCompatActivity {
 		// Force immediate token persistence
 		tokenManager.forceCommit();
 
-		// Update location if detected
-		String detectedLocation = tokenManager.getCurrentCity();
-		if (detectedLocation != null && !detectedLocation.isEmpty()) {
-			updateLocation(detectedLocation);
-		}
-
 		// Navigate directly to Account Created (skip password creation for Facebook users)
 		Log.d(TAG, "Facebook registration successful, navigating to Account Created");
 		showAccountCreatedFragment();
@@ -921,6 +918,10 @@ public class RegisterActivity extends AppCompatActivity {
 	public void showAccountCreatedFragment() {
 		try {
 			Log.d(TAG, "Showing AccountCreatedFragment");
+
+			// Update location for newly registered user
+			updateLocationForNewUser();
+
 			// Hide template layout, show fragment container
 			hideTemplateLayout();
 			Fragment fragment = new AccountCreatedFragment();
@@ -1064,11 +1065,6 @@ public class RegisterActivity extends AppCompatActivity {
 						tokenManager.forceCommit();
 						
 						Log.d(TAG, "Account created successfully");
-						// Update location if detected
-						String detectedLocation = tokenManager.getCurrentCity();
-						if (detectedLocation != null && !detectedLocation.isEmpty()) {
-							updateLocation(detectedLocation);
-						}
 						// Navigate to Account Created fragment
 						showAccountCreatedFragment();
 					} else {
@@ -1292,12 +1288,6 @@ public class RegisterActivity extends AppCompatActivity {
 				if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
 					Log.d(TAG, "Password updated successfully for Google user");
 					
-					// Update location if detected
-					String detectedLocation = tokenManager.getCurrentCity();
-					if (detectedLocation != null && !detectedLocation.isEmpty()) {
-						updateLocation(detectedLocation);
-					}
-					
 					// Navigate to Account Created
 					showAccountCreatedFragment();
 				} else {
@@ -1318,69 +1308,34 @@ public class RegisterActivity extends AppCompatActivity {
 		});
 	}
 
-	private void updateLocation(String location) {
-		String token = tokenManager.getToken();
-		if (token == null || token.isEmpty()) {
-			Log.e(TAG, "No token available for location update");
+	/**
+	 * Update location for newly registered user
+	 */
+	private void updateLocationForNewUser() {
+		if (!tokenManager.isLoggedIn()) {
+			Log.d(TAG, "User not logged in, skipping location update");
 			return;
 		}
-		
-		// Use cached location if available, otherwise use the passed location
-		String locationToUpdate = location;
-		String cachedLocation = tokenManager.getCurrentCity();
-		if (cachedLocation != null && !cachedLocation.isEmpty()) {
-			locationToUpdate = cachedLocation;
-		}
-		
-		// Final variables for use in inner classes
-		final String finalLocationToUpdate = locationToUpdate;
-		final String finalToken = token;
-		
-		// Get current user data to preserve other fields
-		ApiService apiService = ApiClient.getApiService();
-		Call<UserResponse> getUserCall = apiService.getUser(finalToken);
-		getUserCall.enqueue(new Callback<UserResponse>() {
-			@Override
-			public void onResponse(@NonNull Call<UserResponse> call, @NonNull Response<UserResponse> response) {
-				if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
-					UserResponse.Data currentUser = response.body().getData();
-					if (currentUser != null) {
-						// Update user profile with new location
-						UpdateProfileRequest updateRequest = new UpdateProfileRequest(
-								currentUser.getFirstName(),
-								currentUser.getLastName(),
-								"", // Phone not available in current user data
-								finalLocationToUpdate
-						);
-						
-						Call<UserResponse> updateCall = apiService.updateUser(finalToken, updateRequest);
-						updateCall.enqueue(new Callback<UserResponse>() {
-							@Override
-							public void onResponse(@NonNull Call<UserResponse> call, @NonNull Response<UserResponse> response) {
-								if (response.isSuccessful() && response.body() != null) {
-									Log.d(TAG, "Location updated successfully: " + finalLocationToUpdate);
-								} else {
-									Log.e(TAG, "Failed to update location: " + response.code() + " - " + (response.message() != null ? response.message() : "Unknown error"));
-								}
-							}
 
-							@Override
-							public void onFailure(@NonNull Call<UserResponse> call, @NonNull Throwable t) {
-								Log.e(TAG, "Failed to update location", t);
-							}
-						});
-					} else {
-						Log.e(TAG, "Current user data is null");
-					}
-				} else {
-					Log.e(TAG, "Failed to get current user data: " + response.code() + " - " + (response.message() != null ? response.message() : "Unknown error"));
-				}
+		userLocationManager.updateUserLocation(new UserLocationManager.LocationUpdateCallback() {
+			@Override
+			public void onLocationUpdated(String location) {
+				Log.d(TAG, "Location updated successfully for new user: " + location);
 			}
 
 			@Override
-			public void onFailure(@NonNull Call<UserResponse> call, @NonNull Throwable t) {
-				Log.e(TAG, "Failed to get current user data", t);
+			public void onLocationUpdateFailed(String error) {
+				Log.e(TAG, "Location update failed for new user: " + error);
+				// Don't show error to user, just log it
 			}
 		});
+	}
+
+	@Override
+	protected void onDestroy() {
+		super.onDestroy();
+		if (userLocationManager != null) {
+			userLocationManager.cleanup();
+		}
 	}
 }
