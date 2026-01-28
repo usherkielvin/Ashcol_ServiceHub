@@ -464,33 +464,11 @@ public class MainActivity extends AppCompatActivity {
             tokenManager.saveName(fullName);
         }
 
-        // Update location for signed-in user
-        runOnUiThread(() -> {
-            String detectedLocation = tokenManager.getCurrentCity();
-            if (detectedLocation != null && !detectedLocation.isEmpty()) {
-                updateLocation(detectedLocation);
-            } else {
-                // If no location detected yet, try to detect now
-                detectLocation();
-            }
-        });
-        
-        // Navigate to dashboard
-        runOnUiThread(() -> {
-            final Intent intent;
-            if ("admin".equals(user.getRole())) {
-                intent = new Intent(MainActivity.this, AdminDashboardActivity.class);
-            } else if ("manager".equals(user.getRole())) {
-                intent = new Intent(MainActivity.this, ManagerDashboardActivity.class);
-            } else if ("employee".equals(user.getRole()) || "staff".equals(user.getRole())) {
-                intent = new Intent(MainActivity.this, EmployeeDashboardActivity.class);
-            } else {
-                intent = new Intent(MainActivity.this, DashboardActivity.class);
-                intent.putExtra(DashboardActivity.EXTRA_EMAIL, user.getEmail());
-            }
-            startActivity(intent);
-            finish();
-        });
+        // Force immediate token persistence
+        tokenManager.forceCommit();
+
+        // Update location for signed-in user and navigate after completion
+        updateLocationAndNavigate(user);
     }
 
     private void handleGoogleSignInResult(Task<GoogleSignInAccount> completedTask) {
@@ -622,33 +600,11 @@ public class MainActivity extends AppCompatActivity {
             tokenManager.saveName(fullName);
         }
 
-        // Update location for signed-in user
-        runOnUiThread(() -> {
-            String detectedLocation = tokenManager.getCurrentCity();
-            if (detectedLocation != null && !detectedLocation.isEmpty()) {
-                updateLocation(detectedLocation);
-            } else {
-                // If no location detected yet, try to detect now
-                detectLocation();
-            }
-        });
-        
-        // Navigate to dashboard
-        runOnUiThread(() -> {
-            final Intent intent;
-            if ("admin".equals(user.getRole())) {
-                intent = new Intent(MainActivity.this, AdminDashboardActivity.class);
-            } else if ("manager".equals(user.getRole())) {
-                intent = new Intent(MainActivity.this, ManagerDashboardActivity.class);
-            } else if ("employee".equals(user.getRole()) || "staff".equals(user.getRole())) {
-                intent = new Intent(MainActivity.this, EmployeeDashboardActivity.class);
-            } else {
-                intent = new Intent(MainActivity.this, DashboardActivity.class);
-                intent.putExtra(DashboardActivity.EXTRA_EMAIL, user.getEmail());
-            }
-            startActivity(intent);
-            finish();
-        });
+        // Force immediate token persistence
+        tokenManager.forceCommit();
+
+        // Update location for signed-in user and navigate after completion
+        updateLocationAndNavigate(user);
     }
 
     /**
@@ -1192,4 +1148,200 @@ public class MainActivity extends AppCompatActivity {
             return "Metro Manila Area"; // Default fallback
         }
     }
-}
+
+    /**
+     * Update user's location and then navigate to dashboard
+     * Ensures location update completes before navigation
+     */
+    private void updateLocationAndNavigate(Object user) {
+        // First, try to get cached location
+        String detectedLocation = tokenManager.getCurrentCity();
+        
+        if (detectedLocation != null && !detectedLocation.isEmpty()) {
+            Log.d(TAG, "Using cached location: " + detectedLocation);
+            // Update location with callback to navigate after completion
+            updateLocationWithCallback(detectedLocation, () -> navigateToDashboard(user));
+        } else {
+            Log.d(TAG, "No cached location, detecting now...");
+            // Detect location and update, then navigate
+            detectLocationWithCallback(() -> navigateToDashboard(user));
+        }
+    }
+
+    /**
+     * Update location with callback after completion
+     */
+    private void updateLocationWithCallback(String location, Runnable onComplete) {
+        if (!tokenManager.isLoggedIn()) {
+            Log.d(TAG, "User not logged in, skipping location update");
+            onComplete.run();
+            return;
+        }
+        
+        String token = tokenManager.getToken();
+        if (token == null || token.isEmpty()) {
+            Log.e(TAG, "No token available for location update");
+            onComplete.run();
+            return;
+        }
+        
+        Log.d(TAG, "Updating location to: " + location);
+        
+        // Get current user data to preserve other fields
+        ApiService apiService = ApiClient.getApiService();
+        Call<UserResponse> getUserCall = apiService.getUser(token);
+        getUserCall.enqueue(new Callback<UserResponse>() {
+            @Override
+            public void onResponse(@NonNull Call<UserResponse> call, @NonNull Response<UserResponse> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().getData() != null) {
+                    UserResponse.Data currentUser = response.body().getData();
+                    if (currentUser != null) {
+                        // Update user profile with new location
+                        UpdateProfileRequest updateRequest = new UpdateProfileRequest(
+                            currentUser.getFirstName(),
+                            currentUser.getLastName(),
+                            "", // Phone not available in current user data
+                            location
+                        );
+                        
+                        Call<UserResponse> updateCall = apiService.updateUser(token, updateRequest);
+                        updateCall.enqueue(new Callback<UserResponse>() {
+                            @Override
+                            public void onResponse(@NonNull Call<UserResponse> call, @NonNull Response<UserResponse> response) {
+                                if (response.isSuccessful() && response.body() != null) {
+                                    Log.d(TAG, "Location updated successfully: " + location);
+                                } else {
+                                    Log.e(TAG, "Failed to update location: " + response.code() + " - " + (response.message() != null ? response.message() : "Unknown error"));
+                                }
+                                // Always proceed to navigation regardless of location update success
+                                onComplete.run();
+                            }
+
+                            @Override
+                            public void onFailure(@NonNull Call<UserResponse> call, @NonNull Throwable t) {
+                                Log.e(TAG, "Failed to update location", t);
+                                // Still navigate even if location update fails
+                                onComplete.run();
+                            }
+                        });
+                    } else {
+                        Log.e(TAG, "Current user data is null");
+                        onComplete.run();
+                    }
+                } else {
+                    Log.e(TAG, "Failed to get current user data: " + response.code() + " - " + (response.message() != null ? response.message() : "Unknown error"));
+                    onComplete.run();
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<UserResponse> call, @NonNull Throwable t) {
+                Log.e(TAG, "Failed to get current user data", t);
+                onComplete.run();
+            }
+        });
+    }
+
+    /**
+     * Detect location with callback after completion
+     */
+    private void detectLocationWithCallback(Runnable onComplete) {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) 
+                != PackageManager.PERMISSION_GRANTED) {
+            Log.d(TAG, "Location permission not granted, proceeding without location update");
+            onComplete.run();
+            return;
+        }
+        
+        try {
+            LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+            if (locationManager != null) {
+                // Check if providers are enabled
+                boolean isGPSEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+                boolean isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+                
+                if (!isGPSEnabled && !isNetworkEnabled) {
+                    Log.d(TAG, "Location providers disabled, proceeding without location update");
+                    onComplete.run();
+                    return;
+                }
+                
+                Location location = null;
+                // Try network provider first (faster)
+                if (isNetworkEnabled) {
+                    location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+                }
+                // Fall back to GPS
+                if (location == null && isGPSEnabled) {
+                    location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                }
+                
+                if (location != null) {
+                    Log.d(TAG, "Location detected - Lat: " + location.getLatitude() + ", Lng: " + location.getLongitude());
+                    String city = reverseGeocodeLocation(location.getLatitude(), location.getLongitude());
+                    if (city != null && !city.isEmpty()) {
+                        // Store in SharedPreferences
+                        tokenManager.saveCurrentCity(city);
+                        Log.d(TAG, "Detected city: " + city);
+                        // Update user's location in database
+                        updateLocationWithCallback(city, onComplete);
+                    } else {
+                        Log.d(TAG, "Reverse geocoding returned null or empty, proceeding without location update");
+                        onComplete.run();
+                    }
+                } else {
+                    Log.d(TAG, "Could not get current location, proceeding without location update");
+                    onComplete.run();
+                }
+            } else {
+                Log.e(TAG, "LocationManager is null");
+                onComplete.run();
+            }
+        } catch (SecurityException e) {
+            Log.e(TAG, "Location permission denied at runtime", e);
+            onComplete.run();
+        } catch (Exception e) {
+            Log.e(TAG, "Error getting location", e);
+            onComplete.run();
+        }
+    }
+
+    /**
+     * Navigate to appropriate dashboard based on user role
+     */
+    private void navigateToDashboard(Object user) {
+        runOnUiThread(() -> {
+            final Intent intent;
+            
+            // Handle both GoogleSignInResponse.User and FacebookSignInResponse.User
+            String role = null;
+            String email = null;
+            
+            if (user instanceof GoogleSignInResponse.User) {
+                GoogleSignInResponse.User googleUser = (GoogleSignInResponse.User) user;
+                role = googleUser.getRole();
+                email = googleUser.getEmail();
+            } else if (user instanceof FacebookSignInResponse.User) {
+                FacebookSignInResponse.User fbUser = (FacebookSignInResponse.User) user;
+                role = fbUser.getRole();
+                email = fbUser.getEmail();
+            }
+            
+            if ("admin".equals(role)) {
+                intent = new Intent(MainActivity.this, AdminDashboardActivity.class);
+            } else if ("manager".equals(role)) {
+                intent = new Intent(MainActivity.this, ManagerDashboardActivity.class);
+            } else if ("employee".equals(role) || "staff".equals(role)) {
+                intent = new Intent(MainActivity.this, EmployeeDashboardActivity.class);
+            } else {
+                intent = new Intent(MainActivity.this, DashboardActivity.class);
+                if (email != null) {
+                    intent.putExtra(DashboardActivity.EXTRA_EMAIL, email);
+                }
+            }
+            
+            Log.d(TAG, "Navigating to dashboard for role: " + role);
+            startActivity(intent);
+            finish();
+        });
+    }
