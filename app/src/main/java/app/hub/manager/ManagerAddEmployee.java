@@ -25,8 +25,7 @@ public class ManagerAddEmployee extends AppCompatActivity {
     private TextInputEditText firstNameInput, lastNameInput, usernameInput, emailInput, passwordInput, confirmPasswordInput;
     private TextView branchInfoText;
     private TokenManager tokenManager;
-    private String managerBranch = "";
-    private boolean branchLoaded = false;
+    private String managerBranch = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,7 +35,7 @@ public class ManagerAddEmployee extends AppCompatActivity {
         tokenManager = new TokenManager(this);
         initializeViews();
         setupButtons();
-        getManagerBranch();
+        loadManagerInfo();
     }
 
     private void initializeViews() {
@@ -57,8 +56,7 @@ public class ManagerAddEmployee extends AppCompatActivity {
         backButton.setOnClickListener(v -> finish());
     }
 
-    private void getManagerBranch() {
-        // Get current manager's branch from API
+    private void loadManagerInfo() {
         String token = tokenManager.getToken();
         if (token == null) {
             Toast.makeText(this, "Authentication error", Toast.LENGTH_SHORT).show();
@@ -66,8 +64,7 @@ public class ManagerAddEmployee extends AppCompatActivity {
             return;
         }
 
-        // Show loading state
-        branchInfoText.setText("Loading branch information...");
+        branchInfoText.setText("Loading your branch information...");
 
         ApiService apiService = ApiClient.getApiService();
         Call<UserResponse> call = apiService.getUser("Bearer " + token);
@@ -79,41 +76,32 @@ public class ManagerAddEmployee extends AppCompatActivity {
                     UserResponse userResponse = response.body();
                     if (userResponse.isSuccess() && userResponse.getData() != null) {
                         managerBranch = userResponse.getData().getBranch();
-                        if (managerBranch == null || managerBranch.isEmpty()) {
-                            managerBranch = "No branch assigned";
-                            branchInfoText.setText("Warning: You don't have a branch assigned. Employee will be created without branch.");
-                        } else {
+                        
+                        if (managerBranch != null && !managerBranch.isEmpty()) {
                             branchInfoText.setText("Employee will be assigned to: " + managerBranch);
+                        } else {
+                            branchInfoText.setText("Warning: You don't have a branch assigned. Please contact admin.");
+                            managerBranch = null;
                         }
-                        branchLoaded = true;
                     } else {
-                        branchInfoText.setText("Could not load branch information");
-                        managerBranch = "";
-                        branchLoaded = true;
+                        branchInfoText.setText("Error: Could not load your information");
+                        managerBranch = null;
                     }
                 } else {
-                    branchInfoText.setText("Could not load branch information");
-                    managerBranch = "";
-                    branchLoaded = true;
+                    branchInfoText.setText("Error: Could not load your information");
+                    managerBranch = null;
                 }
             }
 
             @Override
             public void onFailure(Call<UserResponse> call, Throwable t) {
-                branchInfoText.setText("Error loading branch information");
-                managerBranch = "";
-                branchLoaded = true;
+                branchInfoText.setText("Network error: Could not load branch information");
+                managerBranch = null;
             }
         });
     }
 
     private void createEmployee() {
-        // Check if branch information is loaded
-        if (!branchLoaded) {
-            Toast.makeText(this, "Please wait, loading branch information...", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
         String firstName = firstNameInput.getText().toString().trim();
         String lastName = lastNameInput.getText().toString().trim();
         String username = usernameInput.getText().toString().trim();
@@ -164,10 +152,16 @@ public class ManagerAddEmployee extends AppCompatActivity {
             return;
         }
 
-        // Create employee request with manager's branch (can be null/empty if manager has no branch)
+        // Check if manager has a branch
+        if (managerBranch == null || managerBranch.isEmpty()) {
+            Toast.makeText(this, "Cannot create employee: You don't have a branch assigned. Please contact admin.", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        // Create employee with manager's branch
         RegisterRequest registerRequest = new RegisterRequest(
             username, firstName, lastName, email, "", "", 
-            password, confirmPassword, "employee", managerBranch.isEmpty() ? null : managerBranch
+            password, confirmPassword, "employee", managerBranch
         );
 
         ApiService apiService = ApiClient.getApiService();
@@ -179,16 +173,13 @@ public class ManagerAddEmployee extends AppCompatActivity {
                 if (response.isSuccessful() && response.body() != null) {
                     RegisterResponse registerResponse = response.body();
                     if (registerResponse.isSuccess()) {
-                        String successMessage = "Employee created successfully";
-                        if (!managerBranch.isEmpty() && !managerBranch.equals("No branch assigned")) {
-                            successMessage += " and assigned to " + managerBranch;
-                        }
-                        Toast.makeText(ManagerAddEmployee.this, successMessage, Toast.LENGTH_LONG).show();
+                        Toast.makeText(ManagerAddEmployee.this, 
+                            "Employee created successfully and assigned to " + managerBranch, 
+                            Toast.LENGTH_LONG).show();
                         finish();
                     } else {
                         String errorMessage = "Failed to create employee";
                         if (registerResponse.getErrors() != null) {
-                            // Handle validation errors
                             StringBuilder sb = new StringBuilder();
                             if (registerResponse.getErrors().getEmail() != null) {
                                 sb.append("Email: ").append(String.join(", ", registerResponse.getErrors().getEmail())).append("\n");
