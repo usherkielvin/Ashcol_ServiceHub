@@ -30,6 +30,7 @@ public class UserResponse {
         private String role;
         private String profile_photo;
         private String location;
+        private String branch;
         private boolean has_facebook_account;
 
         public int getId() {
@@ -110,6 +111,14 @@ public class UserResponse {
 
         public void setLocation(String location) {
             this.location = location;
+        }
+
+        public String getBranch() {
+            return branch;
+        }
+
+        public void setBranch(String branch) {
+            this.branch = branch;
         }
     }
 }

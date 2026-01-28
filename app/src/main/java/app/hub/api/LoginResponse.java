@@ -59,6 +59,7 @@ public class LoginResponse {
         private String email;
         private String role;
         private String location;
+        private String branch;
         private boolean has_facebook_account;
 
         public int getId() {
@@ -131,6 +132,14 @@ public class LoginResponse {
 
         public void setLocation(String location) {
             this.location = location;
+        }
+
+        public String getBranch() {
+            return branch;
+        }
+
+        public void setBranch(String branch) {
+            this.branch = branch;
         }
     }
 }

@@ -43,6 +43,12 @@
             android:name=".admin.AdminAddEmployee"
             android:exported="false" />
         <activity
+            android:name=".admin.AdminAddManager"
+            android:exported="false" />
+        <activity
+            android:name=".manager.ManagerAddEmployee"
+            android:exported="false" />
+        <activity
             android:name=".employee.EmployeeDashboardActivity"
             android:exported="false" />
         <activity
