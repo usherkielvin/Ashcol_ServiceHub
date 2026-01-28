@@ -1,5 +1,6 @@
 package app.hub.user;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -7,21 +8,21 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import com.google.android.material.textfield.TextInputEditText;
-import com.google.android.material.textfield.TextInputLayout;
-
 import app.hub.R;
 import app.hub.api.ApiClient;
 import app.hub.api.ApiService;
 import app.hub.api.CreateTicketRequest;
 import app.hub.api.CreateTicketResponse;
+import app.hub.map.MapSelectionActivity;
 import app.hub.util.TokenManager;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -29,10 +30,10 @@ import retrofit2.Response;
 
 public class UserCreateTicketFragment extends Fragment {
 
-    private TextInputEditText titleInput, descriptionInput, addressInput, contactInput;
-    private TextInputLayout titleInputLayout, descriptionInputLayout, addressInputLayout, contactInputLayout;
+    private EditText titleInput, descriptionInput, addressInput, contactInput;
     private Spinner serviceTypeSpinner;
     private Button createTicketButton;
+    private Button mapButton;
     private TokenManager tokenManager;
 
     public UserCreateTicketFragment() {
@@ -50,6 +51,14 @@ public class UserCreateTicketFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        // Initialize views - based on fragment_user_create_ticket.xml
+        titleInput = view.findViewById(R.id.etTitle);
+        descriptionInput = view.findViewById(R.id.etDescription);
+        addressInput = view.findViewById(R.id.etLocation);
+        contactInput = view.findViewById(R.id.etContact);
+        serviceTypeSpinner = view.findViewById(R.id.spinnerServiceType);
+        createTicketButton = view.findViewById(R.id.btnSubmit);
+        mapButton = view.findViewById(R.id.btnMap);
 
         tokenManager = new TokenManager(getContext());
 
@@ -61,40 +70,42 @@ public class UserCreateTicketFragment extends Fragment {
         // Apply the adapter to the spinner
         serviceTypeSpinner.setAdapter(adapter);
 
-        // Hide the form fields initially
-        setFormVisibility(View.GONE);
+        // Set up map button click listener
+        if (mapButton != null) {
+            mapButton.setOnClickListener(v -> {
+                Intent intent = new Intent(getActivity(), MapSelectionActivity.class);
+                startActivityForResult(intent, 1001); // Use a request code for result
+            });
+        }
 
-        serviceTypeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                if (position > 0) {
-                    setFormVisibility(View.VISIBLE);
-                }
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-
-            }
-        });
-
-        createTicketButton.setOnClickListener(v -> createTicket());
+        if (createTicketButton != null) {
+            createTicketButton.setOnClickListener(v -> createTicket());
+        }
     }
 
-    private void setFormVisibility(int visibility) {
-        titleInputLayout.setVisibility(visibility);
-        descriptionInputLayout.setVisibility(visibility);
-        addressInputLayout.setVisibility(visibility);
-        contactInputLayout.setVisibility(visibility);
-        createTicketButton.setVisibility(visibility);
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == 1001 && resultCode == getActivity().RESULT_OK && data != null) {
+            double latitude = data.getDoubleExtra("latitude", 0.0);
+            double longitude = data.getDoubleExtra("longitude", 0.0);
+            String address = data.getStringExtra("address");
+            
+            // Set the selected address to the location field
+            if (addressInput != null && address != null) {
+                addressInput.setText(address);
+            }
+            
+            Toast.makeText(getContext(), "Location selected: " + address, Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void createTicket() {
-        String title = titleInput.getText().toString().trim();
-        String description = descriptionInput.getText().toString().trim();
-        String serviceType = serviceTypeSpinner.getSelectedItem().toString();
-        String address = addressInput.getText().toString().trim();
-        String contact = contactInput.getText().toString().trim();
+        String title = titleInput != null ? titleInput.getText().toString().trim() : "";
+        String description = descriptionInput != null ? descriptionInput.getText().toString().trim() : "";
+        String serviceType = serviceTypeSpinner != null ? serviceTypeSpinner.getSelectedItem().toString() : "";
+        String address = addressInput != null ? addressInput.getText().toString().trim() : "";
+        String contact = contactInput != null ? contactInput.getText().toString().trim() : "";
 
         if (title.isEmpty() || description.isEmpty() || address.isEmpty() || contact.isEmpty()) {
             Toast.makeText(getContext(), "Please fill out all fields", Toast.LENGTH_SHORT).show();
@@ -117,12 +128,11 @@ public class UserCreateTicketFragment extends Fragment {
                 if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
                     Toast.makeText(getContext(), "Ticket created successfully", Toast.LENGTH_SHORT).show();
                     // Clear the input fields
-                    titleInput.setText("");
-                    descriptionInput.setText("");
-                    addressInput.setText("");
-                    contactInput.setText("");
-                    serviceTypeSpinner.setSelection(0);
-                    setFormVisibility(View.GONE);
+                    if (titleInput != null) titleInput.setText("");
+                    if (descriptionInput != null) descriptionInput.setText("");
+                    if (addressInput != null) addressInput.setText("");
+                    if (contactInput != null) contactInput.setText("");
+                    if (serviceTypeSpinner != null) serviceTypeSpinner.setSelection(0);
                 } else {
                     Toast.makeText(getContext(), "Failed to create ticket", Toast.LENGTH_SHORT).show();
                 }

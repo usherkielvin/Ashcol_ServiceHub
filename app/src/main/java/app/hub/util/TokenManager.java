@@ -11,6 +11,11 @@ public class TokenManager {
     private static final String KEY_ROLE = "role";
     private static final String KEY_CONNECTION_STATUS = "connection_status";
     private static final String KEY_CURRENT_CITY = "current_city";
+    
+    // Notification Settings
+    private static final String KEY_PUSH_NOTIF = "push_notifications";
+    private static final String KEY_EMAIL_NOTIF = "email_notifications";
+    private static final String KEY_SMS_NOTIF = "sms_notifications";
 
     private final SharedPreferences sharedPreferences;
 
@@ -77,5 +82,29 @@ public class TokenManager {
     public String getCurrentCity() {
         return sharedPreferences.getString(KEY_CURRENT_CITY, null);
     }
+    
+    // Notification Settings Methods
+    public void setPushEnabled(boolean enabled) {
+        sharedPreferences.edit().putBoolean(KEY_PUSH_NOTIF, enabled).apply();
+    }
+    
+    public boolean isPushEnabled() {
+        return sharedPreferences.getBoolean(KEY_PUSH_NOTIF, true);
+    }
+    
+    public void setEmailNotifEnabled(boolean enabled) {
+        sharedPreferences.edit().putBoolean(KEY_EMAIL_NOTIF, enabled).apply();
+    }
+    
+    public boolean isEmailNotifEnabled() {
+        return sharedPreferences.getBoolean(KEY_EMAIL_NOTIF, true);
+    }
+    
+    public void setSmsNotifEnabled(boolean enabled) {
+        sharedPreferences.edit().putBoolean(KEY_SMS_NOTIF, enabled).apply();
+    }
+    
+    public boolean isSmsNotifEnabled() {
+        return sharedPreferences.getBoolean(KEY_SMS_NOTIF, false);
+    }
 }
-

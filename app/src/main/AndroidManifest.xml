@@ -13,6 +13,7 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     
     <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <uses-feature android:name="android.hardware.location.gps" android:required="false" />
 
     <application
         android:allowBackup="true"
@@ -25,6 +26,10 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.ServiceHubApp"
         android:usesCleartextTraffic="true" >
+
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyC16-WtxerB8MN4TbhYy5OX2xeHXSPRH_E" />
         <activity
             android:name=".common.SplashActivity"
             android:exported="true"
@@ -55,12 +60,15 @@
         <activity
             android:name=".user.DashboardActivity"
             android:exported="false" />
-        <activity
-            android:name=".common.ProfileActivity"
-            android:exported="false" />
+
         <activity
             android:name=".common.RegisterActivity"
             android:exported="false" />
+        <activity
+            android:name=".map.MapSelectionActivity"
+            android:exported="false"
+            android:theme="@style/Theme.ServiceHubApp" />
+        
         <activity
             android:name=".ForgotPasswordActivity"
             android:exported="false" />

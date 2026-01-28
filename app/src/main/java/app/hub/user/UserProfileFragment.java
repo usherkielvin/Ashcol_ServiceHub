@@ -20,7 +20,9 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
 
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.imageview.ShapeableImageView;
+import com.google.android.material.switchmaterial.SwitchMaterial;
 
 import app.hub.R;
 import app.hub.api.ApiClient;
@@ -402,7 +404,7 @@ public class UserProfileFragment extends Fragment {
         setClickListener(view, R.id.btn_appearance, () -> 
             showToast("Appearance clicked"));
         setClickListener(view, R.id.btn_notifications, () -> 
-            showToast("Notifications clicked"));
+            showNotificationSettings());
         setClickListener(view, R.id.btn_language, () -> 
             showToast("Language clicked"));
         setClickListener(view, R.id.btn_payroll, () -> 
@@ -414,6 +416,38 @@ public class UserProfileFragment extends Fragment {
         if (button != null) {
             button.setOnClickListener(v -> action.run());
         }
+    }
+
+    private void showNotificationSettings() {
+        if (getContext() == null) return;
+        
+        BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(requireContext());
+        View view = getLayoutInflater().inflate(R.layout.user_notificationstoggler, null);
+        
+        SwitchMaterial switchPush = view.findViewById(R.id.switch_push);
+        SwitchMaterial switchEmail = view.findViewById(R.id.switch_email);
+        SwitchMaterial switchSms = view.findViewById(R.id.switch_sms);
+        
+        if (switchPush != null) {
+            switchPush.setChecked(tokenManager.isPushEnabled());
+            switchPush.setOnCheckedChangeListener((buttonView, isChecked) -> 
+                tokenManager.setPushEnabled(isChecked));
+        }
+        
+        if (switchEmail != null) {
+            switchEmail.setChecked(tokenManager.isEmailNotifEnabled());
+            switchEmail.setOnCheckedChangeListener((buttonView, isChecked) -> 
+                tokenManager.setEmailNotifEnabled(isChecked));
+        }
+        
+        if (switchSms != null) {
+            switchSms.setChecked(tokenManager.isSmsNotifEnabled());
+            switchSms.setOnCheckedChangeListener((buttonView, isChecked) -> 
+                tokenManager.setSmsNotifEnabled(isChecked));
+        }
+        
+        bottomSheetDialog.setContentView(view);
+        bottomSheetDialog.show();
     }
 
     private void showToast(String message) {
