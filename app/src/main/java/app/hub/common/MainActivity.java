@@ -108,6 +108,9 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
+        // Get location when app starts (before any login)
+        requestLocationPermissionAndDetect();
+
         TextInputEditText emailInput = findViewById(R.id.Email_val);
         TextInputEditText passwordInput = findViewById(R.id.Pass_val);
         TextInputLayout emailInputLayout = findViewById(R.id.emailInputLayout);
@@ -1004,6 +1007,30 @@ public class MainActivity extends AppCompatActivity {
         }
     }
     
+    /**
+     * Request location permission and detect location when app starts
+     */
+    private void requestLocationPermissionAndDetect() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) 
+                != PackageManager.PERMISSION_GRANTED) {
+            // Should we show an explanation?
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this, 
+                    Manifest.permission.ACCESS_FINE_LOCATION)) {
+                // Show an explanation to the user *asynchronously* - this is just for info
+                // We'll request the permission anyway
+                Log.d(TAG, "Location permission needed for location services");
+            }
+            
+            // Request the permission
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                    LOCATION_PERMISSION_REQUEST_CODE);
+        } else {
+            // Permission already granted, detect location
+            detectLocation();
+        }
+    }
+    
     private void updateLocation(String location) {
         if (!tokenManager.isLoggedIn()) {
             Log.d(TAG, "User not logged in, skipping location update");
@@ -1014,6 +1041,13 @@ public class MainActivity extends AppCompatActivity {
         if (token == null || token.isEmpty()) {
             Log.e(TAG, "No token available for location update");
             return;
+        }
+        
+        // Use cached location if available, otherwise use the passed location
+        String locationToUpdate = location;
+        String cachedLocation = tokenManager.getCurrentCity();
+        if (cachedLocation != null && !cachedLocation.isEmpty()) {
+            locationToUpdate = cachedLocation;
         }
         
         // Get current user data to preserve other fields
@@ -1030,7 +1064,7 @@ public class MainActivity extends AppCompatActivity {
                             currentUser.getFirstName(),
                             currentUser.getLastName(),
                             "", // Phone not available in current user data
-                            location
+                            locationToUpdate
                         );
                         
                         Call<UserResponse> updateCall = apiService.updateUser(token, updateRequest);
@@ -1038,7 +1072,7 @@ public class MainActivity extends AppCompatActivity {
                             @Override
                             public void onResponse(@NonNull Call<UserResponse> call, @NonNull Response<UserResponse> response) {
                                 if (response.isSuccessful() && response.body() != null) {
-                                    Log.d(TAG, "Location updated successfully: " + location);
+                                    Log.d(TAG, "Location updated successfully: " + locationToUpdate);
                                 } else {
                                     Log.e(TAG, "Failed to update location: " + response.code() + " - " + (response.message() != null ? response.message() : "Unknown error"));
                                 }
@@ -1185,7 +1219,14 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
         
-        Log.d(TAG, "Updating location to: " + location);
+        // Use cached location if available, otherwise use the passed location
+        String locationToUpdate = location;
+        String cachedLocation = tokenManager.getCurrentCity();
+        if (cachedLocation != null && !cachedLocation.isEmpty()) {
+            locationToUpdate = cachedLocation;
+        }
+        
+        Log.d(TAG, "Updating location to: " + locationToUpdate);
         
         // Get current user data to preserve other fields
         ApiService apiService = ApiClient.getApiService();
@@ -1201,7 +1242,7 @@ public class MainActivity extends AppCompatActivity {
                             currentUser.getFirstName(),
                             currentUser.getLastName(),
                             "", // Phone not available in current user data
-                            location
+                            locationToUpdate
                         );
                         
                         Call<UserResponse> updateCall = apiService.updateUser(token, updateRequest);
@@ -1209,7 +1250,7 @@ public class MainActivity extends AppCompatActivity {
                             @Override
                             public void onResponse(@NonNull Call<UserResponse> call, @NonNull Response<UserResponse> response) {
                                 if (response.isSuccessful() && response.body() != null) {
-                                    Log.d(TAG, "Location updated successfully: " + location);
+                                    Log.d(TAG, "Location updated successfully: " + locationToUpdate);
                                 } else {
                                     Log.e(TAG, "Failed to update location: " + response.code() + " - " + (response.message() != null ? response.message() : "Unknown error"));
                                 }
@@ -1283,8 +1324,14 @@ public class MainActivity extends AppCompatActivity {
                         // Store in SharedPreferences
                         tokenManager.saveCurrentCity(city);
                         Log.d(TAG, "Detected city: " + city);
-                        // Update user's location in database
-                        updateLocationWithCallback(city, onComplete);
+                        // Update user's location in database if logged in
+                        if (tokenManager.isLoggedIn()) {
+                            updateLocationWithCallback(city, onComplete);
+                        } else {
+                            // Just save for later use when user logs in
+                            Log.d(TAG, "Location saved for later use when user logs in");
+                            onComplete.run();
+                        }
                     } else {
                         Log.d(TAG, "Reverse geocoding returned null or empty, proceeding without location update");
                         onComplete.run();

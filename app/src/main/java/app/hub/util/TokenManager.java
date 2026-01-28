@@ -110,11 +110,14 @@ public class TokenManager {
 
     /**
      * Force immediate persistence of SharedPreferences.
-     * Note: Most save methods already use apply() which is preferred for UI performance.
+     * This method ensures all pending changes are written to disk immediately.
      */
     public void forceCommit() {
-        // SharedPreferences.apply() already ensures in-memory consistency.
-        // This method can be a no-op or we could use it to ensure everything is flushed.
-        // Since we don't have a pending editor here, we don't need to do anything specific.
+        // Create a small commit operation to ensure all pending apply() calls are flushed
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putBoolean("_commit_sync_key", true);
+        editor.commit(); // Synchronous commit to ensure immediate persistence
+        // Clean up the temporary key
+        sharedPreferences.edit().remove("_commit_sync_key").apply();
     }
 }
