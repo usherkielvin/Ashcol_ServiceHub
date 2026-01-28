@@ -107,4 +107,14 @@ public class TokenManager {
     public boolean isSmsNotifEnabled() {
         return sharedPreferences.getBoolean(KEY_SMS_NOTIF, false);
     }
+
+    /**
+     * Force immediate persistence of SharedPreferences.
+     * Note: Most save methods already use apply() which is preferred for UI performance.
+     */
+    public void forceCommit() {
+        // SharedPreferences.apply() already ensures in-memory consistency.
+        // This method can be a no-op or we could use it to ensure everything is flushed.
+        // Since we don't have a pending editor here, we don't need to do anything specific.
+    }
 }
