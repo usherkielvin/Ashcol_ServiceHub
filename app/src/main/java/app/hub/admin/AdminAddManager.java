@@ -2,8 +2,10 @@ package app.hub.admin;
 
 import android.os.Bundle;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.Spinner;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -21,23 +23,9 @@ import retrofit2.Response;
 
 public class AdminAddManager extends AppCompatActivity {
 
-    private TextInputEditText firstNameInput, lastNameInput, usernameInput, emailInput, passwordInput, confirmPasswordInput, branchInput;
+    private TextInputEditText firstNameInput, lastNameInput, usernameInput, emailInput, passwordInput, confirmPasswordInput;
+    private Spinner branchSpinner;
     private String selectedBranch = "";
-
-    // Branch options
-    private final String[] branches = {
-        "ASHCOL TAGUIG",
-        "ASHCOL Valenzuela", 
-        "ASHCOL Rodriguez Rizal",
-        "ASHCOL PAMPANGA",
-        "ASHCOL Bulacan",
-        "ASHCOL GENTRI CAVITE",
-        "ASHCOL DASMARINAS CAVITE",
-        "ASHCOL STA ROSA – TAGAYTAY RD",
-        "ASHCOL LAGUNA",
-        "ASHCOL BATANGAS",
-        "ASHCOL CANDELARIA QUEZON PROVINCE"
-    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,7 +33,7 @@ public class AdminAddManager extends AppCompatActivity {
         setContentView(R.layout.activity_admin_add_manager);
 
         initializeViews();
-        setupBranchDropdown();
+        setupBranchSpinner();
         setupButtons();
     }
 
@@ -56,23 +44,36 @@ public class AdminAddManager extends AppCompatActivity {
         emailInput = findViewById(R.id.Email_val);
         passwordInput = findViewById(R.id.Pass_val);
         confirmPasswordInput = findViewById(R.id.confirmPasswordInput);
-        branchInput = findViewById(R.id.branchInput);
+        branchSpinner = findViewById(R.id.branchSpinner);
     }
 
-    private void setupBranchDropdown() {
-        branchInput.setOnClickListener(v -> showBranchDialog());
-    }
-
-    private void showBranchDialog() {
-        androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(this);
-        builder.setTitle("Select Branch");
+    private void setupBranchSpinner() {
+        // Create ArrayAdapter using the string array and a default spinner layout
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
+                R.array.branch_options, android.R.layout.simple_spinner_item);
         
-        builder.setItems(branches, (dialog, which) -> {
-            selectedBranch = branches[which];
-            branchInput.setText(selectedBranch);
+        // Specify the layout to use when the list of choices appears
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        
+        // Apply the adapter to the spinner
+        branchSpinner.setAdapter(adapter);
+        
+        // Set up the selection listener
+        branchSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                if (position > 0) { // Skip the first item "Select branch..."
+                    selectedBranch = parent.getItemAtPosition(position).toString();
+                } else {
+                    selectedBranch = "";
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                selectedBranch = "";
+            }
         });
-        
-        builder.show();
     }
 
     private void setupButtons() {

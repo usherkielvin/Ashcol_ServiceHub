@@ -2,6 +2,7 @@ package app.hub.manager;
 
 import android.os.Bundle;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -22,8 +23,10 @@ import retrofit2.Response;
 public class ManagerAddEmployee extends AppCompatActivity {
 
     private TextInputEditText firstNameInput, lastNameInput, usernameInput, emailInput, passwordInput, confirmPasswordInput;
+    private TextView branchInfoText;
     private TokenManager tokenManager;
     private String managerBranch = "";
+    private boolean branchLoaded = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,6 +46,7 @@ public class ManagerAddEmployee extends AppCompatActivity {
         emailInput = findViewById(R.id.Email_val);
         passwordInput = findViewById(R.id.Pass_val);
         confirmPasswordInput = findViewById(R.id.confirmPasswordInput);
+        branchInfoText = findViewById(R.id.branchInfoText);
     }
 
     private void setupButtons() {
@@ -62,6 +66,9 @@ public class ManagerAddEmployee extends AppCompatActivity {
             return;
         }
 
+        // Show loading state
+        branchInfoText.setText("Loading branch information...");
+
         ApiService apiService = ApiClient.getApiService();
         Call<UserResponse> call = apiService.getUser("Bearer " + token);
 
@@ -72,21 +79,41 @@ public class ManagerAddEmployee extends AppCompatActivity {
                     UserResponse userResponse = response.body();
                     if (userResponse.isSuccess() && userResponse.getData() != null) {
                         managerBranch = userResponse.getData().getBranch();
-                        if (managerBranch == null) {
-                            managerBranch = "";
+                        if (managerBranch == null || managerBranch.isEmpty()) {
+                            managerBranch = "No branch assigned";
+                            branchInfoText.setText("Warning: You don't have a branch assigned. Employee will be created without branch.");
+                        } else {
+                            branchInfoText.setText("Employee will be assigned to: " + managerBranch);
                         }
+                        branchLoaded = true;
+                    } else {
+                        branchInfoText.setText("Could not load branch information");
+                        managerBranch = "";
+                        branchLoaded = true;
                     }
+                } else {
+                    branchInfoText.setText("Could not load branch information");
+                    managerBranch = "";
+                    branchLoaded = true;
                 }
             }
 
             @Override
             public void onFailure(Call<UserResponse> call, Throwable t) {
-                // Continue without branch info
+                branchInfoText.setText("Error loading branch information");
+                managerBranch = "";
+                branchLoaded = true;
             }
         });
     }
 
     private void createEmployee() {
+        // Check if branch information is loaded
+        if (!branchLoaded) {
+            Toast.makeText(this, "Please wait, loading branch information...", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         String firstName = firstNameInput.getText().toString().trim();
         String lastName = lastNameInput.getText().toString().trim();
         String username = usernameInput.getText().toString().trim();
@@ -137,10 +164,10 @@ public class ManagerAddEmployee extends AppCompatActivity {
             return;
         }
 
-        // Create employee request with manager's branch
+        // Create employee request with manager's branch (can be null/empty if manager has no branch)
         RegisterRequest registerRequest = new RegisterRequest(
             username, firstName, lastName, email, "", "", 
-            password, confirmPassword, "employee", managerBranch
+            password, confirmPassword, "employee", managerBranch.isEmpty() ? null : managerBranch
         );
 
         ApiService apiService = ApiClient.getApiService();
@@ -152,7 +179,11 @@ public class ManagerAddEmployee extends AppCompatActivity {
                 if (response.isSuccessful() && response.body() != null) {
                     RegisterResponse registerResponse = response.body();
                     if (registerResponse.isSuccess()) {
-                        Toast.makeText(ManagerAddEmployee.this, "Employee created successfully", Toast.LENGTH_SHORT).show();
+                        String successMessage = "Employee created successfully";
+                        if (!managerBranch.isEmpty() && !managerBranch.equals("No branch assigned")) {
+                            successMessage += " and assigned to " + managerBranch;
+                        }
+                        Toast.makeText(ManagerAddEmployee.this, successMessage, Toast.LENGTH_LONG).show();
                         finish();
                     } else {
                         String errorMessage = "Failed to create employee";

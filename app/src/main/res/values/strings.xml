@@ -8,6 +8,21 @@
         <item>Appliance Repair</item>
     </string-array>
 
+    <string-array name="branch_options">
+        <item>Select branch...</item>
+        <item>ASHCOL TAGUIG</item>
+        <item>ASHCOL Valenzuela</item>
+        <item>ASHCOL Rodriguez Rizal</item>
+        <item>ASHCOL PAMPANGA</item>
+        <item>ASHCOL Bulacan</item>
+        <item>ASHCOL GENTRI CAVITE</item>
+        <item>ASHCOL DASMARINAS CAVITE</item>
+        <item>ASHCOL STA ROSA – TAGAYTAY RD</item>
+        <item>ASHCOL LAGUNA</item>
+        <item>ASHCOL BATANGAS</item>
+        <item>ASHCOL CANDELARIA QUEZON PROVINCE</item>
+    </string-array>
+
     <string name="chatbot_button_description">Chatbot</string>
     <string name="keeping_you_cool">Keeping you cool</string>
     <string name="sign_in">Sign In</string>
