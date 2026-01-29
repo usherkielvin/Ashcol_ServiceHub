@@ -224,4 +224,8 @@
     <string name="text_follow_fb">Follow us on Facebook</string>
     <string name="desc_back">Go back</string>
 
+    <string name="dialog_logout_title">Log out of your account?</string>
+    <string name="action_logout">Log Out</string>
+    <string name="action_cancel">Cancel</string>
+
 </resources>
