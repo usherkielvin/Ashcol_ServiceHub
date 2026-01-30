@@ -9,23 +9,33 @@ import androidx.appcompat.widget.TooltipCompat;
 import androidx.fragment.app.Fragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
+import android.view.animation.AccelerateDecelerateInterpolator;
 import app.hub.R;
 
 public class EmployeeDashboardActivity extends AppCompatActivity {
+
+    private View navIndicator;
+    private BottomNavigationView bottomNav;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_employee_dashboard);
 
-        BottomNavigationView bottomNav = findViewById(R.id.bottom_navigation);
+        navIndicator = findViewById(R.id.navIndicator);
+        bottomNav = findViewById(R.id.bottom_navigation);
         bottomNav.setOnNavigationItemSelectedListener(navListener);
 
         disableNavigationTooltips(bottomNav);
 
         // as soon as the activity is created, we want to show the Dashboard fragment
-        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,
-                new EmployeeDashboardFragment()).commit();
+        if (savedInstanceState == null) {
+            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,
+                    new EmployeeDashboardFragment()).commit();
+            
+            // Set initial indicator position
+            bottomNav.post(() -> moveIndicatorToItem(R.id.nav_home, false));
+        }
     }
 
     private void disableNavigationTooltips(BottomNavigationView navigationView) {
@@ -42,22 +52,47 @@ public class EmployeeDashboardActivity extends AppCompatActivity {
 
     private BottomNavigationView.OnNavigationItemSelectedListener navListener = item -> {
         Fragment selectedFragment = null;
+        int itemId = item.getItemId();
 
-        if (item.getItemId() == R.id.nav_home) {
+        if (itemId == R.id.nav_home) {
             selectedFragment = new EmployeeDashboardFragment();
-        } else if (item.getItemId() == R.id.nav_work) {
+        } else if (itemId == R.id.nav_work) {
             selectedFragment = new EmployeeWork();
-        } else if (item.getItemId() == R.id.nav_sched) {
+        } else if (itemId == R.id.nav_sched) {
             selectedFragment = new EmployeeScheduleFragment();
-        } else if (item.getItemId() == R.id.nav_profile) {
+        } else if (itemId == R.id.nav_profile) {
             selectedFragment = new EmployeeProfileFragment();
         }
 
         if (selectedFragment != null) {
+            moveIndicatorToItem(itemId, true);
             getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,
                     selectedFragment).commit();
+            return true;
         }
 
-        return true;
+        return false;
     };
+
+    private void moveIndicatorToItem(int itemId, boolean animate) {
+        View itemView = bottomNav.findViewById(itemId);
+        if (itemView == null || navIndicator == null) return;
+
+        int itemWidth = itemView.getWidth();
+        int indicatorWidth = navIndicator.getWidth();
+        float targetX = itemView.getLeft() + (itemWidth / 2f) - (indicatorWidth / 2f);
+        float targetY = 0f;
+
+        if (animate) {
+            navIndicator.animate()
+                    .translationX(targetX)
+                    .translationY(targetY)
+                    .setDuration(300)
+                    .setInterpolator(new AccelerateDecelerateInterpolator())
+                    .start();
+        } else {
+            navIndicator.setTranslationX(targetX);
+            navIndicator.setTranslationY(targetY);
+        }
+    }
 }

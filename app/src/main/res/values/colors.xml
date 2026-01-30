@@ -13,17 +13,25 @@
     <color name="text_hint">#62000000</color>
     <color name="light_green">#215531</color>
     <color name="bg_chip_default">#F0F0F0</color>
-    <color name="app_background">#D6EFE2</color> <color name="dark_green_text">#1B5E20</color> <color name="label_text">#212121</color>
+    <color name="app_background">#D6EFE2</color> 
+    <color name="dark_green_text">#1B5E20</color> 
+    <color name="label_text">#212121</color>
     <color name="status_green">#4CAF50</color>
     <color name="ticket_green">#66BB6A</color>
     <color name="btn_cancel">#E53935</color>
     <color name="btn_accept">#43A047</color>
     <color name="stroke_color">#808080</color>
-    <color name="app_green">#4CAF50</color> <color name="dark_gray_text">#212121</color>
+    <color name="app_green">#4CAF50</color> 
+    <color name="dark_gray_text">#212121</color>
     <color name="sub_text_gray">#757575</color>
-
-    <color name="apps_green">#1A4330</color> <color name="switch_thumb_green">#1A4330</color>
+    <color name="apps_green">#1A4330</color> 
+    <color name="switch_thumb_green">#1A4330</color>
     <color name="switch_track_green">#4D1A4330</color>
-
-
+    
+    <!-- Additional colors for ticket functionality -->
+    <color name="light_blue">#E3F2FD</color>
+    <color name="light_gray">#F5F5F5</color>
+    <color name="dark_gray">#424242</color>
+    <color name="gray">#757575</color>
+    <color name="orange">#FF9800</color>
 </resources>

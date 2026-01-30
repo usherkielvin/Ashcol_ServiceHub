@@ -78,6 +78,13 @@ public class ManagerEmployeeFragment extends Fragment {
     }
     
     private void loadManagerBranch() {
+        // First check if we have cached branch data
+        String cachedBranch = tokenManager.getCachedBranch();
+        if (cachedBranch != null) {
+            locationTitle.setText(cachedBranch);
+            return; // Use cached data, no need to make API call
+        }
+
         String token = tokenManager.getToken();
         if (token == null) {
             locationTitle.setText("Authentication Error");
@@ -99,6 +106,10 @@ public class ManagerEmployeeFragment extends Fragment {
                         String branch = userResponse.getData().getBranch();
                         if (branch != null && !branch.isEmpty()) {
                             locationTitle.setText(branch);
+                            // Save to cache
+                            Integer cachedCount = tokenManager.getCachedEmployeeCount();
+                            int count = cachedCount != null ? cachedCount : 0;
+                            tokenManager.saveBranchInfo(branch, count);
                         } else {
                             locationTitle.setText("No Branch Assigned");
                         }
@@ -118,6 +129,14 @@ public class ManagerEmployeeFragment extends Fragment {
     }
     
     private void loadEmployees() {
+        // First check if we have cached employee count
+        Integer cachedCount = tokenManager.getCachedEmployeeCount();
+        if (cachedCount != null && cachedCount >= 0) {
+            employeeCount.setText(cachedCount + " Employee" + (cachedCount != 1 ? "s" : ""));
+        } else {
+            employeeCount.setText("Loading...");
+        }
+
         String token = tokenManager.getToken();
         if (token == null) {
             Toast.makeText(getContext(), "Authentication error", Toast.LENGTH_SHORT).show();
@@ -146,6 +165,11 @@ public class ManagerEmployeeFragment extends Fragment {
                         }
                         employeeAdapter.notifyDataSetChanged();
                         
+                        // Save to cache
+                        String cachedBranch = tokenManager.getCachedBranch();
+                        String branch = cachedBranch != null ? cachedBranch : "Unknown Branch";
+                        tokenManager.saveBranchInfo(branch, count);
+                        
                     } else {
                         employeeCount.setText("0 Employees");
                         Toast.makeText(getContext(), "Could not load employees", Toast.LENGTH_SHORT).show();
@@ -158,7 +182,13 @@ public class ManagerEmployeeFragment extends Fragment {
 
             @Override
             public void onFailure(Call<EmployeeResponse> call, Throwable t) {
-                employeeCount.setText("0 Employees");
+                // If we have cached data, keep showing it
+                Integer cachedCount = tokenManager.getCachedEmployeeCount();
+                if (cachedCount != null && cachedCount >= 0) {
+                    employeeCount.setText(cachedCount + " Employee" + (cachedCount != 1 ? "s" : ""));
+                } else {
+                    employeeCount.setText("0 Employees");
+                }
                 Toast.makeText(getContext(), "Network error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
@@ -167,7 +197,8 @@ public class ManagerEmployeeFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        // Refresh employee list when returning from add employee activity
+        // Only refresh employee list when returning from add employee activity
+        // Branch info will use cached data for instant loading
         loadEmployees();
     }
 }

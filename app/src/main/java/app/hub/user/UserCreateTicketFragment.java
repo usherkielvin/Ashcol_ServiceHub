@@ -56,7 +56,7 @@ public class UserCreateTicketFragment extends Fragment {
         descriptionInput = view.findViewById(R.id.etDescription);
         addressInput = view.findViewById(R.id.etLocation);
         contactInput = view.findViewById(R.id.etContact);
-        serviceTypeSpinner = view.findViewById(R.id.spinnerServiceType);
+
         createTicketButton = view.findViewById(R.id.btnSubmit);
         mapButton = view.findViewById(R.id.btnMap);
 
@@ -118,6 +118,57 @@ public class UserCreateTicketFragment extends Fragment {
 
         if (token == null) {
             Toast.makeText(getContext(), "You are not logged in.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Show loading state
+        createTicketButton.setEnabled(false);
+        createTicketButton.setText("Creating Ticket...");
+
+        Call<CreateTicketResponse> call = apiService.createTicket("Bearer " + token, request);
+        call.enqueue(new Callback<CreateTicketResponse>() {
+            @Override
+            public void onResponse(Call<CreateTicketResponse> call, Response<CreateTicketResponse> response) {
+                // Reset button state
+                createTicketButton.setEnabled(true);
+                createTicketButton.setText("Submit");
+
+                if (response.isSuccessful() && response.body() != null) {
+                    CreateTicketResponse ticketResponse = response.body();
+                    
+                    // Navigate to confirmation screen
+                    Intent intent = new Intent(getActivity(), TicketConfirmationActivity.class);
+                    intent.putExtra("ticket_id", ticketResponse.getTicketId());
+                    intent.putExtra("status", ticketResponse.getStatus());
+                    startActivity(intent);
+                    
+                    // Clear form
+                    clearForm();
+                    
+                    Toast.makeText(getContext(), "Ticket created successfully!", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(getContext(), "Failed to create ticket. Please try again.", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<CreateTicketResponse> call, Throwable t) {
+                // Reset button state
+                createTicketButton.setEnabled(true);
+                createTicketButton.setText("Submit");
+                
+                Toast.makeText(getContext(), "Network error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void clearForm() {
+        if (titleInput != null) titleInput.setText("");
+        if (descriptionInput != null) descriptionInput.setText("");
+        if (addressInput != null) addressInput.setText("");
+        if (contactInput != null) contactInput.setText("");
+        if (serviceTypeSpinner != null) serviceTypeSpinner.setSelection(0);
+    }
             return;
         }
 

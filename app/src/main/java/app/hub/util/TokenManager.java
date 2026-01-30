@@ -15,6 +15,12 @@ public class TokenManager {
     private static final String KEY_CURRENT_CITY = "current_city";
     private static final String KEY_FAILED_GOOGLE_LOGIN_PREFIX = "failed_google_login_";
     
+    // Branch Cache
+    private static final String KEY_BRANCH = "branch";
+    private static final String KEY_EMPLOYEE_COUNT = "employee_count";
+    private static final String KEY_BRANCH_CACHE_TIME = "branch_cache_time";
+    private static final long CACHE_DURATION = 5 * 60 * 1000; // 5 minutes cache
+    
     // Notification Settings
     private static final String KEY_PUSH_NOTIF = "push_notifications";
     private static final String KEY_EMAIL_NOTIF = "email_notifications";
@@ -180,5 +186,41 @@ public class TokenManager {
         editor.commit(); // Synchronous commit to ensure immediate persistence
         // Clean up the temporary key
         sharedPreferences.edit().remove("_commit_sync_key").apply();
+    }
+    
+    // Branch Cache Methods
+    public void saveBranchInfo(String branch, int employeeCount) {
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString(KEY_BRANCH, branch);
+        editor.putInt(KEY_EMPLOYEE_COUNT, employeeCount);
+        editor.putLong(KEY_BRANCH_CACHE_TIME, System.currentTimeMillis());
+        editor.apply();
+    }
+    
+    public String getCachedBranch() {
+        if (isCacheValid()) {
+            return sharedPreferences.getString(KEY_BRANCH, null);
+        }
+        return null;
+    }
+    
+    public Integer getCachedEmployeeCount() {
+        if (isCacheValid()) {
+            return sharedPreferences.getInt(KEY_EMPLOYEE_COUNT, -1);
+        }
+        return null;
+    }
+    
+    private boolean isCacheValid() {
+        long cacheTime = sharedPreferences.getLong(KEY_BRANCH_CACHE_TIME, 0);
+        return (System.currentTimeMillis() - cacheTime) < CACHE_DURATION;
+    }
+    
+    public void clearBranchCache() {
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.remove(KEY_BRANCH);
+        editor.remove(KEY_EMPLOYEE_COUNT);
+        editor.remove(KEY_BRANCH_CACHE_TIME);
+        editor.apply();
     }
 }

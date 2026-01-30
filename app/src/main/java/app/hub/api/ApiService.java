@@ -88,4 +88,16 @@ public interface ApiService {
 
     @POST("api/v1/update-location")
     Call<UpdateLocationResponse> updateLocation(@Header("Authorization") String token, @Body UpdateLocationRequest request);
+
+    @GET("api/v1/tickets")
+    Call<TicketListResponse> getTickets(@Header("Authorization") String token);
+
+    @GET("api/v1/tickets")
+    Call<TicketListResponse> getTickets(@Header("Authorization") String token, @retrofit2.http.Query("status") String status);
+
+    @POST("api/v1/tickets/{ticketId}/accept")
+    Call<TicketStatusResponse> acceptTicket(@Header("Authorization") String token, @retrofit2.http.Path("ticketId") String ticketId);
+
+    @POST("api/v1/tickets/{ticketId}/reject")
+    Call<TicketStatusResponse> rejectTicket(@Header("Authorization") String token, @retrofit2.http.Path("ticketId") String ticketId);
 }

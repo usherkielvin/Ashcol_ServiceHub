@@ -50,10 +50,7 @@ public class ServiceSelectActivity extends AppCompatActivity {
         mapButton = findViewById(R.id.btnMap);
 
         // Hide the Spinner since we already have the service type from intent
-        View spinnerLabel = findViewById(R.id.tvServiceTypeLabel2);
-        View spinner = findViewById(R.id.spinnerServiceType);
-        if (spinnerLabel != null) spinnerLabel.setVisibility(View.GONE);
-        if (spinner != null) spinner.setVisibility(View.GONE);
+
 
         tokenManager = new TokenManager(this);
 
