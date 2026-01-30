@@ -14,6 +14,9 @@ public class CreateTicketResponse {
     
     @SerializedName("status")
     private String status;
+    
+    @SerializedName("success")
+    private boolean success = true; // Default to true for successful responses
 
     public String getMessage() {
         return message;
@@ -45,6 +48,14 @@ public class CreateTicketResponse {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+    
+    public boolean isSuccess() {
+        return success;
+    }
+    
+    public void setSuccess(boolean success) {
+        this.success = success;
     }
 
     public static class TicketData {

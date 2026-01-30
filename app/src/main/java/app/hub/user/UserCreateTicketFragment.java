@@ -56,6 +56,8 @@ public class UserCreateTicketFragment extends Fragment {
         descriptionInput = view.findViewById(R.id.etDescription);
         addressInput = view.findViewById(R.id.etLocation);
         contactInput = view.findViewById(R.id.etContact);
+        // Note: serviceTypeSpinner is not in the current layout, using TextView for now
+        // serviceTypeSpinner = view.findViewById(R.id.spinnerServiceType);
 
         createTicketButton = view.findViewById(R.id.btnSubmit);
         mapButton = view.findViewById(R.id.btnMap);
@@ -63,12 +65,17 @@ public class UserCreateTicketFragment extends Fragment {
         tokenManager = new TokenManager(getContext());
 
         // Create an ArrayAdapter using the string array and a default spinner layout
+        // Note: Spinner not available in current layout, will use default service type
+        /*
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(getContext(),
-                R.array.service_types, android.R.layout.simple_spinner_item);
+                R.array.Services, android.R.layout.simple_spinner_item);
         // Specify the layout to use when the list of choices appears
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         // Apply the adapter to the spinner
-        serviceTypeSpinner.setAdapter(adapter);
+        if (serviceTypeSpinner != null) {
+            serviceTypeSpinner.setAdapter(adapter);
+        }
+        */
 
         // Set up map button click listener
         if (mapButton != null) {
@@ -103,7 +110,7 @@ public class UserCreateTicketFragment extends Fragment {
     private void createTicket() {
         String title = titleInput != null ? titleInput.getText().toString().trim() : "";
         String description = descriptionInput != null ? descriptionInput.getText().toString().trim() : "";
-        String serviceType = serviceTypeSpinner != null ? serviceTypeSpinner.getSelectedItem().toString() : "";
+        String serviceType = "General Service"; // Default service type since spinner is not available
         String address = addressInput != null ? addressInput.getText().toString().trim() : "";
         String contact = contactInput != null ? contactInput.getText().toString().trim() : "";
 
@@ -167,32 +174,6 @@ public class UserCreateTicketFragment extends Fragment {
         if (descriptionInput != null) descriptionInput.setText("");
         if (addressInput != null) addressInput.setText("");
         if (contactInput != null) contactInput.setText("");
-        if (serviceTypeSpinner != null) serviceTypeSpinner.setSelection(0);
-    }
-            return;
-        }
-
-        Call<CreateTicketResponse> call = apiService.createTicket(token, request);
-        call.enqueue(new Callback<CreateTicketResponse>() {
-            @Override
-            public void onResponse(Call<CreateTicketResponse> call, Response<CreateTicketResponse> response) {
-                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
-                    Toast.makeText(getContext(), "Ticket created successfully", Toast.LENGTH_SHORT).show();
-                    // Clear the input fields
-                    if (titleInput != null) titleInput.setText("");
-                    if (descriptionInput != null) descriptionInput.setText("");
-                    if (addressInput != null) addressInput.setText("");
-                    if (contactInput != null) contactInput.setText("");
-                    if (serviceTypeSpinner != null) serviceTypeSpinner.setSelection(0);
-                } else {
-                    Toast.makeText(getContext(), "Failed to create ticket", Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            @Override
-            public void onFailure(Call<CreateTicketResponse> call, Throwable t) {
-                Toast.makeText(getContext(), "An error occurred", Toast.LENGTH_SHORT).show();
-            }
-        });
+        // if (serviceTypeSpinner != null) serviceTypeSpinner.setSelection(0);
     }
 }

@@ -76,6 +76,11 @@
             android:theme="@style/Theme.ServiceHubApp" />
         
         <activity
+            android:name=".user.TicketConfirmationActivity"
+            android:exported="false"
+            android:theme="@style/Theme.ServiceHubApp" />
+        
+        <activity
             android:name=".ForgotPasswordActivity"
             android:exported="false" />
         
