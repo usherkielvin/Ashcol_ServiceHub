@@ -46,9 +46,9 @@ public class EmployeeDashboardActivity extends AppCompatActivity {
         if (item.getItemId() == R.id.nav_home) {
             selectedFragment = new EmployeeDashboardFragment();
         } else if (item.getItemId() == R.id.nav_work) {
-            selectedFragment = new EmployeeAssignedTicketsFragment();
+            selectedFragment = new EmployeeWork();
         } else if (item.getItemId() == R.id.nav_sched) {
-            selectedFragment = new InProgressFragment();
+            selectedFragment = new EmployeeScheduleFragment();
         } else if (item.getItemId() == R.id.nav_profile) {
             selectedFragment = new EmployeeProfileFragment();
         }
