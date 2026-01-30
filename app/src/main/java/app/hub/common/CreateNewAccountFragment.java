@@ -29,6 +29,7 @@ import com.facebook.AccessToken;
 import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
 import com.facebook.FacebookException;
+import com.facebook.FacebookException;
 import com.facebook.GraphRequest;
 import com.facebook.GraphResponse;
 import com.facebook.login.LoginManager;
@@ -52,11 +53,32 @@ public class CreateNewAccountFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_user_new_acc, container, false);
         
+        // Clear any cached social sign-in states when fragment is created
+        clearSocialSignInStates();
+        
         setupGoogleSignIn();
         setupFacebookLogin();
         setupButtons(view);
         
         return view;
+    }
+
+    // Clear cached social sign-in states to allow fresh account selection
+    private void clearSocialSignInStates() {
+        // Clear Google sign-in cache
+        if (googleSignInClient != null) {
+            googleSignInClient.signOut();
+        }
+        
+        // Clear Facebook login cache
+        LoginManager.getInstance().logOut();
+        
+        // Clear any cached data in RegisterActivity
+        RegisterActivity activity = (RegisterActivity) getActivity();
+        if (activity != null) {
+            // We'll add a method to clear states in RegisterActivity
+            activity.clearAllSignInStates();
+        }
     }
 
     private void setupFacebookLogin() {
@@ -173,11 +195,18 @@ public class CreateNewAccountFragment extends Fragment {
     }
 
     private void signInWithGoogle() {
-        Intent signInIntent = googleSignInClient.getSignInIntent();
-        startActivityForResult(signInIntent, RC_SIGN_IN);
+        // Clear any cached Google account to allow user to select different account
+        googleSignInClient.signOut().addOnCompleteListener(requireActivity(), task -> {
+            // After signing out, start the sign-in flow
+            Intent signInIntent = googleSignInClient.getSignInIntent();
+            startActivityForResult(signInIntent, RC_SIGN_IN);
+        });
     }
 
     private void signInWithFacebook() {
+        // Clear any cached Facebook login to allow user to select different account
+        LoginManager.getInstance().logOut();
+        
         // Use only public_profile permission - email is automatically included via Graph API
         LoginManager.getInstance().logInWithReadPermissions(this, 
             java.util.Arrays.asList("public_profile"));

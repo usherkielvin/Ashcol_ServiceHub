@@ -38,11 +38,11 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 
 import app.hub.api.LogoutResponse;
 
-public class EmployeeSettingsFragment extends Fragment {
+public class EmployeeProfileFragment extends Fragment {
 
     private TokenManager tokenManager;
 
-    public EmployeeSettingsFragment() {
+    public EmployeeProfileFragment() {
         // Required empty public constructor
     }
 
@@ -50,7 +50,7 @@ public class EmployeeSettingsFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_employee_settings, container, false);
+        return inflater.inflate(R.layout.fragment_employee_profile, container, false);
     }
 
     @Override

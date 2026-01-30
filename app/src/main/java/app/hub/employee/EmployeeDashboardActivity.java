@@ -43,16 +43,14 @@ public class EmployeeDashboardActivity extends AppCompatActivity {
     private BottomNavigationView.OnNavigationItemSelectedListener navListener = item -> {
         Fragment selectedFragment = null;
 
-        if (item.getItemId() == R.id.nav_dashboard) {
+        if (item.getItemId() == R.id.nav_home) {
             selectedFragment = new EmployeeDashboardFragment();
-        } else if (item.getItemId() == R.id.nav_assigned_tickets) {
+        } else if (item.getItemId() == R.id.nav_work) {
             selectedFragment = new EmployeeAssignedTicketsFragment();
-        } else if (item.getItemId() == R.id.nav_in_progress) {
+        } else if (item.getItemId() == R.id.nav_sched) {
             selectedFragment = new InProgressFragment();
-        } else if (item.getItemId() == R.id.nav_completed) {
-            selectedFragment = new CompletedFragment();
-        } else if (item.getItemId() == R.id.nav_settings) {
-            selectedFragment = new EmployeeSettingsFragment();
+        } else if (item.getItemId() == R.id.nav_profile) {
+            selectedFragment = new EmployeeProfileFragment();
         }
 
         if (selectedFragment != null) {

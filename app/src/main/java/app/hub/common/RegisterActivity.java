@@ -102,9 +102,17 @@ public class RegisterActivity extends AppCompatActivity {
 		OnBackPressedCallback callback = new OnBackPressedCallback(true) {
 			@Override
 			public void handleOnBackPressed() {
-				// If template layout is visible (Tell Us step), go back to email fragment
+				// If template layout is visible (Tell Us step), handle back navigation
 				if (templateLayout != null && templateLayout.getVisibility() == View.VISIBLE) {
-					showEmailFragment();
+					// For Google/Facebook users, skip email fragment and go back to CreateNewAccountFragment
+					if (isGoogleSignIn || isFacebookSignIn) {
+						// Clear sign-in states so user can select different account
+						clearAllSignInStates();
+						showCreateNewAccountFragment();
+					} else {
+						// For regular email users, go back to email fragment
+						showEmailFragment();
+					}
 					return;
 				}
 
@@ -271,12 +279,18 @@ public class RegisterActivity extends AppCompatActivity {
 		ImageButton backButton = findViewById(R.id.backToLoginButton);
 		if (backButton != null) {
 			backButton.setOnClickListener(v -> {
-				if (fragmentManager.getBackStackEntryCount() > 0) {
-					fragmentManager.popBackStack();
+				// For Google/Facebook users, skip email fragment and go back to CreateNewAccountFragment
+				if (isGoogleSignIn || isFacebookSignIn) {
+					// Clear sign-in states so user can select different account
+					clearAllSignInStates();
+					showCreateNewAccountFragment();
 				} else {
-					Intent intent = new Intent(this, MainActivity.class);
-					startActivity(intent);
-					finish();
+					// For regular email users, use fragment back stack or go to email fragment
+					if (fragmentManager.getBackStackEntryCount() > 0) {
+						fragmentManager.popBackStack();
+					} else {
+						showEmailFragment();
+					}
 				}
 			});
 		}
@@ -483,11 +497,50 @@ public class RegisterActivity extends AppCompatActivity {
 			return;
 		}
 		
-		Log.d(TAG, "Checking if Google user exists - Email: " + email);
-		Log.d(TAG, "First Name: " + firstName + ", Last Name: " + lastName);
+		Log.d(TAG, "Registering Google user with backend - Email: " + email);
+		Log.d(TAG, "First Name: " + firstName + ", Last Name: " + lastName + ", Phone: " + phone);
 		
-		// Check if account already exists
-		checkGoogleAccountExistsForRegistration(email, firstName, lastName, phone);
+		// Now actually register the user with the backend
+		ApiService apiService = ApiClient.getApiService();
+		String idToken = googleIdToken != null && !googleIdToken.isEmpty() ? googleIdToken : "";
+		GoogleSignInRequest request = new GoogleSignInRequest(
+			idToken,
+			email,
+			firstName != null ? firstName : "",
+			lastName != null ? lastName : "",
+			phone != null ? phone : ""
+		);
+		
+		Log.d(TAG, "Sending Google registration request - Email: " + email + ", First: " + firstName + ", Last: " + lastName + ", Phone: " + phone);
+
+		Call<GoogleSignInResponse> call = apiService.googleSignIn(request);
+		call.enqueue(new Callback<>() {
+			@Override
+			public void onResponse(@NonNull Call<GoogleSignInResponse> call, @NonNull Response<GoogleSignInResponse> response) {
+				if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+					handleGoogleRegistrationSuccess(response.body());
+				} else {
+					// Log response body for debugging
+					String errorBody = "";
+					try {
+						if (response.errorBody() != null) {
+							errorBody = response.errorBody().string();
+							Log.e(TAG, "Google registration error response: " + errorBody);
+						}
+					} catch (Exception e) {
+						Log.e(TAG, "Error reading error response", e);
+					}
+					handleGoogleRegistrationError(response.code(), errorBody);
+				}
+			}
+
+			@Override
+			public void onFailure(@NonNull Call<GoogleSignInResponse> call, @NonNull Throwable t) {
+				Log.e(TAG, "Error registering Google user: " + t.getMessage(), t);
+				Toast.makeText(RegisterActivity.this, 
+					"Failed to register. Please check your connection and try again.", Toast.LENGTH_SHORT).show();
+			}
+		});
 	}
 
 	private void checkGoogleAccountExistsForRegistration(String email, String firstName, String lastName, String phone) {
@@ -511,30 +564,17 @@ public class RegisterActivity extends AppCompatActivity {
 				if (response.isSuccessful() && response.body() != null) {
 					GoogleSignInResponse signInResponse = response.body();
 					if (signInResponse.isSuccess()) {
-						// Account already exists - show error message
-						String message = signInResponse.getMessage() != null ? 
-							signInResponse.getMessage() : "Account already exists. Please login instead.";
-						Toast.makeText(RegisterActivity.this, message, Toast.LENGTH_LONG).show();
-						// Navigate back to login screen
-						Intent intent = new Intent(RegisterActivity.this, MainActivity.class);
-						startActivity(intent);
-						finish();
+						// Account already exists - log user in automatically
+						Log.d(TAG, "Google account exists, logging user in");
+						handleGoogleLoginSuccess(signInResponse);
 					} else {
 						// Account doesn't exist - proceed with registration
 						proceedWithGoogleRegistration(email, firstName, lastName, phone, idToken);
 					}
 				} else {
-					// Handle error response
-					String errorMsg = "Registration check failed. Please try again.";
-					try {
-						if (response.errorBody() != null) {
-							String errorBody = response.errorBody().string();
-							Log.e(TAG, "Google registration check error: " + errorBody);
-						}
-					} catch (Exception e) {
-						Log.e(TAG, "Error reading error response", e);
-					}
-					Toast.makeText(RegisterActivity.this, errorMsg, Toast.LENGTH_SHORT).show();
+					// Handle error response - assume account doesn't exist and proceed
+					Log.w(TAG, "Google account check failed, proceeding with registration");
+					proceedWithGoogleRegistration(email, firstName, lastName, phone, idToken);
 				}
 			}
 
@@ -548,50 +588,155 @@ public class RegisterActivity extends AppCompatActivity {
 	}
 
 	private void proceedWithGoogleRegistration(String email, String firstName, String lastName, String phone, String idToken) {
-		Log.d(TAG, "Proceeding with Google registration - Email: " + email + ", Phone: " + phone);
-		Log.d(TAG, "First Name: " + firstName + ", Last Name: " + lastName);
+		Log.d(TAG, "Account doesn't exist, proceeding to Tell Us form");
 		
-		ApiService apiService = ApiClient.getApiService();
-		GoogleSignInRequest request = new GoogleSignInRequest(
-			idToken,
-			email,
-			firstName != null ? firstName : "",
-			lastName != null ? lastName : "",
-			phone != null ? phone : ""
-		);
-		
-		Log.d(TAG, "Sending Google Sign-In request - Email: " + email + ", First: " + firstName + ", Last: " + lastName + ", Phone: " + phone);
-
-		Call<GoogleSignInResponse> call = apiService.googleSignIn(request);
-		call.enqueue(new Callback<>() {
-			@Override
-			public void onResponse(@NonNull Call<GoogleSignInResponse> call, @NonNull Response<GoogleSignInResponse> response) {
-				if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
-					handleGoogleRegistrationSuccess(response.body());
-				} else {
-					// Log response body for debugging
-					String errorBody = "";
-					try {
-						if (response.errorBody() != null) {
-							errorBody = response.errorBody().string();
-							Log.e(TAG, "Google Sign-In error response: " + errorBody);
-						}
-					} catch (Exception e) {
-						Log.e(TAG, "Error reading error response", e);
-					}
-					handleGoogleRegistrationError(response.code(), errorBody);
-				}
-			}
-
-			@Override
-			public void onFailure(@NonNull Call<GoogleSignInResponse> call, @NonNull Throwable t) {
-				Log.e(TAG, "Error registering Google user: " + t.getMessage(), t);
-				Toast.makeText(RegisterActivity.this, 
-					"Failed to register. Please check your connection and try again.", Toast.LENGTH_SHORT).show();
-			}
-		});
+		// Navigate to "Tell Us" to collect phone number and other details
+		Toast.makeText(this, "Welcome! Please provide your phone number to continue.", Toast.LENGTH_LONG).show();
+		showTellUsFragment();
 	}
 	
+	// Handle successful Facebook login (account already exists)
+	private void handleFacebookLoginSuccess(FacebookSignInResponse response) {
+		if (response.getData() == null || response.getData().getUser() == null) {
+			Toast.makeText(this, "Login failed. Please try again.", Toast.LENGTH_SHORT).show();
+			return;
+		}
+
+		// Save user data and token
+		FacebookSignInResponse.User user = response.getData().getUser();
+		tokenManager.saveToken("Bearer " + response.getData().getToken());
+		if (user.getEmail() != null && !user.getEmail().isEmpty()) {
+			tokenManager.saveEmail(user.getEmail());
+		}
+
+		// Build and save name
+		String firstName = user.getFirstName();
+		String lastName = user.getLastName();
+		StringBuilder nameBuilder = new StringBuilder();
+		if (firstName != null && !firstName.trim().isEmpty()) {
+			nameBuilder.append(firstName.trim());
+		}
+		if (lastName != null && !lastName.trim().isEmpty()) {
+			if (nameBuilder.length() > 0) {
+				nameBuilder.append(" ");
+			}
+			nameBuilder.append(lastName.trim());
+		}
+		String fullName = nameBuilder.toString();
+		if (!fullName.isEmpty()) {
+			tokenManager.saveName(fullName);
+			Log.d(TAG, "Saved name to cache: " + fullName);
+		}
+
+		// Force immediate token persistence
+		tokenManager.forceCommit();
+
+		// Navigate to appropriate dashboard based on user role
+		navigateToUserDashboard(user.getRole());
+	}
+
+	// Handle successful Google login (account already exists)
+	private void handleGoogleLoginSuccess(GoogleSignInResponse response) {
+		if (response.getData() == null || response.getData().getUser() == null) {
+			Toast.makeText(this, "Login failed. Please try again.", Toast.LENGTH_SHORT).show();
+			return;
+		}
+
+		// Save user data and token
+		GoogleSignInResponse.User user = response.getData().getUser();
+		tokenManager.saveToken("Bearer " + response.getData().getToken());
+		tokenManager.saveEmail(user.getEmail());
+
+		// Build and save name
+		String firstName = user.getFirstName();
+		String lastName = user.getLastName();
+		StringBuilder nameBuilder = new StringBuilder();
+		if (firstName != null && !firstName.trim().isEmpty()) {
+			nameBuilder.append(firstName.trim());
+		}
+		if (lastName != null && !lastName.trim().isEmpty()) {
+			if (nameBuilder.length() > 0) {
+				nameBuilder.append(" ");
+			}
+			nameBuilder.append(lastName.trim());
+		}
+		String fullName = nameBuilder.toString();
+		if (!fullName.isEmpty()) {
+			tokenManager.saveName(fullName);
+			Log.d(TAG, "Saved name to cache: " + fullName);
+		}
+
+		// Force immediate token persistence
+		tokenManager.forceCommit();
+
+		// Navigate to appropriate dashboard based on user role
+		navigateToUserDashboard(user.getRole());
+	}
+
+	// Navigate to appropriate dashboard based on user role
+	private void navigateToUserDashboard(String role) {
+		Intent intent;
+		
+		if (role == null) {
+			role = "customer"; // Default role
+		}
+		
+		switch (role.toLowerCase()) {
+			case "admin":
+				intent = new Intent(this, app.hub.admin.AdminDashboardActivity.class);
+				break;
+			case "manager":
+				intent = new Intent(this, app.hub.manager.ManagerDashboardActivity.class);
+				break;
+			case "employee":
+				intent = new Intent(this, app.hub.employee.EmployeeDashboardActivity.class);
+				break;
+			case "customer":
+			default:
+				intent = new Intent(this, app.hub.user.DashboardActivity.class);
+				break;
+		}
+		
+		Toast.makeText(this, "Welcome back!", Toast.LENGTH_SHORT).show();
+		startActivity(intent);
+		finish();
+	}
+
+	// Clear all sign-in states (called from CreateNewAccountFragment)
+	public void clearAllSignInStates() {
+		clearGoogleSignInState();
+		clearFacebookSignInState();
+	}
+
+	// Clear Facebook sign-in state to allow user to try different account
+	private void clearFacebookSignInState() {
+		isFacebookSignIn = false;
+		isGoogleSignIn = false;
+		facebookId = null;
+		facebookEmail = null;
+		googleIdToken = null;
+		userEmail = null;
+		userFirstName = null;
+		userLastName = null;
+		userName = null;
+		userPhone = null;
+		userLocation = null;
+		userPassword = null;
+	}
+
+	// Clear Google sign-in state to allow user to select different account
+	private void clearGoogleSignInState() {
+		isGoogleSignIn = false;
+		googleIdToken = null;
+		userEmail = null;
+		userFirstName = null;
+		userLastName = null;
+		userName = null;
+		userPhone = null;
+		userLocation = null;
+		userPassword = null;
+	}
+
 	// Handle successful Google registration
 	private void handleGoogleRegistrationSuccess(GoogleSignInResponse response) {
 		if (response.getData() == null || response.getData().getUser() == null) {
@@ -648,7 +793,7 @@ public class RegisterActivity extends AppCompatActivity {
 		}
 		
 		// Log all data being sent
-		Log.d(TAG, "registerFacebookUser called with:");
+		Log.d(TAG, "Registering Facebook user with backend:");
 		Log.d(TAG, "  - Facebook ID: " + facebookId);
 		Log.d(TAG, "  - Email: " + (email != null && !email.isEmpty() ? email : "NULL (pure FB auth)"));
 		Log.d(TAG, "  - First Name: " + firstName);
@@ -656,11 +801,47 @@ public class RegisterActivity extends AppCompatActivity {
 		Log.d(TAG, "  - Phone: " + phone);
 		Log.d(TAG, "  - Access Token: " + (accessToken != null && !accessToken.isEmpty() ? "Present" : "Missing"));
 
-		Log.d(TAG, "Checking if Facebook user exists - Facebook ID: " + facebookId + ", Email: " + (email != null ? email : "NULL"));
-		Log.d(TAG, "First Name: " + firstName + ", Last Name: " + lastName);
+		// Now actually register the user with the backend
+		ApiService apiService = ApiClient.getApiService();
+		String token = accessToken != null && !accessToken.isEmpty() ? accessToken : "";
+		FacebookSignInRequest request = new FacebookSignInRequest(
+			token,
+			facebookId,
+			email != null ? email : "", // Email can be empty for pure FB auth
+			firstName != null ? firstName : "",
+			lastName != null ? lastName : "",
+			phone != null ? phone : ""
+		);
 
-		// Check if account already exists
-		checkFacebookAccountExistsForRegistration(accessToken, facebookId, email, firstName, lastName, phone);
+		Log.d(TAG, "Sending Facebook registration request - Facebook ID: " + facebookId + ", Email: " + (email != null ? email : "NULL") + ", First: " + firstName + ", Last: " + lastName + ", Phone: " + phone);
+
+		Call<FacebookSignInResponse> call = apiService.facebookSignIn(request);
+		call.enqueue(new Callback<>() {
+			@Override
+			public void onResponse(@NonNull Call<FacebookSignInResponse> call, @NonNull Response<FacebookSignInResponse> response) {
+				if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+					handleFacebookRegistrationSuccess(response.body());
+				} else {
+					String errorBody = "";
+					try {
+						if (response.errorBody() != null) {
+							errorBody = response.errorBody().string();
+							Log.e(TAG, "Facebook registration error response: " + errorBody);
+						}
+					} catch (Exception e) {
+						Log.e(TAG, "Error reading error response", e);
+					}
+					handleFacebookRegistrationError(response.code(), errorBody);
+				}
+			}
+
+			@Override
+			public void onFailure(@NonNull Call<FacebookSignInResponse> call, @NonNull Throwable t) {
+				Log.e(TAG, "Error registering Facebook user: " + t.getMessage(), t);
+				Toast.makeText(RegisterActivity.this,
+					"Failed to register. Please check your connection and try again.", Toast.LENGTH_SHORT).show();
+			}
+		});
 	}
 
 	private void checkFacebookAccountExistsForRegistration(String accessToken, String facebookId, String email, String firstName, String lastName, String phone) {
@@ -684,30 +865,17 @@ public class RegisterActivity extends AppCompatActivity {
 				if (response.isSuccessful() && response.body() != null) {
 					FacebookSignInResponse signInResponse = response.body();
 					if (signInResponse.isSuccess()) {
-						// Account already exists - show error message
-						String message = signInResponse.getMessage() != null ? 
-							signInResponse.getMessage() : "Account already exists. Please login instead.";
-						Toast.makeText(RegisterActivity.this, message, Toast.LENGTH_LONG).show();
-						// Navigate back to login screen
-						Intent intent = new Intent(RegisterActivity.this, MainActivity.class);
-						startActivity(intent);
-						finish();
+						// Account already exists - log user in automatically
+						Log.d(TAG, "Facebook account exists, logging user in");
+						handleFacebookLoginSuccess(signInResponse);
 					} else {
 						// Account doesn't exist - proceed with registration
 						proceedWithFacebookRegistration(accessToken, facebookId, email, firstName, lastName, phone);
 					}
 				} else {
-					// Handle error response
-					String errorMsg = "Registration check failed. Please try again.";
-					try {
-						if (response.errorBody() != null) {
-							String errorBody = response.errorBody().string();
-							Log.e(TAG, "Facebook registration check error: " + errorBody);
-						}
-					} catch (Exception e) {
-						Log.e(TAG, "Error reading error response", e);
-					}
-					Toast.makeText(RegisterActivity.this, errorMsg, Toast.LENGTH_SHORT).show();
+					// Handle error response - assume account doesn't exist and proceed
+					Log.w(TAG, "Facebook account check failed, proceeding with registration");
+					proceedWithFacebookRegistration(accessToken, facebookId, email, firstName, lastName, phone);
 				}
 			}
 
@@ -721,49 +889,18 @@ public class RegisterActivity extends AppCompatActivity {
 	}
 
 	private void proceedWithFacebookRegistration(String accessToken, String facebookId, String email, String firstName, String lastName, String phone) {
-		Log.d(TAG, "Proceeding with Facebook registration - Facebook ID: " + facebookId + ", Email: " + (email != null ? email : "NULL") + ", Phone: " + phone);
-		Log.d(TAG, "First Name: " + firstName + ", Last Name: " + lastName);
-
-		ApiService apiService = ApiClient.getApiService();
-		String token = accessToken != null && !accessToken.isEmpty() ? accessToken : "";
-		FacebookSignInRequest request = new FacebookSignInRequest(
-			token,
-			facebookId,
-			email != null ? email : "", // Email can be empty for pure FB auth
-			firstName != null ? firstName : "",
-			lastName != null ? lastName : "",
-			phone != null ? phone : ""
-		);
-
-		Log.d(TAG, "Sending Facebook Sign-In request - Facebook ID: " + facebookId + ", Email: " + (email != null ? email : "NULL") + ", First: " + firstName + ", Last: " + lastName + ", Phone: " + phone);
-
-		Call<FacebookSignInResponse> call = apiService.facebookSignIn(request);
-		call.enqueue(new Callback<>() {
-			@Override
-			public void onResponse(@NonNull Call<FacebookSignInResponse> call, @NonNull Response<FacebookSignInResponse> response) {
-				if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
-					handleFacebookRegistrationSuccess(response.body());
-				} else {
-					String errorBody = "";
-					try {
-						if (response.errorBody() != null) {
-							errorBody = response.errorBody().string();
-							Log.e(TAG, "Facebook Sign-In error response: " + errorBody);
-						}
-					} catch (Exception e) {
-						Log.e(TAG, "Error reading error response", e);
-					}
-					handleFacebookRegistrationError(response.code(), errorBody);
-				}
-			}
-
-			@Override
-			public void onFailure(@NonNull Call<FacebookSignInResponse> call, @NonNull Throwable t) {
-				Log.e(TAG, "Error registering Facebook user: " + t.getMessage(), t);
-				Toast.makeText(RegisterActivity.this,
-					"Failed to register. Please check your connection and try again.", Toast.LENGTH_SHORT).show();
-			}
-		});
+		Log.d(TAG, "Account doesn't exist, proceeding to registration flow");
+		
+		// If email is available, go to email fragment; otherwise skip directly to Tell Us
+		if (email != null && !email.isEmpty()) {
+			Log.d(TAG, "Email available, navigating to email fragment");
+			Toast.makeText(this, "Please verify your email and continue.", Toast.LENGTH_SHORT).show();
+			showEmailFragment();
+		} else {
+			Log.d(TAG, "No email from Facebook, skipping email fragment and going to Tell Us");
+			Toast.makeText(this, "Welcome! Please provide your information to continue.", Toast.LENGTH_SHORT).show();
+			showTellUsFragment();
+		}
 	}
 
 	// Handle successful Facebook registration
@@ -1179,6 +1316,9 @@ public class RegisterActivity extends AppCompatActivity {
 	                                     String displayName, String idToken) {
 		Log.d(TAG, "Handling Google Sign-In success");
 		
+		// Show loading message
+		Toast.makeText(this, "Signing in...", Toast.LENGTH_SHORT).show();
+		
 		// Mark as Google Sign-In user (skip OTP)
 		isGoogleSignIn = true;
 		
@@ -1202,9 +1342,8 @@ public class RegisterActivity extends AppCompatActivity {
 		// Store Google ID token for backend API call
 		googleIdToken = idToken;
 		
-		// Navigate to "Tell Us" to collect phone number
-		Toast.makeText(this, "Welcome! Please provide your phone number to continue.", Toast.LENGTH_LONG).show();
-		showTellUsFragment();
+		// Check if account already exists before proceeding
+		checkGoogleAccountExistsForRegistration(email, firstName, lastName, "");
 	}
 
 	// Store Facebook ID
@@ -1217,6 +1356,9 @@ public class RegisterActivity extends AppCompatActivity {
 		Log.d(TAG, "Facebook ID: " + facebookId);
 		Log.d(TAG, "Facebook email received: " + (email != null && !email.isEmpty() ? email : "NULL"));
 		Log.d(TAG, "Facebook firstName: " + firstName + ", lastName: " + lastName);
+		
+		// Show loading message
+		Toast.makeText(this, "Signing in...", Toast.LENGTH_SHORT).show();
 		
 		// Mark as Facebook Sign-In user (skip OTP after password creation)
 		isFacebookSignIn = true;
@@ -1247,17 +1389,13 @@ public class RegisterActivity extends AppCompatActivity {
 			setUserPersonalInfo(finalFirstName, finalLastName, username, "", "");
 		}
 		
-		// If email is available, go to email fragment; otherwise skip directly to Tell Us
+		// If email is available, set it
 		if (email != null && !email.isEmpty()) {
 			setUserEmail(email);
-			Log.d(TAG, "Email available, navigating to email fragment");
-			Toast.makeText(this, "Please verify your email and continue.", Toast.LENGTH_SHORT).show();
-			showEmailFragment();
-		} else {
-			Log.d(TAG, "No email from Facebook, skipping email fragment and going to Tell Us");
-			Toast.makeText(this, "Welcome! Please provide your information to continue.", Toast.LENGTH_SHORT).show();
-			showTellUsFragment();
 		}
+		
+		// Check if account already exists before proceeding
+		checkFacebookAccountExistsForRegistration(accessToken, facebookId, email, finalFirstName, finalLastName, "");
 	}
 	
 	// Store Google ID token
