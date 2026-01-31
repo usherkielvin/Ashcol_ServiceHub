@@ -500,7 +500,7 @@ public class RegisterActivity extends AppCompatActivity {
 		Log.d(TAG, "Registering Google user with backend - Email: " + email);
 		Log.d(TAG, "First Name: " + firstName + ", Last Name: " + lastName + ", Phone: " + phone);
 		
-		// Now actually register the user with the backend
+		// Now actually register the user with the backend using the REGISTRATION endpoint
 		ApiService apiService = ApiClient.getApiService();
 		String idToken = googleIdToken != null && !googleIdToken.isEmpty() ? googleIdToken : "";
 		GoogleSignInRequest request = new GoogleSignInRequest(
@@ -513,7 +513,8 @@ public class RegisterActivity extends AppCompatActivity {
 		
 		Log.d(TAG, "Sending Google registration request - Email: " + email + ", First: " + firstName + ", Last: " + lastName + ", Phone: " + phone);
 
-		Call<GoogleSignInResponse> call = apiService.googleSignIn(request);
+		// Use the REGISTRATION endpoint for new users
+		Call<GoogleSignInResponse> call = apiService.googleRegister(request);
 		call.enqueue(new Callback<>() {
 			@Override
 			public void onResponse(@NonNull Call<GoogleSignInResponse> call, @NonNull Response<GoogleSignInResponse> response) {
@@ -557,6 +558,7 @@ public class RegisterActivity extends AppCompatActivity {
 		
 		Log.d(TAG, "Checking Google account existence - Email: " + email + ", First: " + firstName + ", Last: " + lastName + ", Phone: " + phone);
 
+		// Use the SIGN-IN endpoint to check if account exists
 		Call<GoogleSignInResponse> call = apiService.googleSignIn(request);
 		call.enqueue(new Callback<>() {
 			@Override

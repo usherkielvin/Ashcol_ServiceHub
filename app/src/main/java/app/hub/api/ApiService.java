@@ -24,6 +24,9 @@ public interface ApiService {
     @POST("api/v1/google-signin")
     Call<GoogleSignInResponse> googleSignIn(@Body GoogleSignInRequest request);
 
+    @POST("api/v1/google-register")
+    Call<GoogleSignInResponse> googleRegister(@Body GoogleSignInRequest request);
+
     @POST("api/v1/facebook-signin")
     Call<FacebookSignInResponse> facebookSignIn(@Body FacebookSignInRequest request);
 
