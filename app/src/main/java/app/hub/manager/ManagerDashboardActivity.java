@@ -5,12 +5,17 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.animation.AccelerateDecelerateInterpolator;
+import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.TooltipCompat;
 import androidx.fragment.app.Fragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
+import java.util.List;
+
 import app.hub.R;
+import app.hub.api.EmployeeResponse;
+import app.hub.api.TicketListResponse;
 
 public class ManagerDashboardActivity extends AppCompatActivity {
 
@@ -36,6 +41,9 @@ public class ManagerDashboardActivity extends AppCompatActivity {
             // Set initial indicator position
             bottomNav.post(() -> moveIndicatorToItem(R.id.nav_home, false));
         }
+        
+        // Load all manager data at startup so tabs are instantly ready
+        loadAllManagerData();
     }
 
     private void disableNavigationTooltips(BottomNavigationView navigationView) {
@@ -96,5 +104,44 @@ public class ManagerDashboardActivity extends AppCompatActivity {
             navIndicator.setTranslationX(targetX);
             navIndicator.setTranslationY(targetY);
         }
+    }
+    
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Refresh data when app is reopened
+        android.util.Log.d("ManagerDashboard", "App resumed - refreshing data");
+        loadAllManagerData();
+    }
+    
+    /**
+     * Load all manager data at startup so tabs are instantly ready
+     */
+    private void loadAllManagerData() {
+        android.util.Log.d("ManagerDashboard", "Loading all manager data at startup");
+        
+        ManagerDataManager.loadAllData(this, new ManagerDataManager.DataLoadCallback() {
+            @Override
+            public void onEmployeesLoaded(String branchName, List<EmployeeResponse.Employee> employees) {
+                android.util.Log.d("ManagerDashboard", "Employees loaded: " + employees.size() + " in " + branchName);
+            }
+
+            @Override
+            public void onTicketsLoaded(List<TicketListResponse.TicketItem> tickets) {
+                android.util.Log.d("ManagerDashboard", "Tickets loaded: " + tickets.size());
+            }
+
+            @Override
+            public void onLoadComplete() {
+                android.util.Log.d("ManagerDashboard", "All manager data loaded successfully");
+                // Data is now ready - tabs will load instantly
+            }
+
+            @Override
+            public void onLoadError(String error) {
+                android.util.Log.e("ManagerDashboard", "Error loading manager data: " + error);
+                // Don't show error toast - fragments will handle individual errors
+            }
+        });
     }
 }

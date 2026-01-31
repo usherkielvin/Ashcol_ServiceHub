@@ -119,7 +119,7 @@ public class ManagerTicketDetailActivity extends AppCompatActivity {
             }
         });
 
-        btnAccept.setOnClickListener(v -> updateTicketStatus("accepted"));
+        btnAccept.setOnClickListener(v -> showStaffAssignmentDialog()); // Accept + Assign in one step
         btnReject.setOnClickListener(v -> showRejectConfirmation());
         btnAssignStaff.setOnClickListener(v -> showStaffAssignmentDialog());
     }
@@ -281,8 +281,9 @@ public class ManagerTicketDetailActivity extends AppCompatActivity {
             case "pending":
             case "open": // Also handle "open" status
                 btnAccept.setVisibility(View.VISIBLE);
+                btnAccept.setText("Assign Employee"); // Change text to be more clear
                 btnReject.setVisibility(View.VISIBLE);
-                btnAssignStaff.setVisibility(View.GONE);
+                btnAssignStaff.setVisibility(View.GONE); // Hide separate assign button
                 break;
             case "accepted":
                 btnAccept.setVisibility(View.GONE);
@@ -297,8 +298,9 @@ public class ManagerTicketDetailActivity extends AppCompatActivity {
                 btnAssignStaff.setVisibility(View.GONE);
                 break;
             default:
-                // For unknown statuses, show accept and reject buttons
+                // For unknown statuses, show assign and reject buttons
                 btnAccept.setVisibility(View.VISIBLE);
+                btnAccept.setText("Assign Employee");
                 btnReject.setVisibility(View.VISIBLE);
                 btnAssignStaff.setVisibility(View.GONE);
                 break;
@@ -328,6 +330,9 @@ public class ManagerTicketDetailActivity extends AppCompatActivity {
                     android.util.Log.d("ManagerTicketDetail", "Status update success: " + statusResponse.isSuccess());
                     
                     if (statusResponse.isSuccess()) {
+                        // Clear ticket cache so the list will refresh with updated status
+                        ManagerDataManager.clearTicketCache();
+                        
                         Toast.makeText(ManagerTicketDetailActivity.this, "Ticket status updated successfully", Toast.LENGTH_SHORT).show();
                         loadTicketDetails(); // Refresh ticket details
                     } else {
@@ -406,9 +411,9 @@ public class ManagerTicketDetailActivity extends AppCompatActivity {
             spinnerEmployees.setAdapter(adapter);
 
             new AlertDialog.Builder(this)
-                    .setTitle("Assign Staff")
+                    .setTitle("Accept & Assign Staff")
                     .setView(dialogView)
-                    .setPositiveButton("Assign", (dialog, which) -> {
+                    .setPositiveButton("Accept & Assign", (dialog, which) -> {
                         int selectedPosition = spinnerEmployees.getSelectedItemPosition();
                         if (selectedPosition > 0 && selectedPosition <= employees.size()) { // Skip "Select Employee" option
                             EmployeeResponse.Employee selectedEmployee = employees.get(selectedPosition - 1);
@@ -431,6 +436,8 @@ public class ManagerTicketDetailActivity extends AppCompatActivity {
             return;
         }
 
+        // First accept the ticket (if pending), then assign staff
+        // This combines accept + assign into one action
         UpdateTicketStatusRequest request = new UpdateTicketStatusRequest("in_progress", staffId);
         ApiService apiService = ApiClient.getApiService();
         Call<UpdateTicketStatusResponse> call = apiService.updateTicketStatus("Bearer " + token, ticketId, request);
@@ -441,7 +448,10 @@ public class ManagerTicketDetailActivity extends AppCompatActivity {
                 if (response.isSuccessful() && response.body() != null) {
                     UpdateTicketStatusResponse statusResponse = response.body();
                     if (statusResponse.isSuccess()) {
-                        Toast.makeText(ManagerTicketDetailActivity.this, "Staff assigned successfully", Toast.LENGTH_SHORT).show();
+                        // Clear ticket cache so the list will refresh with updated status
+                        ManagerDataManager.clearTicketCache();
+                        
+                        Toast.makeText(ManagerTicketDetailActivity.this, "Ticket accepted and staff assigned successfully", Toast.LENGTH_SHORT).show();
                         loadTicketDetails(); // Refresh ticket details
                     } else {
                         Toast.makeText(ManagerTicketDetailActivity.this, "Failed to assign staff", Toast.LENGTH_SHORT).show();

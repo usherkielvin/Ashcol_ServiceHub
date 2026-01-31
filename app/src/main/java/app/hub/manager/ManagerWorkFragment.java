@@ -27,6 +27,7 @@ import java.util.List;
 import app.hub.R;
 import app.hub.api.ApiClient;
 import app.hub.api.ApiService;
+import app.hub.api.EmployeeResponse;
 import app.hub.api.TicketListResponse;
 import app.hub.util.TokenManager;
 import retrofit2.Call;
@@ -71,7 +72,8 @@ public class ManagerWorkFragment extends Fragment {
         chipAll.setChecked(true);
         currentFilter = "all";
         
-        loadTickets();
+        // Display tickets immediately if available
+        displayTicketData();
     }
 
     private void initViews(View view) {
@@ -171,91 +173,59 @@ public class ManagerWorkFragment extends Fragment {
                 R.color.orange
             );
             
-            // Set refresh listener
+            // Set refresh listener - refresh from centralized manager
             swipeRefreshLayout.setOnRefreshListener(() -> {
-                android.util.Log.d("ManagerWork", "Pull-to-refresh triggered");
-                loadTickets();
+                android.util.Log.d("ManagerWork", "Pull-to-refresh triggered - refreshing tickets");
+                ManagerDataManager.refreshTickets(getContext(), new ManagerDataManager.DataLoadCallback() {
+                    @Override
+                    public void onEmployeesLoaded(String branchName, List<EmployeeResponse.Employee> employees) {
+                        // Not needed for ticket refresh
+                    }
+
+                    @Override
+                    public void onTicketsLoaded(List<TicketListResponse.TicketItem> tickets) {
+                        displayTicketData();
+                    }
+
+                    @Override
+                    public void onLoadComplete() {
+                        if (swipeRefreshLayout != null && swipeRefreshLayout.isRefreshing()) {
+                            swipeRefreshLayout.setRefreshing(false);
+                        }
+                        Toast.makeText(getContext(), "Tickets refreshed", Toast.LENGTH_SHORT).show();
+                    }
+
+                    @Override
+                    public void onLoadError(String error) {
+                        if (swipeRefreshLayout != null && swipeRefreshLayout.isRefreshing()) {
+                            swipeRefreshLayout.setRefreshing(false);
+                        }
+                        Toast.makeText(getContext(), "Error: " + error, Toast.LENGTH_SHORT).show();
+                    }
+                });
             });
             
             android.util.Log.d("ManagerWork", "SwipeRefreshLayout configured");
         }
     }
 
-    private void loadTickets() {
-        String token = tokenManager.getToken();
-        if (token == null) {
-            Toast.makeText(getContext(), "You are not logged in.", Toast.LENGTH_SHORT).show();
-            // Stop refresh animation if it's running
-            if (swipeRefreshLayout != null && swipeRefreshLayout.isRefreshing()) {
-                swipeRefreshLayout.setRefreshing(false);
-            }
-            return;
+    private void displayTicketData() {
+        // Get data from centralized manager
+        List<TicketListResponse.TicketItem> cachedTickets = ManagerDataManager.getCachedTickets();
+        
+        if (cachedTickets != null && !cachedTickets.isEmpty()) {
+            // Display cached data immediately
+            tickets.clear();
+            tickets.addAll(cachedTickets);
+            
+            // Apply filtering
+            filterTickets();
+            
+            android.util.Log.d("ManagerWork", "Displayed " + tickets.size() + " cached tickets");
+        } else {
+            // No data available yet
+            android.util.Log.d("ManagerWork", "No cached tickets available");
         }
-
-        // DEBUG: Log the token and user info
-        android.util.Log.d("ManagerWork", "Loading tickets with token: " + token.substring(0, 10) + "...");
-
-        ApiService apiService = ApiClient.getApiService();
-        Call<TicketListResponse> call = apiService.getManagerTickets("Bearer " + token);
-
-        call.enqueue(new Callback<TicketListResponse>() {
-            @Override
-            public void onResponse(Call<TicketListResponse> call, Response<TicketListResponse> response) {
-                // Stop refresh animation
-                if (swipeRefreshLayout != null && swipeRefreshLayout.isRefreshing()) {
-                    swipeRefreshLayout.setRefreshing(false);
-                }
-                
-                // DEBUG: Log response details
-                android.util.Log.d("ManagerWork", "Response code: " + response.code());
-                android.util.Log.d("ManagerWork", "Response successful: " + response.isSuccessful());
-                
-                if (response.isSuccessful() && response.body() != null) {
-                    TicketListResponse ticketResponse = response.body();
-                    android.util.Log.d("ManagerWork", "Response success flag: " + ticketResponse.isSuccess());
-                    android.util.Log.d("ManagerWork", "Tickets count: " + (ticketResponse.getTickets() != null ? ticketResponse.getTickets().size() : "null"));
-                    
-                    if (ticketResponse.isSuccess()) {
-                        tickets.clear();
-                        tickets.addAll(ticketResponse.getTickets());
-                        android.util.Log.d("ManagerWork", "Loaded " + tickets.size() + " real tickets from API");
-                        
-                        // Apply filtering
-                        filterTickets();
-                        
-                        // Show success message only if not from pull-to-refresh
-                        if (swipeRefreshLayout == null || !swipeRefreshLayout.isRefreshing()) {
-                            Toast.makeText(getContext(), "Loaded " + tickets.size() + " tickets", Toast.LENGTH_SHORT).show();
-                        }
-                    } else {
-                        android.util.Log.e("ManagerWork", "API returned success=false");
-                        Toast.makeText(getContext(), "Failed to load tickets", Toast.LENGTH_SHORT).show();
-                    }
-                } else {
-                    android.util.Log.e("ManagerWork", "Response not successful or body is null");
-                    if (response.errorBody() != null) {
-                        try {
-                            String errorBody = response.errorBody().string();
-                            android.util.Log.e("ManagerWork", "Error body: " + errorBody);
-                        } catch (Exception e) {
-                            android.util.Log.e("ManagerWork", "Could not read error body", e);
-                        }
-                    }
-                    Toast.makeText(getContext(), "Failed to load tickets", Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            @Override
-            public void onFailure(Call<TicketListResponse> call, Throwable t) {
-                // Stop refresh animation
-                if (swipeRefreshLayout != null && swipeRefreshLayout.isRefreshing()) {
-                    swipeRefreshLayout.setRefreshing(false);
-                }
-                
-                android.util.Log.e("ManagerWork", "Network error: " + t.getMessage(), t);
-                Toast.makeText(getContext(), "Network error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
-            }
-        });
     }
 
     private void filterTickets() {
@@ -314,8 +284,9 @@ public class ManagerWorkFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        // Remove automatic refresh - users can now pull-to-refresh manually
-        android.util.Log.d("ManagerWork", "Fragment resumed - no automatic refresh");
+        // Always display latest data when fragment becomes visible
+        displayTicketData();
+        android.util.Log.d("ManagerWork", "Fragment resumed - displaying cached data");
     }
 
     /**
@@ -323,6 +294,34 @@ public class ManagerWorkFragment extends Fragment {
      */
     public void refreshTickets() {
         android.util.Log.d("ManagerWork", "Manual refresh requested");
-        loadTickets();
+        ManagerDataManager.refreshTickets(getContext(), new ManagerDataManager.DataLoadCallback() {
+            @Override
+            public void onEmployeesLoaded(String branchName, List<EmployeeResponse.Employee> employees) {
+                // Not needed
+            }
+
+            @Override
+            public void onTicketsLoaded(List<TicketListResponse.TicketItem> tickets) {
+                displayTicketData();
+            }
+
+            @Override
+            public void onLoadComplete() {
+                Toast.makeText(getContext(), "Tickets refreshed", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onLoadError(String error) {
+                Toast.makeText(getContext(), "Error: " + error, Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+    
+    /**
+     * Clear ticket cache - call this when tickets are updated (e.g., status changed)
+     */
+    public static void clearTicketCache() {
+        ManagerDataManager.clearTicketCache();
+        android.util.Log.d("ManagerWork", "Ticket cache cleared");
     }
 }

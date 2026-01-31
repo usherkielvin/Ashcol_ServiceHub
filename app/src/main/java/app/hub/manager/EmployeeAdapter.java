@@ -36,29 +36,24 @@ public class EmployeeAdapter extends RecyclerView.Adapter<EmployeeAdapter.Employ
     public void onBindViewHolder(@NonNull EmployeeViewHolder holder, int position) {
         EmployeeResponse.Employee employee = employees.get(position);
         
-        // Set employee name using firstName and lastName
-        String displayName = (employee.getFirstName() + " " + employee.getLastName()).trim();
+        // Set employee name
+        String firstName = employee.getFirstName() != null ? employee.getFirstName() : "";
+        String lastName = employee.getLastName() != null ? employee.getLastName() : "";
+        String displayName = (firstName + " " + lastName).trim();
+        
         if (displayName.isEmpty()) {
-            displayName = employee.getEmail(); // Fallback to email
+            displayName = employee.getEmail() != null ? employee.getEmail() : "Unknown Employee";
         }
         holder.employeeName.setText(displayName);
         
-        // Set department (role)
+        // Set role
         holder.employeeDept.setText(employee.getRole() != null ? employee.getRole() : "Employee");
         
         // Set branch
         holder.employeeStatus.setText(employee.getBranch() != null ? employee.getBranch() : "No Branch");
         
-        // Load profile photo
-//        if (employee.getProfilePhoto() != null && !employee.getProfilePhoto().isEmpty()) {
-//            Picasso.get()
-//                    .load(employee.getProfilePhoto())
-//                    .placeholder(R.drawable.profile_icon)
-//                    .error(R.drawable.profile_icon)
-//                    .into(holder.employeeImage);
-//        } else {
-//            holder.employeeImage.setImageResource(R.drawable.profile_icon);
-//        }
+        // Set default image
+        holder.employeeImage.setImageResource(R.drawable.profile_icon);
     }
 
     @Override

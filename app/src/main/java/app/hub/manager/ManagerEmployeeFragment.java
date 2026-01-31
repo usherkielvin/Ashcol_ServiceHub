@@ -40,7 +40,6 @@ public class ManagerEmployeeFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_manager_employee, container, false);
         
         tokenManager = new TokenManager(getContext());
@@ -49,8 +48,9 @@ public class ManagerEmployeeFragment extends Fragment {
         initializeViews(view);
         setupRecyclerView();
         setupButtons(view);
-        loadManagerBranch();
-        loadEmployees();
+        
+        // Display data immediately if available
+        displayEmployeeData();
         
         return view;
     }
@@ -77,146 +77,50 @@ public class ManagerEmployeeFragment extends Fragment {
         }
     }
     
-    private void loadManagerBranch() {
-        // Clear cache to get fresh data
-        tokenManager.clearBranchCache();
-        
-        String token = tokenManager.getToken();
-        if (token == null) {
-            locationTitle.setText("Authentication Error");
+    private void displayEmployeeData() {
+        if (!isFragmentReady()) {
             return;
         }
-
-        // Show loading state
-        locationTitle.setText("Loading...");
-        android.util.Log.d("ManagerEmployee", "Loading manager branch info");
-
-        ApiService apiService = ApiClient.getApiService();
-        Call<UserResponse> call = apiService.getUser("Bearer " + token);
-
-        call.enqueue(new Callback<UserResponse>() {
-            @Override
-            public void onResponse(Call<UserResponse> call, Response<UserResponse> response) {
-                android.util.Log.d("ManagerEmployee", "User API response - Code: " + response.code());
-                
-                if (response.isSuccessful() && response.body() != null) {
-                    UserResponse userResponse = response.body();
-                    android.util.Log.d("ManagerEmployee", "User response success: " + userResponse.isSuccess());
-                    
-                    if (userResponse.isSuccess() && userResponse.getData() != null) {
-                        String branch = userResponse.getData().getBranch();
-                        android.util.Log.d("ManagerEmployee", "Manager branch: " + branch);
-                        
-                        if (branch != null && !branch.isEmpty()) {
-                            locationTitle.setText(branch);
-                            // Save to cache
-                            tokenManager.saveBranchInfo(branch, 0); // Will be updated when employees load
-                        } else {
-                            locationTitle.setText("No Branch Assigned");
-                        }
-                    } else {
-                        locationTitle.setText("Error Loading Branch");
-                    }
-                } else {
-                    android.util.Log.e("ManagerEmployee", "User API response failed");
-                    locationTitle.setText("Error Loading Branch");
-                }
-            }
-
-            @Override
-            public void onFailure(Call<UserResponse> call, Throwable t) {
-                android.util.Log.e("ManagerEmployee", "User API call failed", t);
-                locationTitle.setText("Network Error");
-            }
-        });
+        
+        // Get data from centralized manager
+        String branchName = ManagerDataManager.getCachedBranchName();
+        List<EmployeeResponse.Employee> employees = ManagerDataManager.getCachedEmployees();
+        
+        if (branchName != null && employees != null) {
+            // Display cached data immediately
+            locationTitle.setText(branchName);
+            employeeCount.setText(employees.size() + " Employee" + (employees.size() != 1 ? "s" : ""));
+            
+            employeeList.clear();
+            employeeList.addAll(employees);
+            employeeAdapter.notifyDataSetChanged();
+            
+            android.util.Log.d("ManagerEmployee", "Displayed cached data: " + branchName + " with " + employees.size() + " employees");
+        } else {
+            // No data available yet
+            locationTitle.setText("Loading...");
+            employeeCount.setText("Loading...");
+            android.util.Log.d("ManagerEmployee", "No cached data available");
+        }
     }
     
-    private void loadEmployees() {
-        // First check if we have cached employee count
-        Integer cachedCount = tokenManager.getCachedEmployeeCount();
-        if (cachedCount != null && cachedCount >= 0) {
-            employeeCount.setText(cachedCount + " Employee" + (cachedCount != 1 ? "s" : ""));
-        } else {
-            employeeCount.setText("Loading...");
-        }
-
-        String token = tokenManager.getToken();
-        if (token == null) {
-            Toast.makeText(getContext(), "Authentication error", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        ApiService apiService = ApiClient.getApiService();
-        Call<EmployeeResponse> call = apiService.getEmployees("Bearer " + token);
-
-        call.enqueue(new Callback<EmployeeResponse>() {
-            @Override
-            public void onResponse(Call<EmployeeResponse> call, Response<EmployeeResponse> response) {
-                android.util.Log.d("ManagerEmployee", "Employee API response - Code: " + response.code());
-                android.util.Log.d("ManagerEmployee", "Response successful: " + response.isSuccessful());
-                
-                if (response.isSuccessful() && response.body() != null) {
-                    EmployeeResponse employeeResponse = response.body();
-                    android.util.Log.d("ManagerEmployee", "Employee response success: " + employeeResponse.isSuccess());
-                    
-                    if (employeeResponse.isSuccess() && employeeResponse.getEmployees() != null) {
-                        List<EmployeeResponse.Employee> employees = employeeResponse.getEmployees();
-                        android.util.Log.d("ManagerEmployee", "Found " + employees.size() + " employees");
-                        
-                        // Update employee count
-                        int count = employees.size();
-                        employeeCount.setText(count + " Employee" + (count != 1 ? "s" : ""));
-                        
-                        // Update employee list
-                        employeeList.clear();
-                        employeeList.addAll(employees);
-                        employeeAdapter.notifyDataSetChanged();
-                        
-                        // Save to cache
-                        String cachedBranch = tokenManager.getCachedBranch();
-                        String branch = cachedBranch != null ? cachedBranch : "Unknown Branch";
-                        tokenManager.saveBranchInfo(branch, count);
-                        
-                    } else {
-                        android.util.Log.e("ManagerEmployee", "Employee response failed or no employees");
-                        employeeCount.setText("0 Employees");
-                        Toast.makeText(getContext(), "Could not load employees", Toast.LENGTH_SHORT).show();
-                    }
-                } else {
-                    android.util.Log.e("ManagerEmployee", "Employee API response not successful");
-                    if (response.errorBody() != null) {
-                        try {
-                            String errorBody = response.errorBody().string();
-                            android.util.Log.e("ManagerEmployee", "Error body: " + errorBody);
-                        } catch (Exception e) {
-                            android.util.Log.e("ManagerEmployee", "Could not read error body", e);
-                        }
-                    }
-                    employeeCount.setText("0 Employees");
-                    Toast.makeText(getContext(), "Failed to load employees", Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            @Override
-            public void onFailure(Call<EmployeeResponse> call, Throwable t) {
-                android.util.Log.e("ManagerEmployee", "Employee API call failed", t);
-                // If we have cached data, keep showing it
-                Integer cachedCount = tokenManager.getCachedEmployeeCount();
-                if (cachedCount != null && cachedCount >= 0) {
-                    employeeCount.setText(cachedCount + " Employee" + (cachedCount != 1 ? "s" : ""));
-                } else {
-                    employeeCount.setText("0 Employees");
-                }
-                Toast.makeText(getContext(), "Network error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
-            }
-        });
+    private boolean isFragmentReady() {
+        return isAdded() && getContext() != null && 
+               locationTitle != null && employeeCount != null && 
+               employeeList != null && employeeAdapter != null;
     }
     
     @Override
     public void onResume() {
         super.onResume();
-        // Only refresh employee list when returning from add employee activity
-        // Branch info will use cached data for instant loading
-        loadEmployees();
+        // Always display latest data when fragment becomes visible
+        displayEmployeeData();
+    }
+    
+    /**
+     * Only call this when you actually add a new employee
+     */
+    public static void clearCache() {
+        ManagerDataManager.clearEmployeeCache();
     }
 }

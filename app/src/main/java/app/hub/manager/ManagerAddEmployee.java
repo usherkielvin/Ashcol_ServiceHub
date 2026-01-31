@@ -264,7 +264,10 @@ public class ManagerAddEmployee extends AppCompatActivity {
                                 
                                 // Clear employee cache to refresh the list
                                 try {
-                                    // Clear any cached employee data
+                                    // Clear the centralized cache
+                                    ManagerDataManager.clearEmployeeCache();
+                                    
+                                    // Also clear TokenManager cache for compatibility
                                     if (tokenManager != null) {
                                         tokenManager.clearBranchCache();
                                     }

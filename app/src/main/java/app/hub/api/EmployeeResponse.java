@@ -12,6 +12,12 @@ public class EmployeeResponse {
     
     @SerializedName("employees")
     private List<Employee> employees;
+    
+    @SerializedName("branch")
+    private String branch;
+    
+    @SerializedName("employee_count")
+    private int employeeCount;
 
     public boolean isSuccess() {
         return success;
@@ -35,6 +41,22 @@ public class EmployeeResponse {
 
     public void setEmployees(List<Employee> employees) {
         this.employees = employees;
+    }
+    
+    public String getBranch() {
+        return branch;
+    }
+
+    public void setBranch(String branch) {
+        this.branch = branch;
+    }
+
+    public int getEmployeeCount() {
+        return employeeCount;
+    }
+
+    public void setEmployeeCount(int employeeCount) {
+        this.employeeCount = employeeCount;
     }
 
     public static class Employee {
