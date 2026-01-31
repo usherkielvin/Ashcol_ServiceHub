@@ -9,6 +9,9 @@ public class TicketListResponse {
     
     @SerializedName("tickets")
     private List<TicketItem> tickets;
+    
+    @SerializedName("message")
+    private String message;
 
     public boolean isSuccess() {
         return success;
@@ -24,6 +27,14 @@ public class TicketListResponse {
 
     public void setTickets(List<TicketItem> tickets) {
         this.tickets = tickets;
+    }
+    
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
     }
 
     public static class TicketItem {

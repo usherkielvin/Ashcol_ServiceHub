@@ -93,6 +93,9 @@ public interface ApiService {
     @POST("api/v1/update-location")
     Call<UpdateLocationResponse> updateLocation(@Header("Authorization") String token, @Body UpdateLocationRequest request);
 
+    @GET("api/v1/test")
+    Call<TestResponse> test(@Header("Authorization") String token);
+
     @GET("api/v1/tickets")
     Call<TicketListResponse> getTickets(@Header("Authorization") String token);
 

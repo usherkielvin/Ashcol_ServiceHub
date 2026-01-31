@@ -9,11 +9,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 
 import app.hub.R;
 import app.hub.api.TicketListResponse;
@@ -45,12 +41,21 @@ public class TicketsAdapter extends RecyclerView.Adapter<TicketsAdapter.TicketVi
 
     @Override
     public void onBindViewHolder(@NonNull TicketViewHolder holder, int position) {
+        if (position < 0 || position >= tickets.size()) {
+            android.util.Log.w("TicketsAdapter", "Invalid position: " + position + ", tickets size: " + tickets.size());
+            return;
+        }
+        
         TicketListResponse.TicketItem ticket = tickets.get(position);
+        android.util.Log.d("TicketsAdapter", "Binding ticket at position " + position + ": " + 
+                          (ticket != null ? ticket.getTicketId() : "null"));
+        
         holder.bind(ticket);
         
         // Set click listener
         holder.itemView.setOnClickListener(v -> {
-            if (onTicketClickListener != null) {
+            if (onTicketClickListener != null && ticket != null) {
+                android.util.Log.d("TicketsAdapter", "Ticket clicked: " + ticket.getTicketId());
                 onTicketClickListener.onTicketClick(ticket);
             }
         });
@@ -58,7 +63,9 @@ public class TicketsAdapter extends RecyclerView.Adapter<TicketsAdapter.TicketVi
 
     @Override
     public int getItemCount() {
-        return tickets.size();
+        int count = tickets != null ? tickets.size() : 0;
+        android.util.Log.d("TicketsAdapter", "getItemCount: " + count);
+        return count;
     }
 
     static class TicketViewHolder extends RecyclerView.ViewHolder {
@@ -66,8 +73,6 @@ public class TicketsAdapter extends RecyclerView.Adapter<TicketsAdapter.TicketVi
         private TextView tvTicketId;
         private TextView tvServiceType;
         private TextView tvStatus;
-        private TextView tvDate;
-        private TextView tvDescription;
 
         public TicketViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -75,72 +80,93 @@ public class TicketsAdapter extends RecyclerView.Adapter<TicketsAdapter.TicketVi
             tvTicketId = itemView.findViewById(R.id.tvTicketId);
             tvServiceType = itemView.findViewById(R.id.tvServiceType);
             tvStatus = itemView.findViewById(R.id.tvStatus);
-            tvDate = itemView.findViewById(R.id.tvDate);
-            tvDescription = itemView.findViewById(R.id.tvDescription);
         }
 
         public void bind(TicketListResponse.TicketItem ticket) {
-            tvTitle.setText(ticket.getTitle());
-            tvTicketId.setText("Requested by: " + ticket.getTicketId());
-            tvServiceType.setText(ticket.getServiceType());
-            tvStatus.setText("Status: " + ticket.getStatus());
-            tvDescription.setText(ticket.getDescription());
-
-            // Set status color
-            String statusColor = ticket.getStatusColor();
-            if (statusColor != null && !statusColor.isEmpty()) {
-                try {
-                    tvStatus.setTextColor(Color.parseColor(statusColor));
-                } catch (IllegalArgumentException e) {
-                    // Fallback to default colors based on status
-                    setStatusColor(tvStatus, ticket.getStatus());
-                }
-            } else {
-                setStatusColor(tvStatus, ticket.getStatus());
+            if (ticket == null) {
+                android.util.Log.w("TicketsAdapter", "Ticket is null, cannot bind");
+                return;
             }
-
-            // Format date
-            String formattedDate = formatDate(ticket.getCreatedAt());
-            tvDate.setText(formattedDate);
+            
+            // Set title with null check
+            String title = ticket.getTitle();
+            tvTitle.setText(title != null ? title : "Service Request");
+            
+            // Set service type with null check and bullet point
+            String serviceType = ticket.getServiceType();
+            tvServiceType.setText("• " + (serviceType != null ? serviceType : "Service Type"));
+            
+            // Set ticket ID with "Requested by:" prefix
+            String ticketId = ticket.getTicketId();
+            tvTicketId.setText("Requested by: " + (ticketId != null ? ticketId : "Unknown ID"));
+            
+            // Set status with proper formatting and background color
+            String status = ticket.getStatus();
+            String displayStatus = "Status: " + (status != null ? status : "Unknown");
+            tvStatus.setText(displayStatus);
+            
+            // Set status background color based on status
+            setStatusBackgroundColor(tvStatus, status);
+            
+            android.util.Log.d("TicketsAdapter", "Bound ticket: " + ticketId + " - " + title);
         }
 
-        private void setStatusColor(TextView textView, String status) {
-            if (status == null) return;
+        private void setStatusBackgroundColor(TextView textView, String status) {
+            if (status == null || textView == null) return;
             
+            // Set text color to white for all status badges
+            textView.setTextColor(Color.WHITE);
+            
+            // Set background color based on status
             switch (status.toLowerCase()) {
                 case "pending":
-                    textView.setTextColor(Color.parseColor("#FFA500")); // Orange
+                    textView.setBackgroundColor(Color.parseColor("#FF9800")); // Orange
                     break;
                 case "accepted":
                 case "in progress":
-                    textView.setTextColor(Color.parseColor("#2196F3")); // Blue
+                    textView.setBackgroundColor(Color.parseColor("#2196F3")); // Blue
                     break;
                 case "completed":
-                    textView.setTextColor(Color.parseColor("#4CAF50")); // Green
+                    textView.setBackgroundColor(Color.parseColor("#4CAF50")); // Green
                     break;
                 case "cancelled":
                 case "rejected":
-                    textView.setTextColor(Color.parseColor("#F44336")); // Red
+                    textView.setBackgroundColor(Color.parseColor("#F44336")); // Red
                     break;
                 default:
-                    textView.setTextColor(Color.parseColor("#757575")); // Gray
+                    textView.setBackgroundColor(Color.parseColor("#4CAF50")); // Default Green for "New Requests"
                     break;
             }
+            
+            // Apply rounded corners
+            textView.setBackground(createRoundedBackground(getBackgroundColorForStatus(status)));
         }
-
-        private String formatDate(String dateString) {
-            if (dateString == null || dateString.isEmpty()) {
-                return "";
+        
+        private int getBackgroundColorForStatus(String status) {
+            if (status == null) return Color.parseColor("#4CAF50");
+            
+            switch (status.toLowerCase()) {
+                case "pending":
+                    return Color.parseColor("#FF9800"); // Orange
+                case "accepted":
+                case "in progress":
+                    return Color.parseColor("#2196F3"); // Blue
+                case "completed":
+                    return Color.parseColor("#4CAF50"); // Green
+                case "cancelled":
+                case "rejected":
+                    return Color.parseColor("#F44336"); // Red
+                default:
+                    return Color.parseColor("#4CAF50"); // Default Green
             }
-
-            try {
-                SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
-                SimpleDateFormat outputFormat = new SimpleDateFormat("MMM dd, yyyy - hh:mm a", Locale.getDefault());
-                Date date = inputFormat.parse(dateString);
-                return outputFormat.format(date);
-            } catch (ParseException e) {
-                return dateString; // Return original if parsing fails
-            }
+        }
+        
+        private android.graphics.drawable.GradientDrawable createRoundedBackground(int color) {
+            android.graphics.drawable.GradientDrawable drawable = new android.graphics.drawable.GradientDrawable();
+            drawable.setShape(android.graphics.drawable.GradientDrawable.RECTANGLE);
+            drawable.setColor(color);
+            drawable.setCornerRadius(20f); // Rounded corners
+            return drawable;
         }
     }
 }
