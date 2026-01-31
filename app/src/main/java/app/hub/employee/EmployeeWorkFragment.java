@@ -1,4 +1,4 @@
-package app.hub.user;
+package app.hub.employee;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -26,22 +26,18 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class UserTicketsFragment extends Fragment {
+public class EmployeeWorkFragment extends Fragment {
 
-    private RecyclerView recyclerView;
+    private RecyclerView recyclerViewAssignedTickets;
     private SwipeRefreshLayout swipeRefreshLayout;
-    private TicketsAdapter adapter;
+    private EmployeeTicketsAdapter adapter;
     private TokenManager tokenManager;
-    private List<TicketListResponse.TicketItem> tickets;
+    private List<TicketListResponse.TicketItem> assignedTickets;
 
-    public UserTicketsFragment() {
-        // Required empty public constructor
-    }
-
+    @Nullable
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_user_tickets, container, false);
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.fragment_employee_work, container, false);
     }
 
     @Override
@@ -50,24 +46,25 @@ public class UserTicketsFragment extends Fragment {
 
         initViews(view);
         setupRecyclerView();
-        loadTickets();
+        loadAssignedTickets();
     }
 
     private void initViews(View view) {
-        recyclerView = view.findViewById(R.id.recyclerViewTickets);
+        recyclerViewAssignedTickets = view.findViewById(R.id.recyclerViewAssignedTickets);
         swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout);
+        
         tokenManager = new TokenManager(getContext());
-        tickets = new ArrayList<>();
+        assignedTickets = new ArrayList<>();
     }
 
     private void setupRecyclerView() {
-        adapter = new TicketsAdapter(tickets);
-        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        recyclerView.setAdapter(adapter);
+        adapter = new EmployeeTicketsAdapter(assignedTickets);
+        recyclerViewAssignedTickets.setLayoutManager(new LinearLayoutManager(getContext()));
+        recyclerViewAssignedTickets.setAdapter(adapter);
 
         // Set click listener for ticket items
         adapter.setOnTicketClickListener(ticket -> {
-            Intent intent = new Intent(getContext(), TicketDetailActivity.class);
+            Intent intent = new Intent(getContext(), EmployeeTicketDetailActivity.class);
             intent.putExtra("ticket_id", ticket.getTicketId());
             startActivity(intent);
         });
@@ -87,15 +84,15 @@ public class UserTicketsFragment extends Fragment {
             
             // Set refresh listener
             swipeRefreshLayout.setOnRefreshListener(() -> {
-                android.util.Log.d("UserTickets", "Pull-to-refresh triggered");
-                loadTickets();
+                android.util.Log.d("EmployeeWork", "Pull-to-refresh triggered");
+                loadAssignedTickets();
             });
             
-            android.util.Log.d("UserTickets", "SwipeRefreshLayout configured");
+            android.util.Log.d("EmployeeWork", "SwipeRefreshLayout configured");
         }
     }
 
-    private void loadTickets() {
+    private void loadAssignedTickets() {
         String token = tokenManager.getToken();
         if (token == null) {
             Toast.makeText(getContext(), "You are not logged in.", Toast.LENGTH_SHORT).show();
@@ -104,7 +101,7 @@ public class UserTicketsFragment extends Fragment {
         }
 
         ApiService apiService = ApiClient.getApiService();
-        Call<TicketListResponse> call = apiService.getTickets("Bearer " + token);
+        Call<TicketListResponse> call = apiService.getEmployeeTickets("Bearer " + token);
 
         call.enqueue(new Callback<TicketListResponse>() {
             @Override
@@ -114,14 +111,14 @@ public class UserTicketsFragment extends Fragment {
                 if (response.isSuccessful() && response.body() != null) {
                     TicketListResponse ticketResponse = response.body();
                     if (ticketResponse.isSuccess()) {
-                        tickets.clear();
-                        tickets.addAll(ticketResponse.getTickets());
+                        assignedTickets.clear();
+                        assignedTickets.addAll(ticketResponse.getTickets());
                         adapter.notifyDataSetChanged();
                     } else {
-                        Toast.makeText(getContext(), "Failed to load tickets", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getContext(), "Failed to load assigned tickets", Toast.LENGTH_SHORT).show();
                     }
                 } else {
-                    Toast.makeText(getContext(), "Failed to load tickets", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), "Failed to load assigned tickets", Toast.LENGTH_SHORT).show();
                 }
             }
 
@@ -137,14 +134,15 @@ public class UserTicketsFragment extends Fragment {
     public void onResume() {
         super.onResume();
         // Remove automatic refresh - users can now pull-to-refresh manually
-        android.util.Log.d("UserTickets", "Fragment resumed - no automatic refresh");
+        android.util.Log.d("EmployeeWork", "Fragment resumed - no automatic refresh");
     }
 
     /**
      * Public method to manually refresh tickets (can be called from parent activity if needed)
      */
     public void refreshTickets() {
-        android.util.Log.d("UserTickets", "Manual refresh requested");
-        loadTickets();
+        android.util.Log.d("EmployeeWork", "Manual refresh requested");
+        loadAssignedTickets();
     }
 }
+

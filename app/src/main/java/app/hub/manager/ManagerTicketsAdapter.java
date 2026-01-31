@@ -1,4 +1,4 @@
-package app.hub.user;
+package app.hub.manager;
 
 import android.graphics.Color;
 import android.view.LayoutInflater;
@@ -18,7 +18,7 @@ import java.util.Locale;
 import app.hub.R;
 import app.hub.api.TicketListResponse;
 
-public class TicketsAdapter extends RecyclerView.Adapter<TicketsAdapter.TicketViewHolder> {
+public class ManagerTicketsAdapter extends RecyclerView.Adapter<ManagerTicketsAdapter.ManagerTicketViewHolder> {
 
     private List<TicketListResponse.TicketItem> tickets;
     private OnTicketClickListener onTicketClickListener;
@@ -27,7 +27,7 @@ public class TicketsAdapter extends RecyclerView.Adapter<TicketsAdapter.TicketVi
         void onTicketClick(TicketListResponse.TicketItem ticket);
     }
 
-    public TicketsAdapter(List<TicketListResponse.TicketItem> tickets) {
+    public ManagerTicketsAdapter(List<TicketListResponse.TicketItem> tickets) {
         this.tickets = tickets;
     }
 
@@ -37,14 +37,14 @@ public class TicketsAdapter extends RecyclerView.Adapter<TicketsAdapter.TicketVi
 
     @NonNull
     @Override
-    public TicketViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    public ManagerTicketViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.item_ticket, parent, false);
-        return new TicketViewHolder(view);
+                .inflate(R.layout.item_manager_ticket, parent, false);
+        return new ManagerTicketViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull TicketViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull ManagerTicketViewHolder holder, int position) {
         TicketListResponse.TicketItem ticket = tickets.get(position);
         holder.bind(ticket);
         
@@ -61,15 +61,17 @@ public class TicketsAdapter extends RecyclerView.Adapter<TicketsAdapter.TicketVi
         return tickets.size();
     }
 
-    static class TicketViewHolder extends RecyclerView.ViewHolder {
+    static class ManagerTicketViewHolder extends RecyclerView.ViewHolder {
         private TextView tvTitle;
         private TextView tvTicketId;
         private TextView tvServiceType;
         private TextView tvStatus;
         private TextView tvDate;
         private TextView tvDescription;
+        private TextView tvCustomerName;
+        private TextView tvPriority;
 
-        public TicketViewHolder(@NonNull View itemView) {
+        public ManagerTicketViewHolder(@NonNull View itemView) {
             super(itemView);
             tvTitle = itemView.findViewById(R.id.tvTitle);
             tvTicketId = itemView.findViewById(R.id.tvTicketId);
@@ -77,14 +79,28 @@ public class TicketsAdapter extends RecyclerView.Adapter<TicketsAdapter.TicketVi
             tvStatus = itemView.findViewById(R.id.tvStatus);
             tvDate = itemView.findViewById(R.id.tvDate);
             tvDescription = itemView.findViewById(R.id.tvDescription);
+            tvCustomerName = itemView.findViewById(R.id.tvCustomerName);
+            tvPriority = itemView.findViewById(R.id.tvPriority);
         }
 
         public void bind(TicketListResponse.TicketItem ticket) {
             tvTitle.setText(ticket.getTitle());
-            tvTicketId.setText("Requested by: " + ticket.getTicketId());
+            tvTicketId.setText(ticket.getTicketId());
             tvServiceType.setText(ticket.getServiceType());
             tvStatus.setText("Status: " + ticket.getStatus());
             tvDescription.setText(ticket.getDescription());
+            tvCustomerName.setText("Customer: " + (ticket.getCustomerName() != null ? ticket.getCustomerName() : "Unknown"));
+
+            // Set priority if available
+            if (tvPriority != null) {
+                String priority = ticket.getPriority();
+                if (priority != null && !priority.isEmpty()) {
+                    tvPriority.setText("Priority: " + priority);
+                    tvPriority.setVisibility(View.VISIBLE);
+                } else {
+                    tvPriority.setVisibility(View.GONE);
+                }
+            }
 
             // Set status color
             String statusColor = ticket.getStatusColor();
@@ -134,13 +150,31 @@ public class TicketsAdapter extends RecyclerView.Adapter<TicketsAdapter.TicketVi
             }
 
             try {
+                // Parse the date string (assuming ISO format from API)
                 SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
                 SimpleDateFormat outputFormat = new SimpleDateFormat("MMM dd, yyyy - hh:mm a", Locale.getDefault());
+                
                 Date date = inputFormat.parse(dateString);
-                return outputFormat.format(date);
+                if (date != null) {
+                    return outputFormat.format(date);
+                }
             } catch (ParseException e) {
-                return dateString; // Return original if parsing fails
+                // If parsing fails, try alternative format
+                try {
+                    SimpleDateFormat altInputFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault());
+                    SimpleDateFormat outputFormat = new SimpleDateFormat("MMM dd, yyyy - hh:mm a", Locale.getDefault());
+                    
+                    Date date = altInputFormat.parse(dateString);
+                    if (date != null) {
+                        return outputFormat.format(date);
+                    }
+                } catch (ParseException ex) {
+                    // Return original string if all parsing fails
+                    return dateString;
+                }
             }
+            
+            return dateString;
         }
     }
 }

@@ -1,4 +1,4 @@
-package app.hub.user;
+package app.hub.employee;
 
 import android.graphics.Color;
 import android.view.LayoutInflater;
@@ -18,7 +18,7 @@ import java.util.Locale;
 import app.hub.R;
 import app.hub.api.TicketListResponse;
 
-public class TicketsAdapter extends RecyclerView.Adapter<TicketsAdapter.TicketViewHolder> {
+public class EmployeeTicketsAdapter extends RecyclerView.Adapter<EmployeeTicketsAdapter.EmployeeTicketViewHolder> {
 
     private List<TicketListResponse.TicketItem> tickets;
     private OnTicketClickListener onTicketClickListener;
@@ -27,7 +27,7 @@ public class TicketsAdapter extends RecyclerView.Adapter<TicketsAdapter.TicketVi
         void onTicketClick(TicketListResponse.TicketItem ticket);
     }
 
-    public TicketsAdapter(List<TicketListResponse.TicketItem> tickets) {
+    public EmployeeTicketsAdapter(List<TicketListResponse.TicketItem> tickets) {
         this.tickets = tickets;
     }
 
@@ -37,14 +37,14 @@ public class TicketsAdapter extends RecyclerView.Adapter<TicketsAdapter.TicketVi
 
     @NonNull
     @Override
-    public TicketViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    public EmployeeTicketViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.item_ticket, parent, false);
-        return new TicketViewHolder(view);
+                .inflate(R.layout.item_employee_ticket, parent, false);
+        return new EmployeeTicketViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull TicketViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull EmployeeTicketViewHolder holder, int position) {
         TicketListResponse.TicketItem ticket = tickets.get(position);
         holder.bind(ticket);
         
@@ -61,15 +61,18 @@ public class TicketsAdapter extends RecyclerView.Adapter<TicketsAdapter.TicketVi
         return tickets.size();
     }
 
-    static class TicketViewHolder extends RecyclerView.ViewHolder {
+    static class EmployeeTicketViewHolder extends RecyclerView.ViewHolder {
         private TextView tvTitle;
         private TextView tvTicketId;
         private TextView tvServiceType;
         private TextView tvStatus;
         private TextView tvDate;
         private TextView tvDescription;
+        private TextView tvCustomerName;
+        private TextView tvAddress;
+        private TextView tvUrgency;
 
-        public TicketViewHolder(@NonNull View itemView) {
+        public EmployeeTicketViewHolder(@NonNull View itemView) {
             super(itemView);
             tvTitle = itemView.findViewById(R.id.tvTitle);
             tvTicketId = itemView.findViewById(R.id.tvTicketId);
@@ -77,14 +80,46 @@ public class TicketsAdapter extends RecyclerView.Adapter<TicketsAdapter.TicketVi
             tvStatus = itemView.findViewById(R.id.tvStatus);
             tvDate = itemView.findViewById(R.id.tvDate);
             tvDescription = itemView.findViewById(R.id.tvDescription);
+            tvCustomerName = itemView.findViewById(R.id.tvCustomerName);
+            tvAddress = itemView.findViewById(R.id.tvAddress);
+            tvUrgency = itemView.findViewById(R.id.tvUrgency);
         }
 
         public void bind(TicketListResponse.TicketItem ticket) {
             tvTitle.setText(ticket.getTitle());
-            tvTicketId.setText("Requested by: " + ticket.getTicketId());
+            tvTicketId.setText(ticket.getTicketId());
             tvServiceType.setText(ticket.getServiceType());
             tvStatus.setText("Status: " + ticket.getStatus());
             tvDescription.setText(ticket.getDescription());
+            tvCustomerName.setText("Customer: " + (ticket.getCustomerName() != null ? ticket.getCustomerName() : "Unknown"));
+            tvAddress.setText("Location: " + (ticket.getAddress() != null ? ticket.getAddress() : "Not specified"));
+
+            // Set urgency indicator
+            if (tvUrgency != null) {
+                String priority = ticket.getPriority();
+                if (priority != null && !priority.isEmpty()) {
+                    tvUrgency.setText(priority.toUpperCase());
+                    tvUrgency.setVisibility(View.VISIBLE);
+                    
+                    // Set urgency color
+                    switch (priority.toLowerCase()) {
+                        case "high":
+                            tvUrgency.setTextColor(Color.parseColor("#F44336")); // Red
+                            break;
+                        case "medium":
+                            tvUrgency.setTextColor(Color.parseColor("#FF9800")); // Orange
+                            break;
+                        case "low":
+                            tvUrgency.setTextColor(Color.parseColor("#4CAF50")); // Green
+                            break;
+                        default:
+                            tvUrgency.setTextColor(Color.parseColor("#757575")); // Gray
+                            break;
+                    }
+                } else {
+                    tvUrgency.setVisibility(View.GONE);
+                }
+            }
 
             // Set status color
             String statusColor = ticket.getStatusColor();
@@ -101,7 +136,7 @@ public class TicketsAdapter extends RecyclerView.Adapter<TicketsAdapter.TicketVi
 
             // Format date
             String formattedDate = formatDate(ticket.getCreatedAt());
-            tvDate.setText(formattedDate);
+            tvDate.setText("Assigned: " + formattedDate);
         }
 
         private void setStatusColor(TextView textView, String status) {
@@ -134,13 +169,31 @@ public class TicketsAdapter extends RecyclerView.Adapter<TicketsAdapter.TicketVi
             }
 
             try {
+                // Parse the date string (assuming ISO format from API)
                 SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
-                SimpleDateFormat outputFormat = new SimpleDateFormat("MMM dd, yyyy - hh:mm a", Locale.getDefault());
+                SimpleDateFormat outputFormat = new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault());
+                
                 Date date = inputFormat.parse(dateString);
-                return outputFormat.format(date);
+                if (date != null) {
+                    return outputFormat.format(date);
+                }
             } catch (ParseException e) {
-                return dateString; // Return original if parsing fails
+                // If parsing fails, try alternative format
+                try {
+                    SimpleDateFormat altInputFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault());
+                    SimpleDateFormat outputFormat = new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault());
+                    
+                    Date date = altInputFormat.parse(dateString);
+                    if (date != null) {
+                        return outputFormat.format(date);
+                    }
+                } catch (ParseException ex) {
+                    // Return original string if all parsing fails
+                    return dateString;
+                }
             }
+            
+            return dateString;
         }
     }
 }

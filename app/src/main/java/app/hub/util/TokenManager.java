@@ -19,7 +19,7 @@ public class TokenManager {
     private static final String KEY_BRANCH = "branch";
     private static final String KEY_EMPLOYEE_COUNT = "employee_count";
     private static final String KEY_BRANCH_CACHE_TIME = "branch_cache_time";
-    private static final long CACHE_DURATION = 5 * 60 * 1000; // 5 minutes cache
+    private static final long CACHE_DURATION = 30 * 60 * 1000; // 30 minutes cache for branch data
     
     // Notification Settings
     private static final String KEY_PUSH_NOTIF = "push_notifications";

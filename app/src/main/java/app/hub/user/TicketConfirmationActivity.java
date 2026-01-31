@@ -50,9 +50,10 @@ public class TicketConfirmationActivity extends AppCompatActivity {
 
     private void setupClickListeners() {
         btnDone.setOnClickListener(v -> {
-            // Navigate back to main activity or tickets list
+            // Navigate back to main activity with user home fragment
             Intent intent = new Intent(this, app.hub.common.MainActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+            intent.putExtra("navigate_to", "user_home"); // Signal to show user home fragment
             startActivity(intent);
             finish();
         });
@@ -63,6 +64,7 @@ public class TicketConfirmationActivity extends AppCompatActivity {
         // Prevent going back to ticket creation form
         Intent intent = new Intent(this, app.hub.common.MainActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.putExtra("navigate_to", "user_home"); // Signal to show user home fragment
         startActivity(intent);
         finish();
     }

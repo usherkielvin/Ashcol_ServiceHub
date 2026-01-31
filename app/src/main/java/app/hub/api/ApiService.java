@@ -12,6 +12,7 @@ import retrofit2.http.GET;
 import retrofit2.http.Header;
 import retrofit2.http.Multipart;
 import retrofit2.http.POST;
+import retrofit2.http.PUT;
 import retrofit2.http.Part;
 
 public interface ApiService {
@@ -97,6 +98,18 @@ public interface ApiService {
 
     @GET("api/v1/tickets")
     Call<TicketListResponse> getTickets(@Header("Authorization") String token, @retrofit2.http.Query("status") String status);
+
+    @GET("api/v1/tickets/{ticketId}")
+    Call<TicketDetailResponse> getTicketDetail(@Header("Authorization") String token, @retrofit2.http.Path("ticketId") String ticketId);
+
+    @GET("api/v1/manager/tickets")
+    Call<TicketListResponse> getManagerTickets(@Header("Authorization") String token);
+
+    @PUT("api/v1/tickets/{ticketId}/status")
+    Call<UpdateTicketStatusResponse> updateTicketStatus(@Header("Authorization") String token, @retrofit2.http.Path("ticketId") String ticketId, @Body UpdateTicketStatusRequest request);
+
+    @GET("api/v1/employee/tickets")
+    Call<TicketListResponse> getEmployeeTickets(@Header("Authorization") String token);
 
     @POST("api/v1/tickets/{ticketId}/accept")
     Call<TicketStatusResponse> acceptTicket(@Header("Authorization") String token, @retrofit2.http.Path("ticketId") String ticketId);

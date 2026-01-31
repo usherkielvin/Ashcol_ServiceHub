@@ -1,10 +1,21 @@
 package app.hub.api;
 
+import com.google.gson.annotations.SerializedName;
+
 public class CreateTicketRequest {
+    @SerializedName("title")
     private String title;
+    
+    @SerializedName("description")
     private String description;
+    
+    @SerializedName("service_type")
     private String serviceType;
+    
+    @SerializedName("address")
     private String address;
+    
+    @SerializedName("contact")
     private String contact;
 
     public CreateTicketRequest(String title, String description, String serviceType, String address, String contact) {

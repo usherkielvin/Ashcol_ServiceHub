@@ -36,32 +36,29 @@ public class EmployeeAdapter extends RecyclerView.Adapter<EmployeeAdapter.Employ
     public void onBindViewHolder(@NonNull EmployeeViewHolder holder, int position) {
         EmployeeResponse.Employee employee = employees.get(position);
         
-        // Set employee name
-        String displayName = employee.getName();
-        if (displayName == null || displayName.isEmpty()) {
-            displayName = (employee.getFirstName() + " " + employee.getLastName()).trim();
-        }
+        // Set employee name using firstName and lastName
+        String displayName = (employee.getFirstName() + " " + employee.getLastName()).trim();
         if (displayName.isEmpty()) {
-            displayName = employee.getUsername();
+            displayName = employee.getEmail(); // Fallback to email
         }
         holder.employeeName.setText(displayName);
         
         // Set department (role)
-        holder.employeeDept.setText("Employee");
+        holder.employeeDept.setText(employee.getRole() != null ? employee.getRole() : "Employee");
         
-        // Set status (for now, all active)
-        holder.employeeStatus.setText("Active");
+        // Set branch
+        holder.employeeStatus.setText(employee.getBranch() != null ? employee.getBranch() : "No Branch");
         
         // Load profile photo
-        if (employee.getProfilePhoto() != null && !employee.getProfilePhoto().isEmpty()) {
-            Picasso.get()
-                    .load(employee.getProfilePhoto())
-                    .placeholder(R.drawable.profile_icon)
-                    .error(R.drawable.profile_icon)
-                    .into(holder.employeeImage);
-        } else {
-            holder.employeeImage.setImageResource(R.drawable.profile_icon);
-        }
+//        if (employee.getProfilePhoto() != null && !employee.getProfilePhoto().isEmpty()) {
+//            Picasso.get()
+//                    .load(employee.getProfilePhoto())
+//                    .placeholder(R.drawable.profile_icon)
+//                    .error(R.drawable.profile_icon)
+//                    .into(holder.employeeImage);
+//        } else {
+//            holder.employeeImage.setImageResource(R.drawable.profile_icon);
+//        }
     }
 
     @Override

@@ -81,6 +81,31 @@
             android:theme="@style/Theme.ServiceHubApp" />
         
         <activity
+            android:name=".manager.ManagerTicketDetailActivity"
+            android:exported="false"
+            android:theme="@style/Theme.ServiceHubApp" />
+        
+        <activity
+            android:name=".user.TicketDetailActivity"
+            android:exported="false"
+            android:theme="@style/Theme.ServiceHubApp" />
+        
+        <activity
+            android:name=".employee.EmployeeTicketDetailActivity"
+            android:exported="false"
+            android:theme="@style/Theme.ServiceHubApp" />
+        
+        <activity
+            android:name=".map.MapViewActivity"
+            android:exported="false"
+            android:theme="@style/Theme.ServiceHubApp" />
+        
+        <activity
+            android:name=".map.EmployeeMapActivity"
+            android:exported="false"
+            android:theme="@style/Theme.ServiceHubApp" />
+        
+        <activity
             android:name=".ForgotPasswordActivity"
             android:exported="false" />
         

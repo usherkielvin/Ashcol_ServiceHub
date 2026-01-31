@@ -32,11 +32,11 @@ public class ApiClient {
             HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor();
             loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
             
-            // Create OkHttpClient with timeouts for local development
+            // Create OkHttpClient with longer timeouts for debugging
             OkHttpClient okHttpClient = new OkHttpClient.Builder()
-                    .connectTimeout(30, TimeUnit.SECONDS)      // Connection timeout: 30 seconds
-                    .readTimeout(30, TimeUnit.SECONDS)         // Read timeout: 30 seconds
-                    .writeTimeout(30, TimeUnit.SECONDS)        // Write timeout: 30 seconds
+                    .connectTimeout(60, TimeUnit.SECONDS)      // Connection timeout: 60 seconds
+                    .readTimeout(60, TimeUnit.SECONDS)         // Read timeout: 60 seconds
+                    .writeTimeout(60, TimeUnit.SECONDS)        // Write timeout: 60 seconds
                     .retryOnConnectionFailure(true)            // Auto-retry on connection failure
                     .addInterceptor(loggingInterceptor)
                     .build();

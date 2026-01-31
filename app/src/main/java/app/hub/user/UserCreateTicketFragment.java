@@ -143,11 +143,22 @@ public class UserCreateTicketFragment extends Fragment {
                 if (response.isSuccessful() && response.body() != null) {
                     CreateTicketResponse ticketResponse = response.body();
                     
+                    // Clear form fields
+                    titleInput.setText("");
+                    descriptionInput.setText("");
+                    addressInput.setText("");
+                    contactInput.setText("");
+                    
                     // Navigate to confirmation screen
                     Intent intent = new Intent(getActivity(), TicketConfirmationActivity.class);
                     intent.putExtra("ticket_id", ticketResponse.getTicketId());
                     intent.putExtra("status", ticketResponse.getStatus());
                     startActivity(intent);
+                    
+                    // Close this fragment/activity
+                    if (getActivity() != null) {
+                        getActivity().finish();
+                    }
                     
                     // Clear form
                     clearForm();

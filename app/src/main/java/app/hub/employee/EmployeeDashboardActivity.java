@@ -57,7 +57,7 @@ public class EmployeeDashboardActivity extends AppCompatActivity {
         if (itemId == R.id.nav_home) {
             selectedFragment = new EmployeeDashboardFragment();
         } else if (itemId == R.id.nav_work) {
-            selectedFragment = new EmployeeWork();
+            selectedFragment = new EmployeeWorkFragment();
         } else if (itemId == R.id.nav_sched) {
             selectedFragment = new EmployeeScheduleFragment();
         } else if (itemId == R.id.nav_profile) {
