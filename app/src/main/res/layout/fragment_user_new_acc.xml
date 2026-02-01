@@ -94,30 +94,10 @@
             app:layout_constraintTop_toBottomOf="@id/OpenOTP" />
 
         <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/btnFacebook"
-            android:layout_width="0dp"
-            android:layout_height="60dp"
-            android:layout_marginTop="32dp"
-            android:background="@drawable/bg_input_field"
-            android:drawableStart="@drawable/facebook"
-            android:drawablePadding="12dp"
-            android:paddingStart="24dp"
-            android:paddingEnd="24dp"
-            android:text="@string/continue_with_facebook"
-            android:textAllCaps="false"
-            android:textColor="#3A383F"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvOr" />
-
-        <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btnGoogle"
             android:layout_width="0dp"
             android:layout_height="60dp"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="32dp"
             android:background="@drawable/bg_input_field"
             android:drawableStart="@drawable/ic_google"
             android:drawablePadding="12dp"
@@ -131,7 +111,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/btnFacebook" />
+            app:layout_constraintTop_toBottomOf="@id/tvOr" />
 
         <ImageView
             android:id="@+id/ivLogo"

@@ -41,7 +41,7 @@ public class UserAddEmailFragment extends Fragment {
         setupValidation();
         setupButtons(view);
         
-        // Pre-fill email if available (for Facebook/Google users)
+        // Pre-fill email if available (for Google users)
         prefillEmailIfAvailable();
         
         return view;

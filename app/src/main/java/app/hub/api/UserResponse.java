@@ -31,8 +31,6 @@ public class UserResponse {
         private String profile_photo;
         private String location;
         private String branch;
-        private boolean has_facebook_account;
-
         public int getId() {
             return id;
         }
@@ -87,14 +85,6 @@ public class UserResponse {
 
         public void setRole(String role) {
             this.role = role;
-        }
-
-        public boolean hasFacebookAccount() {
-            return has_facebook_account;
-        }
-
-        public void setHas_facebook_account(boolean has_facebook_account) {
-            this.has_facebook_account = has_facebook_account;
         }
 
         public String getProfilePhoto() {

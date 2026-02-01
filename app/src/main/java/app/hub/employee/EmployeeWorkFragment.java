@@ -97,9 +97,18 @@ public class EmployeeWorkFragment extends Fragment {
         if (token == null) {
             Toast.makeText(getContext(), "You are not logged in.", Toast.LENGTH_SHORT).show();
             swipeRefreshLayout.setRefreshing(false);
+            android.util.Log.e("EmployeeWork", "No token found - user not logged in");
             return;
         }
 
+        android.util.Log.d("EmployeeWork", "Loading assigned tickets with token: " + (token.length() > 20 ? token.substring(0, 20) + "..." : token));
+        
+        // Check if we have user info
+        String userEmail = tokenManager.getEmail();
+        String userRole = tokenManager.getRole();
+        String userName = tokenManager.getName();
+        android.util.Log.d("EmployeeWork", "User Email: " + userEmail + ", Role: " + userRole + ", Name: " + userName);
+        
         ApiService apiService = ApiClient.getApiService();
         Call<TicketListResponse> call = apiService.getEmployeeTickets("Bearer " + token);
 
@@ -107,25 +116,49 @@ public class EmployeeWorkFragment extends Fragment {
             @Override
             public void onResponse(Call<TicketListResponse> call, Response<TicketListResponse> response) {
                 swipeRefreshLayout.setRefreshing(false);
+                
+                android.util.Log.d("EmployeeWork", "API Response - Success: " + response.isSuccessful() + ", Code: " + response.code());
 
                 if (response.isSuccessful() && response.body() != null) {
                     TicketListResponse ticketResponse = response.body();
+                    android.util.Log.d("EmployeeWork", "Ticket Response - Success: " + ticketResponse.isSuccess() + ", Tickets count: " + (ticketResponse.getTickets() != null ? ticketResponse.getTickets().size() : 0));
+                    
                     if (ticketResponse.isSuccess()) {
                         assignedTickets.clear();
-                        assignedTickets.addAll(ticketResponse.getTickets());
+                        if (ticketResponse.getTickets() != null) {
+                            assignedTickets.addAll(ticketResponse.getTickets());
+                            android.util.Log.d("EmployeeWork", "Loaded " + assignedTickets.size() + " tickets");
+                        }
                         adapter.notifyDataSetChanged();
+                        
+                        if (assignedTickets.isEmpty()) {
+                            Toast.makeText(getContext(), "No assigned tickets found", Toast.LENGTH_SHORT).show();
+                        }
                     } else {
-                        Toast.makeText(getContext(), "Failed to load assigned tickets", Toast.LENGTH_SHORT).show();
+                        String message = ticketResponse.getMessage() != null ? ticketResponse.getMessage() : "Failed to load assigned tickets";
+                        Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
+                        android.util.Log.e("EmployeeWork", "API Error: " + message);
                     }
                 } else {
-                    Toast.makeText(getContext(), "Failed to load assigned tickets", Toast.LENGTH_SHORT).show();
+                    String errorMessage = "Failed to load assigned tickets (Code: " + response.code() + ")";
+                    if (response.errorBody() != null) {
+                        try {
+                            errorMessage += " - " + response.errorBody().string();
+                        } catch (Exception e) {
+                            android.util.Log.e("EmployeeWork", "Error reading error body", e);
+                        }
+                    }
+                    Toast.makeText(getContext(), errorMessage, Toast.LENGTH_SHORT).show();
+                    android.util.Log.e("EmployeeWork", "HTTP Error: " + errorMessage);
                 }
             }
 
             @Override
             public void onFailure(Call<TicketListResponse> call, Throwable t) {
                 swipeRefreshLayout.setRefreshing(false);
-                Toast.makeText(getContext(), "Network error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                String errorMessage = "Network error: " + t.getMessage();
+                Toast.makeText(getContext(), errorMessage, Toast.LENGTH_SHORT).show();
+                android.util.Log.e("EmployeeWork", "Network Error", t);
             }
         });
     }

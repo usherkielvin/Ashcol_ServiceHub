@@ -40,8 +40,8 @@
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:layout_gravity="center"
-            android:src="@drawable/ic_pin"
-            android:elevation="10dp" />
+            android:elevation="10dp"
+            android:src="@drawable/mapinup" />
 
     </FrameLayout>
 

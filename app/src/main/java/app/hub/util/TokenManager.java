@@ -63,9 +63,19 @@ public class TokenManager {
     public String getRole() {
         return sharedPreferences.getString(KEY_ROLE, null);
     }
+    
+    public String getUserId() {
+        // For backward compatibility, we can use email as user identifier
+        return getEmail();
+    }
+    
+    public String getUserRole() {
+        return getRole();
+    }
 
     public void clear() {
-        sharedPreferences.edit().clear().apply();
+        // Use commit() instead of apply() for immediate persistence
+        sharedPreferences.edit().clear().commit();
     }
 
     public boolean isLoggedIn() {

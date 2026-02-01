@@ -4,8 +4,7 @@ import app.hub.ForgotPasswordActivity;
 import app.hub.R;
 import app.hub.api.ApiClient;
 import app.hub.api.ApiService;
-import app.hub.api.FacebookSignInRequest;
-import app.hub.api.FacebookSignInResponse;
+
 import app.hub.api.GoogleSignInRequest;
 import app.hub.api.GoogleSignInResponse;
 import app.hub.api.LoginRequest;
@@ -43,14 +42,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.splashscreen.SplashScreen;
 
-import com.facebook.AccessToken;
-import com.facebook.CallbackManager;
-import com.facebook.FacebookCallback;
-import com.facebook.FacebookException;
-import com.facebook.GraphRequest;
-import com.facebook.GraphResponse;
-import com.facebook.login.LoginManager;
-import com.facebook.login.LoginResult;
+
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
@@ -80,7 +72,7 @@ public class MainActivity extends AppCompatActivity {
 	private static final int LOCATION_PERMISSION_REQUEST_CODE = 1001;
 	private TokenManager tokenManager;
 	private GoogleSignInClient googleSignInClient;
-	private CallbackManager facebookCallbackManager;
+
 	private UserLocationManager userLocationManager;
 
 	@Override
@@ -195,9 +187,6 @@ public class MainActivity extends AppCompatActivity {
         // Setup Google Sign-In
         setupGoogleSignIn();
         
-        // Setup Facebook Login
-        setupFacebookLogin();
-        
         // Setup social login buttons
         setupSocialLoginButtons();
         
@@ -214,63 +203,7 @@ public class MainActivity extends AppCompatActivity {
         googleSignInClient.signOut();
     }
 
-    private void setupFacebookLogin() {
-        facebookCallbackManager = CallbackManager.Factory.create();
-        LoginManager.getInstance().registerCallback(facebookCallbackManager,
-            new FacebookCallback<LoginResult>() {
-                @Override
-                public void onSuccess(LoginResult loginResult) {
-                    AccessToken accessToken = loginResult.getAccessToken();
-                    Log.d(TAG, "Facebook login successful");
-                    
-                    // Get user info from Facebook Graph API
-                    GraphRequest request = GraphRequest.newMeRequest(
-                        accessToken,
-                        (object, response) -> {
-                            try {
-                                String email = object.optString("email");
-                                String firstName = object.optString("first_name");
-                                String lastName = object.optString("last_name");
-                                String name = object.optString("name");
-                                String id = object.optString("id");
-                                
-                                Log.d(TAG, "Facebook user info - ID: " + id + ", Email: " + (email != null && !email.isEmpty() ? email : "NULL") + ", Name: " + name);
-                                
-                                // Call backend API to login/register with Facebook (pass Facebook ID for pure FB auth)
-                                loginWithFacebook(accessToken.getToken(), id, email, firstName, lastName);
-                            } catch (Exception e) {
-                                Log.e(TAG, "Error parsing Facebook user info", e);
-                                runOnUiThread(() -> Toast.makeText(MainActivity.this, "Error getting Facebook user info", Toast.LENGTH_SHORT).show());
-                            }
-                        });
-                    
-                    Bundle parameters = new Bundle();
-                    parameters.putString("fields", "id,name,email,first_name,last_name");
-                    request.setParameters(parameters);
-                    request.executeAsync();
-                }
 
-                @Override
-                public void onCancel() {
-                    Log.d(TAG, "Facebook login cancelled");
-                    Toast.makeText(MainActivity.this, "Facebook login was cancelled", Toast.LENGTH_SHORT).show();
-                }
-
-                @Override
-                public void onError(FacebookException exception) {
-                    Log.e(TAG, "Facebook login error: " + exception.getMessage(), exception);
-                    String errorMsg = "Facebook login failed";
-                    if (exception.getMessage() != null) {
-                        if (exception.getMessage().contains("CONNECTION_FAILURE")) {
-                            errorMsg = "Network error. Please check your connection.";
-                        } else if (exception.getMessage().contains("INVALID_APP_ID")) {
-                            errorMsg = "Facebook login not configured. Please contact support.";
-                        }
-                    }
-                    Toast.makeText(MainActivity.this, errorMsg, Toast.LENGTH_SHORT).show();
-                }
-            });
-    }
 
     private void setupGoogleSignIn() {
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -282,14 +215,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupSocialLoginButtons() {
-        // Facebook button
-        Button facebookButton = findViewById(R.id.btnFacebook);
-        if (facebookButton != null) {
-            facebookButton.setOnClickListener(v -> {
-                signInWithFacebook();
-            });
-        }
-
         // Google Sign-In button
         Button googleButton = findViewById(R.id.btnGoogle);
         if (googleButton != null) {
@@ -310,11 +235,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        
-        // Handle Facebook callback
-        if (facebookCallbackManager != null) {
-            facebookCallbackManager.onActivityResult(requestCode, resultCode, data);
-        }
 
         if (requestCode == RC_SIGN_IN) {
             Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
@@ -322,181 +242,11 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void signInWithFacebook() {
-        // Use only public_profile permission - email is automatically included via Graph API
-        LoginManager.getInstance().logInWithReadPermissions(this, 
-            java.util.Arrays.asList("public_profile"));
-    }
 
-    private void loginWithFacebook(String accessToken, String facebookId, String email, String firstName, String lastName) {
-        // Validate Facebook ID (required for pure FB auth)
-        if (facebookId == null || facebookId.isEmpty()) {
-            Log.e(TAG, "Facebook login failed: Facebook ID is required but not available");
-            showError("Login Failed", "Facebook authentication error. Please try again.");
-            return;
-        }
-        
-        MaterialButton loginButton = findViewById(R.id.loginButton);
-        if (loginButton != null) {
-            loginButton.setEnabled(false);
-            loginButton.setText("Logging in...");
-        }
 
-        Log.d(TAG, "Attempting Facebook login with:");
-        Log.d(TAG, "  - Facebook ID: " + facebookId);
-        Log.d(TAG, "  - Email: " + (email != null && !email.isEmpty() ? email : "NULL (pure FB auth)"));
-        Log.d(TAG, "  - First Name: " + firstName);
-        Log.d(TAG, "  - Last Name: " + lastName);
-        Log.d(TAG, "  - Access Token: " + (accessToken != null && !accessToken.isEmpty() ? "Present" : "Missing"));
 
-        ApiService apiService = ApiClient.getApiService();
-        FacebookSignInRequest request = new FacebookSignInRequest(
-            accessToken != null ? accessToken : "",
-            facebookId,
-            email != null ? email : "", // Email can be empty for pure FB auth
-            firstName != null ? firstName : "",
-            lastName != null ? lastName : "",
-            "" // No phone on login
-        );
 
-        Call<FacebookSignInResponse> call = apiService.facebookSignIn(request);
-        call.enqueue(new Callback<>() {
-            @Override
-            public void onResponse(@NonNull Call<FacebookSignInResponse> call, @NonNull Response<FacebookSignInResponse> response) {
-                runOnUiThread(() -> {
-                    if (loginButton != null) {
-                        loginButton.setEnabled(true);
-                        loginButton.setText("Login");
-                    }
-                });
 
-                if (response.isSuccessful() && response.body() != null) {
-                    FacebookSignInResponse signInResponse = response.body();
-                    
-                    if (signInResponse.isSuccess()) {
-                        // Check if user data exists
-                        if (signInResponse.getData() == null || signInResponse.getData().getUser() == null) {
-                            runOnUiThread(() -> showError("Account Not Found", 
-                                "Account not found. Please register first before signing in with Facebook."));
-                            LoginManager.getInstance().logOut();
-                            return;
-                        }
-
-                        // Check message for registration indicator
-                        String message = signInResponse.getMessage();
-                        if (message != null) {
-                            String lowerMessage = message.toLowerCase();
-                            if (lowerMessage.contains("created") || lowerMessage.contains("registered") || lowerMessage.contains("welcome")) {
-                                runOnUiThread(() -> showError("Account Not Found", 
-                                    "Account not found. Please register first before signing in with Facebook."));
-                                LoginManager.getInstance().logOut();
-                                return;
-                            }
-                        }
-                        
-                        handleFacebookLoginSuccess(signInResponse);
-                    } else {
-                        // Success = false from API (likely account doesn't exist)
-                        String errorMsg = signInResponse.getMessage() != null ? signInResponse.getMessage() : "Account not found. Please register first.";
-                        runOnUiThread(() -> showError("Login Failed", errorMsg));
-                        LoginManager.getInstance().logOut();
-                    }
-                } else {
-                    String errorMsg = "Login failed. Please try again.";
-                    try {
-                        if (response.errorBody() != null) {
-                            String errorBody = response.errorBody().string();
-                            Log.e(TAG, "Facebook login error response (" + response.code() + "): " + errorBody);
-                            
-                            // Try to parse error message from response
-                            try {
-                                Gson gson = new Gson();
-                                JsonObject jsonObject = gson.fromJson(errorBody, JsonObject.class);
-                                if (jsonObject != null && jsonObject.has("message")) {
-                                    errorMsg = jsonObject.get("message").getAsString();
-                                }
-                            } catch (Exception e) {
-                                Log.d(TAG, "Could not parse error JSON");
-                            }
-                            
-                            // Check for account existence keywords in error body
-                            String lowerError = errorBody.toLowerCase();
-                            if (lowerError.contains("not found") || lowerError.contains("does not exist") || lowerError.contains("account")) {
-                                errorMsg = "Account not found. Please register first.";
-                            }
-                        }
-                    } catch (Exception e) {
-                        Log.e(TAG, "Error reading error response", e);
-                    }
-                    
-                    final String finalErrorMsg = errorMsg;
-                    runOnUiThread(() -> showError("Login Failed", finalErrorMsg));
-                    LoginManager.getInstance().logOut();
-                }
-            }
-
-            @Override
-            public void onFailure(@NonNull Call<FacebookSignInResponse> call, @NonNull Throwable t) {
-                runOnUiThread(() -> {
-                    if (loginButton != null) {
-                        loginButton.setEnabled(true);
-                        loginButton.setText("Login");
-                    }
-                });
-                Log.e(TAG, "Error logging in with Facebook: " + t.getMessage(), t);
-                String errorMsg = getConnectionErrorMessage(t);
-                runOnUiThread(() -> showError("Connection Error", errorMsg));
-                LoginManager.getInstance().logOut();
-            }
-        });
-    }
-
-    private void handleFacebookLoginSuccess(FacebookSignInResponse response) {
-        if (response.getData() == null || response.getData().getUser() == null) {
-            showError("Login Failed", "Invalid response from server.");
-            return;
-        }
-
-        // Save token and user data
-        FacebookSignInResponse.User user = response.getData().getUser();
-        tokenManager.saveToken("Bearer " + response.getData().getToken());
-        
-        // Save email or connection status
-        String email = user.getEmail();
-        if (email != null && email.contains("@")) {
-            tokenManager.saveEmail(email);
-            tokenManager.clearConnectionStatus();
-        } else {
-            // Facebook user without email - save connection status
-            tokenManager.saveConnectionStatus("Facebook connected");
-        }
-        
-        tokenManager.saveRole(user.getRole());
-
-        // Build and save name
-        String firstName = user.getFirstName();
-        String lastName = user.getLastName();
-        StringBuilder nameBuilder = new StringBuilder();
-        if (firstName != null && !firstName.trim().isEmpty()) {
-            nameBuilder.append(firstName.trim());
-        }
-        if (lastName != null && !lastName.trim().isEmpty()) {
-            if (nameBuilder.length() > 0) {
-                nameBuilder.append(" ");
-            }
-            nameBuilder.append(lastName.trim());
-        }
-        String fullName = nameBuilder.toString();
-        if (!fullName.isEmpty()) {
-            tokenManager.saveName(fullName);
-        }
-
-        // Force immediate token persistence
-        tokenManager.forceCommit();
-
-        // Update location for signed-in user and navigate after completion
-        updateLocationAndNavigate(user);
-    }
 
     private void handleGoogleSignInResult(Task<GoogleSignInAccount> completedTask) {
         try {
@@ -726,8 +476,6 @@ public class MainActivity extends AppCompatActivity {
 						if (email != null && email.contains("@")) {
 							tokenManager.saveEmail(email);
 							tokenManager.clearConnectionStatus();
-						} else if (user.hasFacebookAccount()) {
-							tokenManager.saveConnectionStatus("Facebook connected");
 						}
 						
                         tokenManager.saveRole(user.getRole());
@@ -1116,7 +864,7 @@ public class MainActivity extends AppCompatActivity {
         runOnUiThread(() -> {
             final Intent intent;
             
-            // Handle both GoogleSignInResponse.User and FacebookSignInResponse.User
+            // Handle GoogleSignInResponse.User
             String role = null;
             String email = null;
             
@@ -1124,10 +872,6 @@ public class MainActivity extends AppCompatActivity {
                 GoogleSignInResponse.User googleUser = (GoogleSignInResponse.User) user;
                 role = googleUser.getRole();
                 email = googleUser.getEmail();
-            } else if (user instanceof FacebookSignInResponse.User) {
-                FacebookSignInResponse.User fbUser = (FacebookSignInResponse.User) user;
-                role = fbUser.getRole();
-                email = fbUser.getEmail();
             }
             
             if ("admin".equals(role)) {

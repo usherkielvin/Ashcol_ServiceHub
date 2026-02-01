@@ -38,6 +38,10 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 
 import app.hub.api.LogoutResponse;
 
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
 public class EmployeeProfileFragment extends Fragment {
 
     private TokenManager tokenManager;
@@ -224,63 +228,203 @@ public class EmployeeProfileFragment extends Fragment {
     }
 
     private void logout() {
+        Log.d("EmployeeProfileFragment", "logout() method called");
+        
+        // Show progress indicator
+        if (getActivity() == null) {
+            Log.w("EmployeeProfileFragment", "Activity is null, cannot logout");
+            return;
+        }
+        
+        Log.d("EmployeeProfileFragment", "Creating progress dialog");
+        android.app.ProgressDialog progressDialog = new android.app.ProgressDialog(getContext());
+        progressDialog.setMessage("Logging out...");
+        progressDialog.setCancelable(false);
+        progressDialog.show();
+        
+        Log.d("EmployeeProfileFragment", "Clearing user data immediately");
+        // Clear user data immediately (this is the most important part)
+        clearUserData();
+        
         String token = tokenManager.getToken();
+        Log.d("EmployeeProfileFragment", "Token present: " + (token != null));
+        
         if (token != null) {
+            Log.d("EmployeeProfileFragment", "Making API logout call");
             ApiService apiService = ApiClient.getApiService();
             Call<LogoutResponse> call = apiService.logout(token);
             call.enqueue(new Callback<LogoutResponse>() {
                 @Override
                 public void onResponse(@NonNull Call<LogoutResponse> call, @NonNull Response<LogoutResponse> response) {
-                    signOutFromGoogle();
-                    clearUserData();
-                    navigateToLogin();
+                    Log.d("EmployeeProfileFragment", "API logout response received - Success: " + response.isSuccessful() + ", Code: " + response.code());
+                    
+                    // Dismiss progress dialog
+                    if (progressDialog.isShowing()) {
+                        progressDialog.dismiss();
+                    }
+                    
+                    Log.d("EmployeeProfileFragment", "Performing final cleanup");
+                    // Perform remaining cleanup and navigate
+                    performFinalCleanup();
                 }
 
                 @Override
                 public void onFailure(@NonNull Call<LogoutResponse> call, @NonNull Throwable t) {
-                    signOutFromGoogle();
-                    clearUserData();
-                    navigateToLogin();
+                    Log.w("EmployeeProfileFragment", "API logout failed: " + t.getMessage());
+                    
+                    // Dismiss progress dialog
+                    if (progressDialog.isShowing()) {
+                        progressDialog.dismiss();
+                    }
+                    
+                    Log.d("EmployeeProfileFragment", "Performing final cleanup after API failure");
+                    // Still perform cleanup even if API call fails
+                    performFinalCleanup();
                 }
             });
         } else {
-            signOutFromGoogle();
-            clearUserData();
-            navigateToLogin();
+            Log.d("EmployeeProfileFragment", "No token, dismissing progress dialog");
+            // Dismiss progress dialog
+            if (progressDialog.isShowing()) {
+                progressDialog.dismiss();
+            }
+            
+            Log.d("EmployeeProfileFragment", "Performing final cleanup (no token)");
+            // No token, just perform final cleanup
+            performFinalCleanup();
         }
+    }
+    
+    private void performFinalCleanup() {
+        Log.d("EmployeeProfileFragment", "performFinalCleanup() called");
+        
+        try {
+            Log.d("EmployeeProfileFragment", "Starting Google sign out");
+            // Sign out from Google (this can be slow, but we'll do it synchronously with timeout)
+            signOutFromGoogle();
+            
+            Log.d("EmployeeProfileFragment", "Starting navigation to login");
+            // Navigate to login
+            navigateToLogin();
+        } catch (Exception e) {
+            Log.e("EmployeeProfileFragment", "Error during final cleanup: " + e.getMessage(), e);
+            // Still navigate to login even if cleanup fails
+            try {
+                navigateToLogin();
+            } catch (Exception navException) {
+                Log.e("EmployeeProfileFragment", "Error during navigation after cleanup failure: " + navException.getMessage(), navException);
+            }
+        }
+        
+        Log.d("EmployeeProfileFragment", "performFinalCleanup() completed");
     }
 
     private void signOutFromGoogle() {
-        if (getActivity() != null) {
-            GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                    .requestEmail()
-                    .requestProfile()
-                    .build();
-            GoogleSignInClient googleSignInClient = GoogleSignIn.getClient(getActivity(), gso);
-            googleSignInClient.signOut();
+        Log.d("EmployeeProfileFragment", "signOutFromGoogle called");
+        
+        try {
+            if (getActivity() != null) {
+                Log.d("EmployeeProfileFragment", "Setting up Google Sign-In client");
+                GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                        .requestEmail()
+                        .requestProfile()
+                        .build();
+                GoogleSignInClient googleSignInClient = GoogleSignIn.getClient(getActivity(), gso);
+                
+                Log.d("EmployeeProfileFragment", "Starting Google sign out with timeout");
+                
+                // Perform sign out with timeout
+                java.util.concurrent.CompletableFuture<Void> signOutFuture = 
+                    java.util.concurrent.CompletableFuture.runAsync(() -> {
+                        try {
+                            Log.d("EmployeeProfileFragment", "Executing Google signOut()");
+                            googleSignInClient.signOut().addOnCompleteListener(task -> {
+                                if (task.isSuccessful()) {
+                                    Log.d("EmployeeProfileFragment", "Google sign out successful");
+                                } else {
+                                    Log.w("EmployeeProfileFragment", "Google sign out failed: " + task.getException());
+                                }
+                            }).addOnFailureListener(e -> {
+                                Log.w("EmployeeProfileFragment", "Google sign out error: " + e.getMessage());
+                            });
+                        } catch (Exception e) {
+                            Log.w("EmployeeProfileFragment", "Google sign out exception: " + e.getMessage());
+                        }
+                    });
+                
+                // Wait for sign out with timeout (don't block forever)
+                try {
+                    Log.d("EmployeeProfileFragment", "Waiting for Google sign out (3 second timeout)");
+                    signOutFuture.get(3, java.util.concurrent.TimeUnit.SECONDS);
+                    Log.d("EmployeeProfileFragment", "Google sign out completed within timeout");
+                } catch (java.util.concurrent.TimeoutException e) {
+                    Log.w("EmployeeProfileFragment", "Google sign out timed out");
+                } catch (Exception e) {
+                    Log.w("EmployeeProfileFragment", "Google sign out interrupted: " + e.getMessage());
+                }
+            } else {
+                Log.w("EmployeeProfileFragment", "Activity is null, skipping Google sign out");
+            }
+        } catch (Exception e) {
+            Log.e("EmployeeProfileFragment", "Error during Google sign out: " + e.getMessage(), e);
         }
+        
+        Log.d("EmployeeProfileFragment", "signOutFromGoogle completed");
     }
 
     private void navigateToLogin() {
-        if (getActivity() == null) return;
-        Intent intent = new Intent(getActivity(), MainActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        startActivity(intent);
-        getActivity().finish();
+        Log.d("EmployeeProfileFragment", "navigateToLogin called");
+        
+        if (getActivity() == null) {
+            Log.w("EmployeeProfileFragment", "Activity is null, cannot navigate to login");
+            return;
+        }
+        
+        try {
+            Log.d("EmployeeProfileFragment", "Creating intent to MainActivity");
+            Intent intent = new Intent(getActivity(), MainActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            Log.d("EmployeeProfileFragment", "Starting MainActivity");
+            startActivity(intent);
+            Log.d("EmployeeProfileFragment", "Finishing current activity");
+            getActivity().finish();
+            Log.d("EmployeeProfileFragment", "Navigation completed");
+        } catch (Exception e) {
+            Log.e("EmployeeProfileFragment", "Error navigating to login: " + e.getMessage(), e);
+            // If navigation fails, at least clear the activity stack
+            try {
+                getActivity().finish();
+            } catch (Exception finishException) {
+                Log.e("EmployeeProfileFragment", "Error finishing activity: " + finishException.getMessage(), finishException);
+            }
+        }
     }
 
     private void clearUserData() {
-        // Clear token manager data
-        tokenManager.clear();
-        
-        // Delete locally stored profile photo
         try {
-            File imageFile = new File(requireContext().getFilesDir(), "profile_image.jpg");
-            if (imageFile.exists()) {
-                imageFile.delete();
+            Log.d("EmployeeProfileFragment", "Starting clearUserData");
+            
+            // Clear token manager data
+            if (tokenManager != null) {
+                Log.d("EmployeeProfileFragment", "Clearing token manager data");
+                tokenManager.clear();
+                Log.d("EmployeeProfileFragment", "Token manager cleared");
             }
+            
+            // Delete locally stored profile photo
+            if (requireContext() != null) {
+                File imageFile = new File(requireContext().getFilesDir(), "profile_image.jpg");
+                if (imageFile.exists()) {
+                    Log.d("EmployeeProfileFragment", "Deleting profile image file");
+                    imageFile.delete();
+                    Log.d("EmployeeProfileFragment", "Profile image file deleted");
+                }
+            }
+            
+            Log.d("EmployeeProfileFragment", "clearUserData completed successfully");
         } catch (Exception e) {
-            // Ignore errors when clearing profile photo
+            Log.e("EmployeeProfileFragment", "Error clearing user data: " + e.getMessage(), e);
+            // Continue with logout even if clearing data fails
         }
     }
 }

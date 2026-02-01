@@ -153,23 +153,6 @@
                 android:textSize="16sp" />
 
             <androidx.appcompat.widget.AppCompatButton
-                android:id="@+id/btnFacebook"
-                android:layout_width="match_parent"
-                android:layout_height="60dp"
-                android:layout_marginHorizontal="32dp"
-                android:layout_marginBottom="16dp"
-                android:background="@drawable/bg_input_field"
-                android:drawableStart="@drawable/facebook"
-                android:drawablePadding="12dp"
-                android:paddingStart="24dp"
-                android:paddingEnd="24dp"
-                android:text="@string/continue_with_facebook"
-                android:textAllCaps="false"
-                android:textColor="#3A383F"
-                android:textSize="16sp"
-                android:textStyle="bold" />
-
-            <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/btnGoogle"
                 android:layout_width="match_parent"
                 android:layout_height="60dp"
