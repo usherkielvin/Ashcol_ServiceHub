@@ -10,7 +10,6 @@ Ashcol ServiceHub is a comprehensive service management platform with Android an
 - User registration with automatic location detection
 - **Hidden location field auto-filled after splash screen**
 - Google Sign-In (requires configuration)
-- Facebook Sign-In (requires configuration)
 - Email verification
 - Password management
 - Profile management
@@ -32,13 +31,7 @@ Ashcol ServiceHub is a comprehensive service management platform with Android an
    - Add package name: `app.hub`
    - Add SHA-1 fingerprint
    - Update `google-services.json` file
-3. Configure Facebook Sign-In (optional):
-   - Create Facebook App
-   - Add Android platform
-   - Add package name: `app.hub`
-   - Add key hashes
-   - Update `strings.xml` with Facebook App ID
-4. Build and run the app
+3. Build and run the app
 
 ### Web App Setup
 
@@ -53,10 +46,12 @@ Ashcol ServiceHub is a comprehensive service management platform with Android an
 ### How Location Detection Works
 
 1. **After splash screen:** MainActivity automatically requests location permission from the user
-2. **Permission Granted:** The app retrieves your current location
+2. **Permission Granted:** The app retrieves your current location and stores it in SharedPreferences
 3. **Auto Fill:** A hidden location field is automatically populated with the detected city (with toast notification)
-4. **Location Storage:** Detected location is stored in SharedPreferences and sent to database during registration
-5. **Social Login:** Location is also detected and stored when signing in with Google or Facebook
+4. **Location Storage:** Detected location is stored in SharedPreferences for the device
+5. **Registration:** New registrations use the detected location from SharedPreferences
+6. **Social Login:** After successful Google sign-in, the user's location is updated in the database from the device-stored location
+7. **Database Sync:** All signed-in users have their location updated in the database automatically after authentication is complete
 
 ### Location Detection Logic
 
@@ -90,7 +85,6 @@ This will add a `location` column to the `users` table.
 - `POST /api/v1/register` - User registration (includes auto-detected location)
 - `POST /api/v1/login` - User login
 - `POST /api/v1/google-signin` - Google Sign-In
-- `POST /api/v1/facebook-signin` - Facebook Sign-In
 
 ### User Management
 - `GET /api/v1/user` - Get user profile (includes auto-detected location)
@@ -169,7 +163,6 @@ The app includes comprehensive error handling for:
 - Validation errors
 - Server errors
 - Google Sign-In errors
-- Facebook Sign-In errors
 
 ## Logging
 

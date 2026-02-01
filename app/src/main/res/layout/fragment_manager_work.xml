@@ -139,18 +139,25 @@
 
         </HorizontalScrollView>
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rvWorkLoadList"
+        <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+            android:id="@+id/swipeRefreshLayout"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:clipToPadding="false"
-            android:paddingBottom="20dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/hsvFilters"
-            tools:itemCount="4"
-            tools:listitem="@layout/item_workoad_card"/>
+            app:layout_constraintTop_toBottomOf="@id/hsvFilters">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvWorkLoadList"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clipToPadding="false"
+                android:paddingBottom="20dp"
+                tools:itemCount="4"
+                tools:listitem="@layout/item_workoad_card"/>
+
+        </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

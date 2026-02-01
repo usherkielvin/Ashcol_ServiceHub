@@ -91,7 +91,7 @@ public class DashboardActivity extends AppCompatActivity {
             if (itemId == R.id.homebtn) {
                 selectedFragment = new UserHomeFragment();
             } else if (itemId == R.id.my_ticket) {
-                selectedFragment = new UserTicketFragment();
+                selectedFragment = new UserTicketsFragment();
             } else if (itemId == R.id.activitybtn) {
                 selectedFragment = new UserNotificationFragment();
             } else if (itemId == R.id.Profile) {

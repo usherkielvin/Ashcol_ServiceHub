@@ -99,7 +99,7 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/etDate" />
 
-            <EditText
+            <AutoCompleteTextView
                 android:id="@+id/etLocation"
                 android:layout_width="0dp"
                 android:layout_height="40dp"
@@ -112,7 +112,7 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/tvLocationLabel" />
 
-            <TextView
+            <Button
                 android:id="@+id/btnMap"
                 android:layout_width="80dp"
                 android:layout_height="40dp"
@@ -149,28 +149,58 @@
                 android:textSize="14sp"
                 app:layout_constraintTop_toBottomOf="@id/tvDescriptionLabel" />
 
-            <!-- Attachments -->
+            <!-- Title Field -->
             <TextView
-                android:id="@+id/tvAttachmentsLabel"
+                android:id="@+id/tvTitleLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
-                android:text="Attachments"
+                android:text="Title"
                 android:textColor="#000000"
                 android:textStyle="bold"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/etDescription" />
 
             <EditText
-                android:id="@+id/etAttachments"
+                android:id="@+id/etTitle"
                 android:layout_width="match_parent"
                 android:layout_height="40dp"
                 android:layout_marginTop="4dp"
                 android:background="@drawable/bg_input_white"
-                android:hint="Attach photos or upload file"
+                android:hint="Enter ticket title"
                 android:padding="8dp"
                 android:textSize="14sp"
-                app:layout_constraintTop_toBottomOf="@id/tvAttachmentsLabel" />
+                app:layout_constraintTop_toBottomOf="@id/tvTitleLabel" />
+
+            <!-- Contact Field -->
+            <TextView
+                android:id="@+id/tvContactLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="Contact Number"
+                android:textColor="#000000"
+                android:textStyle="bold"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/etTitle" />
+
+            <!-- Service Type Spinner -->
+
+            <!-- Attachments -->
+
+            <EditText
+                android:id="@+id/etContact"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:layout_marginStart="4dp"
+                android:layout_marginTop="4dp"
+                android:background="@drawable/bg_input_white"
+                android:hint="Enter contact number"
+                android:inputType="phone"
+                android:padding="8dp"
+                android:textSize="14sp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tvContactLabel" />
 
             <androidx.constraintlayout.widget.Guideline
                 android:id="@+id/guideline50"
