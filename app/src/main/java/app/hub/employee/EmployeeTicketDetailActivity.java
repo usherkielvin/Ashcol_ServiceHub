@@ -31,7 +31,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class EmployeeTicketDetailActivity extends AppCompatActivity {
+public class EmployeeTicketDetailActivity extends AppCompatActivity implements EmployeePaymentFragment.OnPaymentConfirmedListener {
 
     private TextView tvTicketId, tvTitle, tvDescription, tvServiceType, tvAddress, tvContact, tvStatus, tvCustomerName, tvCreatedAt, tvScheduleDate, tvScheduleTime, tvScheduleNotes;
     private Button btnViewMap, btnBack, btnStartWork, btnCompleteWork;
@@ -105,7 +105,7 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity {
         });
 
         btnStartWork.setOnClickListener(v -> updateTicketStatus("in_progress"));
-        btnCompleteWork.setOnClickListener(v -> showPaymentSelectionDialog());
+        btnCompleteWork.setOnClickListener(v -> showPaymentFragment());
     }
 
     private void loadTicketDetails() {
@@ -345,11 +345,20 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity {
         }
     }
 
-    private void showPaymentSelectionDialog() {
-        PaymentSelectionDialog dialog = new PaymentSelectionDialog(this, (paymentMethod, amount, notes) -> {
-            completeWorkWithPayment(paymentMethod, amount, notes);
-        });
-        dialog.show();
+    private void showPaymentFragment() {
+        // Use a full-screen style fragment for payment so it appears properly
+        EmployeePaymentFragment fragment = EmployeePaymentFragment.newInstance(ticketId);
+        getSupportFragmentManager()
+                .beginTransaction()
+                .add(android.R.id.content, fragment)
+                .addToBackStack(null)
+                .commit();
+    }
+
+    @Override
+    public void onPaymentConfirmed(String paymentMethod, double amount, String notes) {
+        // Callback from EmployeePaymentFragment
+        completeWorkWithPayment(paymentMethod, amount, notes);
     }
 
     private void completeWorkWithPayment(String paymentMethod, double amount, String notes) {

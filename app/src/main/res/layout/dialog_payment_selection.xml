@@ -74,8 +74,6 @@
             android:text="Online"
             android:textSize="16sp"
             android:textStyle="bold" />
-            app:iconGravity="textStart"
-            app:iconPadding="8dp" />
 
     </LinearLayout>
 
