@@ -153,12 +153,17 @@ public class EmployeeWorkFragment extends Fragment {
                         }
                         adapter.notifyDataSetChanged();
                         
+                        // Don't show toast for empty list - it's normal
                         if (assignedTickets.isEmpty()) {
-                            // Show empty state if needed
+                            android.util.Log.d("EmployeeWork", "No tickets found for status: " + status);
                         }
                     } else {
-                        Toast.makeText(getContext(), "Failed to load tickets: " + ticketResponse.getMessage(), Toast.LENGTH_SHORT).show();
-                        android.util.Log.e("EmployeeWork", "Ticket API error: " + ticketResponse.getMessage());
+                        String message = ticketResponse.getMessage() != null ? ticketResponse.getMessage() : "Failed to load tickets";
+                        android.util.Log.e("EmployeeWork", "Ticket API error: " + message);
+                        // Only show error toast for actual errors
+                        if (!message.toLowerCase().contains("no") && !message.toLowerCase().contains("empty")) {
+                            Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
+                        }
                     }
                 } else {
                     Toast.makeText(getContext(), "Failed to load tickets. Please try again.", Toast.LENGTH_SHORT).show();
@@ -284,25 +289,62 @@ public class EmployeeWorkFragment extends Fragment {
                         }
                         adapter.notifyDataSetChanged();
                         
+                        // Don't show toast for empty list - it's normal if no tickets assigned yet
                         if (assignedTickets.isEmpty()) {
-                            Toast.makeText(getContext(), "No assigned tickets found", Toast.LENGTH_SHORT).show();
+                            android.util.Log.d("EmployeeWork", "No assigned tickets found - this is normal");
                         }
                     } else {
                         String message = ticketResponse.getMessage() != null ? ticketResponse.getMessage() : "Failed to load assigned tickets";
-                        Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
                         android.util.Log.e("EmployeeWork", "API Error: " + message);
+                        // Only show error toast for actual errors, not empty lists
+                        if (!message.toLowerCase().contains("no") && !message.toLowerCase().contains("empty")) {
+                            Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
+                        }
                     }
                 } else {
-                    String errorMessage = "Failed to load assigned tickets (Code: " + response.code() + ")";
+                    String errorMessage = "Failed to load assigned tickets";
+                    String errorBody = "";
                     if (response.errorBody() != null) {
                         try {
-                            errorMessage += " - " + response.errorBody().string();
+                            errorBody = response.errorBody().string();
+                            android.util.Log.e("EmployeeWork", "Error body: " + errorBody);
+                            
+                            // Try to parse JSON error message
+                            try {
+                                com.google.gson.JsonObject errorJson = new com.google.gson.Gson().fromJson(errorBody, com.google.gson.JsonObject.class);
+                                if (errorJson.has("message")) {
+                                    errorMessage = errorJson.get("message").getAsString();
+                                }
+                            } catch (Exception parseEx) {
+                                // If JSON parsing fails, use raw error body
+                                errorMessage = errorBody.length() > 100 ? errorBody.substring(0, 100) + "..." : errorBody;
+                            }
                         } catch (Exception e) {
                             android.util.Log.e("EmployeeWork", "Error reading error body", e);
                         }
                     }
-                    Toast.makeText(getContext(), errorMessage, Toast.LENGTH_SHORT).show();
-                    android.util.Log.e("EmployeeWork", "HTTP Error: " + errorMessage);
+                    
+                    // Show user-friendly error based on status code
+                    switch (response.code()) {
+                        case 403:
+                            errorMessage = "You don't have permission to view assigned tickets. Please contact your manager.";
+                            break;
+                        case 401:
+                            errorMessage = "Session expired. Please log in again.";
+                            break;
+                        case 500:
+                            errorMessage = "Server error. Please try again later.";
+                            break;
+                        default:
+                            if (!errorMessage.isEmpty() && !errorMessage.equals("Failed to load assigned tickets")) {
+                                // Use parsed error message
+                            } else {
+                                errorMessage = "Failed to load assigned tickets (Error " + response.code() + ")";
+                            }
+                    }
+                    
+                    android.util.Log.e("EmployeeWork", "HTTP Error: " + errorMessage + " (Code: " + response.code() + ")");
+                    Toast.makeText(getContext(), errorMessage, Toast.LENGTH_LONG).show();
                 }
             }
 
