@@ -30,8 +30,8 @@ public class ManagerDataManager {
     private static boolean isLoading = false;
     private static long lastLoadTime = 0;
     
-    // Cache duration - refresh if data is older than 5 minutes
-    private static final long CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+    // Cache duration - refresh if data is older than 3 minutes (matches backend cache)
+    private static final long CACHE_DURATION = 3 * 60 * 1000; // 3 minutes
     
     // Callbacks for UI updates
     public interface DataLoadCallback {
@@ -186,12 +186,23 @@ public class ManagerDataManager {
     
     private static void checkLoadComplete(DataLoadCallback callback) {
         // Check if both employees and tickets are loaded
-        if (cachedEmployees != null && cachedTickets != null) {
+        // Note: We mark as complete even if one fails, so UI can still show partial data
+        boolean employeesReady = cachedEmployees != null;
+        boolean ticketsReady = cachedTickets != null;
+        
+        if (employeesReady && ticketsReady) {
             isDataLoaded = true;
             isLoading = false;
             lastLoadTime = System.currentTimeMillis(); // Update timestamp
             Log.d(TAG, "All data loaded successfully");
             
+            if (callback != null) {
+                callback.onLoadComplete();
+            }
+        } else if (!isLoading) {
+            // If we're not loading anymore but data is incomplete, still mark as complete
+            // to prevent infinite waiting
+            isLoading = false;
             if (callback != null) {
                 callback.onLoadComplete();
             }

@@ -109,9 +109,23 @@ public class ManagerDashboardActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        // Refresh data when app is reopened
-        android.util.Log.d("ManagerDashboard", "App resumed - refreshing data");
-        loadAllManagerData();
+        // Only refresh if cache is stale (ManagerDataManager handles this internally)
+        // This prevents unnecessary API calls when returning to the app quickly
+        android.util.Log.d("ManagerDashboard", "App resumed - checking cache freshness");
+        ManagerDataManager.loadAllData(this, new ManagerDataManager.DataLoadCallback() {
+            @Override
+            public void onEmployeesLoaded(String branchName, List<EmployeeResponse.Employee> employees) {}
+            @Override
+            public void onTicketsLoaded(List<TicketListResponse.TicketItem> tickets) {}
+            @Override
+            public void onLoadComplete() {
+                android.util.Log.d("ManagerDashboard", "Data refresh check completed");
+            }
+            @Override
+            public void onLoadError(String error) {
+                android.util.Log.e("ManagerDashboard", "Error refreshing data: " + error);
+            }
+        });
     }
     
     /**
