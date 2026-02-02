@@ -32,6 +32,12 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+
+import app.hub.api.LogoutResponse;
+
 public class ManagerSettingsFragment extends Fragment {
 
     private TokenManager tokenManager;
@@ -61,10 +67,7 @@ public class ManagerSettingsFragment extends Fragment {
         Button logoutButton = view.findViewById(R.id.logoutButton);
         if (logoutButton != null) {
             logoutButton.setOnClickListener(v -> {
-                clearUserData();
-                Intent intent = new Intent(getActivity(), MainActivity.class);
-                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                startActivity(intent);
+                logout();
             });
         }
     }
@@ -220,18 +223,150 @@ public class ManagerSettingsFragment extends Fragment {
         }
     }
 
-    private void clearUserData() {
-        // Clear token manager data
-        tokenManager.clear();
+    private void logout() {
+        // Show progress indicator
+        if (getActivity() == null) return;
         
-        // Delete locally stored profile photo
+        android.app.ProgressDialog progressDialog = new android.app.ProgressDialog(getContext());
+        progressDialog.setMessage("Logging out...");
+        progressDialog.setCancelable(false);
+        progressDialog.show();
+        
+        String token = tokenManager.getToken();
+        if (token != null) {
+            ApiService apiService = ApiClient.getApiService();
+            Call<LogoutResponse> call = apiService.logout(token);
+            call.enqueue(new Callback<LogoutResponse>() {
+                @Override
+                public void onResponse(@NonNull Call<LogoutResponse> call, @NonNull Response<LogoutResponse> response) {
+                    // Dismiss progress dialog
+                    if (progressDialog.isShowing()) {
+                        progressDialog.dismiss();
+                    }
+                    
+                    // Perform cleanup operations asynchronously
+                    performLogoutCleanup();
+                }
+
+                @Override
+                public void onFailure(@NonNull Call<LogoutResponse> call, @NonNull Throwable t) {
+                    // Dismiss progress dialog
+                    if (progressDialog.isShowing()) {
+                        progressDialog.dismiss();
+                    }
+                    
+                    // Still perform cleanup even if API call fails
+                    performLogoutCleanup();
+                }
+            });
+        } else {
+            // Dismiss progress dialog
+            if (progressDialog.isShowing()) {
+                progressDialog.dismiss();
+            }
+            
+            // No token, just perform cleanup
+            performLogoutCleanup();
+        }
+    }
+    
+    private void performLogoutCleanup() {
+        // Run cleanup operations in background to prevent blocking UI
+        new Thread(() -> {
+            try {
+                // Clear user data first (fast operation)
+                clearUserData();
+                
+                // Sign out from Google (this can be slow)
+                signOutFromGoogle();
+                
+                // Navigate to login on main thread
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(this::navigateToLogin);
+                }
+            } catch (Exception e) {
+                Log.e("ManagerSettingsFragment", "Error during logout cleanup: " + e.getMessage(), e);
+                // Still navigate to login even if cleanup fails
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(this::navigateToLogin);
+                }
+            }
+        }).start();
+    }
+
+    private void signOutFromGoogle() {
         try {
-            File imageFile = new File(requireContext().getFilesDir(), "profile_image.jpg");
-            if (imageFile.exists()) {
-                imageFile.delete();
+            if (getActivity() != null) {
+                GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                        .requestEmail()
+                        .requestProfile()
+                        .build();
+                GoogleSignInClient googleSignInClient = GoogleSignIn.getClient(getActivity(), gso);
+                
+                // Perform sign out with timeout
+                java.util.concurrent.CompletableFuture<Void> signOutFuture = 
+                    java.util.concurrent.CompletableFuture.runAsync(() -> {
+                        try {
+                            googleSignInClient.signOut().addOnCompleteListener(task -> {
+                                if (task.isSuccessful()) {
+                                    Log.d("ManagerSettingsFragment", "Google sign out successful");
+                                } else {
+                                    Log.w("ManagerSettingsFragment", "Google sign out failed: " + task.getException());
+                                }
+                            }).addOnFailureListener(e -> {
+                                Log.w("ManagerSettingsFragment", "Google sign out error: " + e.getMessage());
+                            });
+                        } catch (Exception e) {
+                            Log.w("ManagerSettingsFragment", "Google sign out exception: " + e.getMessage());
+                        }
+                    });
+                
+                // Wait for sign out with timeout (don't block forever)
+                try {
+                    signOutFuture.get(3, java.util.concurrent.TimeUnit.SECONDS);
+                } catch (java.util.concurrent.TimeoutException e) {
+                    Log.w("ManagerSettingsFragment", "Google sign out timed out");
+                } catch (Exception e) {
+                    Log.w("ManagerSettingsFragment", "Google sign out interrupted: " + e.getMessage());
+                }
             }
         } catch (Exception e) {
-            // Ignore errors when clearing profile photo
+            Log.e("ManagerSettingsFragment", "Error during Google sign out: " + e.getMessage(), e);
+        }
+    }
+
+    private void navigateToLogin() {
+        if (getActivity() == null) return;
+        
+        try {
+            Intent intent = new Intent(getActivity(), MainActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+            getActivity().finish();
+        } catch (Exception e) {
+            Log.e("ManagerSettingsFragment", "Error navigating to login: " + e.getMessage(), e);
+            // If navigation fails, at least clear the activity stack
+            getActivity().finish();
+        }
+    }
+
+    private void clearUserData() {
+        try {
+            // Clear token manager data
+            if (tokenManager != null) {
+                tokenManager.clear();
+            }
+            
+            // Delete locally stored profile photo
+            if (requireContext() != null) {
+                File imageFile = new File(requireContext().getFilesDir(), "profile_image.jpg");
+                if (imageFile.exists()) {
+                    imageFile.delete();
+                }
+            }
+        } catch (Exception e) {
+            Log.w("ManagerSettingsFragment", "Error clearing user data: " + e.getMessage());
+            // Continue with logout even if clearing data fails
         }
     }
 }

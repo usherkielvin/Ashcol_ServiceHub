@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,7 +21,9 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
 
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.imageview.ShapeableImageView;
+import com.google.android.material.switchmaterial.SwitchMaterial;
 
 import app.hub.R;
 import app.hub.api.ApiClient;
@@ -45,11 +48,16 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+
 public class UserProfileFragment extends Fragment {
 
     private TokenManager tokenManager;
     private String currentName;
     private String currentEmail;
+    private String connectionStatus;
     private TextView tvName, tvUsername;
     private ShapeableImageView imgProfile;
     private Uri cameraImageUri;
@@ -122,7 +130,7 @@ public class UserProfileFragment extends Fragment {
         String cachedEmail = getCachedEmail();
         String cachedConnectionStatus = getCachedConnectionStatus();
         
-        // Prefer connection status (e.g., "Facebook connected") over email if available
+        // Prefer connection status over email if available
         if (cachedConnectionStatus != null && !cachedConnectionStatus.isEmpty()) {
             currentEmail = cachedConnectionStatus;
             if (tvUsername != null) {
@@ -172,12 +180,7 @@ public class UserProfileFragment extends Fragment {
         currentName = buildNameFromApi(userData);
         currentEmail = getEmailToDisplay(userData);
         
-        // If user has Facebook account but no email, show "Facebook connected"
-        String connectionStatus = null;
-        if (userData.hasFacebookAccount() && !isValidEmail(currentEmail)) {
-            currentEmail = "Facebook connected";
-            connectionStatus = "Facebook connected";
-        }
+        connectionStatus = null;
         
         // Load profile photo from API if available
         if (userData.getProfilePhoto() != null && !userData.getProfilePhoto().isEmpty()) {
@@ -268,7 +271,7 @@ public class UserProfileFragment extends Fragment {
             tokenManager.saveEmail(currentEmail);
         }
         
-        // Save connection status (e.g., "Facebook connected") to cache
+        // Save connection status to cache
         if (connectionStatus != null && !connectionStatus.isEmpty()) {
             saveConnectionStatus(connectionStatus);
         } else {
@@ -296,10 +299,10 @@ public class UserProfileFragment extends Fragment {
     private void updateEmailDisplay() {
         String displayEmail = currentEmail;
         
-        // If we have "Facebook connected" text, use it directly
-        if ("Facebook connected".equals(currentEmail)) {
+        // If we have connection status text, use it directly
+        if (connectionStatus != null && !connectionStatus.isEmpty()) {
             if (tvUsername != null) {
-                tvUsername.setText(currentEmail);
+                tvUsername.setText(connectionStatus);
             }
             return;
         }
@@ -398,7 +401,7 @@ public class UserProfileFragment extends Fragment {
         setClickListener(view, R.id.btn_appearance, () -> 
             showToast("Appearance clicked"));
         setClickListener(view, R.id.btn_notifications, () -> 
-            showToast("Notifications clicked"));
+            showNotificationSettings());
         setClickListener(view, R.id.btn_language, () -> 
             showToast("Language clicked"));
         setClickListener(view, R.id.btn_payroll, () -> 
@@ -412,55 +415,187 @@ public class UserProfileFragment extends Fragment {
         }
     }
 
+    private void showNotificationSettings() {
+        if (getContext() == null) return;
+        
+        BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(requireContext());
+        View view = getLayoutInflater().inflate(R.layout.user_notificationstoggler, null);
+        
+        SwitchMaterial switchPush = view.findViewById(R.id.switch_push);
+        SwitchMaterial switchEmail = view.findViewById(R.id.switch_email);
+        SwitchMaterial switchSms = view.findViewById(R.id.switch_sms);
+        
+        if (switchPush != null) {
+            switchPush.setChecked(tokenManager.isPushEnabled());
+            switchPush.setOnCheckedChangeListener((buttonView, isChecked) -> 
+                tokenManager.setPushEnabled(isChecked));
+        }
+        
+        if (switchEmail != null) {
+            switchEmail.setChecked(tokenManager.isEmailNotifEnabled());
+            switchEmail.setOnCheckedChangeListener((buttonView, isChecked) -> 
+                tokenManager.setEmailNotifEnabled(isChecked));
+        }
+        
+        if (switchSms != null) {
+            switchSms.setChecked(tokenManager.isSmsNotifEnabled());
+            switchSms.setOnCheckedChangeListener((buttonView, isChecked) -> 
+                tokenManager.setSmsNotifEnabled(isChecked));
+        }
+        
+        bottomSheetDialog.setContentView(view);
+        bottomSheetDialog.show();
+    }
+
     private void showToast(String message) {
         Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
     }
 
     private void logout() {
+        // Show progress indicator
+        if (getActivity() == null) return;
+            
+        android.app.ProgressDialog progressDialog = new android.app.ProgressDialog(getContext());
+        progressDialog.setMessage("Logging out...");
+        progressDialog.setCancelable(false);
+        progressDialog.show();
+            
         String token = tokenManager.getToken();
         if (token != null) {
             ApiService apiService = ApiClient.getApiService();
             Call<LogoutResponse> call = apiService.logout(token);
             call.enqueue(new Callback<LogoutResponse>() {
                 @Override
-               	public void onResponse(@NonNull Call<LogoutResponse> call, @NonNull Response<LogoutResponse> response) {
-                    clearUserData();
-                    navigateToLogin();
+                public void onResponse(@NonNull Call<LogoutResponse> call, @NonNull Response<LogoutResponse> response) {
+                    // Dismiss progress dialog
+                    if (progressDialog.isShowing()) {
+                        progressDialog.dismiss();
+                    }
+                        
+                    // Perform cleanup operations asynchronously
+                    performLogoutCleanup();
                 }
-
+    
                 @Override
                 public void onFailure(@NonNull Call<LogoutResponse> call, @NonNull Throwable t) {
-                    clearUserData();
-                    navigateToLogin();
+                    // Dismiss progress dialog
+                    if (progressDialog.isShowing()) {
+                        progressDialog.dismiss();
+                    }
+                        
+                    // Still perform cleanup even if API call fails
+                    performLogoutCleanup();
                 }
             });
         } else {
-            clearUserData();
-            navigateToLogin();
+            // Dismiss progress dialog
+            if (progressDialog.isShowing()) {
+                progressDialog.dismiss();
+            }
+                
+            // No token, just perform cleanup
+            performLogoutCleanup();
+        }
+    }
+        
+    private void performLogoutCleanup() {
+        // Run cleanup operations in background to prevent blocking UI
+        new Thread(() -> {
+            try {
+                // Clear user data first (fast operation)
+                clearUserData();
+                    
+                // Sign out from Google (this can be slow)
+                signOutFromGoogle();
+                    
+                // Navigate to login on main thread
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(this::navigateToLogin);
+                }
+            } catch (Exception e) {
+                Log.e("UserProfileFragment", "Error during logout cleanup: " + e.getMessage(), e);
+                // Still navigate to login even if cleanup fails
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(this::navigateToLogin);
+                }
+            }
+        }).start();
+    }
+
+    private void signOutFromGoogle() {
+        try {
+            if (getActivity() != null) {
+                GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                        .requestEmail()
+                        .requestProfile()
+                        .build();
+                GoogleSignInClient googleSignInClient = GoogleSignIn.getClient(getActivity(), gso);
+                
+                // Perform sign out with timeout
+                java.util.concurrent.CompletableFuture<Void> signOutFuture = 
+                    java.util.concurrent.CompletableFuture.runAsync(() -> {
+                        try {
+                            googleSignInClient.signOut().addOnCompleteListener(task -> {
+                                if (task.isSuccessful()) {
+                                    Log.d("UserProfileFragment", "Google sign out successful");
+                                } else {
+                                    Log.w("UserProfileFragment", "Google sign out failed: " + task.getException());
+                                }
+                            }).addOnFailureListener(e -> {
+                                Log.w("UserProfileFragment", "Google sign out error: " + e.getMessage());
+                            });
+                        } catch (Exception e) {
+                            Log.w("UserProfileFragment", "Google sign out exception: " + e.getMessage());
+                        }
+                    });
+                
+                // Wait for sign out with timeout (don't block forever)
+                try {
+                    signOutFuture.get(3, java.util.concurrent.TimeUnit.SECONDS);
+                } catch (java.util.concurrent.TimeoutException e) {
+                    Log.w("UserProfileFragment", "Google sign out timed out");
+                } catch (Exception e) {
+                    Log.w("UserProfileFragment", "Google sign out interrupted: " + e.getMessage());
+                }
+            }
+        } catch (Exception e) {
+            Log.e("UserProfileFragment", "Error during Google sign out: " + e.getMessage(), e);
         }
     }
 
     private void clearUserData() {
-        // Clear token manager data
-        tokenManager.clear();
-        
-        // Delete locally stored profile photo
         try {
-            File imageFile = new File(requireContext().getFilesDir(), "profile_image.jpg");
-            if (imageFile.exists()) {
-                imageFile.delete();
+            // Clear token manager data
+            if (tokenManager != null) {
+                tokenManager.clear();
+            }
+            
+            // Delete locally stored profile photo
+            if (requireContext() != null) {
+                File imageFile = new File(requireContext().getFilesDir(), "profile_image.jpg");
+                if (imageFile.exists()) {
+                    imageFile.delete();
+                }
             }
         } catch (Exception e) {
-            // Ignore errors when clearing profile photo
+            Log.w("UserProfileFragment", "Error clearing user data: " + e.getMessage());
+            // Continue with logout even if clearing data fails
         }
     }
 
     private void navigateToLogin() {
         if (getActivity() == null) return;
-        Intent intent = new Intent(getActivity(), MainActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        startActivity(intent);
-        getActivity().finish();
+        
+        try {
+            Intent intent = new Intent(getActivity(), MainActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+            getActivity().finish();
+        } catch (Exception e) {
+            Log.e("UserProfileFragment", "Error navigating to login: " + e.getMessage(), e);
+            // If navigation fails, at least clear the activity stack
+            getActivity().finish();
+        }
     }
 
     private void showImagePickerDialog() {

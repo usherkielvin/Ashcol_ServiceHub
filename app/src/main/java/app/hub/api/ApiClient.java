@@ -22,7 +22,12 @@ public class ApiClient {
     // Note: Trailing slash is required when endpoints don't start with /
     // LOCAL DEVELOPMENT - Using local Laravel server
     // Make sure to run: php artisan serve --host=0.0.0.0 --port=8000
+<<<<<<< HEAD
     private static final String BASE_URL = "http://192.168.254.153:8000/";
+=======
+    // IMPORTANT: no leading/trailing spaces in BASE_URL
+    private static final String BASE_URL = "http://10.0.2.2:8000/";
+>>>>>>> 9e1352f7e2ba43c0175d25a48c75ea00d79e93a6
     
     private static Retrofit retrofit = null;
 
@@ -32,11 +37,11 @@ public class ApiClient {
             HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor();
             loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
             
-            // Create OkHttpClient with timeouts for local development
+            // Create OkHttpClient with longer timeouts for debugging
             OkHttpClient okHttpClient = new OkHttpClient.Builder()
-                    .connectTimeout(30, TimeUnit.SECONDS)      // Connection timeout: 30 seconds
-                    .readTimeout(30, TimeUnit.SECONDS)         // Read timeout: 30 seconds
-                    .writeTimeout(30, TimeUnit.SECONDS)        // Write timeout: 30 seconds
+                    .connectTimeout(60, TimeUnit.SECONDS)      // Connection timeout: 60 seconds
+                    .readTimeout(60, TimeUnit.SECONDS)         // Read timeout: 60 seconds
+                    .writeTimeout(60, TimeUnit.SECONDS)        // Write timeout: 60 seconds
                     .retryOnConnectionFailure(true)            // Auto-retry on connection failure
                     .addInterceptor(loggingInterceptor)
                     .build();

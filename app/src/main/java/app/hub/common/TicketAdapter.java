@@ -53,9 +53,9 @@ public class TicketAdapter extends RecyclerView.Adapter<TicketAdapter.TicketView
 
         public TicketViewHolder(@NonNull View itemView) {
             super(itemView);
-            ticketTitle = itemView.findViewById(R.id.ticketTitle);
-            ticketDescription = itemView.findViewById(R.id.ticketDescription);
-            ticketStatus = itemView.findViewById(R.id.statusBadge);
+            ticketTitle = itemView.findViewById(R.id.tvTitle);
+            ticketDescription = itemView.findViewById(R.id.tvDescription);
+            ticketStatus = itemView.findViewById(R.id.tvStatus);
         }
     }
 }

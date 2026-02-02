@@ -8,6 +8,21 @@
         <item>Appliance Repair</item>
     </string-array>
 
+    <string-array name="branch_options">
+        <item>Select branch...</item>
+        <item>ASHCOL TAGUIG</item>
+        <item>ASHCOL Valenzuela</item>
+        <item>ASHCOL Rodriguez Rizal</item>
+        <item>ASHCOL PAMPANGA</item>
+        <item>ASHCOL Bulacan</item>
+        <item>ASHCOL GENTRI CAVITE</item>
+        <item>ASHCOL DASMARINAS CAVITE</item>
+        <item>ASHCOL STA ROSA – TAGAYTAY RD</item>
+        <item>ASHCOL LAGUNA</item>
+        <item>ASHCOL BATANGAS</item>
+        <item>ASHCOL CANDELARIA QUEZON PROVINCE</item>
+    </string-array>
+
     <string name="chatbot_button_description">Chatbot</string>
     <string name="keeping_you_cool">Keeping you cool</string>
     <string name="sign_in">Sign In</string>
@@ -28,7 +43,7 @@
     <!-- New Strings -->
     <string name="or_log_in_with">Or log in with</string>
     <string name="sign_in_with_google">Sign in with Google</string>
-    <string name="sign_in_with_facebook">Sign in with Facebook</string>
+
     <string name="edit_name">Edit Name</string>
     <string name="change_password">Change Password</string>
     <string name="sign_up_subtitle">Create an account</string>
@@ -41,7 +56,7 @@
     <string name="back_to_login">Back to Login</string>
     <string name="or_sign_up_with">Or sign up with</string>
     <string name="sign_up_with_google">Sign up with Google</string>
-    <string name="sign_up_with_facebook">Sign up with Facebook</string>
+
     <string name="current_password">Current Password</string>
     <string name="new_password">New Password</string>
     <string name="confirm_new_password">Confirm New Password</string>
@@ -63,7 +78,7 @@
     <string name="by_using_ashcol_you_agree_to_the_terms_and_privacy_policy">By using Ashcol, you agree to the Terms and Privacy Policy.</string>
     <string name="continue_signup">continue</string>
     <string name="continue_with_google">Continue with Google</string>
-    <string name="continue_with_facebook">Continue with Facebook</string>
+
     <string name="or">or</string>
     <string name="continue_with_email">Continue with email</string>
     <string name="sign_up_and_start_your_journey_with_nthe_ashcol_family">Sign up and start your journey with\nthe Ashcol family.</string>
@@ -105,10 +120,7 @@
     <string name="btnback">btnBack</string>
     <string name="footer_terms">By using Ashcol, you agree to the\n<b>Terms</b> and <b>Privacy Policy</b>.</string>
 
-    <!-- Facebook App ID and Client Token -->
-    <string name="facebook_app_id">1801560017165722</string>
-    <string name="facebook_client_token">54e4eab332c3a64641dd434cb86c1c7f</string>
-    <string name="fb_login_protocol_scheme">fb1801560017165722</string>
+
     <string name="service_request_form">Service Request Form</string>
     <string name="btnclose">btnClose</string>
     <string name="btn_close_desc">Close form</string>
@@ -182,5 +194,35 @@
     <string name="legend_this_month">This month</string>
     <string name="legend_last_month">Last month</string>
     <string name="desc_logo" />
+
+    <string name="notifications_title">Notifications</string>
+    <string name="label_push_notification">Push Notification</string>
+    <string name="label_email_notification">Email Notification</string>
+    <string name="label_sms_notification">SMS Notification</string>
+
+
+    <string name="title_about_us">About us</string>
+    <string name="label_company_name">Company name</string>
+    <string name="text_company_name">ASCHOL AIRCONDITIONING SERVICES CORPORATION</string>
+    <string name="label_address">Address</string>
+    <string name="text_address">Units 4D, 4E and 4F Genesis Building 182-A 19th Avenue Brgy East Rembo Makati City 1216.</string>
+
+    <string name="label_customer_hotline">Customer Hotline</string>
+    <string name="text_hotline">+63 (2) 77291293</string>
+    <string name="label_service_dept">Service / Technical Department</string>
+    <string name="text_service_dept">+63 (2) 77541418</string>
+    <string name="label_mobile">Mobile Numbers</string>
+    <string name="text_mobile_globe">+63 (917) 7143810 (Globe)</string>
+    <string name="text_mobile_smart">+63 (908) 8950849 (Smart)</string>
+    <string name="label_email">Email</string>
+    <string name="text_email">headoffice@ashcol.com.ph</string>
+    <string name="label_website">Website</string>
+    <string name="text_website">ashcol.com.ph</string>
+
+    <string name="desc_back">Go back</string>
+
+    <string name="dialog_logout_title">Log out of your account?</string>
+    <string name="action_logout">Log Out</string>
+    <string name="action_cancel">Cancel</string>
 
 </resources>

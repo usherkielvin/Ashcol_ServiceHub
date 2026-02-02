@@ -1,211 +1,231 @@
 package app.hub.user;
 
-import android.Manifest;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
-import android.net.Uri;
 import android.os.Bundle;
-import android.provider.MediaStore;
-import android.view.View;
+import android.util.Log;
 import android.widget.Button;
-import android.widget.ImageView;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 
-import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.datepicker.CalendarConstraints;
+import com.google.android.material.datepicker.MaterialDatePicker;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Locale;
+import java.util.TimeZone;
 
 import app.hub.R;
 import app.hub.api.ApiClient;
 import app.hub.api.ApiService;
+import app.hub.api.CreateTicketRequest;
 import app.hub.api.CreateTicketResponse;
+import app.hub.api.TicketListResponse;
+import app.hub.map.MapSelectionActivity;
 import app.hub.util.TokenManager;
-import okhttp3.MediaType;
-import okhttp3.MultipartBody;
-import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
 public class ServiceSelectActivity extends AppCompatActivity {
 
-    private static final int REQUEST_CAMERA = 1;
-    private static final int REQUEST_GALLERY = 2;
-    private static final int CAMERA_PERMISSION_CODE = 100;
-    private static final int STORAGE_PERMISSION_CODE = 101;
+    private static final String TAG = "ServiceSelectActivity";
+    private static final SimpleDateFormat DATE_FORMAT_API = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+    private static final SimpleDateFormat DATE_FORMAT_DISPLAY = new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault());
 
-    private TextInputEditText descriptionInput, addressInput, contactInput;
-    private Button createTicketButton, uploadImageButton;
-    private ImageView imagePreview;
-    private TextView serviceTypeHeader;
+    private EditText titleInput, descriptionInput, addressInput, contactInput, dateInput;
+    private Button createTicketButton;
+    private Button mapButton;
+    private TextView serviceTypeDisplay;
     private TokenManager tokenManager;
-    private Uri imageUri;
+    private String selectedServiceType;
+    private Long selectedDateMillis = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_service_select);
+        setContentView(R.layout.fragment_user_create_ticket);
 
-        descriptionInput = findViewById(R.id.descriptionInput);
-        addressInput = findViewById(R.id.addressInput);
-        contactInput = findViewById(R.id.contactInput);
-        createTicketButton = findViewById(R.id.createTicketButton);
-        uploadImageButton = findViewById(R.id.uploadImageButton);
-        imagePreview = findViewById(R.id.imagePreview);
-        serviceTypeHeader = findViewById(R.id.serviceTypeHeader);
+        // Initialize views based on fragment_user_create_ticket.xml IDs
+        titleInput = findViewById(R.id.etTitle);
+        descriptionInput = findViewById(R.id.etDescription);
+        addressInput = findViewById(R.id.etLocation);
+        contactInput = findViewById(R.id.etContact);
+        dateInput = findViewById(R.id.etDate);
+        serviceTypeDisplay = findViewById(R.id.tvServiceType);
+        createTicketButton = findViewById(R.id.btnSubmit);
+        mapButton = findViewById(R.id.btnMap);
+
+        // Hide the Spinner since we already have the service type from intent
+
+
         tokenManager = new TokenManager(this);
 
         // Get the selected service type from the intent
-        String serviceType = getIntent().getStringExtra("SERVICE_TYPE");
-        serviceTypeHeader.setText("Service Type: " + serviceType);
+        selectedServiceType = getIntent().getStringExtra("serviceType");
+        if (serviceTypeDisplay != null && selectedServiceType != null) {
+            serviceTypeDisplay.setText(selectedServiceType);
+        }
 
-        uploadImageButton.setOnClickListener(v -> selectImage());
-        createTicketButton.setOnClickListener(v -> createTicket());
+        // Date picker - open when date field is clicked
+        if (dateInput != null) {
+            dateInput.setOnClickListener(v -> showDatePicker());
+            dateInput.setOnFocusChangeListener((v, hasFocus) -> {
+                if (hasFocus) showDatePicker();
+            });
+        }
+
+        if (mapButton != null) {
+            mapButton.setOnClickListener(v -> {
+                try {
+                    Intent intent = new Intent(ServiceSelectActivity.this, MapSelectionActivity.class);
+                    startActivityForResult(intent, 1001);
+                } catch (Exception e) {
+                    Log.e(TAG, "Error starting MapSelectionActivity", e);
+                    Toast.makeText(this, "Error opening map", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+
+        if (createTicketButton != null) {
+            createTicketButton.setOnClickListener(v -> createTicket());
+        }
     }
 
-    private void selectImage() {
-        final CharSequence[] options = {"Take Photo", "Choose from Gallery", "Cancel"};
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Add Photo");
-        builder.setItems(options, (dialog, item) -> {
-            if (options[item].equals("Take Photo")) {
-                checkPermission(Manifest.permission.CAMERA, CAMERA_PERMISSION_CODE);
-            } else if (options[item].equals("Choose from Gallery")) {
-                checkPermission(Manifest.permission.READ_EXTERNAL_STORAGE, STORAGE_PERMISSION_CODE);
-            } else if (options[item].equals("Cancel")) {
-                dialog.dismiss();
-            }
+    private void showDatePicker() {
+        long today = MaterialDatePicker.todayInUtcMilliseconds();
+        long minDate = today;
+        Calendar maxCal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+        maxCal.add(Calendar.YEAR, 2);
+        long maxDate = maxCal.getTimeInMillis();
+
+        MaterialDatePicker.Builder<Long> builder = MaterialDatePicker.Builder.datePicker();
+        builder.setTitleText("Select preferred service date");
+        builder.setSelection(selectedDateMillis != null ? selectedDateMillis : today);
+        builder.setCalendarConstraints(new CalendarConstraints.Builder()
+                .setStart(minDate)
+                .setEnd(maxDate)
+                .build());
+
+        MaterialDatePicker<Long> picker = builder.build();
+        picker.addOnPositiveButtonClickListener(selection -> {
+            selectedDateMillis = selection;
+            Calendar cal = Calendar.getInstance(TimeZone.getDefault());
+            cal.setTimeInMillis(selection);
+            String dateStr = DATE_FORMAT_DISPLAY.format(cal.getTime());
+            if (dateInput != null) dateInput.setText(dateStr);
         });
-        builder.show();
-    }
-
-    private void checkPermission(String permission, int requestCode) {
-        if (ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_DENIED) {
-            ActivityCompat.requestPermissions(this, new String[]{permission}, requestCode);
-        } else {
-            if (requestCode == CAMERA_PERMISSION_CODE) {
-                openCamera();
-            } else if (requestCode == STORAGE_PERMISSION_CODE) {
-                openGallery();
-            }
-        }
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == CAMERA_PERMISSION_CODE) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                openCamera();
-            } else {
-                Toast.makeText(this, "Camera Permission Denied", Toast.LENGTH_SHORT).show();
-            }
-        } else if (requestCode == STORAGE_PERMISSION_CODE) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                openGallery();
-            } else {
-                Toast.makeText(this, "Storage Permission Denied", Toast.LENGTH_SHORT).show();
-            }
-        }
-    }
-
-    private void openCamera() {
-        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        startActivityForResult(intent, REQUEST_CAMERA);
-    }
-
-    private void openGallery() {
-        Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-        startActivityForResult(intent, REQUEST_GALLERY);
+        picker.show(getSupportFragmentManager(), "DATE_PICKER");
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode == RESULT_OK) {
-            if (requestCode == REQUEST_CAMERA) {
-                Bitmap bitmap = (Bitmap) data.getExtras().get("data");
-                imagePreview.setImageBitmap(bitmap);
-                imageUri = getImageUri(bitmap);
-                imagePreview.setVisibility(View.VISIBLE);
-            } else if (requestCode == REQUEST_GALLERY) {
-                imageUri = data.getData();
-                imagePreview.setImageURI(imageUri);
-                imagePreview.setVisibility(View.VISIBLE);
+        Log.d(TAG, "onActivityResult: requestCode=" + requestCode + ", resultCode=" + resultCode);
+        if (requestCode == 1001 && resultCode == RESULT_OK && data != null) {
+            String address = data.getStringExtra("address");
+            if (addressInput != null && address != null) {
+                addressInput.setText(address);
+                Log.d(TAG, "onActivityResult: Address set to " + address);
             }
+            Toast.makeText(this, "Location selected", Toast.LENGTH_SHORT).show();
         }
     }
 
-    private Uri getImageUri(Bitmap bitmap) {
-        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
-        String path = MediaStore.Images.Media.insertImage(getContentResolver(), bitmap, "Title", null);
-        return Uri.parse(path);
-    }
-
     private void createTicket() {
-        String description = descriptionInput.getText().toString().trim();
-        String address = addressInput.getText().toString().trim();
-        String contact = contactInput.getText().toString().trim();
-        String serviceType = getIntent().getStringExtra("SERVICE_TYPE");
+        String title = titleInput != null ? titleInput.getText().toString().trim() : "";
+        String description = descriptionInput != null ? descriptionInput.getText().toString().trim() : "";
+        String address = addressInput != null ? addressInput.getText().toString().trim() : "";
+        String contact = contactInput != null ? contactInput.getText().toString().trim() : "";
 
-        if (description.isEmpty() || address.isEmpty() || contact.isEmpty()) {
+        if (title.isEmpty() || description.isEmpty() || address.isEmpty() || contact.isEmpty()) {
             Toast.makeText(this, "Please fill out all fields", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        MultipartBody.Part imagePart = null;
-        if (imageUri != null) {
-            try {
-                Bitmap bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), imageUri);
-                ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
-                byte[] byteArray = stream.toByteArray();
-                RequestBody requestFile = RequestBody.create(MediaType.parse("image/jpeg"), byteArray);
-                imagePart = MultipartBody.Part.createFormData("image", "image.jpg", requestFile);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        if (selectedServiceType == null || selectedServiceType.isEmpty()) {
+            selectedServiceType = "General Service";
         }
 
-        RequestBody descriptionBody = RequestBody.create(MediaType.parse("text/plain"), description);
-        RequestBody addressBody = RequestBody.create(MediaType.parse("text/plain"), address);
-        RequestBody contactBody = RequestBody.create(MediaType.parse("text/plain"), contact);
-        RequestBody serviceTypeBody = RequestBody.create(MediaType.parse("text/plain"), serviceType);
+        // Format preferred date for API (yyyy-MM-dd)
+        String preferredDate = null;
+        if (selectedDateMillis != null) {
+            Calendar cal = Calendar.getInstance(TimeZone.getDefault());
+            cal.setTimeInMillis(selectedDateMillis);
+            preferredDate = DATE_FORMAT_API.format(cal.getTime());
+        }
 
+        CreateTicketRequest request = new CreateTicketRequest(title, description, selectedServiceType, address, contact, preferredDate, "medium");
         ApiService apiService = ApiClient.getApiService();
         String token = tokenManager.getToken();
 
-        if (token == null) {
+        if (token == null || token.isEmpty()) {
             Toast.makeText(this, "You are not logged in.", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        Call<CreateTicketResponse> call = apiService.createTicket(token, descriptionBody, addressBody, contactBody, serviceTypeBody, imagePart);
+        // Ensure token has Bearer prefix for API authentication
+        String authToken = token.startsWith("Bearer ") ? token : "Bearer " + token;
+
+        createTicketButton.setEnabled(false);
+        createTicketButton.setText("Creating...");
+
+        Call<CreateTicketResponse> call = apiService.createTicket(authToken, request);
         call.enqueue(new Callback<CreateTicketResponse>() {
             @Override
             public void onResponse(Call<CreateTicketResponse> call, Response<CreateTicketResponse> response) {
-                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
-                    Toast.makeText(ServiceSelectActivity.this, "Ticket created successfully", Toast.LENGTH_SHORT).show();
+                createTicketButton.setEnabled(true);
+                createTicketButton.setText("Submit");
+
+                if (response.isSuccessful() && response.body() != null) {
+                    CreateTicketResponse ticketResponse = response.body();
+                    String ticketId = ticketResponse.getTicketId();
+                    String status = ticketResponse.getStatus();
+
+                    // Store ticket for instant display when user opens My Tickets
+                    CreateTicketResponse.TicketData ticketData = ticketResponse.getTicket();
+                    if (ticketData != null) {
+                        TicketListResponse.TicketItem item = TicketListResponse.fromCreateResponse(
+                                ticketData, status, ticketData.getStatus() != null ? ticketData.getStatus().getColor() : null);
+                        if (item != null) {
+                            UserTicketsFragment.setPendingNewTicket(item);
+                        }
+                    }
+
+                    Toast.makeText(ServiceSelectActivity.this, "Ticket created successfully!", Toast.LENGTH_SHORT).show();
+
+                    // Navigate to confirmation screen
+                    Intent intent = new Intent(ServiceSelectActivity.this, TicketConfirmationActivity.class);
+                    intent.putExtra("ticket_id", ticketId != null ? ticketId : "");
+                    intent.putExtra("status", status != null ? status : "Pending");
+                    startActivity(intent);
                     finish();
                 } else {
-                    Toast.makeText(ServiceSelectActivity.this, "Failed to create ticket", Toast.LENGTH_SHORT).show();
+                    String errorMsg = "Failed to create ticket";
+                    try {
+                        if (response.errorBody() != null) {
+                            String errBody = response.errorBody().string();
+                            if (errBody != null && !errBody.isEmpty()) {
+                                errorMsg = errBody.length() > 100 ? errBody.substring(0, 100) + "..." : errBody;
+                            }
+                        }
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error reading error body", e);
+                    }
+                    Toast.makeText(ServiceSelectActivity.this, errorMsg, Toast.LENGTH_LONG).show();
                 }
             }
 
             @Override
             public void onFailure(Call<CreateTicketResponse> call, Throwable t) {
-                Toast.makeText(ServiceSelectActivity.this, "An error occurred", Toast.LENGTH_SHORT).show();
+                createTicketButton.setEnabled(true);
+                createTicketButton.setText("Submit");
+                Log.e(TAG, "Ticket creation failed", t);
+                Toast.makeText(ServiceSelectActivity.this, "Network error: " + t.getMessage(), Toast.LENGTH_LONG).show();
             }
         });
     }

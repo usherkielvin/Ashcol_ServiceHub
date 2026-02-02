@@ -1,27 +1,32 @@
 package app.hub.user;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.Spinner;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import com.google.android.material.textfield.TextInputEditText;
-import com.google.android.material.textfield.TextInputLayout;
+import com.google.android.material.datepicker.CalendarConstraints;
+import com.google.android.material.datepicker.MaterialDatePicker;
+
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Locale;
+import java.util.TimeZone;
 
 import app.hub.R;
 import app.hub.api.ApiClient;
 import app.hub.api.ApiService;
 import app.hub.api.CreateTicketRequest;
 import app.hub.api.CreateTicketResponse;
+import app.hub.map.MapSelectionActivity;
 import app.hub.util.TokenManager;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -29,11 +34,14 @@ import retrofit2.Response;
 
 public class UserCreateTicketFragment extends Fragment {
 
-    private TextInputEditText titleInput, descriptionInput, addressInput, contactInput;
-    private TextInputLayout titleInputLayout, descriptionInputLayout, addressInputLayout, contactInputLayout;
-    private Spinner serviceTypeSpinner;
+    private static final SimpleDateFormat DATE_FORMAT_API = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+    private static final SimpleDateFormat DATE_FORMAT_DISPLAY = new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault());
+
+    private EditText titleInput, descriptionInput, addressInput, contactInput, dateInput;
     private Button createTicketButton;
+    private Button mapButton;
     private TokenManager tokenManager;
+    private Long selectedDateMillis = null;
 
     public UserCreateTicketFragment() {
         // Required empty public constructor
@@ -50,67 +58,98 @@ public class UserCreateTicketFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        titleInput = view.findViewById(R.id.titleInput);
-        descriptionInput = view.findViewById(R.id.descriptionInput);
-        addressInput = view.findViewById(R.id.addressInput);
-        contactInput = view.findViewById(R.id.contactInput);
-        titleInputLayout = view.findViewById(R.id.titleInputLayout);
-        descriptionInputLayout = view.findViewById(R.id.descriptionInputLayout);
-        addressInputLayout = view.findViewById(R.id.addressInputLayout);
-        contactInputLayout = view.findViewById(R.id.contactInputLayout);
-        serviceTypeSpinner = view.findViewById(R.id.serviceTypeSpinner);
-        createTicketButton = view.findViewById(R.id.createTicketButton);
+        // Initialize views - based on fragment_user_create_ticket.xml
+        titleInput = view.findViewById(R.id.etTitle);
+        descriptionInput = view.findViewById(R.id.etDescription);
+        addressInput = view.findViewById(R.id.etLocation);
+        contactInput = view.findViewById(R.id.etContact);
+        dateInput = view.findViewById(R.id.etDate);
+        createTicketButton = view.findViewById(R.id.btnSubmit);
+        mapButton = view.findViewById(R.id.btnMap);
+
         tokenManager = new TokenManager(getContext());
 
-        // Create an ArrayAdapter using the string array and a default spinner layout
-        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(getContext(),
-                R.array.service_types, android.R.layout.simple_spinner_item);
-        // Specify the layout to use when the list of choices appears
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        // Apply the adapter to the spinner
-        serviceTypeSpinner.setAdapter(adapter);
+        // Date picker - open when date field is clicked
+        if (dateInput != null) {
+            dateInput.setOnClickListener(v -> showDatePicker());
+            dateInput.setOnFocusChangeListener((v, hasFocus) -> {
+                if (hasFocus) showDatePicker();
+            });
+        }
 
-        // Hide the form fields initially
-        setFormVisibility(View.GONE);
+        // Set up map button click listener
+        if (mapButton != null) {
+            mapButton.setOnClickListener(v -> {
+                Intent intent = new Intent(getActivity(), MapSelectionActivity.class);
+                startActivityForResult(intent, 1001); // Use a request code for result
+            });
+        }
 
-        serviceTypeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                if (position > 0) {
-                    setFormVisibility(View.VISIBLE);
-                }
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-
-            }
-        });
-
-        createTicketButton.setOnClickListener(v -> createTicket());
+        if (createTicketButton != null) {
+            createTicketButton.setOnClickListener(v -> createTicket());
+        }
     }
 
-    private void setFormVisibility(int visibility) {
-        titleInputLayout.setVisibility(visibility);
-        descriptionInputLayout.setVisibility(visibility);
-        addressInputLayout.setVisibility(visibility);
-        contactInputLayout.setVisibility(visibility);
-        createTicketButton.setVisibility(visibility);
+    private void showDatePicker() {
+        long today = MaterialDatePicker.todayInUtcMilliseconds();
+        Calendar maxCal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+        maxCal.add(Calendar.YEAR, 2);
+
+        MaterialDatePicker.Builder<Long> builder = MaterialDatePicker.Builder.datePicker();
+        builder.setTitleText("Select preferred service date");
+        builder.setSelection(selectedDateMillis != null ? selectedDateMillis : today);
+        builder.setCalendarConstraints(new CalendarConstraints.Builder()
+                .setStart(today)
+                .setEnd(maxCal.getTimeInMillis())
+                .build());
+
+        MaterialDatePicker<Long> picker = builder.build();
+        picker.addOnPositiveButtonClickListener(selection -> {
+            selectedDateMillis = selection;
+            Calendar cal = Calendar.getInstance(TimeZone.getDefault());
+            cal.setTimeInMillis(selection);
+            if (dateInput != null) dateInput.setText(DATE_FORMAT_DISPLAY.format(cal.getTime()));
+        });
+        picker.show(getChildFragmentManager(), "DATE_PICKER");
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == 1001 && resultCode == getActivity().RESULT_OK && data != null) {
+            double latitude = data.getDoubleExtra("latitude", 0.0);
+            double longitude = data.getDoubleExtra("longitude", 0.0);
+            String address = data.getStringExtra("address");
+            
+            // Set the selected address to the location field
+            if (addressInput != null && address != null) {
+                addressInput.setText(address);
+            }
+            
+            Toast.makeText(getContext(), "Location selected: " + address, Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void createTicket() {
-        String title = titleInput.getText().toString().trim();
-        String description = descriptionInput.getText().toString().trim();
-        String serviceType = serviceTypeSpinner.getSelectedItem().toString();
-        String address = addressInput.getText().toString().trim();
-        String contact = contactInput.getText().toString().trim();
+        String title = titleInput != null ? titleInput.getText().toString().trim() : "";
+        String description = descriptionInput != null ? descriptionInput.getText().toString().trim() : "";
+        String serviceType = "General Service"; // Default service type since spinner is not available
+        String address = addressInput != null ? addressInput.getText().toString().trim() : "";
+        String contact = contactInput != null ? contactInput.getText().toString().trim() : "";
 
         if (title.isEmpty() || description.isEmpty() || address.isEmpty() || contact.isEmpty()) {
             Toast.makeText(getContext(), "Please fill out all fields", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        CreateTicketRequest request = new CreateTicketRequest(title, description, serviceType, address, contact);
+        String preferredDate = null;
+        if (selectedDateMillis != null) {
+            Calendar cal = Calendar.getInstance(TimeZone.getDefault());
+            cal.setTimeInMillis(selectedDateMillis);
+            preferredDate = DATE_FORMAT_API.format(cal.getTime());
+        }
+
+        CreateTicketRequest request = new CreateTicketRequest(title, description, serviceType, address, contact, preferredDate, "medium");
         ApiService apiService = ApiClient.getApiService();
         String token = tokenManager.getToken();
 
@@ -119,28 +158,64 @@ public class UserCreateTicketFragment extends Fragment {
             return;
         }
 
-        Call<CreateTicketResponse> call = apiService.createTicket(token, request);
+        // Show loading state
+        createTicketButton.setEnabled(false);
+        createTicketButton.setText("Creating...");
+
+        Call<CreateTicketResponse> call = apiService.createTicket("Bearer " + token, request);
         call.enqueue(new Callback<CreateTicketResponse>() {
             @Override
             public void onResponse(Call<CreateTicketResponse> call, Response<CreateTicketResponse> response) {
-                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
-                    Toast.makeText(getContext(), "Ticket created successfully", Toast.LENGTH_SHORT).show();
-                    // Clear the input fields
+                // Reset button state
+                createTicketButton.setEnabled(true);
+                createTicketButton.setText("Submit");
+
+                if (response.isSuccessful() && response.body() != null) {
+                    CreateTicketResponse ticketResponse = response.body();
+                    
+                    // Clear form fields
                     titleInput.setText("");
                     descriptionInput.setText("");
                     addressInput.setText("");
                     contactInput.setText("");
-                    serviceTypeSpinner.setSelection(0);
-                    setFormVisibility(View.GONE);
+                    
+                    // Navigate to confirmation screen
+                    Intent intent = new Intent(getActivity(), TicketConfirmationActivity.class);
+                    intent.putExtra("ticket_id", ticketResponse.getTicketId());
+                    intent.putExtra("status", ticketResponse.getStatus());
+                    startActivity(intent);
+                    
+                    // Close this fragment/activity
+                    if (getActivity() != null) {
+                        getActivity().finish();
+                    }
+                    
+                    // Clear form
+                    clearForm();
+                    
+                    Toast.makeText(getContext(), "Ticket created successfully!", Toast.LENGTH_SHORT).show();
                 } else {
-                    Toast.makeText(getContext(), "Failed to create ticket", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), "Failed to create ticket. Please try again.", Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onFailure(Call<CreateTicketResponse> call, Throwable t) {
-                Toast.makeText(getContext(), "An error occurred", Toast.LENGTH_SHORT).show();
+                // Reset button state
+                createTicketButton.setEnabled(true);
+                createTicketButton.setText("Submit");
+                
+                Toast.makeText(getContext(), "Network error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    private void clearForm() {
+        if (titleInput != null) titleInput.setText("");
+        if (descriptionInput != null) descriptionInput.setText("");
+        if (addressInput != null) addressInput.setText("");
+        if (contactInput != null) contactInput.setText("");
+        if (dateInput != null) dateInput.setText("");
+        selectedDateMillis = null;
     }
 }

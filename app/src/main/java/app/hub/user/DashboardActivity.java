@@ -37,6 +37,7 @@ import app.hub.api.ApiService;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -51,10 +52,12 @@ public class DashboardActivity extends AppCompatActivity {
     private BottomNavigationView bottomNavigationView;
     private FloatingActionButton fabChatbot;
 
+    public static final String EXTRA_SHOW_MY_TICKETS = "show_my_tickets";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_dashboard);
+        setContentView(R.layout.activity_user_dashboard);
 
         apiService = ApiClient.getApiService();
         navIndicator = findViewById(R.id.navIndicator);
@@ -65,14 +68,23 @@ public class DashboardActivity extends AppCompatActivity {
         disableNavigationTooltips(bottomNavigationView);
 
         if (savedInstanceState == null) {
+            // If returning from ticket creation, optionally show My Tickets tab
+            boolean showMyTickets = getIntent().getBooleanExtra(EXTRA_SHOW_MY_TICKETS, false);
+            Fragment initialFragment = showMyTickets ? new UserTicketsFragment() : new UserHomeFragment();
+            int selectedItemId = showMyTickets ? R.id.my_ticket : R.id.homebtn;
+
             getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.fragmentContainerView, new UserHomeFragment())
+                    .replace(R.id.fragmentContainerView, initialFragment)
                     .commit();
-            
-            // Set initial indicator position
-            bottomNavigationView.post(() -> moveIndicatorToItem(R.id.homebtn, false));
-            // Show chatbot on home by default
-            if (fabChatbot != null) fabChatbot.show();
+
+            bottomNavigationView.post(() -> moveIndicatorToItem(selectedItemId, false));
+            if (showMyTickets) {
+                bottomNavigationView.setSelectedItemId(R.id.my_ticket);
+                if (fabChatbot != null) fabChatbot.hide();
+            } else if (fabChatbot != null) {
+                fabChatbot.show();
+            }
+            getIntent().removeExtra(EXTRA_SHOW_MY_TICKETS);
         }
 
         bottomNavigationView.setOnNavigationItemSelectedListener(item -> {
@@ -91,7 +103,7 @@ public class DashboardActivity extends AppCompatActivity {
             if (itemId == R.id.homebtn) {
                 selectedFragment = new UserHomeFragment();
             } else if (itemId == R.id.my_ticket) {
-                selectedFragment = new UserTicketFragment();
+                selectedFragment = new UserTicketsFragment();
             } else if (itemId == R.id.activitybtn) {
                 selectedFragment = new UserNotificationFragment();
             } else if (itemId == R.id.Profile) {
@@ -141,6 +153,27 @@ public class DashboardActivity extends AppCompatActivity {
         });
     }
 
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        handleShowMyTickets(intent);
+    }
+
+    private void handleShowMyTickets(Intent intent) {
+        if (intent != null && intent.getBooleanExtra(EXTRA_SHOW_MY_TICKETS, false)) {
+            intent.removeExtra(EXTRA_SHOW_MY_TICKETS);
+            bottomNavigationView.setSelectedItemId(R.id.my_ticket);
+            moveIndicatorToItem(R.id.my_ticket, true);
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.fragmentContainerView, new UserTicketsFragment())
+                    .setReorderingAllowed(true)
+                    .addToBackStack(null)
+                    .commit();
+            if (fabChatbot != null) fabChatbot.hide();
+        }
+    }
+
     private void disableNavigationTooltips(BottomNavigationView navigationView) {
         Menu menu = navigationView.getMenu();
         for (int i = 0; i < menu.size(); i++) {
@@ -177,45 +210,45 @@ public class DashboardActivity extends AppCompatActivity {
 
     private void setupFab(FloatingActionButton fab) {
         if (fab == null) return;
-        fab.setOnTouchListener(new View.OnTouchListener() {
-            private float initialX, initialY;
-            private float initialTouchX, initialTouchY;
-
-            @Override
-            public boolean onTouch(View view, MotionEvent event) {
-                ViewGroup parentView = (ViewGroup) view.getParent();
-                switch (event.getActionMasked()) {
-                    case MotionEvent.ACTION_DOWN:
-                        initialX = view.getX();
-                        initialY = view.getY();
-                        initialTouchX = event.getRawX();
-                        initialTouchY = event.getRawY();
-                        return true;
-
-                    case MotionEvent.ACTION_MOVE:
-                        float newX = initialX + (event.getRawX() - initialTouchX);
-                        float newY = initialY + (event.getRawY() - initialTouchY);
-                        newX = Math.max(0, Math.min(newX, parentView.getWidth() - view.getWidth()));
-                        newY = Math.max(0, Math.min(newY, parentView.getHeight() - view.getHeight()));
-                        view.setY(newY);
-                        view.setX(newX);
-                        return true;
-
-                    case MotionEvent.ACTION_UP:
-                        float endX = event.getRawX();
-                        float endY = event.getRawY();
-                        if (isAClick(initialTouchX, endX, initialTouchY, endY)) {
-                            view.performClick();
-                        } else {
-                            float center = parentView.getWidth() / 2f;
-                            float finalX = view.getX() < center - view.getWidth() / 2f ? 0 : parentView.getWidth() - view.getWidth();
-                            ObjectAnimator.ofFloat(view, "x", view.getX(), finalX).setDuration(200).start();
-                        }
-                        return true;
-                }
-                return false;
-            }
-        });
+//        fab.setOnTouchListener(new View.OnTouchListener() {
+//            private float initialX, initialY;
+//            private float initialTouchX, initialTouchY;
+//
+//            @Override
+//            public boolean onTouch(View view, MotionEvent event) {
+//                ViewGroup parentView = (ViewGroup) view.getParent();
+//                switch (event.getActionMasked()) {
+//                    case MotionEvent.ACTION_DOWN:
+//                        initialX = view.getX();
+//                        initialY = view.getY();
+//                        initialTouchX = event.getRawX();
+//                        initialTouchY = event.getRawY();
+//                        return true;
+//
+//                    case MotionEvent.ACTION_MOVE:
+//                        float newX = initialX + (event.getRawX() - initialTouchX);
+//                        float newY = initialY + (event.getRawY() - initialTouchY);
+//                        newX = Math.max(0, Math.min(newX, parentView.getWidth() - view.getWidth()));
+//                        newY = Math.max(0, Math.min(newY, parentView.getHeight() - view.getHeight()));
+//                        view.setY(newY);
+//                        view.setX(newX);
+//                        return true;
+//
+//                    case MotionEvent.ACTION_UP:
+//                        float endX = event.getRawX();
+//                        float endY = event.getRawY();
+//                        if (isAClick(initialTouchX, endX, initialTouchY, endY)) {
+//                            view.performClick();
+//                        } else {
+//                            float center = parentView.getWidth() / 2f;
+//                            float finalX = view.getX() < center - view.getWidth() / 2f ? 0 : parentView.getWidth() - view.getWidth();
+//                            ObjectAnimator.ofFloat(view, "x", view.getX(), finalX).setDuration(200).start();
+//                        }
+//                        return true;
+//                }
+//                return false;
+//            }
+//        });
 
         fab.setOnClickListener(v -> showChatbotDialog());
     }

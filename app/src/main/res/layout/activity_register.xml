@@ -242,88 +242,76 @@
                 android:visibility="gone"
                 tools:visibility="visible" />
 
+            <!-- Hidden location field for automatic detection -->
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etLocation"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:visibility="gone"
+                android:text="" />
+
+            <!-- Region & City for auto-branching -->
+            <TextView
+                android:id="@+id/labelRegionCity"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="Location"
+                android:textColor="#000000"
+                android:textSize="16sp" />
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="8dp"
                 android:baselineAligned="false"
                 android:orientation="horizontal">
 
-                <LinearLayout
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/regionInputLayout"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="4dp"
                     android:layout_weight="1"
-                    android:orientation="vertical">
+                    app:hintEnabled="false"
+                    app:startIconDrawable="@drawable/ic_pin">
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Pronouns"
-                        android:textColor="#000000"
-                        android:textSize="16sp" />
-
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/pronounsInputLayout"
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etRegion"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        app:hintEnabled="false"
-                        app:startIconDrawable="@drawable/ic_person">
+                        android:layout_height="50dp"
+                        android:background="@drawable/bg_input_field"
+                        android:hint="Region / Province"
+                        android:inputType="textCapWords"
+                        android:paddingTop="12dp"
+                        android:paddingBottom="12dp"
+                        android:textColor="#000000"
+                        android:textColorHint="#979797"
+                        android:textSize="14sp" />
+                </com.google.android.material.textfield.TextInputLayout>
 
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/pronounsInput"
-                            android:layout_width="match_parent"
-                            android:layout_height="50dp"
-                            android:background="@drawable/bg_input_field"
-                            android:hint="Enter pronouns"
-                            android:inputType="text"
-                            android:paddingTop="12dp"
-                            android:paddingBottom="12dp"
-                            android:textColor="#000000"
-                            android:textColorHint="#979797"
-                            android:textSize="14sp" />
-                    </com.google.android.material.textfield.TextInputLayout>
-                </LinearLayout>
-
-                <LinearLayout
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/cityInputLayout"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="4dp"
                     android:layout_weight="1"
-                    android:orientation="vertical">
+                    app:hintEnabled="false"
+                    app:startIconDrawable="@drawable/ic_pin">
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Birthday"
-                        android:textColor="#000000"
-                        android:textSize="16sp" />
-
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/birthdayInputLayout"
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etCity"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        app:hintEnabled="false"
-                        app:startIconDrawable="@drawable/calendar">
-
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/birthdayInput"
-                            android:layout_width="match_parent"
-                            android:layout_height="50dp"
-                            android:background="@drawable/bg_input_field"
-                            android:clickable="true"
-                            android:focusable="false"
-                            android:hint="Enter birthday"
-                            android:inputType="date"
-                            android:paddingTop="12dp"
-                            android:paddingBottom="12dp"
-                            android:textColor="#000000"
-                            android:textColorHint="#979797"
-                            android:textSize="14sp" />
-                    </com.google.android.material.textfield.TextInputLayout>
-                </LinearLayout>
+                        android:layout_height="50dp"
+                        android:background="@drawable/bg_input_field"
+                        android:hint="City / Municipality"
+                        android:inputType="textCapWords"
+                        android:paddingTop="12dp"
+                        android:paddingBottom="12dp"
+                        android:textColor="#000000"
+                        android:textColorHint="#979797"
+                        android:textSize="14sp" />
+                </com.google.android.material.textfield.TextInputLayout>
             </LinearLayout>
 
             <com.google.android.material.button.MaterialButton

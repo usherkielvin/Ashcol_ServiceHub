@@ -4,19 +4,26 @@ import app.hub.ForgotPasswordActivity;
 import app.hub.R;
 import app.hub.api.ApiClient;
 import app.hub.api.ApiService;
-import app.hub.api.FacebookSignInRequest;
-import app.hub.api.FacebookSignInResponse;
+
 import app.hub.api.GoogleSignInRequest;
 import app.hub.api.GoogleSignInResponse;
 import app.hub.api.LoginRequest;
 import app.hub.api.LoginResponse;
+import app.hub.api.UpdateProfileRequest;
+import app.hub.api.UserResponse;
 import app.hub.admin.AdminDashboardActivity;
 import app.hub.employee.EmployeeDashboardActivity;
 import app.hub.manager.ManagerDashboardActivity;
 import app.hub.user.DashboardActivity;
 import app.hub.util.EmailValidator;
+import app.hub.util.LocationConfig;
+import app.hub.util.UserLocationManager;
 import app.hub.util.TokenManager;
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.location.Location;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -27,19 +34,15 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.splashscreen.SplashScreen;
 
-import com.facebook.AccessToken;
-import com.facebook.CallbackManager;
-import com.facebook.FacebookCallback;
-import com.facebook.FacebookException;
-import com.facebook.GraphRequest;
-import com.facebook.GraphResponse;
-import com.facebook.login.LoginManager;
-import com.facebook.login.LoginResult;
+
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
@@ -66,9 +69,11 @@ public class MainActivity extends AppCompatActivity {
 
 	private static final String TAG = "MainActivity";
 	private static final int RC_SIGN_IN = 9001;
+	private static final int LOCATION_PERMISSION_REQUEST_CODE = 1001;
 	private TokenManager tokenManager;
 	private GoogleSignInClient googleSignInClient;
-	private CallbackManager facebookCallbackManager;
+
+	private UserLocationManager userLocationManager;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -76,10 +81,11 @@ public class MainActivity extends AppCompatActivity {
         SplashScreen.installSplashScreen(this);
 
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_login);
 
         tokenManager = new TokenManager(this);
-
+        userLocationManager = new UserLocationManager(this);
+        
         // Check if already logged in
         if (tokenManager.isLoggedIn()) {
             final Intent intent;
@@ -181,70 +187,23 @@ public class MainActivity extends AppCompatActivity {
         // Setup Google Sign-In
         setupGoogleSignIn();
         
-        // Setup Facebook Login
-        setupFacebookLogin();
-        
         // Setup social login buttons
         setupSocialLoginButtons();
+        
+        // Request location permission after splash screen
+        getWindow().getDecorView().post(() -> requestLocationPermission());
     }
 
-    private void setupFacebookLogin() {
-        facebookCallbackManager = CallbackManager.Factory.create();
-        LoginManager.getInstance().registerCallback(facebookCallbackManager,
-            new FacebookCallback<LoginResult>() {
-                @Override
-                public void onSuccess(LoginResult loginResult) {
-                    AccessToken accessToken = loginResult.getAccessToken();
-                    Log.d(TAG, "Facebook login successful");
-                    
-                    // Get user info from Facebook Graph API
-                    GraphRequest request = GraphRequest.newMeRequest(
-                        accessToken,
-                        (object, response) -> {
-                            try {
-                                String email = object.optString("email");
-                                String firstName = object.optString("first_name");
-                                String lastName = object.optString("last_name");
-                                String name = object.optString("name");
-                                String id = object.optString("id");
-                                
-                                Log.d(TAG, "Facebook user info - ID: " + id + ", Email: " + (email != null && !email.isEmpty() ? email : "NULL") + ", Name: " + name);
-                                
-                                // Call backend API to login/register with Facebook (pass Facebook ID for pure FB auth)
-                                loginWithFacebook(accessToken.getToken(), id, email, firstName, lastName);
-                            } catch (Exception e) {
-                                Log.e(TAG, "Error parsing Facebook user info", e);
-                                runOnUiThread(() -> Toast.makeText(MainActivity.this, "Error getting Facebook user info", Toast.LENGTH_SHORT).show());
-                            }
-                        });
-                    
-                    Bundle parameters = new Bundle();
-                    parameters.putString("fields", "id,name,email,first_name,last_name");
-                    request.setParameters(parameters);
-                    request.executeAsync();
-                }
-
-                @Override
-                public void onCancel() {
-                    Log.d(TAG, "Facebook login cancelled");
-                    Toast.makeText(MainActivity.this, "Facebook login was cancelled", Toast.LENGTH_SHORT).show();
-                }
-
-                @Override
-                public void onError(FacebookException exception) {
-                    Log.e(TAG, "Facebook login error: " + exception.getMessage(), exception);
-                    String errorMsg = "Facebook login failed";
-                    if (exception.getMessage() != null) {
-                        if (exception.getMessage().contains("CONNECTION_FAILURE")) {
-                            errorMsg = "Network error. Please check your connection.";
-                        } else if (exception.getMessage().contains("INVALID_APP_ID")) {
-                            errorMsg = "Facebook login not configured. Please contact support.";
-                        }
-                    }
-                    Toast.makeText(MainActivity.this, errorMsg, Toast.LENGTH_SHORT).show();
-                }
-            });
+    private void signOutFromGoogle() {
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestEmail()
+                .requestProfile()
+                .build();
+        GoogleSignInClient googleSignInClient = GoogleSignIn.getClient(this, gso);
+        googleSignInClient.signOut();
     }
+
+
 
     private void setupGoogleSignIn() {
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -256,14 +215,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupSocialLoginButtons() {
-        // Facebook button
-        Button facebookButton = findViewById(R.id.btnFacebook);
-        if (facebookButton != null) {
-            facebookButton.setOnClickListener(v -> {
-                signInWithFacebook();
-            });
-        }
-
         // Google Sign-In button
         Button googleButton = findViewById(R.id.btnGoogle);
         if (googleButton != null) {
@@ -274,18 +225,16 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void signInWithGoogle() {
-        Intent signInIntent = googleSignInClient.getSignInIntent();
-        startActivityForResult(signInIntent, RC_SIGN_IN);
+        // Sign out first to ensure the user can select an account every time
+        googleSignInClient.signOut().addOnCompleteListener(task -> {
+            Intent signInIntent = googleSignInClient.getSignInIntent();
+            startActivityForResult(signInIntent, RC_SIGN_IN);
+        });
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        
-        // Handle Facebook callback
-        if (facebookCallbackManager != null) {
-            facebookCallbackManager.onActivityResult(requestCode, resultCode, data);
-        }
 
         if (requestCode == RC_SIGN_IN) {
             Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
@@ -293,172 +242,11 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void signInWithFacebook() {
-        // Use only public_profile permission - email is automatically included via Graph API
-        LoginManager.getInstance().logInWithReadPermissions(this, 
-            java.util.Arrays.asList("public_profile"));
-    }
 
-    private void loginWithFacebook(String accessToken, String facebookId, String email, String firstName, String lastName) {
-        // Validate Facebook ID (required for pure FB auth)
-        if (facebookId == null || facebookId.isEmpty()) {
-            Log.e(TAG, "Facebook login failed: Facebook ID is required but not available");
-            showError("Login Failed", "Facebook authentication error. Please try again.");
-            return;
-        }
-        
-        MaterialButton loginButton = findViewById(R.id.loginButton);
-        if (loginButton != null) {
-            loginButton.setEnabled(false);
-            loginButton.setText("Logging in...");
-        }
 
-        Log.d(TAG, "Attempting Facebook login with:");
-        Log.d(TAG, "  - Facebook ID: " + facebookId);
-        Log.d(TAG, "  - Email: " + (email != null && !email.isEmpty() ? email : "NULL (pure FB auth)"));
-        Log.d(TAG, "  - First Name: " + firstName);
-        Log.d(TAG, "  - Last Name: " + lastName);
-        Log.d(TAG, "  - Access Token: " + (accessToken != null && !accessToken.isEmpty() ? "Present" : "Missing"));
 
-        ApiService apiService = ApiClient.getApiService();
-        FacebookSignInRequest request = new FacebookSignInRequest(
-            accessToken != null ? accessToken : "",
-            facebookId,
-            email != null ? email : "", // Email can be empty for pure FB auth
-            firstName != null ? firstName : "",
-            lastName != null ? lastName : "",
-            "" // No phone on login
-        );
 
-        Call<FacebookSignInResponse> call = apiService.facebookSignIn(request);
-        call.enqueue(new Callback<>() {
-            @Override
-            public void onResponse(@NonNull Call<FacebookSignInResponse> call, @NonNull Response<FacebookSignInResponse> response) {
-                runOnUiThread(() -> {
-                    if (loginButton != null) {
-                        loginButton.setEnabled(true);
-                        loginButton.setText("Login");
-                    }
-                });
 
-                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
-                    handleFacebookLoginSuccess(response.body());
-                } else {
-                    String errorMsg = "Login failed. Please try again.";
-                    try {
-                        if (response.errorBody() != null) {
-                            String errorBody = response.errorBody().string();
-                            Log.e(TAG, "Facebook login error response (" + response.code() + "): " + errorBody);
-                            
-                            // Try to parse error message from response
-                            try {
-                                Gson gson = new Gson();
-                                JsonObject jsonObject = gson.fromJson(errorBody, JsonObject.class);
-                                if (jsonObject != null) {
-                                    if (jsonObject.has("message") && jsonObject.get("message").isJsonPrimitive()) {
-                                        errorMsg = jsonObject.get("message").getAsString();
-                                    } else if (jsonObject.has("errors") && jsonObject.get("errors").isJsonObject()) {
-                                        // Get first validation error
-                                        JsonObject errorsObj = jsonObject.getAsJsonObject("errors");
-                                        if (errorsObj.has("email") && errorsObj.get("email").isJsonArray()) {
-                                            errorMsg = errorsObj.get("email").getAsJsonArray().get(0).getAsString();
-                                        }
-                                    }
-                                }
-                            } catch (Exception e) {
-                                Log.d(TAG, "Could not parse error JSON, using default message");
-                            }
-                        }
-                    } catch (Exception e) {
-                        Log.e(TAG, "Error reading error response", e);
-                    }
-                    
-                    // Provide more specific error messages based on status code
-                    if (response.code() == 422) {
-                        errorMsg = "Invalid email or Facebook account. Please register first or use email/password login.";
-                    } else if (response.code() == 401) {
-                        errorMsg = "Authentication failed. Please try again.";
-                    } else if (response.code() == 500) {
-                        errorMsg = "Server error. Please try again later.";
-                    }
-                    
-                    final String finalErrorMsg = errorMsg;
-                    runOnUiThread(() -> showError("Login Failed", finalErrorMsg));
-                }
-            }
-
-            @Override
-            public void onFailure(@NonNull Call<FacebookSignInResponse> call, @NonNull Throwable t) {
-                runOnUiThread(() -> {
-                    if (loginButton != null) {
-                        loginButton.setEnabled(true);
-                        loginButton.setText("Login");
-                    }
-                });
-                Log.e(TAG, "Error logging in with Facebook: " + t.getMessage(), t);
-                String errorMsg = getConnectionErrorMessage(t);
-                runOnUiThread(() -> showError("Connection Error", errorMsg));
-            }
-        });
-    }
-
-    private void handleFacebookLoginSuccess(FacebookSignInResponse response) {
-        if (response.getData() == null || response.getData().getUser() == null) {
-            showError("Login Failed", "Invalid response from server.");
-            return;
-        }
-
-        // Save token and user data
-        FacebookSignInResponse.User user = response.getData().getUser();
-        tokenManager.saveToken("Bearer " + response.getData().getToken());
-        
-        // Save email or connection status
-        String email = user.getEmail();
-        if (email != null && email.contains("@")) {
-            tokenManager.saveEmail(email);
-            tokenManager.clearConnectionStatus();
-        } else {
-            // Facebook user without email - save connection status
-            tokenManager.saveConnectionStatus("Facebook connected");
-        }
-        
-        tokenManager.saveRole(user.getRole());
-
-        // Build and save name
-        String firstName = user.getFirstName();
-        String lastName = user.getLastName();
-        StringBuilder nameBuilder = new StringBuilder();
-        if (firstName != null && !firstName.trim().isEmpty()) {
-            nameBuilder.append(firstName.trim());
-        }
-        if (lastName != null && !lastName.trim().isEmpty()) {
-            if (nameBuilder.length() > 0) {
-                nameBuilder.append(" ");
-            }
-            nameBuilder.append(lastName.trim());
-        }
-        String fullName = nameBuilder.toString();
-        if (!fullName.isEmpty()) {
-            tokenManager.saveName(fullName);
-        }
-
-        // Navigate to dashboard
-        runOnUiThread(() -> {
-            final Intent intent;
-            if ("admin".equals(user.getRole())) {
-                intent = new Intent(MainActivity.this, AdminDashboardActivity.class);
-            } else if ("manager".equals(user.getRole())) {
-                intent = new Intent(MainActivity.this, ManagerDashboardActivity.class);
-            } else if ("employee".equals(user.getRole()) || "staff".equals(user.getRole())) {
-                intent = new Intent(MainActivity.this, EmployeeDashboardActivity.class);
-            } else {
-                intent = new Intent(MainActivity.this, DashboardActivity.class);
-                intent.putExtra(DashboardActivity.EXTRA_EMAIL, user.getEmail());
-            }
-            startActivity(intent);
-            finish();
-        });
-    }
 
     private void handleGoogleSignInResult(Task<GoogleSignInAccount> completedTask) {
         try {
@@ -472,7 +260,7 @@ public class MainActivity extends AppCompatActivity {
 
                 Log.d(TAG, "Google Sign-In successful - Email: " + email);
 
-                // Call backend API to login/register with Google
+                // Call backend API to login with Google
                 loginWithGoogle(email, givenName, familyName, idToken);
             }
         } catch (ApiException e) {
@@ -527,20 +315,60 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
 
-                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
-                    handleGoogleLoginSuccess(response.body());
+                if (response.isSuccessful() && response.body() != null) {
+                    GoogleSignInResponse signInResponse = response.body();
+                    
+                    // IF SUCCESS: Backend might have found the user OR just created them.
+                    if (signInResponse.isSuccess()) {
+                        // DETECT LEAK: Check if the message implies a NEW user was created
+                        String message = signInResponse.getMessage();
+                        boolean isActuallyNewRegistration = false;
+                        if (message != null) {
+                            String lowerMsg = message.toLowerCase();
+                            if (lowerMsg.contains("created") || lowerMsg.contains("registered") || lowerMsg.contains("welcome")) {
+                                isActuallyNewRegistration = true;
+                            }
+                        }
+
+                        // DETECT LEAK: Check if we have valid user data. 
+                        // If it's a "login" and the user is NOT in our database yet, 
+                        // we should block it even if the server auto-created it.
+                        if (isActuallyNewRegistration || signInResponse.getData() == null || signInResponse.getData().getUser() == null) {
+                            Log.w(TAG, "Blocking suspected auto-registration: " + message);
+                            runOnUiThread(() -> showError("Account Not Found", 
+                                "Account not found. Please register first before signing in with Google."));
+                            signOutFromGoogle();
+                            return;
+                        }
+                        
+                        // If we got here, it's a truly existing user
+                        handleGoogleLoginSuccess(signInResponse);
+                    } else {
+                        // API returned success: false
+                        String errorMsg = signInResponse.getMessage() != null ? signInResponse.getMessage() : "Account not found. Please register first.";
+                        runOnUiThread(() -> showError("Login Failed", errorMsg));
+                        signOutFromGoogle();
+                    }
                 } else {
+                    // API returned error code (e.g. 401, 404, 500)
                     String errorMsg = "Login failed. Please try again.";
                     try {
                         if (response.errorBody() != null) {
                             String errorBody = response.errorBody().string();
                             Log.e(TAG, "Google login error: " + errorBody);
+                            
+                            // Check for account existence keywords in error body
+                            String lowerError = errorBody.toLowerCase();
+                            if (lowerError.contains("not found") || lowerError.contains("does not exist") || lowerError.contains("account")) {
+                                errorMsg = "Account not found. Please register first.";
+                            }
                         }
                     } catch (Exception e) {
                         Log.e(TAG, "Error reading error response", e);
                     }
                     final String finalErrorMsg = errorMsg;
                     runOnUiThread(() -> showError("Login Failed", finalErrorMsg));
+                    signOutFromGoogle();
                 }
             }
 
@@ -555,6 +383,7 @@ public class MainActivity extends AppCompatActivity {
                 Log.e(TAG, "Error logging in with Google: " + t.getMessage(), t);
                 runOnUiThread(() -> showError("Connection Error", 
                     "Failed to login. Please check your connection and try again."));
+                signOutFromGoogle();
             }
         });
     }
@@ -589,22 +418,11 @@ public class MainActivity extends AppCompatActivity {
             tokenManager.saveName(fullName);
         }
 
-        // Navigate to dashboard
-        runOnUiThread(() -> {
-            final Intent intent;
-            if ("admin".equals(user.getRole())) {
-                intent = new Intent(MainActivity.this, AdminDashboardActivity.class);
-            } else if ("manager".equals(user.getRole())) {
-                intent = new Intent(MainActivity.this, ManagerDashboardActivity.class);
-            } else if ("employee".equals(user.getRole()) || "staff".equals(user.getRole())) {
-                intent = new Intent(MainActivity.this, EmployeeDashboardActivity.class);
-            } else {
-                intent = new Intent(MainActivity.this, DashboardActivity.class);
-                intent.putExtra(DashboardActivity.EXTRA_EMAIL, user.getEmail());
-            }
-            startActivity(intent);
-            finish();
-        });
+        // Force immediate token persistence
+        tokenManager.forceCommit();
+
+        // Update location for signed-in user and navigate after completion
+        updateLocationAndNavigate(user);
     }
 
     /**
@@ -658,8 +476,6 @@ public class MainActivity extends AppCompatActivity {
 						if (email != null && email.contains("@")) {
 							tokenManager.saveEmail(email);
 							tokenManager.clearConnectionStatus();
-						} else if (user.hasFacebookAccount()) {
-							tokenManager.saveConnectionStatus("Facebook connected");
 						}
 						
                         tokenManager.saveRole(user.getRole());
@@ -693,19 +509,8 @@ public class MainActivity extends AppCompatActivity {
 
 						// Navigate to dashboard
 						runOnUiThread(() -> {
-                            final Intent intent;
-                            if ("admin".equals(user.getRole())) {
-                                intent = new Intent(MainActivity.this, AdminDashboardActivity.class);
-                            } else if ("manager".equals(user.getRole())) {
-                                intent = new Intent(MainActivity.this, ManagerDashboardActivity.class);
-                            } else if ("employee".equals(user.getRole()) || "staff".equals(user.getRole())) {
-                                intent = new Intent(MainActivity.this, EmployeeDashboardActivity.class);
-                            } else {
-                                intent = new Intent(MainActivity.this, DashboardActivity.class);
-                                intent.putExtra(DashboardActivity.EXTRA_EMAIL, user.getEmail());
-                            }
-                            startActivity(intent);
-                            finish();
+                            // Update location and then navigate
+                            updateLocationAndNavigate(user.getRole(), user.getEmail());
 						});
 					} else {
 						final String message = loginResponse != null && loginResponse.getMessage() != null 
@@ -895,4 +700,204 @@ public class MainActivity extends AppCompatActivity {
 
 		return errorMsg.toString();
 	}
+
+    // Request location permission when app starts
+    private void requestLocationPermission() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            
+            // Show rationale dialog if user previously denied permission
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this, 
+                    Manifest.permission.ACCESS_FINE_LOCATION)) {
+                new AlertDialog.Builder(this)
+                        .setTitle("Location Access Needed")
+                        .setMessage("This app needs location access to detect your current location for registration.")
+                        .setPositiveButton("OK", (dialog, which) -> 
+                                ActivityCompat.requestPermissions(MainActivity.this,
+                                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                                        LOCATION_PERMISSION_REQUEST_CODE))
+                        .setNegativeButton("Cancel", null)
+                        .show();
+            } else {
+                // No explanation needed - request the permission
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                        LOCATION_PERMISSION_REQUEST_CODE);
+            }
+        } else {
+            // Permission already granted
+            detectLocation();
+        }
+    }
+
+    // Handle permission request result
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, 
+                                           @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        
+        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Log.d(TAG, "Location permission granted");
+                detectLocation();
+            } else {
+                Log.d(TAG, "Location permission denied");
+                // Optional: Show toast if user permanently denied
+                if (!ActivityCompat.shouldShowRequestPermissionRationale(this, 
+                        Manifest.permission.ACCESS_FINE_LOCATION)) {
+                    Toast.makeText(this, "Location permission was denied permanently", 
+                            Toast.LENGTH_LONG).show();
+                }
+            }
+        }
+    }
+
+    // Detect and display current location
+    private void detectLocation() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) 
+                != PackageManager.PERMISSION_GRANTED) {
+            Log.d(TAG, "Location permission not granted");
+            return;
+        }
+        
+        // Use the new UserLocationManager for location detection
+        userLocationManager.updateUserLocation(new UserLocationManager.LocationUpdateCallback() {
+            @Override
+            public void onLocationUpdated(String location) {
+                Log.d(TAG, "Location detected and updated: " + location);
+            }
+
+            @Override
+            public void onLocationUpdateFailed(String error) {
+                Log.e(TAG, "Location detection failed: " + error);
+            }
+        });
+    }
+    
+    // Reverse geocode latitude and longitude to get city name
+    private String reverseGeocodeLocation(double latitude, double longitude) {
+        try {
+            Log.d(TAG, "Reverse geocoding - Lat: " + latitude + ", Lng: " + longitude);
+            
+            // Use the LocationConfig to find the location name
+            String locationName = LocationConfig.findLocationName(latitude, longitude);
+            Log.d(TAG, "Found location: " + locationName);
+            return locationName;
+            
+        } catch (Exception e) {
+            Log.e(TAG, "Reverse geocoding failed", e);
+            return "Metro Manila Area"; // Default fallback
+        }
+    }
+
+    /**
+     * Update user's location and then navigate to dashboard
+     * Ensures location update completes before navigation
+     */
+    private void updateLocationAndNavigate(Object user) {
+        userLocationManager.updateUserLocation(new UserLocationManager.LocationUpdateCallback() {
+            @Override
+            public void onLocationUpdated(String location) {
+                Log.d(TAG, "Location updated successfully: " + location);
+                navigateToDashboard(user);
+            }
+
+            @Override
+            public void onLocationUpdateFailed(String error) {
+                Log.e(TAG, "Location update failed: " + error);
+                // Still navigate even if location update fails
+                navigateToDashboard(user);
+            }
+        });
+    }
+
+    /**
+     * Update user's location and then navigate to dashboard (for regular login)
+     * Overloaded method for role and email parameters
+     */
+    private void updateLocationAndNavigate(String role, String email) {
+        userLocationManager.updateUserLocation(new UserLocationManager.LocationUpdateCallback() {
+            @Override
+            public void onLocationUpdated(String location) {
+                Log.d(TAG, "Location updated successfully: " + location);
+                navigateToRoleDashboard(role, email);
+            }
+
+            @Override
+            public void onLocationUpdateFailed(String error) {
+                Log.e(TAG, "Location update failed: " + error);
+                // Still navigate even if location update fails
+                navigateToRoleDashboard(role, email);
+            }
+        });
+    }
+
+    /**
+     * Navigate to dashboard based on role and email
+     */
+    private void navigateToRoleDashboard(String role, String email) {
+        runOnUiThread(() -> {
+            final Intent intent;
+            if ("admin".equals(role)) {
+                intent = new Intent(MainActivity.this, AdminDashboardActivity.class);
+            } else if ("manager".equals(role)) {
+                intent = new Intent(MainActivity.this, ManagerDashboardActivity.class);
+            } else if ("employee".equals(role) || "staff".equals(role)) {
+                intent = new Intent(MainActivity.this, EmployeeDashboardActivity.class);
+            } else {
+                intent = new Intent(MainActivity.this, DashboardActivity.class);
+                if (email != null) {
+                    intent.putExtra(DashboardActivity.EXTRA_EMAIL, email);
+                }
+            }
+            
+            Log.d(TAG, "Navigating to dashboard for role: " + role);
+            startActivity(intent);
+            finish();
+        });
+    }
+
+    /**
+     * Navigate to appropriate dashboard based on user role
+     */
+    private void navigateToDashboard(Object user) {
+        runOnUiThread(() -> {
+            final Intent intent;
+            
+            // Handle GoogleSignInResponse.User
+            String role = null;
+            String email = null;
+            
+            if (user instanceof GoogleSignInResponse.User) {
+                GoogleSignInResponse.User googleUser = (GoogleSignInResponse.User) user;
+                role = googleUser.getRole();
+                email = googleUser.getEmail();
+            }
+            
+            if ("admin".equals(role)) {
+                intent = new Intent(MainActivity.this, AdminDashboardActivity.class);
+            } else if ("manager".equals(role)) {
+                intent = new Intent(MainActivity.this, ManagerDashboardActivity.class);
+            } else if ("employee".equals(role) || "staff".equals(role)) {
+                intent = new Intent(MainActivity.this, EmployeeDashboardActivity.class);
+            } else {
+                intent = new Intent(MainActivity.this, DashboardActivity.class);
+                if (email != null) {
+                    intent.putExtra(DashboardActivity.EXTRA_EMAIL, email);
+                }
+            }
+            
+            Log.d(TAG, "Navigating to dashboard for role: " + role);
+            startActivity(intent);
+            finish();
+        });
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (userLocationManager != null) {
+            userLocationManager.cleanup();
+        }
+    }
 }

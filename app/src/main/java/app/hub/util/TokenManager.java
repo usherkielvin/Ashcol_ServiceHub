@@ -3,6 +3,8 @@ package app.hub.util;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import java.util.Map;
+
 public class TokenManager {
     private static final String PREF_NAME = "auth_pref";
     private static final String KEY_TOKEN = "token";
@@ -10,6 +12,19 @@ public class TokenManager {
     private static final String KEY_NAME = "name";
     private static final String KEY_ROLE = "role";
     private static final String KEY_CONNECTION_STATUS = "connection_status";
+    private static final String KEY_CURRENT_CITY = "current_city";
+    private static final String KEY_FAILED_GOOGLE_LOGIN_PREFIX = "failed_google_login_";
+    
+    // Branch Cache
+    private static final String KEY_BRANCH = "branch";
+    private static final String KEY_EMPLOYEE_COUNT = "employee_count";
+    private static final String KEY_BRANCH_CACHE_TIME = "branch_cache_time";
+    private static final long CACHE_DURATION = 30 * 60 * 1000; // 30 minutes cache for branch data
+    
+    // Notification Settings
+    private static final String KEY_PUSH_NOTIF = "push_notifications";
+    private static final String KEY_EMAIL_NOTIF = "email_notifications";
+    private static final String KEY_SMS_NOTIF = "sms_notifications";
 
     private final SharedPreferences sharedPreferences;
 
@@ -48,9 +63,19 @@ public class TokenManager {
     public String getRole() {
         return sharedPreferences.getString(KEY_ROLE, null);
     }
+    
+    public String getUserId() {
+        // For backward compatibility, we can use email as user identifier
+        return getEmail();
+    }
+    
+    public String getUserRole() {
+        return getRole();
+    }
 
     public void clear() {
-        sharedPreferences.edit().clear().apply();
+        // Use commit() instead of apply() for immediate persistence
+        sharedPreferences.edit().clear().commit();
     }
 
     public boolean isLoggedIn() {
@@ -68,5 +93,144 @@ public class TokenManager {
     public void clearConnectionStatus() {
         sharedPreferences.edit().remove(KEY_CONNECTION_STATUS).apply();
     }
-}
 
+    public void saveCurrentCity(String city) {
+        sharedPreferences.edit().putString(KEY_CURRENT_CITY, city).apply();
+    }
+
+    public String getCurrentCity() {
+        return sharedPreferences.getString(KEY_CURRENT_CITY, null);
+    }
+    
+    /**
+     * Check if a Google login has failed for a specific email
+     */
+    public boolean hasFailedGoogleLogin(String email) {
+        if (email == null) return false;
+        String key = KEY_FAILED_GOOGLE_LOGIN_PREFIX + sanitizeKey(email);
+        return sharedPreferences.getBoolean(key, false);
+    }
+    
+    /**
+     * Mark a Google login as failed for a specific email
+     */
+    public void markFailedGoogleLogin(String email) {
+        if (email == null) return;
+        String key = KEY_FAILED_GOOGLE_LOGIN_PREFIX + sanitizeKey(email);
+        sharedPreferences.edit().putBoolean(key, true).apply();
+    }
+    
+    /**
+     * Clear the failed Google login flag for a specific email
+     */
+    public void clearFailedGoogleLogin(String email) {
+        if (email == null) return;
+        String key = KEY_FAILED_GOOGLE_LOGIN_PREFIX + sanitizeKey(email);
+        sharedPreferences.edit().remove(key).apply();
+    }
+    
+    /**
+     * Clear all failed Google login flags
+     */
+    public void clearAllFailedGoogleLogins() {
+        // Get all keys that start with the failed login prefix
+        Map<String, ?> allEntries = sharedPreferences.getAll();
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        
+        for (Map.Entry<String, ?> entry : allEntries.entrySet()) {
+            if (entry.getKey().startsWith(KEY_FAILED_GOOGLE_LOGIN_PREFIX)) {
+                editor.remove(entry.getKey());
+            }
+        }
+        editor.apply();
+    }
+    
+    /**
+     * Reset Google login tracking completely
+     */
+    public void resetGoogleLoginTracking() {
+        clearAllFailedGoogleLogins();
+    }
+    
+    /**
+     * Sanitize email to be used as a SharedPreferences key
+     */
+    private String sanitizeKey(String key) {
+        // Replace characters that are not allowed in SharedPreferences keys
+        return key.replaceAll("[^a-zA-Z0-9_]", "_");
+    }
+    
+    // Notification Settings Methods
+    public void setPushEnabled(boolean enabled) {
+        sharedPreferences.edit().putBoolean(KEY_PUSH_NOTIF, enabled).apply();
+    }
+    
+    public boolean isPushEnabled() {
+        return sharedPreferences.getBoolean(KEY_PUSH_NOTIF, true);
+    }
+    
+    public void setEmailNotifEnabled(boolean enabled) {
+        sharedPreferences.edit().putBoolean(KEY_EMAIL_NOTIF, enabled).apply();
+    }
+    
+    public boolean isEmailNotifEnabled() {
+        return sharedPreferences.getBoolean(KEY_EMAIL_NOTIF, true);
+    }
+    
+    public void setSmsNotifEnabled(boolean enabled) {
+        sharedPreferences.edit().putBoolean(KEY_SMS_NOTIF, enabled).apply();
+    }
+    
+    public boolean isSmsNotifEnabled() {
+        return sharedPreferences.getBoolean(KEY_SMS_NOTIF, false);
+    }
+
+    /**
+     * Force immediate persistence of SharedPreferences.
+     * This method ensures all pending changes are written to disk immediately.
+     */
+    public void forceCommit() {
+        // Create a small commit operation to ensure all pending apply() calls are flushed
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putBoolean("_commit_sync_key", true);
+        editor.commit(); // Synchronous commit to ensure immediate persistence
+        // Clean up the temporary key
+        sharedPreferences.edit().remove("_commit_sync_key").apply();
+    }
+    
+    // Branch Cache Methods
+    public void saveBranchInfo(String branch, int employeeCount) {
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString(KEY_BRANCH, branch);
+        editor.putInt(KEY_EMPLOYEE_COUNT, employeeCount);
+        editor.putLong(KEY_BRANCH_CACHE_TIME, System.currentTimeMillis());
+        editor.apply();
+    }
+    
+    public String getCachedBranch() {
+        if (isCacheValid()) {
+            return sharedPreferences.getString(KEY_BRANCH, null);
+        }
+        return null;
+    }
+    
+    public Integer getCachedEmployeeCount() {
+        if (isCacheValid()) {
+            return sharedPreferences.getInt(KEY_EMPLOYEE_COUNT, -1);
+        }
+        return null;
+    }
+    
+    private boolean isCacheValid() {
+        long cacheTime = sharedPreferences.getLong(KEY_BRANCH_CACHE_TIME, 0);
+        return (System.currentTimeMillis() - cacheTime) < CACHE_DURATION;
+    }
+    
+    public void clearBranchCache() {
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.remove(KEY_BRANCH);
+        editor.remove(KEY_EMPLOYEE_COUNT);
+        editor.remove(KEY_BRANCH_CACHE_TIME);
+        editor.apply();
+    }
+}

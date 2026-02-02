@@ -4,102 +4,467 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ServiceSelectActivity">
+    android:background="@color/app_background"
+    android:fillViewport="true"
+    android:padding="16dp"
+    tools:ignore="VisualLintBounds,TextContrastCheck">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="16dp">
+        android:layout_height="wrap_content">
 
         <TextView
-            android:id="@+id/serviceTypeHeader"
+            android:id="@+id/tvTitle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="Service Type: Plumbing"
-            android:textAppearance="@style/TextAppearance.AppCompat.Large"
-            app:layout_constraintEnd_toEndOf="parent"
+            android:text="@string/service_request_form"
+            android:textColor="@color/dark_green_text"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toStartOf="@+id/btnClose"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/descriptionInputLayout"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+        <ImageButton
+            android:id="@+id/btnClose"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/btn_close_desc"
+            android:src="@android:drawable/ic_menu_close_clear_cancel"
+            app:layout_constraintBottom_toBottomOf="@id/tvTitle"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/serviceTypeHeader">
+            app:layout_constraintTop_toTopOf="@id/tvTitle"
+            app:tint="@android:color/black"
+            tools:ignore="TouchTargetSizeCheck" />
 
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/descriptionInput"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="top"
-                android.hint="Describe the issue..."
-                android:lines="5" />
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/addressInputLayout"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/descriptionInputLayout">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/addressInput"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="Address" />
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/contactInputLayout"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/addressInputLayout">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/contactInput"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="Contact Number" />
-        </com.google.android.material.textfield.TextInputLayout>
-
-        <ImageView
-            android:id="@+id/imagePreview"
-            android:layout_width="100dp"
-            android:layout_height="100dp"
-            android:layout_marginTop="16dp"
-            android:scaleType="centerCrop"
-            android:visibility="gone"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/contactInputLayout" />
-
-        <Button
-            android:id="@+id/uploadImageButton"
-            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        <TextView
+            android:id="@+id/lblDate"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Upload Photo"
-            app:layout_constraintBottom_toBottomOf="@+id/imagePreview"
-            app:layout_constraintStart_toEndOf="@+id/imagePreview"
-            app:layout_constraintTop_toTopOf="@+id/imagePreview" />
+            android:layout_marginTop="16dp"
+            android:labelFor="@+id/srfDate"
+            android:text="@string/date_label"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvTitle" />
 
-        <Button
-            android:id="@+id/createTicketButton"
+        <EditText
+            android:id="@+id/srfDate"
             android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_marginTop="4dp"
+            android:layout_marginEnd="8dp"
+            android:autofillHints="no"
+            android:background="@drawable/bg_input_white"
+            android:hint="@string/hint_date"
+            android:inputType="date"
+            android:minHeight="48dp"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:textColorHint="#808080"
+            android:textSize="14sp"
+            app:layout_constraintEnd_toStartOf="@+id/srfNewReq"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/lblDate"
+            tools:ignore="AccessibilityLabel" />
+
+        <TextView
+            android:id="@+id/lblStatus"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
-            android:text="Submit Ticket Request"
+            android:labelFor="@+id/srfNewReq"
+            android:text="@string/status_label"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="@+id/srfNewReq"
+            app:layout_constraintTop_toTopOf="@id/lblDate" />
+
+        <TextView
+            android:id="@+id/srfNewReq"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_marginTop="4dp"
+            android:background="@drawable/bg_status_badge"
+            android:gravity="center"
+            android:text="@string/new_requests"
+            android:textColor="@color/white"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/srfDate"
+            app:layout_constraintTop_toBottomOf="@id/lblStatus"
+            app:layout_constraintWidth_percent="0.5" />
+
+        <TextView
+            android:id="@+id/headerCustomer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/customer_info"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/srfDate" />
+
+        <TextView
+            android:id="@+id/lblFullname"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:labelFor="@+id/srfFullname"
+            android:text="@string/fullname_label"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/headerCustomer" />
+
+        <EditText
+            android:id="@+id/srfFullname"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:autofillHints="name"
+            android:background="@drawable/bg_input_white"
+            android:hint="@string/hint_name"
+            android:inputType="textPersonName"
+            android:minHeight="48dp"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:textColorHint="#808080"
+            android:textSize="14sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/imagePreview" />
+            app:layout_constraintTop_toBottomOf="@id/lblFullname"
+            tools:ignore="AccessibilityLabel" />
+
+        <TextView
+            android:id="@+id/lblTicket"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:labelFor="@+id/srfTicktetId"
+            android:text="@string/ticket_id_label"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/srfFullname" />
+
+        <EditText
+            android:id="@+id/srfTicktetId"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_marginEnd="8dp"
+            android:autofillHints="no"
+            android:background="@drawable/bg_ticket_id"
+            android:enabled="false"
+            android:hint="@string/hint_auto_gen"
+            android:inputType="text"
+            android:minHeight="48dp"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:textColor="@android:color/black"
+            android:textColorHint="#2E7D32"
+            android:textSize="14sp"
+            app:layout_constraintEnd_toStartOf="@+id/srfContact"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/lblTicket"
+            tools:ignore="AccessibilityLabel" />
+
+        <TextView
+            android:id="@+id/lblContact"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:labelFor="@+id/srfContact"
+            android:text="@string/contact_label"
+            app:layout_constraintStart_toStartOf="@+id/srfContact"
+            app:layout_constraintTop_toBottomOf="@id/srfFullname" />
+
+        <EditText
+            android:id="@+id/srfContact"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:autofillHints="phone"
+            android:background="@drawable/bg_input_white"
+            android:hint="@string/hint_phone"
+            android:inputType="phone"
+            android:minHeight="48dp"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:textColorHint="#808080"
+            android:textSize="14sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/srfTicktetId"
+            app:layout_constraintTop_toBottomOf="@id/lblContact"
+            tools:ignore="AccessibilityLabel" />
+
+        <TextView
+            android:id="@+id/lblAddress"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:labelFor="@+id/srfAddress"
+            android:text="@string/address_label"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/srfTicktetId" />
+
+        <EditText
+            android:id="@+id/srfAddress"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:autofillHints="postalAddress"
+            android:background="@drawable/bg_input_white"
+            android:hint="@string/hint_address"
+            android:inputType="textPostalAddress"
+            android:minHeight="48dp"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:textColorHint="#808080"
+            android:textSize="14sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/lblAddress"
+            tools:ignore="AccessibilityLabel" />
+
+        <TextView
+            android:id="@+id/headerService"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/service_details"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/srfAddress" />
+
+        <TextView
+            android:id="@+id/lblServiceType"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:labelFor="@+id/srfServiceType"
+            android:text="@string/service_type_label"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/headerService" />
+
+        <EditText
+            android:id="@+id/srfServiceType"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:autofillHints="no"
+            android:background="@drawable/bg_input_white"
+            android:hint="@string/cleaning"
+            android:inputType="text"
+            android:minHeight="48dp"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:textColorHint="#808080"
+            android:textSize="14sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/lblServiceType"
+            tools:ignore="AccessibilityLabel" />
+
+        <TextView
+            android:id="@+id/lblPrefDate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="56dp"
+            android:labelFor="@+id/srfPrefD_T"
+            android:text="@string/pref_date_label"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/lblServiceType" />
+
+        <EditText
+            android:id="@+id/srfPrefD_T"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:autofillHints="no"
+            android:background="@drawable/bg_input_white"
+            android:drawableEnd="@android:drawable/ic_menu_my_calendar"
+            android:hint="@string/hint_pref_date"
+            android:inputType="datetime"
+            android:minHeight="48dp"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:textColorHint="#808080"
+            android:textSize="14sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/lblPrefDate"
+            tools:ignore="AccessibilityLabel" />
+
+        <TextView
+            android:id="@+id/lblBranch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="56dp"
+            android:labelFor="@+id/srfBranch"
+            android:text="@string/branch_label"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/lblPrefDate" />
+
+        <Spinner
+            android:id="@+id/srfBranch"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:background="@drawable/bg_input_white"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/lblBranch" />
+
+        <TextView
+            android:id="@+id/lblAssign"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="56dp"
+            android:labelFor="@+id/srfAssignTo"
+            android:text="@string/assign_to_label"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/lblBranch" />
+
+        <Spinner
+            android:id="@+id/srfAssignTo"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:background="@drawable/bg_input_white"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/lblAssign" />
+
+        <TextView
+            android:id="@+id/lblCompletion"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="56dp"
+            android:labelFor="@+id/srfExpectCompD"
+            android:text="@string/expected_completion_label"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/lblAssign" />
+
+        <EditText
+            android:id="@+id/srfExpectCompD"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:autofillHints="no"
+            android:background="@drawable/bg_input_white"
+            android:drawableEnd="@android:drawable/ic_menu_my_calendar"
+            android:hint="@string/hint_comp_date"
+            android:inputType="datetime"
+            android:minHeight="48dp"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:textColorHint="#808080"
+            android:textSize="14sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/lblCompletion"
+            tools:ignore="AccessibilityLabel" />
+
+        <TextView
+            android:id="@+id/lblPriority"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="56dp"
+            android:labelFor="@+id/srfPriority"
+            android:text="@string/priority_level_label"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/lblCompletion" />
+
+        <Spinner
+            android:id="@+id/srfPriority"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:background="@drawable/bg_input_white"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/lblPriority" />
+
+        <TextView
+            android:id="@+id/lblDesc"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="56dp"
+            android:labelFor="@+id/srfDescription"
+            android:text="@string/description_label"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/lblPriority" />
+
+        <EditText
+            android:id="@+id/srfDescription"
+            android:layout_width="0dp"
+            android:layout_height="80dp"
+            android:autofillHints="no"
+            android:background="@drawable/bg_input_white"
+            android:gravity="top|start"
+            android:hint="@string/hint_desc"
+            android:inputType="textMultiLine"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:paddingTop="8dp"
+            android:textColorHint="#808080"
+            android:textSize="14sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/lblDesc"
+            tools:ignore="AccessibilityLabel" />
+
+        <TextView
+            android:id="@+id/lblAttach"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="96dp"
+            android:labelFor="@+id/srfAttachFile"
+            android:text="@string/attachments_label"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/lblDesc" />
+
+        <EditText
+            android:id="@+id/srfAttachFile"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:autofillHints="no"
+            android:background="@drawable/bg_input_white"
+            android:hint="@string/hint_attach"
+            android:inputType="text"
+            android:minHeight="48dp"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:textColorHint="#808080"
+            android:textSize="14sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/lblAttach"
+            tools:ignore="AccessibilityLabel" />
+
+        <LinearLayout
+            android:id="@+id/linearLayout3"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="60dp"
+            android:orientation="horizontal"
+            android:weightSum="2"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/srfAttachFile">
+
+            <Button
+                android:id="@+id/srfCancel"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:layout_weight="1"
+                android:backgroundTint="@color/btn_cancel"
+                android:minHeight="48dp"
+                android:text="@string/cancel"
+                android:textColor="@color/white"
+                tools:ignore="ButtonStyle" />
+
+            <Button
+                android:id="@+id/srfAccept"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:backgroundTint="@color/btn_accept"
+                android:minHeight="48dp"
+                android:text="@string/accept"
+                android:textColor="@color/white"
+                tools:ignore="ButtonStyle" />
+        </LinearLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>

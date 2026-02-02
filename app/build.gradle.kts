@@ -14,6 +14,10 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // Google Maps API Key from gradle.properties
+        val mapsKey = project.findProperty("MAPS_API_KEY") as? String ?: ""
+        manifestPlaceholders["MAPS_API_KEY"] = mapsKey
     }
 
     buildTypes {
@@ -58,10 +62,15 @@ dependencies {
     implementation(libs.navigation.ui)
     implementation(libs.cardview)
     implementation(libs.recyclerview)
+    // SwipeRefreshLayout for pull-to-refresh
+    implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
     // Google Sign-In
     implementation("com.google.android.gms:play-services-auth:21.0.0")
-    // Facebook Login
-    implementation("com.facebook.android:facebook-login:16.3.0")
+    // Google Maps
+    implementation("com.google.android.gms:play-services-maps:19.0.0")
+    implementation("com.google.android.gms:play-services-location:21.3.0")
+    // Picasso for image loading
+    implementation("com.squareup.picasso:picasso:2.8")
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)

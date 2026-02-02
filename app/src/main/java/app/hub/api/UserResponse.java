@@ -29,8 +29,8 @@ public class UserResponse {
         private String email;
         private String role;
         private String profile_photo;
-        private boolean has_facebook_account;
-
+        private String location;
+        private String branch;
         public int getId() {
             return id;
         }
@@ -87,20 +87,28 @@ public class UserResponse {
             this.role = role;
         }
 
-        public boolean hasFacebookAccount() {
-            return has_facebook_account;
-        }
-
-        public void setHas_facebook_account(boolean has_facebook_account) {
-            this.has_facebook_account = has_facebook_account;
-        }
-
         public String getProfilePhoto() {
             return profile_photo;
         }
 
         public void setProfilePhoto(String profile_photo) {
             this.profile_photo = profile_photo;
+        }
+
+        public String getLocation() {
+            return location;
+        }
+
+        public void setLocation(String location) {
+            this.location = location;
+        }
+
+        public String getBranch() {
+            return branch;
+        }
+
+        public void setBranch(String branch) {
+            this.branch = branch;
         }
     }
 }

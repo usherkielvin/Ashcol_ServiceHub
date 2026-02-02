@@ -6,19 +6,27 @@ public class RegisterRequest {
     private String lastName;
     private String email;
     private String phone;
+    private String location;
     private String password;
     private String password_confirmation;
     private String role;
+    private String branch;
 
-    public RegisterRequest(String username, String firstName, String lastName, String email, String phone, String password, String passwordConfirmation, String role) {
+    public RegisterRequest(String username, String firstName, String lastName, String email, String phone, String location, String password, String passwordConfirmation, String role, String branch) {
         this.username = username;
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
         this.phone = phone;
+        this.location = location;
         this.password = password;
         this.password_confirmation = passwordConfirmation;
         this.role = role;
+        this.branch = branch;
+    }
+
+    public RegisterRequest(String username, String firstName, String lastName, String email, String phone, String location, String password, String passwordConfirmation, String role) {
+        this(username, firstName, lastName, email, phone, location, password, passwordConfirmation, role, null);
     }
 
     public String getUsername() {
@@ -61,6 +69,14 @@ public class RegisterRequest {
         this.phone = phone;
     }
 
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
+    }
+
     public String getPassword() {
         return password;
     }
@@ -83,5 +99,13 @@ public class RegisterRequest {
 
     public void setRole(String role) {
         this.role = role;
+    }
+
+    public String getBranch() {
+        return branch;
+    }
+
+    public void setBranch(String branch) {
+        this.branch = branch;
     }
 }

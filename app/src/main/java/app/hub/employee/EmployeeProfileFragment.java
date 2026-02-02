@@ -1,0 +1,430 @@
+package app.hub.employee;
+
+import android.content.Intent;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
+import androidx.fragment.app.Fragment;
+
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
+
+import java.io.File;
+
+import app.hub.R;
+import app.hub.api.ApiClient;
+import app.hub.api.ApiService;
+import app.hub.api.ChangePasswordRequest;
+import app.hub.api.ChangePasswordResponse;
+import app.hub.common.MainActivity;
+import app.hub.util.TokenManager;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+
+import app.hub.api.LogoutResponse;
+
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
+public class EmployeeProfileFragment extends Fragment {
+
+    private TokenManager tokenManager;
+
+    public EmployeeProfileFragment() {
+        // Required empty public constructor
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        // Inflate the layout for this fragment
+        return inflater.inflate(R.layout.fragment_employee_profile, container, false);
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        tokenManager = new TokenManager(getContext());
+
+        Button changePasswordButton = view.findViewById(R.id.changePasswordButton);
+        if (changePasswordButton != null) {
+            changePasswordButton.setOnClickListener(v -> showChangePasswordDialog());
+        }
+
+        Button logoutButton = view.findViewById(R.id.logoutButton);
+        if (logoutButton != null) {
+            logoutButton.setOnClickListener(v -> {
+                logout();
+            });
+        }
+    }
+
+    private void showChangePasswordDialog() {
+        if (getContext() == null) return;
+
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_change_password, null);
+        
+        TextInputEditText currentPasswordInput = dialogView.findViewById(R.id.currentPasswordInput);
+        TextInputEditText newPasswordInput = dialogView.findViewById(R.id.newPasswordInput);
+        TextInputEditText confirmPasswordInput = dialogView.findViewById(R.id.confirmPasswordInput);
+        TextInputLayout currentPasswordLayout = dialogView.findViewById(R.id.currentPasswordLayout);
+        TextInputLayout newPasswordLayout = dialogView.findViewById(R.id.newPasswordLayout);
+        TextInputLayout confirmPasswordLayout = dialogView.findViewById(R.id.confirmPasswordLayout);
+
+        AlertDialog dialog = new MaterialAlertDialogBuilder(getContext())
+            .setTitle(getString(R.string.change_password))
+            .setView(dialogView)
+            .setPositiveButton(getString(R.string.save), null)
+            .setNegativeButton(getString(R.string.cancel), null)
+            .create();
+
+        dialog.setOnShowListener(d -> {
+            android.widget.Button positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
+            positiveButton.setOnClickListener(v -> {
+                String currentPassword = currentPasswordInput != null ? currentPasswordInput.getText().toString() : "";
+                String newPassword = newPasswordInput != null ? newPasswordInput.getText().toString() : "";
+                String confirmPassword = confirmPasswordInput != null ? confirmPasswordInput.getText().toString() : "";
+                
+                if (currentPasswordLayout != null) currentPasswordLayout.setError(null);
+                if (newPasswordLayout != null) newPasswordLayout.setError(null);
+                if (confirmPasswordLayout != null) confirmPasswordLayout.setError(null);
+                
+                if (validatePasswordInputs(currentPassword, newPassword, confirmPassword, 
+                        currentPasswordLayout, newPasswordLayout, confirmPasswordLayout)) {
+                    changePassword(currentPassword, newPassword);
+                    dialog.dismiss();
+                }
+            });
+        });
+
+        dialog.show();
+    }
+
+    private boolean validatePasswordInputs(String currentPassword, String newPassword, String confirmPassword,
+            TextInputLayout currentPasswordLayout, TextInputLayout newPasswordLayout, TextInputLayout confirmPasswordLayout) {
+        boolean isValid = true;
+        
+        if (currentPassword.isEmpty()) {
+            if (currentPasswordLayout != null) {
+                currentPasswordLayout.setError("Current password is required");
+            }
+            isValid = false;
+        }
+        
+        if (newPassword.isEmpty()) {
+            if (newPasswordLayout != null) {
+                newPasswordLayout.setError("New password is required");
+            }
+            isValid = false;
+        } else if (newPassword.length() < 8) {
+            if (newPasswordLayout != null) {
+                newPasswordLayout.setError("Password must be at least 8 characters");
+            }
+            isValid = false;
+        }
+        
+        if (!newPassword.equals(confirmPassword)) {
+            if (confirmPasswordLayout != null) {
+                confirmPasswordLayout.setError("Passwords do not match");
+            }
+            isValid = false;
+        }
+        
+        return isValid;
+    }
+
+    private void changePassword(String currentPassword, String newPassword) {
+        String token = tokenManager.getToken();
+        if (token == null) {
+            Toast.makeText(getContext(), "Authentication error. Please login again.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        ChangePasswordRequest request = new ChangePasswordRequest(currentPassword, newPassword, newPassword);
+        ApiService apiService = ApiClient.getApiService();
+        Call<ChangePasswordResponse> call = apiService.changePassword(token, request);
+        
+        call.enqueue(new Callback<ChangePasswordResponse>() {
+            @Override
+            public void onResponse(@NonNull Call<ChangePasswordResponse> call, @NonNull Response<ChangePasswordResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    ChangePasswordResponse changePasswordResponse = response.body();
+                    if (changePasswordResponse.isSuccess()) {
+                        Toast.makeText(getContext(), 
+                            changePasswordResponse.getMessage() != null ? 
+                                changePasswordResponse.getMessage() : "Password changed successfully", 
+                            Toast.LENGTH_SHORT).show();
+                    } else {
+                        String errorMessage = changePasswordResponse.getMessage();
+                        if (errorMessage == null || errorMessage.isEmpty()) {
+                            errorMessage = "Failed to change password";
+                        }
+                        Toast.makeText(getContext(), errorMessage, Toast.LENGTH_LONG).show();
+                    }
+                } else {
+                    handlePasswordChangeError(response);
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<ChangePasswordResponse> call, @NonNull Throwable t) {
+                Log.e("EmployeeSettingsFragment", "Change password failed: " + t.getMessage());
+                Toast.makeText(getContext(), "Network error. Please check your connection.", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void handlePasswordChangeError(Response<ChangePasswordResponse> response) {
+        if (response.code() == 400 || response.code() == 422) {
+            try {
+                ChangePasswordResponse errorResponse = response.body();
+                if (errorResponse != null && errorResponse.getErrors() != null) {
+                    StringBuilder errorMsg = new StringBuilder();
+                    ChangePasswordResponse.Errors errors = errorResponse.getErrors();
+                    
+                    if (errors.getCurrent_password() != null && errors.getCurrent_password().length > 0) {
+                        errorMsg.append(errors.getCurrent_password()[0]).append("\n");
+                    }
+                    if (errors.getNew_password() != null && errors.getNew_password().length > 0) {
+                        errorMsg.append(errors.getNew_password()[0]).append("\n");
+                    }
+                    if (errors.getNew_password_confirmation() != null && errors.getNew_password_confirmation().length > 0) {
+                        errorMsg.append(errors.getNew_password_confirmation()[0]);
+                    }
+                    
+                    if (errorMsg.length() > 0) {
+                        Toast.makeText(getContext(), errorMsg.toString().trim(), Toast.LENGTH_LONG).show();
+                    } else {
+                        Toast.makeText(getContext(), 
+                            errorResponse.getMessage() != null ? errorResponse.getMessage() : "Invalid input", 
+                            Toast.LENGTH_LONG).show();
+                    }
+                } else {
+                    Toast.makeText(getContext(), "Invalid input. Please check your passwords.", Toast.LENGTH_LONG).show();
+                }
+            } catch (Exception e) {
+                Toast.makeText(getContext(), "Failed to change password", Toast.LENGTH_SHORT).show();
+            }
+        } else {
+            Toast.makeText(getContext(), "Failed to change password. Please try again.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void logout() {
+        Log.d("EmployeeProfileFragment", "logout() method called");
+        
+        // Show progress indicator
+        if (getActivity() == null) {
+            Log.w("EmployeeProfileFragment", "Activity is null, cannot logout");
+            return;
+        }
+        
+        Log.d("EmployeeProfileFragment", "Creating progress dialog");
+        android.app.ProgressDialog progressDialog = new android.app.ProgressDialog(getContext());
+        progressDialog.setMessage("Logging out...");
+        progressDialog.setCancelable(false);
+        progressDialog.show();
+        
+        Log.d("EmployeeProfileFragment", "Clearing user data immediately");
+        // Clear user data immediately (this is the most important part)
+        clearUserData();
+        
+        String token = tokenManager.getToken();
+        Log.d("EmployeeProfileFragment", "Token present: " + (token != null));
+        
+        if (token != null) {
+            Log.d("EmployeeProfileFragment", "Making API logout call");
+            ApiService apiService = ApiClient.getApiService();
+            Call<LogoutResponse> call = apiService.logout(token);
+            call.enqueue(new Callback<LogoutResponse>() {
+                @Override
+                public void onResponse(@NonNull Call<LogoutResponse> call, @NonNull Response<LogoutResponse> response) {
+                    Log.d("EmployeeProfileFragment", "API logout response received - Success: " + response.isSuccessful() + ", Code: " + response.code());
+                    
+                    // Dismiss progress dialog
+                    if (progressDialog.isShowing()) {
+                        progressDialog.dismiss();
+                    }
+                    
+                    Log.d("EmployeeProfileFragment", "Performing final cleanup");
+                    // Perform remaining cleanup and navigate
+                    performFinalCleanup();
+                }
+
+                @Override
+                public void onFailure(@NonNull Call<LogoutResponse> call, @NonNull Throwable t) {
+                    Log.w("EmployeeProfileFragment", "API logout failed: " + t.getMessage());
+                    
+                    // Dismiss progress dialog
+                    if (progressDialog.isShowing()) {
+                        progressDialog.dismiss();
+                    }
+                    
+                    Log.d("EmployeeProfileFragment", "Performing final cleanup after API failure");
+                    // Still perform cleanup even if API call fails
+                    performFinalCleanup();
+                }
+            });
+        } else {
+            Log.d("EmployeeProfileFragment", "No token, dismissing progress dialog");
+            // Dismiss progress dialog
+            if (progressDialog.isShowing()) {
+                progressDialog.dismiss();
+            }
+            
+            Log.d("EmployeeProfileFragment", "Performing final cleanup (no token)");
+            // No token, just perform final cleanup
+            performFinalCleanup();
+        }
+    }
+    
+    private void performFinalCleanup() {
+        Log.d("EmployeeProfileFragment", "performFinalCleanup() called");
+        
+        try {
+            Log.d("EmployeeProfileFragment", "Starting Google sign out");
+            // Sign out from Google (this can be slow, but we'll do it synchronously with timeout)
+            signOutFromGoogle();
+            
+            Log.d("EmployeeProfileFragment", "Starting navigation to login");
+            // Navigate to login
+            navigateToLogin();
+        } catch (Exception e) {
+            Log.e("EmployeeProfileFragment", "Error during final cleanup: " + e.getMessage(), e);
+            // Still navigate to login even if cleanup fails
+            try {
+                navigateToLogin();
+            } catch (Exception navException) {
+                Log.e("EmployeeProfileFragment", "Error during navigation after cleanup failure: " + navException.getMessage(), navException);
+            }
+        }
+        
+        Log.d("EmployeeProfileFragment", "performFinalCleanup() completed");
+    }
+
+    private void signOutFromGoogle() {
+        Log.d("EmployeeProfileFragment", "signOutFromGoogle called");
+        
+        try {
+            if (getActivity() != null) {
+                Log.d("EmployeeProfileFragment", "Setting up Google Sign-In client");
+                GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                        .requestEmail()
+                        .requestProfile()
+                        .build();
+                GoogleSignInClient googleSignInClient = GoogleSignIn.getClient(getActivity(), gso);
+                
+                Log.d("EmployeeProfileFragment", "Starting Google sign out with timeout");
+                
+                // Perform sign out with timeout
+                java.util.concurrent.CompletableFuture<Void> signOutFuture = 
+                    java.util.concurrent.CompletableFuture.runAsync(() -> {
+                        try {
+                            Log.d("EmployeeProfileFragment", "Executing Google signOut()");
+                            googleSignInClient.signOut().addOnCompleteListener(task -> {
+                                if (task.isSuccessful()) {
+                                    Log.d("EmployeeProfileFragment", "Google sign out successful");
+                                } else {
+                                    Log.w("EmployeeProfileFragment", "Google sign out failed: " + task.getException());
+                                }
+                            }).addOnFailureListener(e -> {
+                                Log.w("EmployeeProfileFragment", "Google sign out error: " + e.getMessage());
+                            });
+                        } catch (Exception e) {
+                            Log.w("EmployeeProfileFragment", "Google sign out exception: " + e.getMessage());
+                        }
+                    });
+                
+                // Wait for sign out with timeout (don't block forever)
+                try {
+                    Log.d("EmployeeProfileFragment", "Waiting for Google sign out (3 second timeout)");
+                    signOutFuture.get(3, java.util.concurrent.TimeUnit.SECONDS);
+                    Log.d("EmployeeProfileFragment", "Google sign out completed within timeout");
+                } catch (java.util.concurrent.TimeoutException e) {
+                    Log.w("EmployeeProfileFragment", "Google sign out timed out");
+                } catch (Exception e) {
+                    Log.w("EmployeeProfileFragment", "Google sign out interrupted: " + e.getMessage());
+                }
+            } else {
+                Log.w("EmployeeProfileFragment", "Activity is null, skipping Google sign out");
+            }
+        } catch (Exception e) {
+            Log.e("EmployeeProfileFragment", "Error during Google sign out: " + e.getMessage(), e);
+        }
+        
+        Log.d("EmployeeProfileFragment", "signOutFromGoogle completed");
+    }
+
+    private void navigateToLogin() {
+        Log.d("EmployeeProfileFragment", "navigateToLogin called");
+        
+        if (getActivity() == null) {
+            Log.w("EmployeeProfileFragment", "Activity is null, cannot navigate to login");
+            return;
+        }
+        
+        try {
+            Log.d("EmployeeProfileFragment", "Creating intent to MainActivity");
+            Intent intent = new Intent(getActivity(), MainActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            Log.d("EmployeeProfileFragment", "Starting MainActivity");
+            startActivity(intent);
+            Log.d("EmployeeProfileFragment", "Finishing current activity");
+            getActivity().finish();
+            Log.d("EmployeeProfileFragment", "Navigation completed");
+        } catch (Exception e) {
+            Log.e("EmployeeProfileFragment", "Error navigating to login: " + e.getMessage(), e);
+            // If navigation fails, at least clear the activity stack
+            try {
+                getActivity().finish();
+            } catch (Exception finishException) {
+                Log.e("EmployeeProfileFragment", "Error finishing activity: " + finishException.getMessage(), finishException);
+            }
+        }
+    }
+
+    private void clearUserData() {
+        try {
+            Log.d("EmployeeProfileFragment", "Starting clearUserData");
+            
+            // Clear token manager data
+            if (tokenManager != null) {
+                Log.d("EmployeeProfileFragment", "Clearing token manager data");
+                tokenManager.clear();
+                Log.d("EmployeeProfileFragment", "Token manager cleared");
+            }
+            
+            // Delete locally stored profile photo
+            if (requireContext() != null) {
+                File imageFile = new File(requireContext().getFilesDir(), "profile_image.jpg");
+                if (imageFile.exists()) {
+                    Log.d("EmployeeProfileFragment", "Deleting profile image file");
+                    imageFile.delete();
+                    Log.d("EmployeeProfileFragment", "Profile image file deleted");
+                }
+            }
+            
+            Log.d("EmployeeProfileFragment", "clearUserData completed successfully");
+        } catch (Exception e) {
+            Log.e("EmployeeProfileFragment", "Error clearing user data: " + e.getMessage(), e);
+            // Continue with logout even if clearing data fails
+        }
+    }
+}

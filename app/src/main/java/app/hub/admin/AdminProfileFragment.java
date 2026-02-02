@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -50,6 +51,7 @@ public class AdminProfileFragment extends Fragment {
     private TokenManager tokenManager;
     private String currentName;
     private String currentEmail;
+    private String connectionStatus;
     private TextView tvName, tvUsername;
     private ShapeableImageView imgProfile;
     private Uri cameraImageUri;
@@ -169,11 +171,7 @@ public class AdminProfileFragment extends Fragment {
         currentName = buildNameFromApi(userData);
         currentEmail = getEmailToDisplay(userData);
         
-        String connectionStatus = null;
-        if (userData.hasFacebookAccount() && !isValidEmail(currentEmail)) {
-            currentEmail = "Facebook connected";
-            connectionStatus = "Facebook connected";
-        }
+        connectionStatus = null;
         
         if (userData.getProfilePhoto() != null && !userData.getProfilePhoto().isEmpty()) {
             loadProfileImageFromUrl(userData.getProfilePhoto());
@@ -284,9 +282,9 @@ public class AdminProfileFragment extends Fragment {
     private void updateEmailDisplay() {
         String displayEmail = currentEmail;
         
-        if ("Facebook connected".equals(currentEmail)) {
+        if (connectionStatus != null && !connectionStatus.isEmpty()) {
             if (tvUsername != null) {
-                tvUsername.setText(currentEmail);
+                tvUsername.setText(connectionStatus);
             }
             return;
         }
@@ -401,6 +399,14 @@ public class AdminProfileFragment extends Fragment {
     }
 
     private void logout() {
+        // Show progress indicator
+        if (getActivity() == null) return;
+        
+        android.app.ProgressDialog progressDialog = new android.app.ProgressDialog(getContext());
+        progressDialog.setMessage("Logging out...");
+        progressDialog.setCancelable(false);
+        progressDialog.show();
+        
         String token = tokenManager.getToken();
         if (token != null) {
             ApiService apiService = ApiClient.getApiService();
@@ -408,39 +414,91 @@ public class AdminProfileFragment extends Fragment {
             call.enqueue(new Callback<LogoutResponse>() {
                 @Override
                	public void onResponse(@NonNull Call<LogoutResponse> call, @NonNull Response<LogoutResponse> response) {
-                    clearUserData();
-                    navigateToLogin();
+                    // Dismiss progress dialog
+                    if (progressDialog.isShowing()) {
+                        progressDialog.dismiss();
+                    }
+                    
+                    // Perform cleanup operations asynchronously
+                    performLogoutCleanup();
                 }
 
                 @Override
                 public void onFailure(@NonNull Call<LogoutResponse> call, @NonNull Throwable t) {
-                    clearUserData();
-                    navigateToLogin();
+                    // Dismiss progress dialog
+                    if (progressDialog.isShowing()) {
+                        progressDialog.dismiss();
+                    }
+                    
+                    // Still perform cleanup even if API call fails
+                    performLogoutCleanup();
                 }
             });
         } else {
-            clearUserData();
-            navigateToLogin();
+            // Dismiss progress dialog
+            if (progressDialog.isShowing()) {
+                progressDialog.dismiss();
+            }
+            
+            // No token, just perform cleanup
+            performLogoutCleanup();
         }
+    }
+    
+    private void performLogoutCleanup() {
+        // Run cleanup operations in background to prevent blocking UI
+        new Thread(() -> {
+            try {
+                // Clear user data first (fast operation)
+                clearUserData();
+                
+                // Navigate to login on main thread
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(this::navigateToLogin);
+                }
+            } catch (Exception e) {
+                Log.e("AdminProfileFragment", "Error during logout cleanup: " + e.getMessage(), e);
+                // Still navigate to login even if cleanup fails
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(this::navigateToLogin);
+                }
+            }
+        }).start();
     }
 
     private void clearUserData() {
-        tokenManager.clear();
         try {
-            File imageFile = new File(requireContext().getFilesDir(), "profile_image.jpg");
-            if (imageFile.exists()) {
-                imageFile.delete();
+            // Clear token manager data
+            if (tokenManager != null) {
+                tokenManager.clear();
+            }
+            
+            // Delete locally stored profile photo
+            if (requireContext() != null) {
+                File imageFile = new File(requireContext().getFilesDir(), "profile_image.jpg");
+                if (imageFile.exists()) {
+                    imageFile.delete();
+                }
             }
         } catch (Exception e) {
+            Log.w("AdminProfileFragment", "Error clearing user data: " + e.getMessage());
+            // Continue with logout even if clearing data fails
         }
     }
 
     private void navigateToLogin() {
         if (getActivity() == null) return;
-        Intent intent = new Intent(getActivity(), MainActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        startActivity(intent);
-        getActivity().finish();
+        
+        try {
+            Intent intent = new Intent(getActivity(), MainActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+            getActivity().finish();
+        } catch (Exception e) {
+            Log.e("AdminProfileFragment", "Error navigating to login: " + e.getMessage(), e);
+            // If navigation fails, at least clear the activity stack
+            getActivity().finish();
+        }
     }
 
     private void showImagePickerDialog() {
