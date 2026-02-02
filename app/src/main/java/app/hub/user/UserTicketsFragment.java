@@ -43,6 +43,21 @@ public class UserTicketsFragment extends Fragment {
     private TextView tabRecent, tabPending, tabInProgress, tabCompleted;
     private EditText etSearch;
 
+    /** Pending ticket for instant display after creation (cleared after shown) */
+    private static volatile TicketListResponse.TicketItem pendingNewTicket = null;
+
+    public static void setPendingNewTicket(TicketListResponse.TicketItem ticket) {
+        pendingNewTicket = ticket;
+    }
+
+    public static TicketListResponse.TicketItem getPendingNewTicket() {
+        return pendingNewTicket;
+    }
+
+    public static void clearPendingNewTicket() {
+        pendingNewTicket = null;
+    }
+
     public UserTicketsFragment() {
         // Required empty public constructor
     }
@@ -59,15 +74,20 @@ public class UserTicketsFragment extends Fragment {
 
         initViews(view);
         setupRecyclerView();
-        
-        // Load tickets immediately when the view is created
+
+        // Show newly created ticket instantly (optimistic), then load from API in background
+        TicketListResponse.TicketItem pending = pendingNewTicket;
+        if (pending != null) {
+            pendingNewTicket = null;
+            allTickets.add(0, pending);
+            tickets.add(0, pending);
+            if (adapter != null) adapter.notifyItemInserted(0);
+            android.util.Log.d("UserTickets", "Showing new ticket instantly: " + pending.getTicketId());
+        }
+
+        // Load tickets in background to refresh and sync with server (silent if we already showed pending)
         android.util.Log.d("UserTickets", "Fragment view created, loading tickets...");
-        
-        // Add a small delay to ensure everything is properly initialized
-        view.post(() -> {
-            android.util.Log.d("UserTickets", "View posted, now loading tickets");
-            loadTickets();
-        });
+        view.post(() -> loadTickets(pending != null));
     }
 
     private void initViews(View view) {
@@ -152,6 +172,10 @@ public class UserTicketsFragment extends Fragment {
     }
 
     private void loadTickets() {
+        loadTickets(false);
+    }
+
+    private void loadTickets(boolean silentRefresh) {
         String token = tokenManager.getToken();
         if (token == null) {
             android.util.Log.e("UserTickets", "No token found - user not logged in");
@@ -201,11 +225,13 @@ public class UserTicketsFragment extends Fragment {
                             adapter.notifyDataSetChanged();
                         }
                         
-                        // Show result to user
-                        if (tickets.isEmpty()) {
-                            Toast.makeText(getContext(), "No tickets found. Create your first service request!", Toast.LENGTH_LONG).show();
-                        } else {
-                            Toast.makeText(getContext(), "Loaded " + tickets.size() + " ticket(s)", Toast.LENGTH_SHORT).show();
+                        // Show result to user (skip toast for background refresh after instant display)
+                        if (!silentRefresh) {
+                            if (tickets.isEmpty()) {
+                                Toast.makeText(getContext(), "No tickets found. Create your first service request!", Toast.LENGTH_LONG).show();
+                            } else {
+                                Toast.makeText(getContext(), "Loaded " + tickets.size() + " ticket(s)", Toast.LENGTH_SHORT).show();
+                            }
                         }
                     } else {
                         String message = ticketResponse.getMessage();

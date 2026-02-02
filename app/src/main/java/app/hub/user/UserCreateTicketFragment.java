@@ -5,17 +5,21 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.Spinner;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+
+import com.google.android.material.datepicker.CalendarConstraints;
+import com.google.android.material.datepicker.MaterialDatePicker;
+
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Locale;
+import java.util.TimeZone;
 
 import app.hub.R;
 import app.hub.api.ApiClient;
@@ -30,11 +34,14 @@ import retrofit2.Response;
 
 public class UserCreateTicketFragment extends Fragment {
 
-    private EditText titleInput, descriptionInput, addressInput, contactInput;
-    private Spinner serviceTypeSpinner;
+    private static final SimpleDateFormat DATE_FORMAT_API = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+    private static final SimpleDateFormat DATE_FORMAT_DISPLAY = new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault());
+
+    private EditText titleInput, descriptionInput, addressInput, contactInput, dateInput;
     private Button createTicketButton;
     private Button mapButton;
     private TokenManager tokenManager;
+    private Long selectedDateMillis = null;
 
     public UserCreateTicketFragment() {
         // Required empty public constructor
@@ -56,26 +63,19 @@ public class UserCreateTicketFragment extends Fragment {
         descriptionInput = view.findViewById(R.id.etDescription);
         addressInput = view.findViewById(R.id.etLocation);
         contactInput = view.findViewById(R.id.etContact);
-        // Note: serviceTypeSpinner is not in the current layout, using TextView for now
-        // serviceTypeSpinner = view.findViewById(R.id.spinnerServiceType);
-
+        dateInput = view.findViewById(R.id.etDate);
         createTicketButton = view.findViewById(R.id.btnSubmit);
         mapButton = view.findViewById(R.id.btnMap);
 
         tokenManager = new TokenManager(getContext());
 
-        // Create an ArrayAdapter using the string array and a default spinner layout
-        // Note: Spinner not available in current layout, will use default service type
-        /*
-        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(getContext(),
-                R.array.Services, android.R.layout.simple_spinner_item);
-        // Specify the layout to use when the list of choices appears
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        // Apply the adapter to the spinner
-        if (serviceTypeSpinner != null) {
-            serviceTypeSpinner.setAdapter(adapter);
+        // Date picker - open when date field is clicked
+        if (dateInput != null) {
+            dateInput.setOnClickListener(v -> showDatePicker());
+            dateInput.setOnFocusChangeListener((v, hasFocus) -> {
+                if (hasFocus) showDatePicker();
+            });
         }
-        */
 
         // Set up map button click listener
         if (mapButton != null) {
@@ -88,6 +88,29 @@ public class UserCreateTicketFragment extends Fragment {
         if (createTicketButton != null) {
             createTicketButton.setOnClickListener(v -> createTicket());
         }
+    }
+
+    private void showDatePicker() {
+        long today = MaterialDatePicker.todayInUtcMilliseconds();
+        Calendar maxCal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+        maxCal.add(Calendar.YEAR, 2);
+
+        MaterialDatePicker.Builder<Long> builder = MaterialDatePicker.Builder.datePicker();
+        builder.setTitleText("Select preferred service date");
+        builder.setSelection(selectedDateMillis != null ? selectedDateMillis : today);
+        builder.setCalendarConstraints(new CalendarConstraints.Builder()
+                .setStart(today)
+                .setEnd(maxCal.getTimeInMillis())
+                .build());
+
+        MaterialDatePicker<Long> picker = builder.build();
+        picker.addOnPositiveButtonClickListener(selection -> {
+            selectedDateMillis = selection;
+            Calendar cal = Calendar.getInstance(TimeZone.getDefault());
+            cal.setTimeInMillis(selection);
+            if (dateInput != null) dateInput.setText(DATE_FORMAT_DISPLAY.format(cal.getTime()));
+        });
+        picker.show(getChildFragmentManager(), "DATE_PICKER");
     }
 
     @Override
@@ -119,7 +142,14 @@ public class UserCreateTicketFragment extends Fragment {
             return;
         }
 
-        CreateTicketRequest request = new CreateTicketRequest(title, description, serviceType, address, contact);
+        String preferredDate = null;
+        if (selectedDateMillis != null) {
+            Calendar cal = Calendar.getInstance(TimeZone.getDefault());
+            cal.setTimeInMillis(selectedDateMillis);
+            preferredDate = DATE_FORMAT_API.format(cal.getTime());
+        }
+
+        CreateTicketRequest request = new CreateTicketRequest(title, description, serviceType, address, contact, preferredDate, "medium");
         ApiService apiService = ApiClient.getApiService();
         String token = tokenManager.getToken();
 
@@ -130,7 +160,7 @@ public class UserCreateTicketFragment extends Fragment {
 
         // Show loading state
         createTicketButton.setEnabled(false);
-        createTicketButton.setText("Creating Ticket...");
+        createTicketButton.setText("Creating...");
 
         Call<CreateTicketResponse> call = apiService.createTicket("Bearer " + token, request);
         call.enqueue(new Callback<CreateTicketResponse>() {
@@ -185,6 +215,7 @@ public class UserCreateTicketFragment extends Fragment {
         if (descriptionInput != null) descriptionInput.setText("");
         if (addressInput != null) addressInput.setText("");
         if (contactInput != null) contactInput.setText("");
-        // if (serviceTypeSpinner != null) serviceTypeSpinner.setSelection(0);
+        if (dateInput != null) dateInput.setText("");
+        selectedDateMillis = null;
     }
 }

@@ -8,6 +8,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapsInitializer;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
@@ -36,6 +37,7 @@ public class MapViewActivity extends AppCompatActivity implements OnMapReadyCall
         isReadonly = getIntent().getBooleanExtra("readonly", true);
 
         initViews();
+        MapsInitializer.initialize(getApplicationContext());
         setupMap();
     }
 

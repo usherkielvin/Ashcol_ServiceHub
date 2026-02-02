@@ -24,6 +24,7 @@ import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapsInitializer;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
@@ -78,11 +79,17 @@ public class MapSelectionActivity extends AppCompatActivity implements OnMapRead
         // Setup bottom sheet sliding
         setupBottomSheetSliding();
 
+        // Initialize Maps SDK (recommended before map fragment)
+        MapsInitializer.initialize(getApplicationContext());
+
         // Initialize the map
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         if (mapFragment != null) {
             mapFragment.getMapAsync(this);
+        } else {
+            Log.e(TAG, "Map fragment not found - check layout");
+            Toast.makeText(this, "Map failed to load. Check API key and internet.", Toast.LENGTH_LONG).show();
         }
 
         // Finish button click handler

@@ -52,8 +52,10 @@
                 android:layout_marginTop="4dp"
                 android:layout_marginEnd="8dp"
                 android:background="@drawable/bg_input_white"
-                android:hint="MM/DD/YY"
-                android:inputType="date"
+                android:clickable="true"
+                android:focusable="false"
+                android:hint="Tap to select date"
+                android:inputType="none"
                 android:padding="8dp"
                 android:textSize="14sp"
                 app:layout_constraintEnd_toStartOf="@+id/guideline50"
@@ -149,7 +151,7 @@
                 android:textSize="14sp"
                 app:layout_constraintTop_toBottomOf="@id/tvDescriptionLabel" />
 
-            <!-- Title Field -->
+            <!-- Title -->
             <TextView
                 android:id="@+id/tvTitleLabel"
                 android:layout_width="wrap_content"
@@ -172,7 +174,7 @@
                 android:textSize="14sp"
                 app:layout_constraintTop_toBottomOf="@id/tvTitleLabel" />
 
-            <!-- Contact Field -->
+            <!-- Contact -->
             <TextView
                 android:id="@+id/tvContactLabel"
                 android:layout_width="wrap_content"
@@ -184,15 +186,10 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/etTitle" />
 
-            <!-- Service Type Spinner -->
-
-            <!-- Attachments -->
-
             <EditText
                 android:id="@+id/etContact"
                 android:layout_width="match_parent"
                 android:layout_height="40dp"
-                android:layout_marginStart="4dp"
                 android:layout_marginTop="4dp"
                 android:background="@drawable/bg_input_white"
                 android:hint="Enter contact number"
@@ -212,18 +209,18 @@
         </androidx.constraintlayout.widget.ConstraintLayout>
     </ScrollView>
 
-    <com.google.android.material.button.MaterialButton
+    <Button
         android:id="@+id/btnSubmit"
         android:layout_width="match_parent"
         android:layout_height="56dp"
         android:layout_margin="16dp"
-        android:backgroundTint="#38B45D"
+        android:background="@drawable/bg_button_green"
         android:text="Submit"
-        android:textAllCaps="false"
         android:textColor="@color/white"
         android:textSize="16sp"
         android:textStyle="bold"
-        app:cornerRadius="12dp"
-        app:layout_constraintBottom_toBottomOf="parent" />
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
