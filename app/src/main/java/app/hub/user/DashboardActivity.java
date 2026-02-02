@@ -188,7 +188,69 @@ public class DashboardActivity extends AppCompatActivity {
                     .addToBackStack(null)
                     .commit();
             if (fabChatbot != null) fabChatbot.hide();
+            showNewTicketBannerIfPending();
+            loadTicketsInBackground();
         }
+    }
+
+    private void setupNewTicketBanner() {
+        if (newTicketBanner == null) return;
+        View.OnClickListener goToMyTickets = v -> {
+                newTicketBanner.setVisibility(View.GONE);
+                if (bottomNavigationView.getSelectedItemId() != R.id.my_ticket) {
+                    bottomNavigationView.setSelectedItemId(R.id.my_ticket);
+                    moveIndicatorToItem(R.id.my_ticket, true);
+                    getSupportFragmentManager().beginTransaction()
+                            .replace(R.id.fragmentContainerView, new UserTicketsFragment())
+                            .setReorderingAllowed(true)
+                            .addToBackStack(null)
+                            .commit();
+                    if (fabChatbot != null) fabChatbot.hide();
+                }
+            };
+        if (newTicketBanner != null) newTicketBanner.setOnClickListener(goToMyTickets);
+        View actionView = findViewById(R.id.newTicketBannerAction);
+        if (actionView != null) actionView.setOnClickListener(goToMyTickets);
+    }
+
+    private void showNewTicketBannerIfPending() {
+        TicketListResponse.TicketItem pending = UserTicketsFragment.getPendingNewTicket();
+        if (pending != null && newTicketBanner != null && newTicketBannerId != null) {
+            newTicketBannerId.setText(pending.getTicketId());
+            newTicketBanner.setVisibility(View.VISIBLE);
+        }
+    }
+
+    /** Pre-load tickets at activity level - data ready for fragments in main container */
+    private void loadTicketsInBackground() {
+        String token = tokenManager != null ? tokenManager.getToken() : null;
+        if (token == null) return;
+        String authToken = token.startsWith("Bearer ") ? token : "Bearer " + token;
+        apiService.getTickets(authToken).enqueue(new Callback<TicketListResponse>() {
+            @Override
+            public void onResponse(Call<TicketListResponse> call, Response<TicketListResponse> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                    List<TicketListResponse.TicketItem> list = response.body().getTickets();
+                    if (list != null) {
+                        cachedTickets.clear();
+                        cachedTickets.addAll(list);
+                        // Notify current fragment if it's UserTicketsFragment
+                        Fragment f = getSupportFragmentManager().findFragmentById(R.id.fragmentContainerView);
+                        if (f instanceof UserTicketsFragment) {
+                            ((UserTicketsFragment) f).refreshWithTickets(cachedTickets);
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<TicketListResponse> call, Throwable t) { }
+        });
+    }
+
+    /** Get cached tickets from activity (for fragments) */
+    public List<TicketListResponse.TicketItem> getCachedTickets() {
+        return new ArrayList<>(cachedTickets);
     }
 
     private void disableNavigationTooltips(BottomNavigationView navigationView) {
