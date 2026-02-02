@@ -122,7 +122,8 @@ public class UserNotificationFragment extends Fragment {
             public void onFailure(Call<TicketListResponse> call, Throwable t) {
                 if (swipeRefreshLayout != null) swipeRefreshLayout.setRefreshing(false);
                 showEmptyState();
-                Toast.makeText(getContext(), "Failed to load activity", Toast.LENGTH_SHORT).show();
+                // Log only, no popup/toast
+                android.util.Log.e("UserNotification", "Failed to load activity: " + t.getMessage(), t);
             }
         });
     }

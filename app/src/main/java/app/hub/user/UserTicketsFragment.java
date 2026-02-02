@@ -179,7 +179,6 @@ public class UserTicketsFragment extends Fragment {
         String token = tokenManager.getToken();
         if (token == null) {
             android.util.Log.e("UserTickets", "No token found - user not logged in");
-            Toast.makeText(getContext(), "Please log in to view tickets", Toast.LENGTH_LONG).show();
             if (swipeRefreshLayout != null) {
                 swipeRefreshLayout.setRefreshing(false);
             }
@@ -225,18 +224,10 @@ public class UserTicketsFragment extends Fragment {
                             adapter.notifyDataSetChanged();
                         }
                         
-                        // Show result to user (skip toast for background refresh after instant display)
-                        if (!silentRefresh) {
-                            if (tickets.isEmpty()) {
-                                Toast.makeText(getContext(), "No tickets found. Create your first service request!", Toast.LENGTH_LONG).show();
-                            } else {
-                                Toast.makeText(getContext(), "Loaded " + tickets.size() + " ticket(s)", Toast.LENGTH_SHORT).show();
-                            }
-                        }
+                        // No popups/toasts here – UI updates silently
                     } else {
                         String message = ticketResponse.getMessage();
                         android.util.Log.e("UserTickets", "API returned success=false. Message: " + message);
-                        Toast.makeText(getContext(), "Error: " + (message != null ? message : "Unknown error"), Toast.LENGTH_LONG).show();
                     }
                 } else {
                     android.util.Log.e("UserTickets", "Response not successful - Code: " + response.code());
@@ -251,7 +242,8 @@ public class UserTicketsFragment extends Fragment {
                             errorMessage = "Server error (Code: " + response.code() + ")";
                         }
                     }
-                    Toast.makeText(getContext(), errorMessage, Toast.LENGTH_LONG).show();
+                    // Log only, no popup
+                    android.util.Log.e("UserTickets", errorMessage);
                 }
             }
 
@@ -274,7 +266,8 @@ public class UserTicketsFragment extends Fragment {
                     errorMessage = "Network error: " + t.getMessage();
                 }
                 
-                Toast.makeText(getContext(), errorMessage, Toast.LENGTH_LONG).show();
+                // Log only, no popup
+                android.util.Log.e("UserTickets", errorMessage);
             }
         });
     }
