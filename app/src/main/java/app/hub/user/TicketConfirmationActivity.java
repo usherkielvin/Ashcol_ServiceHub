@@ -50,10 +50,10 @@ public class TicketConfirmationActivity extends AppCompatActivity {
 
     private void setupClickListeners() {
         btnDone.setOnClickListener(v -> {
-            // Navigate back to main activity with user home fragment
-            Intent intent = new Intent(this, app.hub.common.MainActivity.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-            intent.putExtra("navigate_to", "user_home"); // Signal to show user home fragment
+            // Navigate to customer dashboard and show My Tickets tab
+            Intent intent = new Intent(this, DashboardActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            intent.putExtra("show_my_tickets", true);
             startActivity(intent);
             finish();
         });
@@ -61,10 +61,10 @@ public class TicketConfirmationActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        // Prevent going back to ticket creation form
-        Intent intent = new Intent(this, app.hub.common.MainActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-        intent.putExtra("navigate_to", "user_home"); // Signal to show user home fragment
+        // Navigate to dashboard and show My Tickets tab
+        Intent intent = new Intent(this, DashboardActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        intent.putExtra("show_my_tickets", true);
         startActivity(intent);
         finish();
     }

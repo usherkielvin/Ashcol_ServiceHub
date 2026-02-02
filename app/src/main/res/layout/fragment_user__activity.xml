@@ -28,57 +28,69 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- Empty State Container -->
-    <LinearLayout
-        android:id="@+id/emptyStateContainer"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:orientation="vertical"
-        android:padding="32dp"
+    <!-- SwipeRefreshLayout wrapping the content area -->
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/swipeRefreshLayout"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/headerBackground">
 
-        <ImageView
-            android:id="@+id/emptyIllustration"
-            android:layout_width="200dp"
-            android:layout_height="200dp"
-            android:alpha="0.6"
-            android:src="@drawable/ic_assignment"
-            app:tint="#E0E0E0" />
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
 
-        <TextView
-            android:id="@+id/noActivityTitle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:text="No Activity"
-            android:textColor="#9E9E9E"
-            android:textSize="22sp"
-            android:textStyle="bold" />
+            <!-- Empty State Container -->
+            <LinearLayout
+                android:id="@+id/emptyStateContainer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:padding="32dp">
 
-        <TextView
-            android:id="@+id/noActivityDesc"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:gravity="center"
-            android:text="No activity yet. Start by submitting a request."
-            android:textColor="#BDBDBD"
-            android:textSize="14sp" />
+                <ImageView
+                    android:id="@+id/emptyIllustration"
+                    android:layout_width="200dp"
+                    android:layout_height="200dp"
+                    android:alpha="0.6"
+                    android:src="@drawable/ic_assignment"
+                    app:tint="#E0E0E0" />
 
-    </LinearLayout>
+                <TextView
+                    android:id="@+id/noActivityTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="24dp"
+                    android:text="No Activity"
+                    android:textColor="#9E9E9E"
+                    android:textSize="22sp"
+                    android:textStyle="bold" />
 
-    <!-- Activity List (hidden when empty) -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rvActivity"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/headerBackground"
-        tools:listitem="@layout/item_recent_activity" />
+                <TextView
+                    android:id="@+id/noActivityDesc"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center"
+                    android:text="No activity yet. Start by submitting a request."
+                    android:textColor="#BDBDBD"
+                    android:textSize="14sp" />
+
+            </LinearLayout>
+
+            <!-- Activity List (hidden when empty) -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvActivity"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="gone"
+                tools:listitem="@layout/item_ticket" />
+
+        </FrameLayout>
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

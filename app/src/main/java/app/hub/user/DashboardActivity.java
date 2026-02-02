@@ -51,6 +51,8 @@ public class DashboardActivity extends AppCompatActivity {
     private BottomNavigationView bottomNavigationView;
     private FloatingActionButton fabChatbot;
 
+    public static final String EXTRA_SHOW_MY_TICKETS = "show_my_tickets";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -65,14 +67,23 @@ public class DashboardActivity extends AppCompatActivity {
         disableNavigationTooltips(bottomNavigationView);
 
         if (savedInstanceState == null) {
+            // If returning from ticket creation, show My Tickets tab
+            boolean showMyTickets = getIntent().getBooleanExtra(EXTRA_SHOW_MY_TICKETS, false);
+            Fragment initialFragment = showMyTickets ? new UserTicketsFragment() : new UserHomeFragment();
+            int selectedItemId = showMyTickets ? R.id.my_ticket : R.id.homebtn;
+
             getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.fragmentContainerView, new UserHomeFragment())
+                    .replace(R.id.fragmentContainerView, initialFragment)
                     .commit();
-            
-            // Set initial indicator position
-            bottomNavigationView.post(() -> moveIndicatorToItem(R.id.homebtn, false));
-            // Show chatbot on home by default
-            if (fabChatbot != null) fabChatbot.show();
+
+            bottomNavigationView.post(() -> moveIndicatorToItem(selectedItemId, false));
+            if (showMyTickets) {
+                bottomNavigationView.setSelectedItemId(R.id.my_ticket);
+                if (fabChatbot != null) fabChatbot.hide();
+            } else if (fabChatbot != null) {
+                fabChatbot.show();
+            }
+            getIntent().removeExtra(EXTRA_SHOW_MY_TICKETS);
         }
 
         bottomNavigationView.setOnNavigationItemSelectedListener(item -> {
@@ -139,6 +150,27 @@ public class DashboardActivity extends AppCompatActivity {
             bottomSheetDialog.setContentView(view);
             bottomSheetDialog.show();
         });
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        handleShowMyTickets(intent);
+    }
+
+    private void handleShowMyTickets(Intent intent) {
+        if (intent != null && intent.getBooleanExtra(EXTRA_SHOW_MY_TICKETS, false)) {
+            intent.removeExtra(EXTRA_SHOW_MY_TICKETS);
+            bottomNavigationView.setSelectedItemId(R.id.my_ticket);
+            moveIndicatorToItem(R.id.my_ticket, true);
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.fragmentContainerView, new UserTicketsFragment())
+                    .setReorderingAllowed(true)
+                    .addToBackStack(null)
+                    .commit();
+            if (fabChatbot != null) fabChatbot.hide();
+        }
     }
 
     private void disableNavigationTooltips(BottomNavigationView navigationView) {

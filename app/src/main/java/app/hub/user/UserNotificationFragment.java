@@ -1,64 +1,131 @@
 package app.hub.user;
 
+import android.content.Intent;
 import android.os.Bundle;
-import androidx.fragment.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
+import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import app.hub.R;
+import app.hub.api.ApiClient;
+import app.hub.api.ApiService;
+import app.hub.api.TicketListResponse;
+import app.hub.util.TokenManager;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 /**
- * A simple {@link Fragment} subclass.
- * Use the {@link UserNotificationFragment#newInstance} factory method to
- * create an instance of this fragment.
+ * Activity tab - shows recent ticket activity from database.
  */
 public class UserNotificationFragment extends Fragment {
 
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
-
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
+    private RecyclerView rvActivity;
+    private LinearLayout emptyStateContainer;
+    private SwipeRefreshLayout swipeRefreshLayout;
+    private TicketsAdapter adapter;
+    private TokenManager tokenManager;
+    private List<TicketListResponse.TicketItem> tickets = new ArrayList<>();
 
     public UserNotificationFragment() {
-        // Required empty public constructor
     }
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment UserNotificationFragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static UserNotificationFragment newInstance(String param1, String param2) {
-        UserNotificationFragment fragment = new UserNotificationFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
+    public static UserNotificationFragment newInstance() {
+        return new UserNotificationFragment();
     }
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
-    }
-
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_user__activity, container, false);
     }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        rvActivity = view.findViewById(R.id.rvActivity);
+        emptyStateContainer = view.findViewById(R.id.emptyStateContainer);
+        tokenManager = new TokenManager(getContext());
+
+        adapter = new TicketsAdapter(tickets);
+        rvActivity.setLayoutManager(new LinearLayoutManager(getContext()));
+        rvActivity.setAdapter(adapter);
+
+        adapter.setOnTicketClickListener(ticket -> {
+            Intent intent = new Intent(getContext(), TicketDetailActivity.class);
+            intent.putExtra("ticket_id", ticket.getTicketId());
+            startActivity(intent);
+        });
+
+        swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout);
+        if (swipeRefreshLayout != null) {
+            swipeRefreshLayout.setOnRefreshListener(this::loadTickets);
+        }
+
+        loadTickets();
+    }
+
+    private void loadTickets() {
+        String token = tokenManager.getToken();
+        if (token == null) {
+            showEmptyState();
+            if (swipeRefreshLayout != null) swipeRefreshLayout.setRefreshing(false);
+            return;
+        }
+
+        String authToken = token.startsWith("Bearer ") ? token : "Bearer " + token;
+        ApiService apiService = ApiClient.getApiService();
+        Call<TicketListResponse> call = apiService.getTickets(authToken);
+
+        call.enqueue(new Callback<TicketListResponse>() {
+            @Override
+            public void onResponse(Call<TicketListResponse> call, Response<TicketListResponse> response) {
+                if (swipeRefreshLayout != null) swipeRefreshLayout.setRefreshing(false);
+
+                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                    List<TicketListResponse.TicketItem> newTickets = response.body().getTickets();
+                    tickets.clear();
+                    if (newTickets != null && !newTickets.isEmpty()) {
+                        tickets.addAll(newTickets);
+                        showTicketList();
+                    } else {
+                        showEmptyState();
+                    }
+                    adapter.notifyDataSetChanged();
+                } else {
+                    showEmptyState();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<TicketListResponse> call, Throwable t) {
+                if (swipeRefreshLayout != null) swipeRefreshLayout.setRefreshing(false);
+                showEmptyState();
+                Toast.makeText(getContext(), "Failed to load activity", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void showTicketList() {
+        if (rvActivity != null) rvActivity.setVisibility(View.VISIBLE);
+        if (emptyStateContainer != null) emptyStateContainer.setVisibility(View.GONE);
+    }
+
+    private void showEmptyState() {
+        if (rvActivity != null) rvActivity.setVisibility(View.GONE);
+        if (emptyStateContainer != null) emptyStateContainer.setVisibility(View.VISIBLE);
+    }
+
 }
