@@ -37,7 +37,7 @@ public class UserTicketsFragment extends Fragment {
     private TokenManager tokenManager;
     private List<TicketListResponse.TicketItem> tickets;
     private List<TicketListResponse.TicketItem> allTickets; // Store all tickets for filtering
-    private String currentFilter = "recent"; // Track current filter
+    private String currentFilter = "pending"; // Track current filter (default to pending)
     
     // Filter tabs
     private TextView tabRecent, tabPending, tabInProgress, tabCompleted;
@@ -285,8 +285,8 @@ public class UserTicketsFragment extends Fragment {
         tabInProgress.setOnClickListener(v -> selectFilter("in progress", tabInProgress));
         tabCompleted.setOnClickListener(v -> selectFilter("completed", tabCompleted));
         
-        // Set initial selection
-        selectFilter("recent", tabRecent);
+        // Set initial selection to pending
+        selectFilter("pending", tabPending);
     }
     
     private void selectFilter(String filter, TextView selectedTab) {
@@ -343,13 +343,23 @@ public class UserTicketsFragment extends Fragment {
             boolean matchesFilter = false;
             boolean matchesSearch = true;
             
-            // Apply status filter
+            // Apply status filter (exact match, case-insensitive)
             if (currentFilter.equals("recent")) {
                 matchesFilter = true; // Show all tickets for recent
             } else {
                 String ticketStatus = ticket.getStatus();
                 if (ticketStatus != null) {
-                    matchesFilter = ticketStatus.toLowerCase().contains(currentFilter.toLowerCase());
+                    String normalizedStatus = ticketStatus.toLowerCase().trim();
+                    String normalizedFilter = currentFilter.toLowerCase().trim();
+                    // Handle "in progress" filter matching "In Progress" status
+                    if (normalizedFilter.equals("in progress")) {
+                        matchesFilter = normalizedStatus.equals("in progress") || 
+                                       normalizedStatus.equals("in-progress") ||
+                                       normalizedStatus.contains("progress");
+                    } else {
+                        // Exact match for other statuses (pending, completed, etc.)
+                        matchesFilter = normalizedStatus.equals(normalizedFilter);
+                    }
                 }
             }
             
@@ -386,9 +396,9 @@ public class UserTicketsFragment extends Fragment {
     public void onResume() {
         super.onResume();
         android.util.Log.d("UserTickets", "Fragment resumed");
-        // Optionally refresh tickets when fragment becomes visible
-        // Uncomment the line below if you want automatic refresh on resume
-        // loadTickets();
+        // Refresh tickets when fragment resumes to catch updates from branch managers
+        // This ensures tickets are updated when edited by branch managers
+        loadTickets(true); // Silent refresh to avoid toast spam
     }
 
     @Override

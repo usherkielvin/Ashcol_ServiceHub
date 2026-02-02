@@ -100,9 +100,9 @@ public class TicketsAdapter extends RecyclerView.Adapter<TicketsAdapter.TicketVi
             String ticketId = ticket.getTicketId();
             tvTicketId.setText("Requested by: " + (ticketId != null ? ticketId : "Unknown ID"));
             
-            // Set status with proper formatting and background color
+            // Set status with proper formatting and background color (simple text, no "Status:" prefix)
             String status = ticket.getStatus();
-            String displayStatus = "Status: " + (status != null ? status : "Unknown");
+            String displayStatus = status != null ? status : "Unknown";
             tvStatus.setText(displayStatus);
             
             // Set status background color based on status
