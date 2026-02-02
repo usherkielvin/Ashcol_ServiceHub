@@ -135,95 +135,12 @@ public class UserAddEmailFragment extends Fragment {
         // Show loading state
         if (continueButton != null) {
             continueButton.setEnabled(false);
-            continueButton.setText("Checking email...");
+            continueButton.setText("Please wait...");
         }
-        
-        // Check if email already exists in database
-        checkEmailExists(email);
-    }
-    
-    private void checkEmailExists(String email) {
-        Log.d(TAG, "Checking if email exists in database: " + email);
-        
-        ApiService apiService = ApiClient.getApiService();
-        // Use a dummy password to check if email exists
-        LoginRequest request = new LoginRequest(email, "dummy_password_check_123");
-        
-        Call<LoginResponse> call = apiService.login(request);
-        call.enqueue(new Callback<LoginResponse>() {
-            @Override
-            public void onResponse(@NonNull Call<LoginResponse> call, @NonNull Response<LoginResponse> response) {
-                // Reset button state
-                resetContinueButton();
-                
-                if (response.isSuccessful() && response.body() != null) {
-                    LoginResponse loginResponse = response.body();
-                    
-                    if (loginResponse.isSuccess()) {
-                        // Login succeeded with dummy password - this shouldn't happen, but email exists
-                        showEmailExistsError("Email already registered. Please login instead.");
-                    } else {
-                        // Login failed - check the error message
-                        String message = loginResponse.getMessage();
-                        if (message != null && message.toLowerCase().contains("invalid credentials")) {
-                            // Wrong password but email exists (this is what we expect)
-                            showEmailExistsError("Email already registered. Please login instead.");
-                        } else {
-                            // Other error - assume email doesn't exist and proceed
-                            Log.d(TAG, "Login failed with message: " + message + " - assuming email doesn't exist");
-                            proceedWithEmailRegistration(email);
-                        }
-                    }
-                } else {
-                    // HTTP error - check status code and error response
-                    if (response.code() == 401) {
-                        // Unauthorized - email exists but wrong password
-                        showEmailExistsError("Email already registered. Please login instead.");
-                    } else {
-                        // Other HTTP error - check error body
-                        handleLoginErrorResponse(response, email);
-                    }
-                }
-            }
-            
-            @Override
-            public void onFailure(@NonNull Call<LoginResponse> call, @NonNull Throwable t) {
-                // Reset button state
-                resetContinueButton();
-                
-                Log.e(TAG, "Network error checking email: " + t.getMessage(), t);
-                Toast.makeText(getContext(), 
-                    "Network error. Please check your connection and try again.", Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
-    
-    private void handleLoginErrorResponse(Response<LoginResponse> response, String email) {
-        String errorMessage = null;
-        try {
-            if (response.errorBody() != null) {
-                String errorBody = response.errorBody().string();
-                Log.e(TAG, "Login error response: " + errorBody);
-                
-                // Try to parse error response
-                com.google.gson.Gson gson = new com.google.gson.Gson();
-                LoginResponse errorResponse = gson.fromJson(errorBody, LoginResponse.class);
-                if (errorResponse != null && errorResponse.getMessage() != null) {
-                    errorMessage = errorResponse.getMessage();
-                }
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "Error parsing login error response", e);
-        }
-        
-        if (errorMessage != null && errorMessage.toLowerCase().contains("invalid credentials")) {
-            // Wrong password but email exists
-            showEmailExistsError("Email already registered. Please login instead.");
-        } else {
-            // Other error or no specific message - assume email doesn't exist and proceed
-            Log.w(TAG, "Unclear error response, proceeding with registration. Error: " + errorMessage);
-            proceedWithEmailRegistration(email);
-        }
+
+        // Directly proceed with registration flow.
+        // Backend will perform the real uniqueness check and return a clear error if needed.
+        proceedWithEmailRegistration(email);
     }
     
     private void showEmailExistsError(String message) {
