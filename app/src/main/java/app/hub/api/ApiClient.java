@@ -22,7 +22,8 @@ public class ApiClient {
     // Note: Trailing slash is required when endpoints don't start with /
     // LOCAL DEVELOPMENT - Using local Laravel server
     // Make sure to run: php artisan serve --host=0.0.0.0 --port=8000
-    private static final String BASE_URL = " http://10.0.2.2:8000/";
+    // IMPORTANT: no leading/trailing spaces in BASE_URL
+    private static final String BASE_URL = "http://10.0.2.2:8000/";
     
     private static Retrofit retrofit = null;
 
