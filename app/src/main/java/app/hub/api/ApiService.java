@@ -125,4 +125,16 @@ public interface ApiService {
     
     @GET("api/v1/employee/schedule")
     Call<EmployeeScheduleResponse> getEmployeeSchedule(@Header("Authorization") String token);
+    
+    @POST("api/v1/tickets/{ticketId}/complete-work")
+    Call<app.hub.api.CompleteWorkResponse> completeWorkWithPayment(@Header("Authorization") String token, @retrofit2.http.Path("ticketId") String ticketId, @Body app.hub.api.CompleteWorkRequest request);
+    
+    @GET("api/v1/manager/payments")
+    Call<app.hub.api.PaymentHistoryResponse> getPaymentHistory(@Header("Authorization") String token);
+    
+    @POST("api/v1/payments/{paymentId}/submit")
+    Call<app.hub.api.CompleteWorkResponse> submitPaymentToManager(@Header("Authorization") String token, @retrofit2.http.Path("paymentId") int paymentId);
+    
+    @POST("api/v1/payments/{paymentId}/complete")
+    Call<app.hub.api.CompleteWorkResponse> completePayment(@Header("Authorization") String token, @retrofit2.http.Path("paymentId") int paymentId);
 }

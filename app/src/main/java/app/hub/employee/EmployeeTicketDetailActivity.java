@@ -23,6 +23,8 @@ import app.hub.api.ApiService;
 import app.hub.api.TicketDetailResponse;
 import app.hub.api.UpdateTicketStatusRequest;
 import app.hub.api.UpdateTicketStatusResponse;
+import app.hub.api.CompleteWorkRequest;
+import app.hub.api.CompleteWorkResponse;
 import app.hub.map.EmployeeMapActivity;
 import app.hub.util.TokenManager;
 import retrofit2.Call;
@@ -103,7 +105,7 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity {
         });
 
         btnStartWork.setOnClickListener(v -> updateTicketStatus("in_progress"));
-        btnCompleteWork.setOnClickListener(v -> updateTicketStatus("completed"));
+        btnCompleteWork.setOnClickListener(v -> showPaymentSelectionDialog());
     }
 
     private void loadTicketDetails() {
@@ -341,5 +343,83 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity {
                 Toast.makeText(this, "Location permission is required to view map", Toast.LENGTH_SHORT).show();
             }
         }
+    }
+
+    private void showPaymentSelectionDialog() {
+        PaymentSelectionDialog dialog = new PaymentSelectionDialog(this, (paymentMethod, amount, notes) -> {
+            completeWorkWithPayment(paymentMethod, amount, notes);
+        });
+        dialog.show();
+    }
+
+    private void completeWorkWithPayment(String paymentMethod, double amount, String notes) {
+        String token = tokenManager.getToken();
+        if (token == null) {
+            Toast.makeText(this, "You are not logged in.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Show progress
+        btnCompleteWork.setEnabled(false);
+        btnCompleteWork.setText("Processing...");
+
+        CompleteWorkRequest request = new CompleteWorkRequest(paymentMethod, amount, notes);
+        ApiService apiService = ApiClient.getApiService();
+        Call<CompleteWorkResponse> call = apiService.completeWorkWithPayment("Bearer " + token, ticketId, request);
+
+        call.enqueue(new Callback<CompleteWorkResponse>() {
+            @Override
+            public void onResponse(Call<CompleteWorkResponse> call, Response<CompleteWorkResponse> response) {
+                btnCompleteWork.setEnabled(true);
+                btnCompleteWork.setText("Complete Work");
+
+                if (response.isSuccessful() && response.body() != null) {
+                    CompleteWorkResponse workResponse = response.body();
+                    if (workResponse.isSuccess()) {
+                        String message = "Work completed successfully!";
+                        if ("cash".equals(paymentMethod)) {
+                            message += "\nPayment collected: ₱" + String.format("%.2f", amount);
+                            message += "\nPlease submit payment to your manager.";
+                        } else {
+                            message += "\nOnline payment recorded.";
+                        }
+                        Toast.makeText(EmployeeTicketDetailActivity.this, message, Toast.LENGTH_LONG).show();
+                        loadTicketDetails(); // Refresh ticket details
+                    } else {
+                        Toast.makeText(EmployeeTicketDetailActivity.this, 
+                            "Failed to complete work: " + workResponse.getMessage(), Toast.LENGTH_LONG).show();
+                    }
+                } else {
+                    String errorMessage = "Failed to complete work";
+                    if (response.errorBody() != null) {
+                        try {
+                            String errorBody = response.errorBody().string();
+                            android.util.Log.e("EmployeeTicketDetail", "Error: " + errorBody);
+                            // Try to parse JSON error
+                            try {
+                                com.google.gson.JsonObject errorJson = new com.google.gson.Gson().fromJson(errorBody, com.google.gson.JsonObject.class);
+                                if (errorJson.has("message")) {
+                                    errorMessage = errorJson.get("message").getAsString();
+                                }
+                            } catch (Exception e) {
+                                errorMessage = errorBody.length() > 100 ? errorBody.substring(0, 100) + "..." : errorBody;
+                            }
+                        } catch (Exception e) {
+                            android.util.Log.e("EmployeeTicketDetail", "Error reading error body", e);
+                        }
+                    }
+                    Toast.makeText(EmployeeTicketDetailActivity.this, errorMessage, Toast.LENGTH_LONG).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<CompleteWorkResponse> call, Throwable t) {
+                btnCompleteWork.setEnabled(true);
+                btnCompleteWork.setText("Complete Work");
+                android.util.Log.e("EmployeeTicketDetail", "Network error completing work", t);
+                Toast.makeText(EmployeeTicketDetailActivity.this, 
+                    "Network error: " + t.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        });
     }
 }
