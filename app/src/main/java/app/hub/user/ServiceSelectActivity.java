@@ -24,6 +24,7 @@ import app.hub.api.ApiClient;
 import app.hub.api.ApiService;
 import app.hub.api.CreateTicketRequest;
 import app.hub.api.CreateTicketResponse;
+import app.hub.api.TicketListResponse;
 import app.hub.map.MapSelectionActivity;
 import app.hub.util.TokenManager;
 import retrofit2.Call;
@@ -184,6 +185,16 @@ public class ServiceSelectActivity extends AppCompatActivity {
                     CreateTicketResponse ticketResponse = response.body();
                     String ticketId = ticketResponse.getTicketId();
                     String status = ticketResponse.getStatus();
+
+                    // Store ticket for instant display when user opens My Tickets
+                    CreateTicketResponse.TicketData ticketData = ticketResponse.getTicket();
+                    if (ticketData != null) {
+                        TicketListResponse.TicketItem item = TicketListResponse.fromCreateResponse(
+                                ticketData, status, ticketData.getStatus() != null ? ticketData.getStatus().getColor() : null);
+                        if (item != null) {
+                            UserTicketsFragment.setPendingNewTicket(item);
+                        }
+                    }
 
                     Toast.makeText(ServiceSelectActivity.this, "Ticket created successfully!", Toast.LENGTH_SHORT).show();
 

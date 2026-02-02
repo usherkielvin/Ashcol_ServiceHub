@@ -74,6 +74,15 @@ public class UserNotificationFragment extends Fragment {
             swipeRefreshLayout.setOnRefreshListener(this::loadTickets);
         }
 
+        // Show newly created ticket instantly if pending (e.g. when switching to Activity tab right after creation)
+        TicketListResponse.TicketItem pending = UserTicketsFragment.getPendingNewTicket();
+        if (pending != null) {
+            UserTicketsFragment.clearPendingNewTicket();
+            tickets.add(0, pending);
+            showTicketList();
+            adapter.notifyItemInserted(0);
+        }
+
         loadTickets();
     }
 

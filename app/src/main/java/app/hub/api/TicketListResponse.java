@@ -135,4 +135,35 @@ public class TicketListResponse {
         public String getUpdatedAt() { return updatedAt; }
         public void setUpdatedAt(String updatedAt) { this.updatedAt = updatedAt; }
     }
+
+    /**
+     * Build a TicketItem from CreateTicketResponse for instant optimistic display.
+     */
+    public static TicketItem fromCreateResponse(CreateTicketResponse.TicketData data, String statusName, String statusColor) {
+        if (data == null) return null;
+        TicketItem item = new TicketItem();
+        item.setId(data.getId());
+        item.setTicketId(data.getTicketId());
+        item.setTitle(data.getTitle());
+        item.setDescription(data.getDescription());
+        item.setServiceType(data.getServiceType());
+        item.setAddress(data.getAddress());
+        item.setContact(data.getContact());
+        item.setPriority("medium");
+        item.setStatus(statusName != null ? statusName : (data.getStatus() != null ? data.getStatus().getName() : "Pending"));
+        item.setStatusColor(statusColor != null ? statusColor : (data.getStatus() != null ? data.getStatus().getColor() : "#gray"));
+        if (data.getCustomer() != null) {
+            String name = (data.getCustomer().getFirstName() != null ? data.getCustomer().getFirstName() + " " : "")
+                    + (data.getCustomer().getLastName() != null ? data.getCustomer().getLastName() : "").trim();
+            item.setCustomerName(name.trim().isEmpty() ? "Customer" : name.trim());
+        } else {
+            item.setCustomerName("Customer");
+        }
+        item.setBranch(data.getBranch() != null ? data.getBranch().getName() : null);
+        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault());
+        String now = sdf.format(new java.util.Date());
+        item.setCreatedAt(now);
+        item.setUpdatedAt(now);
+        return item;
+    }
 }
