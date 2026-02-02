@@ -351,6 +351,12 @@ public class UserTicketsFragment extends Fragment {
                 if (ticketStatus != null) {
                     String normalizedStatus = ticketStatus.toLowerCase().trim();
                     String normalizedFilter = currentFilter.toLowerCase().trim();
+                    
+                    // Normalize "Open" to "Pending" for filtering (same as display logic)
+                    if (normalizedStatus.equals("open")) {
+                        normalizedStatus = "pending";
+                    }
+                    
                     // Handle "in progress" filter matching "In Progress" status
                     if (normalizedFilter.equals("in progress")) {
                         matchesFilter = normalizedStatus.equals("in progress") || 

@@ -100,15 +100,29 @@ public class TicketsAdapter extends RecyclerView.Adapter<TicketsAdapter.TicketVi
             String ticketId = ticket.getTicketId();
             tvTicketId.setText("Requested by: " + (ticketId != null ? ticketId : "Unknown ID"));
             
-            // Set status with proper formatting and background color (simple text, no "Status:" prefix)
+            // Normalize status: "Open" should display as "Pending" with orange color
             String status = ticket.getStatus();
-            String displayStatus = status != null ? status : "Unknown";
+            String normalizedStatus = normalizeStatus(status);
+            String displayStatus = normalizedStatus != null ? normalizedStatus : "Unknown";
             tvStatus.setText(displayStatus);
             
-            // Set status background color based on status
-            setStatusBackgroundColor(tvStatus, status);
+            // Set status background color based on normalized status
+            setStatusBackgroundColor(tvStatus, normalizedStatus);
             
-            android.util.Log.d("TicketsAdapter", "Bound ticket: " + ticketId + " - " + title);
+            android.util.Log.d("TicketsAdapter", "Bound ticket: " + ticketId + " - " + title + " (status: " + status + " -> " + normalizedStatus + ")");
+        }
+        
+        /**
+         * Normalize status values: "Open" maps to "Pending" for consistent display
+         */
+        private String normalizeStatus(String status) {
+            if (status == null) return null;
+            String lowerStatus = status.toLowerCase().trim();
+            // Map "Open" to "Pending" since they represent the same state for customers
+            if (lowerStatus.equals("open")) {
+                return "Pending";
+            }
+            return status; // Return original status for other values
         }
 
         private void setStatusBackgroundColor(TextView textView, String status) {
@@ -117,7 +131,7 @@ public class TicketsAdapter extends RecyclerView.Adapter<TicketsAdapter.TicketVi
             // Set text color to white for all status badges
             textView.setTextColor(Color.WHITE);
             
-            // Set background color based on status
+            // Set background color based on status (status is already normalized)
             switch (status.toLowerCase()) {
                 case "pending":
                     textView.setBackgroundColor(Color.parseColor("#FF9800")); // Orange
@@ -134,7 +148,8 @@ public class TicketsAdapter extends RecyclerView.Adapter<TicketsAdapter.TicketVi
                     textView.setBackgroundColor(Color.parseColor("#F44336")); // Red
                     break;
                 default:
-                    textView.setBackgroundColor(Color.parseColor("#4CAF50")); // Default Green for "New Requests"
+                    // Default to orange for unknown statuses (treat as pending)
+                    textView.setBackgroundColor(Color.parseColor("#FF9800")); // Orange
                     break;
             }
             
@@ -143,7 +158,7 @@ public class TicketsAdapter extends RecyclerView.Adapter<TicketsAdapter.TicketVi
         }
         
         private int getBackgroundColorForStatus(String status) {
-            if (status == null) return Color.parseColor("#4CAF50");
+            if (status == null) return Color.parseColor("#FF9800"); // Default to orange (pending)
             
             switch (status.toLowerCase()) {
                 case "pending":
@@ -157,7 +172,7 @@ public class TicketsAdapter extends RecyclerView.Adapter<TicketsAdapter.TicketVi
                 case "rejected":
                     return Color.parseColor("#F44336"); // Red
                 default:
-                    return Color.parseColor("#4CAF50"); // Default Green
+                    return Color.parseColor("#FF9800"); // Default Orange (pending)
             }
         }
         
