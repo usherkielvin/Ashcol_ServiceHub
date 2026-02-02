@@ -91,6 +91,11 @@
             android:theme="@style/Theme.ServiceHubApp" />
         
         <activity
+            android:name=".manager.AssignEmployeeActivity"
+            android:exported="false"
+            android:theme="@style/Theme.ServiceHubApp" />
+        
+        <activity
             android:name=".employee.EmployeeTicketDetailActivity"
             android:exported="false"
             android:theme="@style/Theme.ServiceHubApp" />

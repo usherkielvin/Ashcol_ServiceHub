@@ -4,6 +4,7 @@ import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -71,6 +72,9 @@ public class EmployeeTicketsAdapter extends RecyclerView.Adapter<EmployeeTickets
         private TextView tvCustomerName;
         private TextView tvAddress;
         private TextView tvUrgency;
+        private TextView tvScheduleDate;
+        private TextView tvScheduleNotes;
+        private LinearLayout scheduleContainer;
 
         public EmployeeTicketViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -83,6 +87,9 @@ public class EmployeeTicketsAdapter extends RecyclerView.Adapter<EmployeeTickets
             tvCustomerName = itemView.findViewById(R.id.tvCustomerName);
             tvAddress = itemView.findViewById(R.id.tvAddress);
             tvUrgency = itemView.findViewById(R.id.tvUrgency);
+            tvScheduleDate = itemView.findViewById(R.id.tvScheduleDate);
+            tvScheduleNotes = itemView.findViewById(R.id.tvScheduleNotes);
+            scheduleContainer = itemView.findViewById(R.id.scheduleContainer);
         }
 
         public void bind(TicketListResponse.TicketItem ticket) {
@@ -137,6 +144,25 @@ public class EmployeeTicketsAdapter extends RecyclerView.Adapter<EmployeeTickets
             // Format date
             String formattedDate = formatDate(ticket.getCreatedAt());
             tvDate.setText("Assigned: " + formattedDate);
+            
+            // Display schedule information
+            if (ticket.getScheduledDate() != null && !ticket.getScheduledDate().isEmpty()) {
+                String scheduleText = "Scheduled: " + formatDate(ticket.getScheduledDate());
+                if (ticket.getScheduledTime() != null && !ticket.getScheduledTime().isEmpty()) {
+                    scheduleText += " at " + formatTime(ticket.getScheduledTime());
+                }
+                tvScheduleDate.setText(scheduleText);
+                scheduleContainer.setVisibility(View.VISIBLE);
+                
+                if (ticket.getScheduleNotes() != null && !ticket.getScheduleNotes().isEmpty()) {
+                    tvScheduleNotes.setText("Notes: " + ticket.getScheduleNotes());
+                    tvScheduleNotes.setVisibility(View.VISIBLE);
+                } else {
+                    tvScheduleNotes.setVisibility(View.GONE);
+                }
+            } else {
+                scheduleContainer.setVisibility(View.GONE);
+            }
         }
 
         private void setStatusColor(TextView textView, String status) {
@@ -194,6 +220,27 @@ public class EmployeeTicketsAdapter extends RecyclerView.Adapter<EmployeeTickets
             }
             
             return dateString;
+        }
+        
+        private String formatTime(String timeString) {
+            if (timeString == null || timeString.isEmpty()) {
+                return "";
+            }
+            
+            try {
+                // Parse the time string (assuming HH:mm format from API)
+                SimpleDateFormat inputFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
+                SimpleDateFormat outputFormat = new SimpleDateFormat("h:mm a", Locale.getDefault());
+                
+                Date time = inputFormat.parse(timeString);
+                if (time != null) {
+                    return outputFormat.format(time);
+                }
+            } catch (ParseException e) {
+                return timeString; // Return original if parsing fails
+            }
+            
+            return timeString;
         }
     }
 }

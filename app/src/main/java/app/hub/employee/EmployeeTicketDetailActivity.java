@@ -31,7 +31,7 @@ import retrofit2.Response;
 
 public class EmployeeTicketDetailActivity extends AppCompatActivity {
 
-    private TextView tvTicketId, tvTitle, tvDescription, tvServiceType, tvAddress, tvContact, tvStatus, tvCustomerName, tvCreatedAt;
+    private TextView tvTicketId, tvTitle, tvDescription, tvServiceType, tvAddress, tvContact, tvStatus, tvCustomerName, tvCreatedAt, tvScheduleDate, tvScheduleTime, tvScheduleNotes;
     private Button btnViewMap, btnBack, btnStartWork, btnCompleteWork;
     private TokenManager tokenManager;
     private String ticketId;
@@ -71,6 +71,9 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity {
         tvStatus = findViewById(R.id.tvStatus);
         tvCustomerName = findViewById(R.id.tvCustomerName);
         tvCreatedAt = findViewById(R.id.tvCreatedAt);
+        tvScheduleDate = findViewById(R.id.tvScheduleDate);
+        tvScheduleTime = findViewById(R.id.tvScheduleTime);
+        tvScheduleNotes = findViewById(R.id.tvScheduleNotes);
         btnViewMap = findViewById(R.id.btnViewMap);
         btnBack = findViewById(R.id.btnBack);
         btnStartWork = findViewById(R.id.btnStartWork);
@@ -151,6 +154,28 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity {
         tvCustomerName.setText("Customer: " + (ticket.getCustomerName() != null ? ticket.getCustomerName() : "Unknown"));
         tvCreatedAt.setText("Created: " + ticket.getCreatedAt());
 
+        // Display schedule information
+        if (ticket.getScheduledDate() != null && !ticket.getScheduledDate().isEmpty()) {
+            tvScheduleDate.setText("Scheduled Date: " + formatDate(ticket.getScheduledDate()));
+            tvScheduleDate.setVisibility(View.VISIBLE);
+        } else {
+            tvScheduleDate.setVisibility(View.GONE);
+        }
+        
+        if (ticket.getScheduledTime() != null && !ticket.getScheduledTime().isEmpty()) {
+            tvScheduleTime.setText("Scheduled Time: " + formatTime(ticket.getScheduledTime()));
+            tvScheduleTime.setVisibility(View.VISIBLE);
+        } else {
+            tvScheduleTime.setVisibility(View.GONE);
+        }
+        
+        if (ticket.getScheduleNotes() != null && !ticket.getScheduleNotes().isEmpty()) {
+            tvScheduleNotes.setText("Notes: " + ticket.getScheduleNotes());
+            tvScheduleNotes.setVisibility(View.VISIBLE);
+        } else {
+            tvScheduleNotes.setVisibility(View.GONE);
+        }
+
         // Set status color
         setStatusColor(tvStatus, ticket.getStatus(), ticket.getStatusColor());
 
@@ -229,6 +254,48 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity {
         });
     }
 
+    private String formatDate(String dateString) {
+        if (dateString == null || dateString.isEmpty()) {
+            return "";
+        }
+        
+        try {
+            // Parse the date string (assuming YYYY-MM-DD format from API)
+            java.text.SimpleDateFormat inputFormat = new java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault());
+            java.text.SimpleDateFormat outputFormat = new java.text.SimpleDateFormat("MMM dd, yyyy", java.util.Locale.getDefault());
+            
+            java.util.Date date = inputFormat.parse(dateString);
+            if (date != null) {
+                return outputFormat.format(date);
+            }
+        } catch (java.text.ParseException e) {
+            return dateString; // Return original if parsing fails
+        }
+        
+        return dateString;
+    }
+    
+    private String formatTime(String timeString) {
+        if (timeString == null || timeString.isEmpty()) {
+            return "";
+        }
+        
+        try {
+            // Parse the time string (assuming HH:mm format from API)
+            java.text.SimpleDateFormat inputFormat = new java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault());
+            java.text.SimpleDateFormat outputFormat = new java.text.SimpleDateFormat("h:mm a", java.util.Locale.getDefault());
+            
+            java.util.Date time = inputFormat.parse(timeString);
+            if (time != null) {
+                return outputFormat.format(time);
+            }
+        } catch (java.text.ParseException e) {
+            return timeString; // Return original if parsing fails
+        }
+        
+        return timeString;
+    }
+    
     private void setStatusColor(TextView textView, String status, String statusColor) {
         if (statusColor != null && !statusColor.isEmpty()) {
             try {

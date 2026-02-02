@@ -32,7 +32,7 @@ import retrofit2.Response;
 public class ManagerTicketDetailActivity extends AppCompatActivity {
 
     private TextView tvTicketId, tvTitle, tvDescription, tvServiceType, tvAddress, tvContact, tvStatus, tvBranch, tvCustomerName, tvCreatedAt;
-    private Button btnViewMap, btnBack, btnAccept, btnReject, btnAssignStaff;
+    private Button btnViewMap, btnBack, btnReject, btnAssignStaff;
     private TokenManager tokenManager;
     private String ticketId;
     private double latitude, longitude;
@@ -88,7 +88,6 @@ public class ManagerTicketDetailActivity extends AppCompatActivity {
             tvCreatedAt = findViewById(R.id.tvCreatedAt);
             btnViewMap = findViewById(R.id.btnViewMap);
             btnBack = findViewById(R.id.btnBack);
-            btnAccept = findViewById(R.id.btnAccept);
             btnReject = findViewById(R.id.btnReject);
             btnAssignStaff = findViewById(R.id.btnAssignStaff);
             
@@ -119,9 +118,8 @@ public class ManagerTicketDetailActivity extends AppCompatActivity {
             }
         });
 
-        btnAccept.setOnClickListener(v -> showStaffAssignmentDialog()); // Accept + Assign in one step
         btnReject.setOnClickListener(v -> showRejectConfirmation());
-        btnAssignStaff.setOnClickListener(v -> showStaffAssignmentDialog());
+        btnAssignStaff.setOnClickListener(v -> launchAssignEmployeeActivity());
     }
 
     private void loadTicketDetails() {
@@ -271,7 +269,6 @@ public class ManagerTicketDetailActivity extends AppCompatActivity {
     private void updateActionButtons(String status) {
         if (status == null) {
             // Hide all buttons if status is null
-            btnAccept.setVisibility(View.GONE);
             btnReject.setVisibility(View.GONE);
             btnAssignStaff.setVisibility(View.GONE);
             return;
@@ -280,29 +277,22 @@ public class ManagerTicketDetailActivity extends AppCompatActivity {
         switch (status.toLowerCase()) {
             case "pending":
             case "open": // Also handle "open" status
-                btnAccept.setVisibility(View.VISIBLE);
-                btnAccept.setText("Assign Employee"); // Change text to be more clear
-                btnReject.setVisibility(View.VISIBLE);
-                btnAssignStaff.setVisibility(View.GONE); // Hide separate assign button
-                break;
-            case "accepted":
-                btnAccept.setVisibility(View.GONE);
+                // Show both Assign Staff and Reject buttons for pending tickets
                 btnReject.setVisibility(View.VISIBLE);
                 btnAssignStaff.setVisibility(View.VISIBLE);
+                btnAssignStaff.setText("Assign Staff");
                 break;
             case "in progress":
             case "completed":
             case "cancelled":
-                btnAccept.setVisibility(View.GONE);
                 btnReject.setVisibility(View.GONE);
                 btnAssignStaff.setVisibility(View.GONE);
                 break;
             default:
                 // For unknown statuses, show assign and reject buttons
-                btnAccept.setVisibility(View.VISIBLE);
-                btnAccept.setText("Assign Employee");
                 btnReject.setVisibility(View.VISIBLE);
-                btnAssignStaff.setVisibility(View.GONE);
+                btnAssignStaff.setVisibility(View.VISIBLE);
+                btnAssignStaff.setText("Assign Staff");
                 break;
         }
     }
@@ -373,100 +363,43 @@ public class ManagerTicketDetailActivity extends AppCompatActivity {
                 .show();
     }
 
-    private void showStaffAssignmentDialog() {
-        if (employees.isEmpty()) {
-            Toast.makeText(this, "No employees available for assignment", Toast.LENGTH_SHORT).show();
+    private void launchAssignEmployeeActivity() {
+        android.util.Log.d("ManagerTicketDetail", "Attempting to launch AssignEmployeeActivity");
+        
+        if (currentTicket == null) {
+            android.util.Log.e("ManagerTicketDetail", "currentTicket is null");
+            Toast.makeText(this, "Ticket details not loaded", Toast.LENGTH_SHORT).show();
             return;
         }
-
+        
+        android.util.Log.d("ManagerTicketDetail", "Ticket ID: " + currentTicket.getTicketId());
+        android.util.Log.d("ManagerTicketDetail", "Ticket Title: " + currentTicket.getTitle());
+        
         try {
-            // Create employee names list for spinner
-            List<String> employeeNames = new ArrayList<>();
-            employeeNames.add("Select Employee");
-            for (EmployeeResponse.Employee employee : employees) {
-                String name = "";
-                if (employee.getFirstName() != null) {
-                    name += employee.getFirstName();
-                }
-                if (employee.getLastName() != null) {
-                    name += " " + employee.getLastName();
-                }
-                if (name.trim().isEmpty()) {
-                    name = employee.getEmail() != null ? employee.getEmail() : "Unknown Employee";
-                }
-                employeeNames.add(name.trim());
-            }
-
-            // Create dialog with spinner
-            View dialogView = getLayoutInflater().inflate(R.layout.dialog_assign_staff, null);
-            Spinner spinnerEmployees = dialogView.findViewById(R.id.spinnerEmployees);
+            Intent intent = new Intent(this, AssignEmployeeActivity.class);
+            intent.putExtra("ticket_id", currentTicket.getTicketId());
+            intent.putExtra("ticket_title", currentTicket.getTitle());
+            intent.putExtra("ticket_description", currentTicket.getDescription());
+            intent.putExtra("ticket_address", currentTicket.getAddress());
             
-            if (spinnerEmployees == null) {
-                Toast.makeText(this, "Dialog layout error", Toast.LENGTH_SHORT).show();
-                return;
-            }
-            
-            ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, employeeNames);
-            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-            spinnerEmployees.setAdapter(adapter);
-
-            new AlertDialog.Builder(this)
-                    .setTitle("Accept & Assign Staff")
-                    .setView(dialogView)
-                    .setPositiveButton("Accept & Assign", (dialog, which) -> {
-                        int selectedPosition = spinnerEmployees.getSelectedItemPosition();
-                        if (selectedPosition > 0 && selectedPosition <= employees.size()) { // Skip "Select Employee" option
-                            EmployeeResponse.Employee selectedEmployee = employees.get(selectedPosition - 1);
-                            assignStaffToTicket(selectedEmployee.getId());
-                        } else {
-                            Toast.makeText(this, "Please select an employee", Toast.LENGTH_SHORT).show();
-                        }
-                    })
-                    .setNegativeButton("Cancel", null)
-                    .show();
+            android.util.Log.d("ManagerTicketDetail", "Starting AssignEmployeeActivity");
+            startActivity(intent);
         } catch (Exception e) {
-            Toast.makeText(this, "Error showing staff assignment dialog: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            android.util.Log.e("ManagerTicketDetail", "Error launching AssignEmployeeActivity", e);
+            Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
     }
-
+    
+    // Remove the old assignment methods since we're using AssignEmployeeActivity
+    /*
+    private void showStaffAssignmentDialog() {
+        // Old method - removed
+    }
+    
     private void assignStaffToTicket(int staffId) {
-        String token = tokenManager.getToken();
-        if (token == null) {
-            Toast.makeText(this, "You are not logged in.", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        // First accept the ticket (if pending), then assign staff
-        // This combines accept + assign into one action
-        UpdateTicketStatusRequest request = new UpdateTicketStatusRequest("in_progress", staffId);
-        ApiService apiService = ApiClient.getApiService();
-        Call<UpdateTicketStatusResponse> call = apiService.updateTicketStatus("Bearer " + token, ticketId, request);
-
-        call.enqueue(new Callback<UpdateTicketStatusResponse>() {
-            @Override
-            public void onResponse(Call<UpdateTicketStatusResponse> call, Response<UpdateTicketStatusResponse> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    UpdateTicketStatusResponse statusResponse = response.body();
-                    if (statusResponse.isSuccess()) {
-                        // Clear ticket cache so the list will refresh with updated status
-                        ManagerDataManager.clearTicketCache();
-                        
-                        Toast.makeText(ManagerTicketDetailActivity.this, "Ticket accepted and staff assigned successfully", Toast.LENGTH_SHORT).show();
-                        loadTicketDetails(); // Refresh ticket details
-                    } else {
-                        Toast.makeText(ManagerTicketDetailActivity.this, "Failed to assign staff", Toast.LENGTH_SHORT).show();
-                    }
-                } else {
-                    Toast.makeText(ManagerTicketDetailActivity.this, "Failed to assign staff", Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            @Override
-            public void onFailure(Call<UpdateTicketStatusResponse> call, Throwable t) {
-                Toast.makeText(ManagerTicketDetailActivity.this, "Network error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
-            }
-        });
+        // Old method - removed
     }
+    */
 
     private void setStatusColor(TextView textView, String status, String statusColor) {
         if (statusColor != null && !statusColor.isEmpty()) {
@@ -485,7 +418,6 @@ public class ManagerTicketDetailActivity extends AppCompatActivity {
             case "pending":
                 textView.setTextColor(Color.parseColor("#FFA500")); // Orange
                 break;
-            case "accepted":
             case "in progress":
                 textView.setTextColor(Color.parseColor("#2196F3")); // Blue
                 break;

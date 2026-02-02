@@ -140,6 +140,42 @@
             android:textSize="12sp"
             android:textColor="@color/gray" />
 
+        <!-- Schedule Information -->
+        <LinearLayout
+            android:id="@+id/scheduleContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginTop="8dp"
+            android:visibility="gone">
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#EEEEEE"
+                android:layout_marginBottom="8dp" />
+
+            <TextView
+                android:id="@+id/tvScheduleDate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Scheduled: Feb 5, 2026 at 9:00 AM"
+                android:textSize="12sp"
+                android:textColor="#1B4332"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvScheduleNotes"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Notes: Please bring ladder for roof access"
+                android:textSize="11sp"
+                android:textColor="@color/gray"
+                android:layout_marginTop="2dp"
+                android:visibility="gone" />
+
+        </LinearLayout>
+
     </LinearLayout>
 
 </androidx.cardview.widget.CardView>
