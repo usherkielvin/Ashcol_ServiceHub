@@ -482,6 +482,13 @@ public class RegisterActivity extends AppCompatActivity {
 				if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
 					handleGoogleRegistrationSuccess(response.body());
 				} else {
+					// HTTP 409 from backend means account already exists → send user to login
+					if (response.code() == 409) {
+						Log.w(TAG, "Google registration: account already exists, redirecting to login");
+						navigateToLoginFromGoogleConflict();
+						return;
+					}
+
 					// Log response body for debugging
 					String errorBody = "";
 					try {
@@ -646,7 +653,7 @@ public class RegisterActivity extends AppCompatActivity {
 	// Handle successful Google registration
 	private void handleGoogleRegistrationSuccess(GoogleSignInResponse response) {
 		if (response.getData() == null || response.getData().getUser() == null) {
-			Log.e(TAG, "Google registration failed with status " + statusCode + ": " + errorMsg);
+			Log.e(TAG, "Google registration success response missing user data");
 			return;
 		}
 
@@ -701,17 +708,30 @@ public class RegisterActivity extends AppCompatActivity {
 	private void handleGoogleRegistrationError(int statusCode, String errorBody) {
 		String errorMsg;
 		if (statusCode == 422) {
-			errorMsg = "Invalid data. Please check your information.";
-			// Try to parse validation errors from response
+			errorMsg = "Invalid data for Google registration.";
 			if (errorBody != null && !errorBody.isEmpty()) {
-				Log.e(TAG, "Validation errors: " + errorBody);
+				Log.e(TAG, "Google registration validation errors: " + errorBody);
 			}
 		} else if (statusCode == 500) {
-			errorMsg = "Server error. Please try again later.";
+			errorMsg = "Server error during Google registration.";
 		} else {
-			errorMsg = "Registration failed. Please try again.";
+			errorMsg = "Google registration failed (" + statusCode + ").";
 		}
-		Toast.makeText(this, errorMsg, Toast.LENGTH_SHORT).show();
+		Log.e(TAG, errorMsg + " body=" + errorBody);
+	}
+
+	/**
+	 * When backend says Google account already exists (HTTP 409), send user back to login screen.
+	 */
+	private void navigateToLoginFromGoogleConflict() {
+		try {
+			Intent intent = new Intent(this, MainActivity.class);
+			intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+			startActivity(intent);
+			finish();
+		} catch (Exception e) {
+			Log.e(TAG, "Error navigating to login from Google conflict: " + e.getMessage(), e);
+		}
 	}
 
 	private String getText(TextInputEditText editText) {
