@@ -85,6 +85,15 @@ public class TicketListResponse {
         
         @SerializedName("updated_at")
         private String updatedAt;
+        
+        @SerializedName("scheduled_date")
+        private String scheduledDate;
+        
+        @SerializedName("scheduled_time")
+        private String scheduledTime;
+        
+        @SerializedName("schedule_notes")
+        private String scheduleNotes;
 
         // Getters and setters
         public int getId() { return id; }
@@ -134,5 +143,14 @@ public class TicketListResponse {
         
         public String getUpdatedAt() { return updatedAt; }
         public void setUpdatedAt(String updatedAt) { this.updatedAt = updatedAt; }
+        
+        public String getScheduledDate() { return scheduledDate; }
+        public void setScheduledDate(String scheduledDate) { this.scheduledDate = scheduledDate; }
+        
+        public String getScheduledTime() { return scheduledTime; }
+        public void setScheduledTime(String scheduledTime) { this.scheduledTime = scheduledTime; }
+        
+        public String getScheduleNotes() { return scheduleNotes; }
+        public void setScheduleNotes(String scheduleNotes) { this.scheduleNotes = scheduleNotes; }
     }
 }

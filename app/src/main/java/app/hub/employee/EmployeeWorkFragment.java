@@ -33,6 +33,9 @@ public class EmployeeWorkFragment extends Fragment {
     private EmployeeTicketsAdapter adapter;
     private TokenManager tokenManager;
     private List<TicketListResponse.TicketItem> assignedTickets;
+    
+    // Tab views
+    private android.widget.TextView tabAll, tabPending, tabInProgress, tabCompleted;
 
     @Nullable
     @Override
@@ -53,17 +56,147 @@ public class EmployeeWorkFragment extends Fragment {
         recyclerViewAssignedTickets = view.findViewById(R.id.recyclerViewAssignedTickets);
         swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout);
         
+        // Initialize tab views
+        tabAll = view.findViewById(R.id.tabAll);
+        tabPending = view.findViewById(R.id.tabPending);
+        tabInProgress = view.findViewById(R.id.tabInProgress);
+        tabCompleted = view.findViewById(R.id.tabCompleted);
+        
         tokenManager = new TokenManager(getContext());
         assignedTickets = new ArrayList<>();
+        
+        setupTabClickListeners();
+    }
+
+    private void setupTabClickListeners() {
+        // Initially select 'All' tab
+        setSelectedTab(tabAll);
+        
+        tabAll.setOnClickListener(v -> {
+            setSelectedTab(tabAll);
+            loadAssignedTickets(); // Load all tickets
+        });
+        
+        tabPending.setOnClickListener(v -> {
+            setSelectedTab(tabPending);
+            loadAssignedTicketsByStatus("pending");
+        });
+        
+        tabInProgress.setOnClickListener(v -> {
+            setSelectedTab(tabInProgress);
+            loadAssignedTicketsByStatus("in_progress");
+        });
+        
+        tabCompleted.setOnClickListener(v -> {
+            setSelectedTab(tabCompleted);
+            loadAssignedTicketsByStatus("completed");
+        });
+    }
+    
+    private void setSelectedTab(android.widget.TextView selectedTab) {
+        // Reset all tabs to unselected state
+        tabAll.setBackground(getResources().getDrawable(R.drawable.bg_input_field));
+        tabPending.setBackground(getResources().getDrawable(R.drawable.bg_input_field));
+        tabInProgress.setBackground(getResources().getDrawable(R.drawable.bg_input_field));
+        tabCompleted.setBackground(getResources().getDrawable(R.drawable.bg_input_field));
+        
+        // Set selected tab to active state
+        selectedTab.setBackground(getResources().getDrawable(R.drawable.bg_status_badge));
+        
+        // Update text colors
+        tabAll.setTextColor(getResources().getColor(R.color.dark_gray));
+        tabPending.setTextColor(getResources().getColor(R.color.dark_gray));
+        tabInProgress.setTextColor(getResources().getColor(R.color.dark_gray));
+        tabCompleted.setTextColor(getResources().getColor(R.color.dark_gray));
+        
+        selectedTab.setTextColor(getResources().getColor(android.R.color.white));
+    }
+    
+    private void loadAssignedTicketsByStatus(String status) {
+        String token = tokenManager.getToken();
+        if (token == null) {
+            Toast.makeText(getContext(), "You are not logged in.", Toast.LENGTH_SHORT).show();
+            if (swipeRefreshLayout != null) {
+                swipeRefreshLayout.setRefreshing(false);
+            }
+            return;
+        }
+        
+        // Show progress if not refreshing
+        if (swipeRefreshLayout == null || !swipeRefreshLayout.isRefreshing()) {
+            android.util.Log.d("EmployeeWork", "Showing progress bar");
+        }
+        
+        ApiService apiService = ApiClient.getApiService();
+        Call<TicketListResponse> call = apiService.getEmployeeTicketsByStatus("Bearer " + token, status);
+        
+        call.enqueue(new Callback<TicketListResponse>() {
+            @Override
+            public void onResponse(Call<TicketListResponse> call, Response<TicketListResponse> response) {
+                if (swipeRefreshLayout != null) {
+                    swipeRefreshLayout.setRefreshing(false);
+                }
+                
+                android.util.Log.d("EmployeeWork", "API Response - Success: " + response.isSuccessful() + ", Code: " + response.code());
+                
+                if (response.isSuccessful() && response.body() != null) {
+                    TicketListResponse ticketResponse = response.body();
+                    android.util.Log.d("EmployeeWork", "Ticket Response - Success: " + ticketResponse.isSuccess() + ", Tickets count: " + (ticketResponse.getTickets() != null ? ticketResponse.getTickets().size() : 0));
+                    
+                    if (ticketResponse.isSuccess()) {
+                        assignedTickets.clear();
+                        if (ticketResponse.getTickets() != null) {
+                            assignedTickets.addAll(ticketResponse.getTickets());
+                            android.util.Log.d("EmployeeWork", "Loaded " + assignedTickets.size() + " tickets with status: " + status);
+                        } else {
+                            android.util.Log.d("EmployeeWork", "Tickets list is null");
+                        }
+                        adapter.notifyDataSetChanged();
+                        
+                        if (assignedTickets.isEmpty()) {
+                            // Show empty state if needed
+                        }
+                    } else {
+                        Toast.makeText(getContext(), "Failed to load tickets: " + ticketResponse.getMessage(), Toast.LENGTH_SHORT).show();
+                        android.util.Log.e("EmployeeWork", "Ticket API error: " + ticketResponse.getMessage());
+                    }
+                } else {
+                    Toast.makeText(getContext(), "Failed to load tickets. Please try again.", Toast.LENGTH_SHORT).show();
+                    android.util.Log.e("EmployeeWork", "Ticket API response not successful");
+                }
+            }
+            
+            @Override
+            public void onFailure(Call<TicketListResponse> call, Throwable t) {
+                if (swipeRefreshLayout != null) {
+                    swipeRefreshLayout.setRefreshing(false);
+                }
+                String errorMessage = "Network error: " + t.getMessage();
+                Toast.makeText(getContext(), errorMessage, Toast.LENGTH_SHORT).show();
+                android.util.Log.e("EmployeeWork", "Network Error", t);
+            }
+        });
     }
 
     private void setupRecyclerView() {
+        // Check if fragment is still attached and context is valid
+        if (!isAdded() || getContext() == null) {
+            android.util.Log.w("EmployeeWork", "Fragment detached or context null, skipping recycler view setup");
+            return;
+        }
+        
         adapter = new EmployeeTicketsAdapter(assignedTickets);
         recyclerViewAssignedTickets.setLayoutManager(new LinearLayoutManager(getContext()));
         recyclerViewAssignedTickets.setAdapter(adapter);
 
         // Set click listener for ticket items
         adapter.setOnTicketClickListener(ticket -> {
+            // Check if context is still valid before starting activity
+            if (getContext() == null) {
+                android.util.Log.w("EmployeeWork", "Context null, cannot start ticket detail activity");
+                return;
+            }
+            
             Intent intent = new Intent(getContext(), EmployeeTicketDetailActivity.class);
             intent.putExtra("ticket_id", ticket.getTicketId());
             startActivity(intent);
@@ -74,6 +207,12 @@ public class EmployeeWorkFragment extends Fragment {
     }
 
     private void setupSwipeRefresh() {
+        // Check if fragment is still attached and context is valid
+        if (!isAdded() || getContext() == null) {
+            android.util.Log.w("EmployeeWork", "Fragment detached or context null, skipping swipe refresh setup");
+            return;
+        }
+        
         if (swipeRefreshLayout != null) {
             // Set refresh colors
             swipeRefreshLayout.setColorSchemeResources(
@@ -93,10 +232,18 @@ public class EmployeeWorkFragment extends Fragment {
     }
 
     private void loadAssignedTickets() {
+        // Check if fragment is still attached and context is valid
+        if (!isAdded() || getContext() == null) {
+            android.util.Log.w("EmployeeWork", "Fragment detached or context null, skipping load");
+            return;
+        }
+        
         String token = tokenManager.getToken();
         if (token == null) {
             Toast.makeText(getContext(), "You are not logged in.", Toast.LENGTH_SHORT).show();
-            swipeRefreshLayout.setRefreshing(false);
+            if (swipeRefreshLayout != null) {
+                swipeRefreshLayout.setRefreshing(false);
+            }
             android.util.Log.e("EmployeeWork", "No token found - user not logged in");
             return;
         }
@@ -115,6 +262,12 @@ public class EmployeeWorkFragment extends Fragment {
         call.enqueue(new Callback<TicketListResponse>() {
             @Override
             public void onResponse(Call<TicketListResponse> call, Response<TicketListResponse> response) {
+                // Check if fragment is still attached and context is valid
+                if (!isAdded() || getContext() == null) {
+                    android.util.Log.w("EmployeeWork", "Fragment detached or context null, ignoring response");
+                    return;
+                }
+                
                 swipeRefreshLayout.setRefreshing(false);
                 
                 android.util.Log.d("EmployeeWork", "API Response - Success: " + response.isSuccessful() + ", Code: " + response.code());
@@ -155,6 +308,12 @@ public class EmployeeWorkFragment extends Fragment {
 
             @Override
             public void onFailure(Call<TicketListResponse> call, Throwable t) {
+                // Check if fragment is still attached and context is valid
+                if (!isAdded() || getContext() == null) {
+                    android.util.Log.w("EmployeeWork", "Fragment detached or context null, ignoring failure");
+                    return;
+                }
+                
                 swipeRefreshLayout.setRefreshing(false);
                 String errorMessage = "Network error: " + t.getMessage();
                 Toast.makeText(getContext(), errorMessage, Toast.LENGTH_SHORT).show();

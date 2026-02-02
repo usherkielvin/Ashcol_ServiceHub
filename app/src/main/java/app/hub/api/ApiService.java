@@ -110,10 +110,19 @@ public interface ApiService {
 
     @GET("api/v1/employee/tickets")
     Call<TicketListResponse> getEmployeeTickets(@Header("Authorization") String token);
-
+        
+    @GET("api/v1/employee/tickets")
+    Call<TicketListResponse> getEmployeeTicketsByStatus(@Header("Authorization") String token, @retrofit2.http.Query("status") String status);
+        
     @POST("api/v1/tickets/{ticketId}/accept")
     Call<TicketStatusResponse> acceptTicket(@Header("Authorization") String token, @retrofit2.http.Path("ticketId") String ticketId);
 
     @POST("api/v1/tickets/{ticketId}/reject")
     Call<TicketStatusResponse> rejectTicket(@Header("Authorization") String token, @retrofit2.http.Path("ticketId") String ticketId);
+    
+    @PUT("api/v1/tickets/{ticketId}/schedule")
+    Call<SetScheduleResponse> setTicketSchedule(@Header("Authorization") String token, @retrofit2.http.Path("ticketId") String ticketId, @Body SetScheduleRequest request);
+    
+    @GET("api/v1/employee/schedule")
+    Call<EmployeeScheduleResponse> getEmployeeSchedule(@Header("Authorization") String token);
 }

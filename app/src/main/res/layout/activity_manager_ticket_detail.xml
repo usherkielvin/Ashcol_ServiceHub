@@ -325,15 +325,15 @@
             android:layout_marginBottom="16dp">
 
             <Button
-                android:id="@+id/btnAccept"
+                android:id="@+id/btnAssignStaff"
                 android:layout_width="0dp"
                 android:layout_height="56dp"
                 android:layout_weight="1"
                 android:layout_marginEnd="8dp"
-                android:text="Assign Employee"
+                android:text="Assign Staff"
                 android:textColor="@color/white"
                 android:textStyle="bold"
-                android:background="@drawable/bg_button_green" />
+                android:backgroundTint="@color/green" />
 
             <Button
                 android:id="@+id/btnReject"
@@ -347,16 +347,6 @@
                 android:backgroundTint="@color/red" />
 
         </LinearLayout>
-
-        <Button
-            android:id="@+id/btnAssignStaff"
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:text="Assign Staff"
-            android:textColor="@color/white"
-            android:textStyle="bold"
-            android:backgroundTint="@color/blue"
-            android:visibility="gone" />
 
     </LinearLayout>
 
