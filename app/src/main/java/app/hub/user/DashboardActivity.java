@@ -68,7 +68,7 @@ public class DashboardActivity extends AppCompatActivity {
         disableNavigationTooltips(bottomNavigationView);
 
         if (savedInstanceState == null) {
-            // If returning from ticket creation, show My Tickets tab and new-ticket banner in main container
+            // If returning from ticket creation, optionally show My Tickets tab
             boolean showMyTickets = getIntent().getBooleanExtra(EXTRA_SHOW_MY_TICKETS, false);
             Fragment initialFragment = showMyTickets ? new UserTicketsFragment() : new UserHomeFragment();
             int selectedItemId = showMyTickets ? R.id.my_ticket : R.id.homebtn;
@@ -332,111 +332,6 @@ public class DashboardActivity extends AppCompatActivity {
         }
         Log.e(TAG, "API Error: " + response.code() + " " + errorBody);
         messageList.add(new Message("Error: " + response.code(), false));
-    }
-
-    /**
-     * Setup the new ticket banner click listener and initial state
-     */
-    private void setupNewTicketBanner() {
-        if (newTicketBanner == null) return;
-        
-        // Initially hide the banner
-        newTicketBanner.setVisibility(View.GONE);
-        
-        // Set click listener to navigate to My Tickets
-        newTicketBanner.setOnClickListener(v -> {
-            // Hide the banner when clicked
-            newTicketBanner.setVisibility(View.GONE);
-            
-            // Navigate to My Tickets tab
-            bottomNavigationView.setSelectedItemId(R.id.my_ticket);
-            moveIndicatorToItem(R.id.my_ticket, true);
-            getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.fragmentContainerView, new UserTicketsFragment())
-                    .setReorderingAllowed(true)
-                    .addToBackStack(null)
-                    .commit();
-            if (fabChatbot != null) fabChatbot.hide();
-        });
-    }
-
-    /**
-     * Show the new ticket banner if there are pending tickets
-     */
-    private void showNewTicketBannerIfPending() {
-        if (newTicketBanner == null || newTicketBannerId == null) return;
-        
-        // Check if we have cached tickets with pending status
-        boolean hasPendingTickets = false;
-        String latestTicketId = null;
-        
-        for (TicketListResponse.TicketItem ticket : cachedTickets) {
-            if ("pending".equalsIgnoreCase(ticket.getStatus()) || 
-                "submitted".equalsIgnoreCase(ticket.getStatus())) {
-                hasPendingTickets = true;
-                if (latestTicketId == null) {
-                    latestTicketId = ticket.getTicketId();
-                }
-                break;
-            }
-        }
-        
-        if (hasPendingTickets && latestTicketId != null) {
-            newTicketBannerId.setText("Ticket #" + latestTicketId);
-            newTicketBanner.setVisibility(View.VISIBLE);
-            
-            // Auto-hide after 10 seconds
-            newTicketBanner.postDelayed(() -> {
-                if (newTicketBanner != null) {
-                    newTicketBanner.setVisibility(View.GONE);
-                }
-            }, 10000);
-        } else {
-            newTicketBanner.setVisibility(View.GONE);
-        }
-    }
-
-    /**
-     * Load tickets in background to populate cache and check for pending tickets
-     */
-    private void loadTicketsInBackground() {
-        String token = tokenManager.getToken();
-        if (token == null) {
-            Log.w(TAG, "No token available for loading tickets");
-            return;
-        }
-        
-        Call<TicketListResponse> call = apiService.getTickets("Bearer " + token);
-        call.enqueue(new Callback<TicketListResponse>() {
-            @Override
-            public void onResponse(@NonNull Call<TicketListResponse> call, @NonNull Response<TicketListResponse> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    TicketListResponse ticketResponse = response.body();
-                    if (ticketResponse.isSuccess() && ticketResponse.getTickets() != null) {
-                        cachedTickets.clear();
-                        cachedTickets.addAll(ticketResponse.getTickets());
-                        Log.d(TAG, "Loaded " + cachedTickets.size() + " tickets in background");
-                        
-                        // Update banner based on loaded tickets
-                        showNewTicketBannerIfPending();
-                    }
-                } else {
-                    Log.w(TAG, "Failed to load tickets in background: " + response.code());
-                }
-            }
-            
-            @Override
-            public void onFailure(@NonNull Call<TicketListResponse> call, @NonNull Throwable t) {
-                Log.e(TAG, "Error loading tickets in background", t);
-            }
-        });
-    }
-
-    /**
-     * Get cached tickets for fragments to use
-     */
-    public List<TicketListResponse.TicketItem> getCachedTickets() {
-        return new ArrayList<>(cachedTickets);
     }
 
     @Override
