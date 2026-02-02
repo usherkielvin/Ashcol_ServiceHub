@@ -88,7 +88,7 @@ public class RegisterActivity extends AppCompatActivity {
 			}
 		} catch (Exception e) {
 			Log.e(TAG, "Error in onCreate: " + e.getMessage(), e);
-			Toast.makeText(this, "Error loading registration", Toast.LENGTH_SHORT).show();
+			// Silent fail – just finish activity, no popup
 			finish();
 		}
 	}
@@ -138,7 +138,6 @@ public class RegisterActivity extends AppCompatActivity {
 			transaction.commit();
 		} catch (Exception e) {
 			Log.e(TAG, "Error showing create new account fragment: " + e.getMessage(), e);
-			Toast.makeText(this, "Error loading screen", Toast.LENGTH_SHORT).show();
 		}
 	}
 
@@ -155,7 +154,6 @@ public class RegisterActivity extends AppCompatActivity {
 			transaction.commit();
 		} catch (Exception e) {
 			Log.e(TAG, "Error showing email fragment: " + e.getMessage(), e);
-			Toast.makeText(this, "Error loading form", Toast.LENGTH_SHORT).show();
 		}
 	}
 
@@ -175,7 +173,6 @@ public class RegisterActivity extends AppCompatActivity {
 			setupTellUsButtons();
 		} catch (Exception e) {
 			Log.e(TAG, "Error showing tell us form: " + e.getMessage(), e);
-			Toast.makeText(this, "Error loading form", Toast.LENGTH_SHORT).show();
 		}
 	}
 
@@ -199,11 +196,11 @@ public class RegisterActivity extends AppCompatActivity {
 
 		// Auto-fill location if detected
 		try {
-			String detectedCity = tokenManager.getCurrentCity();
-			if (detectedCity != null && !detectedCity.isEmpty() && locationInput != null) {
-				locationInput.setText(detectedCity);
-				Toast.makeText(this, "Location auto-detected: " + detectedCity, Toast.LENGTH_SHORT).show();
-			}
+				String detectedCity = tokenManager.getCurrentCity();
+				if (detectedCity != null && !detectedCity.isEmpty() && locationInput != null) {
+					locationInput.setText(detectedCity);
+					Log.d(TAG, "Location auto-detected: " + detectedCity);
+				}
 		} catch (Exception e) {
 			Log.e(TAG, "Error auto-filling location", e);
 		}
@@ -457,7 +454,7 @@ public class RegisterActivity extends AppCompatActivity {
 		String phone = getUserPhone();
 		
 		if (email == null || email.isEmpty()) {
-			Toast.makeText(this, "Email is required", Toast.LENGTH_SHORT).show();
+			Log.w(TAG, "Email is required for Google registration");
 			return;
 		}
 		
@@ -502,8 +499,6 @@ public class RegisterActivity extends AppCompatActivity {
 			@Override
 			public void onFailure(@NonNull Call<GoogleSignInResponse> call, @NonNull Throwable t) {
 				Log.e(TAG, "Error registering Google user: " + t.getMessage(), t);
-				Toast.makeText(RegisterActivity.this, 
-					"Failed to register. Please check your connection and try again.", Toast.LENGTH_SHORT).show();
 			}
 		});
 	}
@@ -547,8 +542,7 @@ public class RegisterActivity extends AppCompatActivity {
 			@Override
 			public void onFailure(@NonNull Call<GoogleSignInResponse> call, @NonNull Throwable t) {
 				Log.e(TAG, "Error checking Google account existence: " + t.getMessage(), t);
-				Toast.makeText(RegisterActivity.this, 
-					"Failed to check account. Please check your connection and try again.", Toast.LENGTH_SHORT).show();
+				Log.e(TAG, "Failed to check Google account: " + t.getMessage(), t);
 			}
 		});
 	}
@@ -557,7 +551,7 @@ public class RegisterActivity extends AppCompatActivity {
 		Log.d(TAG, "Account doesn't exist, proceeding to Tell Us form");
 		
 		// Navigate to "Tell Us" to collect phone number and other details
-		Toast.makeText(this, "Welcome! Please provide your phone number to continue.", Toast.LENGTH_LONG).show();
+		Log.d(TAG, "Prompting user for phone number after Google registration");
 		showTellUsFragment();
 	}
 	
@@ -566,7 +560,7 @@ public class RegisterActivity extends AppCompatActivity {
 	// Handle successful Google login (account already exists)
 	private void handleGoogleLoginSuccess(GoogleSignInResponse response) {
 		if (response.getData() == null || response.getData().getUser() == null) {
-			Toast.makeText(this, "Login failed. Please try again.", Toast.LENGTH_SHORT).show();
+			Log.e(TAG, "Google login failed: missing user data");
 			return;
 		}
 
@@ -625,7 +619,6 @@ public class RegisterActivity extends AppCompatActivity {
 				break;
 		}
 		
-		Toast.makeText(this, "Welcome back!", Toast.LENGTH_SHORT).show();
 		startActivity(intent);
 		finish();
 	}
@@ -653,7 +646,7 @@ public class RegisterActivity extends AppCompatActivity {
 	// Handle successful Google registration
 	private void handleGoogleRegistrationSuccess(GoogleSignInResponse response) {
 		if (response.getData() == null || response.getData().getUser() == null) {
-			Toast.makeText(this, "Registration failed. Please try again.", Toast.LENGTH_SHORT).show();
+			Log.e(TAG, "Google registration failed with status " + statusCode + ": " + errorMsg);
 			return;
 		}
 
@@ -741,7 +734,7 @@ public class RegisterActivity extends AppCompatActivity {
 			transaction.commit();
 		} catch (Exception e) {
 			Log.e(TAG, "Error showing password fragment: " + e.getMessage(), e);
-			Toast.makeText(this, "Error loading form", Toast.LENGTH_SHORT).show();
+			Log.e(TAG, "Error showing password fragment: " + e.getMessage(), e);
 		}
 	}
 
@@ -773,7 +766,7 @@ public class RegisterActivity extends AppCompatActivity {
 		// Get email from stored data (from email fragment)
 		String email = getUserEmail();
 		if (email == null || email.isEmpty()) {
-			Toast.makeText(this, "Email not found. Please start over.", Toast.LENGTH_SHORT).show();
+			Log.e(TAG, "Email not found when starting OTP. Finishing registration.");
 			finish();
 			return;
 		}
@@ -790,7 +783,6 @@ public class RegisterActivity extends AppCompatActivity {
 			transaction.commit();
 		} catch (Exception e) {
 			Log.e(TAG, "Error showing OTP fragment: " + e.getMessage(), e);
-			Toast.makeText(this, "Error loading OTP screen", Toast.LENGTH_SHORT).show();
 		}
 	}
 	
@@ -811,7 +803,6 @@ public class RegisterActivity extends AppCompatActivity {
 			transaction.commit();
 		} catch (Exception e) {
 			Log.e(TAG, "Error showing account created fragment: " + e.getMessage(), e);
-			Toast.makeText(this, "Error loading screen", Toast.LENGTH_SHORT).show();
 		}
 	}
 
@@ -821,7 +812,7 @@ public class RegisterActivity extends AppCompatActivity {
 			String errorMsg = response.getMessage() != null ?
 				response.getMessage() :
 				"Invalid verification code";
-			Toast.makeText(this, errorMsg, Toast.LENGTH_SHORT).show();
+			Log.w(TAG, "OTP verification failed: " + errorMsg);
 			return;
 		}
 
@@ -875,23 +866,23 @@ public class RegisterActivity extends AppCompatActivity {
 
 		// Validate required fields
 		if (email == null || email.isEmpty()) {
-			Toast.makeText(this, "Email is required", Toast.LENGTH_SHORT).show();
+			Log.w(TAG, "createAccountAfterOtpVerification: missing email");
 			return;
 		}
 		if (firstName == null || firstName.isEmpty()) {
-			Toast.makeText(this, "First name is required", Toast.LENGTH_SHORT).show();
+			Log.w(TAG, "createAccountAfterOtpVerification: missing first name");
 			return;
 		}
 		if (lastName == null || lastName.isEmpty()) {
-			Toast.makeText(this, "Last name is required", Toast.LENGTH_SHORT).show();
+			Log.w(TAG, "createAccountAfterOtpVerification: missing last name");
 			return;
 		}
 		if (username == null || username.isEmpty()) {
-			Toast.makeText(this, "Username is required", Toast.LENGTH_SHORT).show();
+			Log.w(TAG, "createAccountAfterOtpVerification: missing username");
 			return;
 		}
 		if (password == null || password.isEmpty()) {
-			Toast.makeText(this, "Password is required", Toast.LENGTH_SHORT).show();
+			Log.w(TAG, "createAccountAfterOtpVerification: missing password");
 			return;
 		}
 
@@ -951,7 +942,7 @@ public class RegisterActivity extends AppCompatActivity {
 						// Registration failed
 						String errorMsg = body.getMessage() != null ? body.getMessage() : "Failed to create account";
 						Log.e(TAG, "Account creation failed: " + errorMsg);
-						Toast.makeText(RegisterActivity.this, errorMsg, Toast.LENGTH_LONG).show();
+						Log.e(TAG, "Account creation failed (API error): " + errorMsg);
 					}
 				} else {
 					// Response not successful
@@ -973,22 +964,13 @@ public class RegisterActivity extends AppCompatActivity {
 						Log.e(TAG, "Error parsing error response: " + e.getMessage(), e);
 					}
 					Log.e(TAG, "Account creation failed with status: " + response.code() + ", message: " + errorMsg);
-					Toast.makeText(RegisterActivity.this, errorMsg, Toast.LENGTH_LONG).show();
+					Log.e(TAG, "Account creation failed: " + errorMsg);
 				}
 			}
 
 			@Override
 			public void onFailure(@NonNull Call<RegisterResponse> call, @NonNull Throwable t) {
 				Log.e(TAG, "Error creating account: " + t.getMessage(), t);
-				String errorMsg = "Network error. Please check your connection and try again.";
-				if (t.getMessage() != null) {
-					if (t.getMessage().contains("timeout") || t.getMessage().contains("Timeout")) {
-						errorMsg = "Request timeout. Please check your connection and try again.";
-					} else if (t.getMessage().contains("Unable to resolve host")) {
-						errorMsg = "Cannot reach server. Please check your internet connection.";
-					}
-				}
-				Toast.makeText(RegisterActivity.this, errorMsg, Toast.LENGTH_LONG).show();
 			}
 		});
 	}
@@ -1105,7 +1087,7 @@ public class RegisterActivity extends AppCompatActivity {
 	public void updateGoogleUserPassword(String password, String confirmPassword) {
 		String token = tokenManager.getToken();
 		if (token == null || token.isEmpty()) {
-			Toast.makeText(this, "Not authenticated. Please try again.", Toast.LENGTH_SHORT).show();
+			Log.w(TAG, "updateGoogleUserPassword: missing auth token");
 			return;
 		}
 
@@ -1128,15 +1110,13 @@ public class RegisterActivity extends AppCompatActivity {
 					if (response.body() != null && response.body().getMessage() != null) {
 						errorMsg = response.body().getMessage();
 					}
-					Toast.makeText(RegisterActivity.this, errorMsg, Toast.LENGTH_SHORT).show();
+					Log.e(TAG, "setInitialPassword failed: " + errorMsg);
 				}
 			}
 
 			@Override
 			public void onFailure(@NonNull Call<SetInitialPasswordResponse> call, @NonNull Throwable t) {
 				Log.e(TAG, "Error updating password: " + t.getMessage(), t);
-				Toast.makeText(RegisterActivity.this, 
-					"Failed to set password. Please check your connection and try again.", Toast.LENGTH_SHORT).show();
 			}
 		});
 	}
