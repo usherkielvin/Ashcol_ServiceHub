@@ -432,15 +432,47 @@ public class AssignEmployeeActivity extends AppCompatActivity {
                         Toast.makeText(AssignEmployeeActivity.this, "API Error: " + scheduleResponse.getMessage(), Toast.LENGTH_LONG).show();
                     }
                 } else {
-                    // Log the error response
+                    // Log the error response with detailed info
+                    String errorMessage = "Failed to assign ticket";
                     try {
-                        String errorBody = response.errorBody() != null ? response.errorBody().string() : "No error body";
-                        android.util.Log.e("AssignEmployee", "Schedule API error response: " + errorBody);
-                        Toast.makeText(AssignEmployeeActivity.this, "Failed to assign and schedule ticket. Error: " + errorBody, Toast.LENGTH_LONG).show();
+                        if (response.errorBody() != null) {
+                            String errorBody = response.errorBody().string();
+                            android.util.Log.e("AssignEmployee", "Schedule API error response (code " + response.code() + "): " + errorBody);
+                            
+                            // Try to parse JSON error message
+                            try {
+                                com.google.gson.JsonObject errorJson = new com.google.gson.Gson().fromJson(errorBody, com.google.gson.JsonObject.class);
+                                if (errorJson.has("message")) {
+                                    errorMessage = errorJson.get("message").getAsString();
+                                }
+                            } catch (Exception parseEx) {
+                                // If JSON parsing fails, use raw error body (truncated)
+                                errorMessage = errorBody.length() > 100 ? errorBody.substring(0, 100) + "..." : errorBody;
+                            }
+                        } else {
+                            android.util.Log.e("AssignEmployee", "Schedule API error - no error body, code: " + response.code());
+                            switch (response.code()) {
+                                case 400:
+                                    errorMessage = "Invalid assignment data. Please check all fields.";
+                                    break;
+                                case 403:
+                                    errorMessage = "You don't have permission to assign tickets.";
+                                    break;
+                                case 404:
+                                    errorMessage = "Ticket or technician not found.";
+                                    break;
+                                case 500:
+                                    errorMessage = "Server error. Please try again later.";
+                                    break;
+                                default:
+                                    errorMessage = "Failed to assign ticket (Error " + response.code() + ")";
+                            }
+                        }
                     } catch (Exception e) {
                         android.util.Log.e("AssignEmployee", "Error reading error body", e);
-                        Toast.makeText(AssignEmployeeActivity.this, "Failed to assign and schedule ticket. Response code: " + response.code(), Toast.LENGTH_LONG).show();
+                        errorMessage = "Failed to assign ticket. Please try again.";
                     }
+                    Toast.makeText(AssignEmployeeActivity.this, errorMessage, Toast.LENGTH_LONG).show();
                 }
             }
 

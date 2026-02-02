@@ -325,8 +325,9 @@ public class EmployeeWorkFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        // Remove automatic refresh - users can now pull-to-refresh manually
-        android.util.Log.d("EmployeeWork", "Fragment resumed - no automatic refresh");
+        // Refresh tickets when fragment becomes visible to show newly assigned tickets
+        android.util.Log.d("EmployeeWork", "Fragment resumed - refreshing tickets");
+        loadAssignedTickets();
     }
 
     /**
