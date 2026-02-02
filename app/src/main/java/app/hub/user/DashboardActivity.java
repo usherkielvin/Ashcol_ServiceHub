@@ -34,13 +34,9 @@ import com.servicehub.model.Message;
 import app.hub.R;
 import app.hub.api.ApiClient;
 import app.hub.api.ApiService;
-import app.hub.api.TicketListResponse;
-import app.hub.util.TokenManager;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
-import com.google.android.material.card.MaterialCardView;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -55,12 +51,6 @@ public class DashboardActivity extends AppCompatActivity {
     private View navIndicator;
     private BottomNavigationView bottomNavigationView;
     private FloatingActionButton fabChatbot;
-    private MaterialCardView newTicketBanner;
-    private android.widget.TextView newTicketBannerId;
-    private TokenManager tokenManager;
-
-    /** Cached tickets at activity level - pre-loaded in background */
-    private List<TicketListResponse.TicketItem> cachedTickets = new ArrayList<>();
 
     public static final String EXTRA_SHOW_MY_TICKETS = "show_my_tickets";
 
@@ -70,15 +60,11 @@ public class DashboardActivity extends AppCompatActivity {
         setContentView(R.layout.activity_user_dashboard);
 
         apiService = ApiClient.getApiService();
-        tokenManager = new TokenManager(this);
         navIndicator = findViewById(R.id.navIndicator);
         bottomNavigationView = findViewById(R.id.bottomNavigationView);
         fabChatbot = findViewById(R.id.fab_chatbot);
-        newTicketBanner = findViewById(R.id.newTicketBanner);
-        newTicketBannerId = findViewById(R.id.newTicketBannerId);
 
         setupFab(fabChatbot);
-        setupNewTicketBanner();
         disableNavigationTooltips(bottomNavigationView);
 
         if (savedInstanceState == null) {
@@ -95,9 +81,6 @@ public class DashboardActivity extends AppCompatActivity {
             if (showMyTickets) {
                 bottomNavigationView.setSelectedItemId(R.id.my_ticket);
                 if (fabChatbot != null) fabChatbot.hide();
-                // Show new ticket banner in main activity container + pre-load tickets in background
-                showNewTicketBannerIfPending();
-                loadTicketsInBackground();
             } else if (fabChatbot != null) {
                 fabChatbot.show();
             }
@@ -188,69 +171,7 @@ public class DashboardActivity extends AppCompatActivity {
                     .addToBackStack(null)
                     .commit();
             if (fabChatbot != null) fabChatbot.hide();
-            showNewTicketBannerIfPending();
-            loadTicketsInBackground();
         }
-    }
-
-    private void setupNewTicketBanner() {
-        if (newTicketBanner == null) return;
-        View.OnClickListener goToMyTickets = v -> {
-                newTicketBanner.setVisibility(View.GONE);
-                if (bottomNavigationView.getSelectedItemId() != R.id.my_ticket) {
-                    bottomNavigationView.setSelectedItemId(R.id.my_ticket);
-                    moveIndicatorToItem(R.id.my_ticket, true);
-                    getSupportFragmentManager().beginTransaction()
-                            .replace(R.id.fragmentContainerView, new UserTicketsFragment())
-                            .setReorderingAllowed(true)
-                            .addToBackStack(null)
-                            .commit();
-                    if (fabChatbot != null) fabChatbot.hide();
-                }
-            };
-        if (newTicketBanner != null) newTicketBanner.setOnClickListener(goToMyTickets);
-        View actionView = findViewById(R.id.newTicketBannerAction);
-        if (actionView != null) actionView.setOnClickListener(goToMyTickets);
-    }
-
-    private void showNewTicketBannerIfPending() {
-        TicketListResponse.TicketItem pending = UserTicketsFragment.getPendingNewTicket();
-        if (pending != null && newTicketBanner != null && newTicketBannerId != null) {
-            newTicketBannerId.setText(pending.getTicketId());
-            newTicketBanner.setVisibility(View.VISIBLE);
-        }
-    }
-
-    /** Pre-load tickets at activity level - data ready for fragments in main container */
-    private void loadTicketsInBackground() {
-        String token = tokenManager != null ? tokenManager.getToken() : null;
-        if (token == null) return;
-        String authToken = token.startsWith("Bearer ") ? token : "Bearer " + token;
-        apiService.getTickets(authToken).enqueue(new Callback<TicketListResponse>() {
-            @Override
-            public void onResponse(Call<TicketListResponse> call, Response<TicketListResponse> response) {
-                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
-                    List<TicketListResponse.TicketItem> list = response.body().getTickets();
-                    if (list != null) {
-                        cachedTickets.clear();
-                        cachedTickets.addAll(list);
-                        // Notify current fragment if it's UserTicketsFragment
-                        Fragment f = getSupportFragmentManager().findFragmentById(R.id.fragmentContainerView);
-                        if (f instanceof UserTicketsFragment) {
-                            ((UserTicketsFragment) f).refreshWithTickets(cachedTickets);
-                        }
-                    }
-                }
-            }
-
-            @Override
-            public void onFailure(Call<TicketListResponse> call, Throwable t) { }
-        });
-    }
-
-    /** Get cached tickets from activity (for fragments) */
-    public List<TicketListResponse.TicketItem> getCachedTickets() {
-        return new ArrayList<>(cachedTickets);
     }
 
     private void disableNavigationTooltips(BottomNavigationView navigationView) {
