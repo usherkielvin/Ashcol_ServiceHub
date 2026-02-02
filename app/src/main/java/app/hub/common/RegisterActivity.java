@@ -62,11 +62,11 @@ public class RegisterActivity extends AppCompatActivity {
 	private boolean isGoogleSignIn = false;
 
 
-	// Views for activity_register.xml (Tell us step)
+    // Views for activity_register.xml (Tell us step)
 	private View fragmentContainer;
 	private ConstraintLayout templateLayout;
-	private TextInputEditText firstNameInput, lastNameInput, usernameInput, phoneInput, locationInput;
-	private TextView fval, lval, uval, phoneVal;
+    private TextInputEditText firstNameInput, lastNameInput, usernameInput, phoneInput, locationInput, regionInput, cityInput;
+    private TextView fval, lval, uval, phoneVal;
 	private MaterialButton registerButton;
 
 	@Override
@@ -185,7 +185,9 @@ public class RegisterActivity extends AppCompatActivity {
 		lastNameInput = findViewById(R.id.lastNameInput);
 		usernameInput = findViewById(R.id.usernameInput);
 		phoneInput = findViewById(R.id.etPhone);
-		locationInput = findViewById(R.id.etLocation);
+        locationInput = findViewById(R.id.etLocation); // hidden, kept for backward compatibility
+        regionInput = findViewById(R.id.etRegion);
+        cityInput = findViewById(R.id.etCity);
 
 		registerButton = findViewById(R.id.registerButton);
 
@@ -380,7 +382,7 @@ public class RegisterActivity extends AppCompatActivity {
 		String firstName = getText(firstNameInput);
 		String lastName = getText(lastNameInput);
 		String username = getText(usernameInput);
-		String phone = getText(phoneInput);
+        String phone = getText(phoneInput);
 
 		boolean isValid = true;
 
@@ -416,13 +418,25 @@ public class RegisterActivity extends AppCompatActivity {
 	// Save personal info and continue to password step
 	private void savePersonalInfoAndContinue() {
 		try {
-			setUserPersonalInfo(
-				getText(firstNameInput),
-				getText(lastNameInput),
-				getText(usernameInput),
-				getText(phoneInput),
-				getText(locationInput)
-			);
+            // Build a simple "Region, City" location string for backend auto-branching
+            String region = getText(regionInput);
+            String city = getText(cityInput);
+            String combinedLocation = "";
+            if (!region.isEmpty() && !city.isEmpty()) {
+                combinedLocation = region + ", " + city;
+            } else if (!city.isEmpty()) {
+                combinedLocation = city;
+            } else if (!region.isEmpty()) {
+                combinedLocation = region;
+            }
+
+            setUserPersonalInfo(
+                getText(firstNameInput),
+                getText(lastNameInput),
+                getText(usernameInput),
+                getText(phoneInput),
+                combinedLocation
+            );
 		} catch (Exception e) {
 			Log.e(TAG, "Error saving personal info", e);
 			// Continue anyway with empty location
