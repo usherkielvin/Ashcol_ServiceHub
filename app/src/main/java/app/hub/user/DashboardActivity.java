@@ -34,13 +34,9 @@ import com.servicehub.model.Message;
 import app.hub.R;
 import app.hub.api.ApiClient;
 import app.hub.api.ApiService;
-import app.hub.api.TicketListResponse;
-import app.hub.util.TokenManager;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
-import com.google.android.material.card.MaterialCardView;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -55,12 +51,6 @@ public class DashboardActivity extends AppCompatActivity {
     private View navIndicator;
     private BottomNavigationView bottomNavigationView;
     private FloatingActionButton fabChatbot;
-    private MaterialCardView newTicketBanner;
-    private android.widget.TextView newTicketBannerId;
-    private TokenManager tokenManager;
-
-    /** Cached tickets at activity level - pre-loaded in background */
-    private List<TicketListResponse.TicketItem> cachedTickets = new ArrayList<>();
 
     public static final String EXTRA_SHOW_MY_TICKETS = "show_my_tickets";
 
@@ -70,15 +60,11 @@ public class DashboardActivity extends AppCompatActivity {
         setContentView(R.layout.activity_user_dashboard);
 
         apiService = ApiClient.getApiService();
-        tokenManager = new TokenManager(this);
         navIndicator = findViewById(R.id.navIndicator);
         bottomNavigationView = findViewById(R.id.bottomNavigationView);
         fabChatbot = findViewById(R.id.fab_chatbot);
-        newTicketBanner = findViewById(R.id.newTicketBanner);
-        newTicketBannerId = findViewById(R.id.newTicketBannerId);
 
         setupFab(fabChatbot);
-        setupNewTicketBanner();
         disableNavigationTooltips(bottomNavigationView);
 
         if (savedInstanceState == null) {
@@ -95,9 +81,6 @@ public class DashboardActivity extends AppCompatActivity {
             if (showMyTickets) {
                 bottomNavigationView.setSelectedItemId(R.id.my_ticket);
                 if (fabChatbot != null) fabChatbot.hide();
-                // Show new ticket banner in main activity container + pre-load tickets in background
-                showNewTicketBannerIfPending();
-                loadTicketsInBackground();
             } else if (fabChatbot != null) {
                 fabChatbot.show();
             }

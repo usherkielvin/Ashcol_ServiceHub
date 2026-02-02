@@ -408,4 +408,15 @@ public class UserTicketsFragment extends Fragment {
         android.util.Log.d("UserTickets", "Manual refresh requested");
         loadTickets();
     }
+
+    /**
+     * Update tickets with data from activity (called when activity pre-loads in background)
+     */
+    public void refreshWithTickets(List<TicketListResponse.TicketItem> ticketsFromActivity) {
+        if (ticketsFromActivity == null || allTickets == null) return;
+        allTickets.clear();
+        allTickets.addAll(ticketsFromActivity);
+        filterTickets();
+        if (adapter != null) adapter.notifyDataSetChanged();
+    }
 }
