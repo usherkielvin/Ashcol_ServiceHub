@@ -22,14 +22,6 @@ import app.hub.R;
  */
 public class UserHomeFragment extends Fragment {
 
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
-
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
     private ViewPager2 bannerViewPager;
     private BannerAdapter bannerAdapter;
     private LinearLayout dotsLayout;
@@ -41,20 +33,9 @@ public class UserHomeFragment extends Fragment {
         // Required empty public constructor
     }
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment UserHomeFragment.
-     */
-    // TODO: Rename and change types and number of parameters
     public static UserHomeFragment newInstance(String param1, String param2) {
         UserHomeFragment fragment = new UserHomeFragment();
         Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
         fragment.setArguments(args);
         return fragment;
     }
@@ -62,10 +43,6 @@ public class UserHomeFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
     }
 
     @Override
@@ -107,11 +84,20 @@ public class UserHomeFragment extends Fragment {
 
     private void updateDots(int position) {
         for (int i = 0; i < dotsLayout.getChildCount(); i++) {
-            ImageView dot = (ImageView) dotsLayout.getChildAt(i);
+            View dot = dotsLayout.getChildAt(i);
             if (i == position) {
-                dot.setImageResource(R.drawable.dot_selected);
+                dot.setBackgroundResource(R.drawable.dot_selected);
+                // Adjust width for selected dot if needed, but here it's handled by drawable or fixed in XML
+                LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) dot.getLayoutParams();
+                params.width = (int) (24 * getResources().getDisplayMetrics().density);
+                params.height = (int) (8 * getResources().getDisplayMetrics().density);
+                dot.setLayoutParams(params);
             } else {
-                dot.setImageResource(R.drawable.dot_unselected);
+                dot.setBackgroundResource(R.drawable.dot_unselected);
+                LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) dot.getLayoutParams();
+                params.width = (int) (8 * getResources().getDisplayMetrics().density);
+                params.height = (int) (8 * getResources().getDisplayMetrics().density);
+                dot.setLayoutParams(params);
             }
         }
     }
