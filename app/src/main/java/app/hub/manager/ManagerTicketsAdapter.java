@@ -47,7 +47,7 @@ public class ManagerTicketsAdapter extends RecyclerView.Adapter<ManagerTicketsAd
     public void onBindViewHolder(@NonNull ManagerTicketViewHolder holder, int position) {
         TicketListResponse.TicketItem ticket = tickets.get(position);
         holder.bind(ticket);
-        
+
         // Set click listener
         holder.itemView.setOnClickListener(v -> {
             if (onTicketClickListener != null) {
@@ -69,7 +69,6 @@ public class ManagerTicketsAdapter extends RecyclerView.Adapter<ManagerTicketsAd
         private TextView tvDate;
         private TextView tvDescription;
         private TextView tvCustomerName;
-        private TextView tvPriority;
 
         public ManagerTicketViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -80,7 +79,7 @@ public class ManagerTicketsAdapter extends RecyclerView.Adapter<ManagerTicketsAd
             tvDate = itemView.findViewById(R.id.tvDate);
             tvDescription = itemView.findViewById(R.id.tvDescription);
             tvCustomerName = itemView.findViewById(R.id.tvCustomerName);
-            tvPriority = itemView.findViewById(R.id.tvPriority);
+
         }
 
         public void bind(TicketListResponse.TicketItem ticket) {
@@ -89,18 +88,8 @@ public class ManagerTicketsAdapter extends RecyclerView.Adapter<ManagerTicketsAd
             tvServiceType.setText(ticket.getServiceType());
             tvStatus.setText("Status: " + ticket.getStatus());
             tvDescription.setText(ticket.getDescription());
-            tvCustomerName.setText("Customer: " + (ticket.getCustomerName() != null ? ticket.getCustomerName() : "Unknown"));
-
-            // Set priority if available
-            if (tvPriority != null) {
-                String priority = ticket.getPriority();
-                if (priority != null && !priority.isEmpty()) {
-                    tvPriority.setText("Priority: " + priority);
-                    tvPriority.setVisibility(View.VISIBLE);
-                } else {
-                    tvPriority.setVisibility(View.GONE);
-                }
-            }
+            tvCustomerName
+                    .setText("Customer: " + (ticket.getCustomerName() != null ? ticket.getCustomerName() : "Unknown"));
 
             // Set status color
             String statusColor = ticket.getStatusColor();
@@ -121,8 +110,9 @@ public class ManagerTicketsAdapter extends RecyclerView.Adapter<ManagerTicketsAd
         }
 
         private void setStatusColor(TextView textView, String status) {
-            if (status == null) return;
-            
+            if (status == null)
+                return;
+
             switch (status.toLowerCase()) {
                 case "pending":
                     textView.setTextColor(Color.parseColor("#FFA500")); // Orange
@@ -153,7 +143,7 @@ public class ManagerTicketsAdapter extends RecyclerView.Adapter<ManagerTicketsAd
                 // Parse the date string (assuming ISO format from API)
                 SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
                 SimpleDateFormat outputFormat = new SimpleDateFormat("MMM dd, yyyy - hh:mm a", Locale.getDefault());
-                
+
                 Date date = inputFormat.parse(dateString);
                 if (date != null) {
                     return outputFormat.format(date);
@@ -161,9 +151,10 @@ public class ManagerTicketsAdapter extends RecyclerView.Adapter<ManagerTicketsAd
             } catch (ParseException e) {
                 // If parsing fails, try alternative format
                 try {
-                    SimpleDateFormat altInputFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault());
+                    SimpleDateFormat altInputFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss",
+                            Locale.getDefault());
                     SimpleDateFormat outputFormat = new SimpleDateFormat("MMM dd, yyyy - hh:mm a", Locale.getDefault());
-                    
+
                     Date date = altInputFormat.parse(dateString);
                     if (date != null) {
                         return outputFormat.format(date);
@@ -173,7 +164,7 @@ public class ManagerTicketsAdapter extends RecyclerView.Adapter<ManagerTicketsAd
                     return dateString;
                 }
             }
-            
+
             return dateString;
         }
     }

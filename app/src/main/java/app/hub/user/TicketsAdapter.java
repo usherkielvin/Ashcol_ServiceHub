@@ -45,13 +45,13 @@ public class TicketsAdapter extends RecyclerView.Adapter<TicketsAdapter.TicketVi
             android.util.Log.w("TicketsAdapter", "Invalid position: " + position + ", tickets size: " + tickets.size());
             return;
         }
-        
+
         TicketListResponse.TicketItem ticket = tickets.get(position);
-        android.util.Log.d("TicketsAdapter", "Binding ticket at position " + position + ": " + 
-                          (ticket != null ? ticket.getTicketId() : "null"));
-        
+        android.util.Log.d("TicketsAdapter", "Binding ticket at position " + position + ": " +
+                (ticket != null ? ticket.getTicketId() : "null"));
+
         holder.bind(ticket);
-        
+
         // Set click listener
         holder.itemView.setOnClickListener(v -> {
             if (onTicketClickListener != null && ticket != null) {
@@ -87,36 +87,38 @@ public class TicketsAdapter extends RecyclerView.Adapter<TicketsAdapter.TicketVi
                 android.util.Log.w("TicketsAdapter", "Ticket is null, cannot bind");
                 return;
             }
-            
+
             // Set title with null check
             String title = ticket.getTitle();
             tvTitle.setText(title != null ? title : "Service Request");
-            
+
             // Set service type with null check and bullet point
             String serviceType = ticket.getServiceType();
             tvServiceType.setText("• " + (serviceType != null ? serviceType : "Service Type"));
-            
+
             // Set ticket ID with "Requested by:" prefix
             String ticketId = ticket.getTicketId();
             tvTicketId.setText("Requested by: " + (ticketId != null ? ticketId : "Unknown ID"));
-            
+
             // Normalize status: "Open" should display as "Pending" with orange color
             String status = ticket.getStatus();
             String normalizedStatus = normalizeStatus(status);
             String displayStatus = normalizedStatus != null ? normalizedStatus : "Unknown";
             tvStatus.setText(displayStatus);
-            
+
             // Set status background color based on normalized status
             setStatusBackgroundColor(tvStatus, normalizedStatus);
-            
-            android.util.Log.d("TicketsAdapter", "Bound ticket: " + ticketId + " - " + title + " (status: " + status + " -> " + normalizedStatus + ")");
+
+            android.util.Log.d("TicketsAdapter", "Bound ticket: " + ticketId + " - " + title + " (status: " + status
+                    + " -> " + normalizedStatus + ")");
         }
-        
+
         /**
          * Normalize status values: "Open" maps to "Pending" for consistent display
          */
         private String normalizeStatus(String status) {
-            if (status == null) return null;
+            if (status == null)
+                return null;
             String lowerStatus = status.toLowerCase().trim();
             // Map "Open" to "Pending" since they represent the same state for customers
             if (lowerStatus.equals("open")) {
@@ -126,11 +128,12 @@ public class TicketsAdapter extends RecyclerView.Adapter<TicketsAdapter.TicketVi
         }
 
         private void setStatusBackgroundColor(TextView textView, String status) {
-            if (status == null || textView == null) return;
-            
+            if (status == null || textView == null)
+                return;
+
             // Set text color to white for all status badges
             textView.setTextColor(Color.WHITE);
-            
+
             // Set background color based on status (status is already normalized)
             switch (status.toLowerCase()) {
                 case "pending":
@@ -152,14 +155,15 @@ public class TicketsAdapter extends RecyclerView.Adapter<TicketsAdapter.TicketVi
                     textView.setBackgroundColor(Color.parseColor("#FF9800")); // Orange
                     break;
             }
-            
+
             // Apply rounded corners
             textView.setBackground(createRoundedBackground(getBackgroundColorForStatus(status)));
         }
-        
+
         private int getBackgroundColorForStatus(String status) {
-            if (status == null) return Color.parseColor("#FF9800"); // Default to orange (pending)
-            
+            if (status == null)
+                return Color.parseColor("#FF9800"); // Default to orange (pending)
+
             switch (status.toLowerCase()) {
                 case "pending":
                     return Color.parseColor("#FF9800"); // Orange
@@ -175,7 +179,7 @@ public class TicketsAdapter extends RecyclerView.Adapter<TicketsAdapter.TicketVi
                     return Color.parseColor("#FF9800"); // Default Orange (pending)
             }
         }
-        
+
         private android.graphics.drawable.GradientDrawable createRoundedBackground(int color) {
             android.graphics.drawable.GradientDrawable drawable = new android.graphics.drawable.GradientDrawable();
             drawable.setShape(android.graphics.drawable.GradientDrawable.RECTANGLE);

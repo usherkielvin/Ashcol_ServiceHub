@@ -35,7 +35,8 @@ import retrofit2.Response;
 public class UserCreateTicketFragment extends Fragment {
 
     private static final SimpleDateFormat DATE_FORMAT_API = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
-    private static final SimpleDateFormat DATE_FORMAT_DISPLAY = new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault());
+    private static final SimpleDateFormat DATE_FORMAT_DISPLAY = new SimpleDateFormat("MMM dd, yyyy",
+            Locale.getDefault());
 
     private EditText titleInput, descriptionInput, addressInput, contactInput, dateInput;
     private Button createTicketButton;
@@ -49,7 +50,7 @@ public class UserCreateTicketFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+            Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_user_create_ticket, container, false);
     }
@@ -73,7 +74,8 @@ public class UserCreateTicketFragment extends Fragment {
         if (dateInput != null) {
             dateInput.setOnClickListener(v -> showDatePicker());
             dateInput.setOnFocusChangeListener((v, hasFocus) -> {
-                if (hasFocus) showDatePicker();
+                if (hasFocus)
+                    showDatePicker();
             });
         }
 
@@ -108,7 +110,8 @@ public class UserCreateTicketFragment extends Fragment {
             selectedDateMillis = selection;
             Calendar cal = Calendar.getInstance(TimeZone.getDefault());
             cal.setTimeInMillis(selection);
-            if (dateInput != null) dateInput.setText(DATE_FORMAT_DISPLAY.format(cal.getTime()));
+            if (dateInput != null)
+                dateInput.setText(DATE_FORMAT_DISPLAY.format(cal.getTime()));
         });
         picker.show(getChildFragmentManager(), "DATE_PICKER");
     }
@@ -120,12 +123,12 @@ public class UserCreateTicketFragment extends Fragment {
             double latitude = data.getDoubleExtra("latitude", 0.0);
             double longitude = data.getDoubleExtra("longitude", 0.0);
             String address = data.getStringExtra("address");
-            
+
             // Set the selected address to the location field
             if (addressInput != null && address != null) {
                 addressInput.setText(address);
             }
-            
+
             Toast.makeText(getContext(), "Location selected: " + address, Toast.LENGTH_SHORT).show();
         }
     }
@@ -149,7 +152,8 @@ public class UserCreateTicketFragment extends Fragment {
             preferredDate = DATE_FORMAT_API.format(cal.getTime());
         }
 
-        CreateTicketRequest request = new CreateTicketRequest(title, description, serviceType, address, contact, preferredDate, "medium");
+        CreateTicketRequest request = new CreateTicketRequest(title, description, serviceType, address, contact,
+                preferredDate);
         ApiService apiService = ApiClient.getApiService();
         String token = tokenManager.getToken();
 
@@ -172,30 +176,31 @@ public class UserCreateTicketFragment extends Fragment {
 
                 if (response.isSuccessful() && response.body() != null) {
                     CreateTicketResponse ticketResponse = response.body();
-                    
+
                     // Clear form fields
                     titleInput.setText("");
                     descriptionInput.setText("");
                     addressInput.setText("");
                     contactInput.setText("");
-                    
+
                     // Navigate to confirmation screen
                     Intent intent = new Intent(getActivity(), TicketConfirmationActivity.class);
                     intent.putExtra("ticket_id", ticketResponse.getTicketId());
                     intent.putExtra("status", ticketResponse.getStatus());
                     startActivity(intent);
-                    
+
                     // Close this fragment/activity
                     if (getActivity() != null) {
                         getActivity().finish();
                     }
-                    
+
                     // Clear form
                     clearForm();
-                    
+
                     Toast.makeText(getContext(), "Ticket created successfully!", Toast.LENGTH_SHORT).show();
                 } else {
-                    Toast.makeText(getContext(), "Failed to create ticket. Please try again.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), "Failed to create ticket. Please try again.", Toast.LENGTH_SHORT)
+                            .show();
                 }
             }
 
@@ -204,18 +209,23 @@ public class UserCreateTicketFragment extends Fragment {
                 // Reset button state
                 createTicketButton.setEnabled(true);
                 createTicketButton.setText("Submit");
-                
+
                 Toast.makeText(getContext(), "Network error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }
 
     private void clearForm() {
-        if (titleInput != null) titleInput.setText("");
-        if (descriptionInput != null) descriptionInput.setText("");
-        if (addressInput != null) addressInput.setText("");
-        if (contactInput != null) contactInput.setText("");
-        if (dateInput != null) dateInput.setText("");
+        if (titleInput != null)
+            titleInput.setText("");
+        if (descriptionInput != null)
+            descriptionInput.setText("");
+        if (addressInput != null)
+            addressInput.setText("");
+        if (contactInput != null)
+            contactInput.setText("");
+        if (dateInput != null)
+            dateInput.setText("");
         selectedDateMillis = null;
     }
 }
