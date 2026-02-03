@@ -251,8 +251,6 @@ public class MainActivity extends AppCompatActivity {
                 String idToken = account.getIdToken();
 
                 Log.d(TAG, "Google Sign-In successful - Email: " + email);
-                Toast.makeText(this, "Google Account Verified: " + email + ". Authenticating...", Toast.LENGTH_SHORT)
-                        .show();
 
                 // Call backend API to login with Google
                 loginWithGoogle(email, givenName, familyName, idToken);
