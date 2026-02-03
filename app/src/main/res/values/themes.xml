@@ -7,6 +7,14 @@
         
         <!-- Remove the Material 3 selection pill background -->
         <item name="colorSecondaryContainer">@android:color/transparent</item>
+        
+        <!-- Override Material Design colors to prevent purple text inputs -->
+        <item name="colorPrimary">@color/green</item>
+        <item name="colorPrimaryVariant">@color/light_green</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorSecondary">@color/green</item>
+        <item name="colorSecondaryVariant">@color/light_green</item>
+        <item name="colorOnSecondary">@color/white</item>
     </style>
 
     <!-- Style for the BottomNavigationView Active Indicator -->

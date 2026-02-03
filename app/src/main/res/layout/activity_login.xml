@@ -75,13 +75,17 @@
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="28dp"
                 android:layout_marginBottom="15dp"
-                android:hint="@string/enter_email_or_username">
+                android:hint="@string/enter_email_or_username"
+                app:boxStrokeColor="@color/green"
+                app:hintTextColor="@color/green">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/Email_val"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:inputType="textEmailAddress" />
+                    android:inputType="textEmailAddress"
+                    android:textColor="@color/black"
+                    android:textColorHint="@color/gray" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.textfield.TextInputLayout
@@ -92,7 +96,9 @@
                 android:layout_marginHorizontal="28dp"
                 android:layout_marginBottom="12dp"
                 android:hint="@string/enter_password"
-                app:passwordToggleEnabled="true">
+                app:passwordToggleEnabled="true"
+                app:boxStrokeColor="@color/green"
+                app:hintTextColor="@color/green">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/Pass_val"
@@ -100,7 +106,9 @@
                     android:layout_height="wrap_content"
                     android:inputType="textPassword"
                     android:imeOptions="actionDone"
-                    android:maxLines="1" />
+                    android:maxLines="1"
+                    android:textColor="@color/black"
+                    android:textColorHint="@color/gray" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <LinearLayout
@@ -134,7 +142,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="32dp"
                 android:layout_marginBottom="24dp"
-                android:backgroundTint="@color/text_primary"
+                android:backgroundTint="@color/green"
                 android:minHeight="56dp"
                 android:text="@string/log_in"
                 android:textColor="@color/white"

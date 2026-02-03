@@ -63,6 +63,12 @@ public class EmployeeProfileFragment extends Fragment {
 
         tokenManager = new TokenManager(getContext());
 
+        // Notification button
+        Button notificationButton = view.findViewById(R.id.btn_notifications);
+        if (notificationButton != null) {
+            notificationButton.setOnClickListener(v -> showNotificationSettings());
+        }
+
         Button changePasswordButton = view.findViewById(R.id.changePasswordButton);
         if (changePasswordButton != null) {
             changePasswordButton.setOnClickListener(v -> showChangePasswordDialog());
@@ -225,6 +231,38 @@ public class EmployeeProfileFragment extends Fragment {
         } else {
             Toast.makeText(getContext(), "Failed to change password. Please try again.", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    private void showNotificationSettings() {
+        if (getContext() == null) return;
+        
+        com.google.android.material.bottomsheet.BottomSheetDialog bottomSheetDialog = new com.google.android.material.bottomsheet.BottomSheetDialog(requireContext());
+        View view = getLayoutInflater().inflate(R.layout.user_notificationstoggler, null);
+        
+        com.google.android.material.switchmaterial.SwitchMaterial switchPush = view.findViewById(R.id.switch_push);
+        com.google.android.material.switchmaterial.SwitchMaterial switchEmail = view.findViewById(R.id.switch_email);
+        com.google.android.material.switchmaterial.SwitchMaterial switchSms = view.findViewById(R.id.switch_sms);
+        
+        if (switchPush != null) {
+            switchPush.setChecked(tokenManager.isPushEnabled());
+            switchPush.setOnCheckedChangeListener((buttonView, isChecked) -> 
+                tokenManager.setPushEnabled(isChecked));
+        }
+        
+        if (switchEmail != null) {
+            switchEmail.setChecked(tokenManager.isEmailNotifEnabled());
+            switchEmail.setOnCheckedChangeListener((buttonView, isChecked) -> 
+                tokenManager.setEmailNotifEnabled(isChecked));
+        }
+        
+        if (switchSms != null) {
+            switchSms.setChecked(tokenManager.isSmsNotifEnabled());
+            switchSms.setOnCheckedChangeListener((buttonView, isChecked) -> 
+                tokenManager.setSmsNotifEnabled(isChecked));
+        }
+        
+        bottomSheetDialog.setContentView(view);
+        bottomSheetDialog.show();
     }
 
     private void logout() {
