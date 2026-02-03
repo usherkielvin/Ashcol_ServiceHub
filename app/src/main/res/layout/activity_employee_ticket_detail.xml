@@ -1,56 +1,68 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/light_gray">
+    android:background="?android:attr/colorBackground"
+    tools:context="app.hub.EmployeeTicketDetailActivity">
 
-    <LinearLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:paddingBottom="32dp">
 
-        <!-- Header -->
-        <LinearLayout
+        <!-- Green Header Section -->
+        <View
+            android:id="@+id/headerBackground"
+            android:layout_width="match_parent"
+            android:layout_height="160dp"
+            android:background="@drawable/header_green"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnBack"
+            style="@style/Widget.Material3.Button.IconButton.Filled"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="48dp"
+            android:contentDescription="@string/desc_back"
+            app:icon="@drawable/outline_arrow_back_24"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/tvHeaderTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Work Assignment"
+            android:textColor="#FFFFFF"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="@+id/btnBack"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/btnBack" />
+
+        <!-- Ticket ID Card (Now Under Header) -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/ticketIdCard"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:background="@color/green"
-            android:padding="16dp"
-            android:layout_marginBottom="16dp"
-            android:gravity="center_vertical">
-
-            <Button
-                android:id="@+id/btnBack"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:background="@drawable/outline_arrow_back_24"
-                android:backgroundTint="@color/white"
-                android:layout_marginEnd="16dp" />
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Work Assignment"
-                android:textColor="@color/white"
-                android:textSize="20sp"
-                android:textStyle="bold" />
-
-        </LinearLayout>
-
-        <!-- Ticket ID Card -->
-        <androidx.cardview.widget.CardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:cardCornerRadius="8dp"
-            app:cardElevation="2dp">
+            android:layout_marginStart="24dp"
+            android:layout_marginTop="24dp"
+            android:layout_marginEnd="24dp"
+            app:cardBackgroundColor="?attr/colorSurface"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="6dp"
+            app:layout_constraintTop_toBottomOf="@id/headerBackground"
+            app:strokeWidth="0dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:gravity="center"
                 android:orientation="vertical"
                 android:padding="16dp">
 
@@ -59,299 +71,308 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="TCKTId_0001"
+                    android:textColor="@color/service_icon_tint"
                     android:textSize="24sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/green"
-                    android:layout_gravity="center"
-                    android:layout_marginBottom="8dp" />
+                    android:textStyle="bold" />
 
                 <TextView
                     android:id="@+id/tvStatus"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Status: In Progress"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:layout_gravity="center"
+                    android:layout_marginTop="8dp"
                     android:background="@drawable/bg_status_badge"
-                    android:paddingHorizontal="12dp"
-                    android:paddingVertical="4dp" />
+                    android:paddingHorizontal="16dp"
+                    android:paddingVertical="4dp"
+                    android:text="Status: In Progress"
+                    android:textColor="#FFFFFF"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
 
             </LinearLayout>
-
-        </androidx.cardview.widget.CardView>
+        </com.google.android.material.card.MaterialCardView>
 
         <!-- Customer Information Card -->
-        <androidx.cardview.widget.CardView
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/customerCard"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:cardCornerRadius="8dp"
-            app:cardElevation="2dp">
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="20dp"
+            app:cardBackgroundColor="?attr/colorSurface"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="3dp"
+            app:layout_constraintTop_toBottomOf="@id/ticketIdCard"
+            app:strokeColor="?attr/colorOutline"
+            app:strokeWidth="1dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="20dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Customer Information"
+                    android:textColor="@color/quick_services_title_color"
                     android:textSize="18sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/dark_gray"
-                    android:layout_marginBottom="12dp" />
+                    android:textStyle="bold" />
 
                 <TextView
                     android:id="@+id/tvCustomerName"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
                     android:text="Customer: John Doe"
-                    android:textSize="16sp"
-                    android:textColor="@color/black"
-                    android:layout_marginBottom="8dp" />
+                    android:textColor="?attr/colorOnSurface"
+                    android:textSize="16sp" />
 
                 <TextView
                     android:id="@+id/tvContact"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="+63 912 345 6789"
-                    android:textSize="16sp"
-                    android:textColor="@color/black"
+                    android:layout_marginTop="8dp"
                     android:drawableStart="@drawable/phone"
-                    android:drawablePadding="8dp"
-                    android:gravity="center_vertical" />
+                    android:drawablePadding="12dp"
+                    android:gravity="center_vertical"
+                    android:text="+63 912 345 6789"
+                    android:textColor="?attr/colorOnSurface"
+                    android:textSize="16sp"
+                    app:drawableTint="@color/service_icon_tint" />
 
             </LinearLayout>
-
-        </androidx.cardview.widget.CardView>
+        </com.google.android.material.card.MaterialCardView>
 
         <!-- Service Details Card -->
-        <androidx.cardview.widget.CardView
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/serviceDetailsCard"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:cardCornerRadius="8dp"
-            app:cardElevation="2dp">
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="20dp"
+            app:cardBackgroundColor="?attr/colorSurface"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="3dp"
+            app:layout_constraintTop_toBottomOf="@id/customerCard"
+            app:strokeColor="?attr/colorOutline"
+            app:strokeWidth="1dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="20dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Service Details"
+                    android:textColor="@color/quick_services_title_color"
                     android:textSize="18sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/dark_gray"
-                    android:layout_marginBottom="12dp" />
+                    android:textStyle="bold" />
 
-                <!-- Title -->
                 <TextView
+                    style="@style/TextAppearance.Material3.LabelMedium"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
                     android:text="Service Title"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/gray"
-                    android:layout_marginBottom="4dp" />
+                    android:textColor="?attr/colorOnSurfaceVariant" />
 
                 <TextView
                     android:id="@+id/tvTitle"
+                    style="@style/TextAppearance.Material3.BodyLarge"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="AC Repair &amp; Diagnostics"
-                    android:textSize="16sp"
-                    android:textColor="@color/black"
-                    android:layout_marginBottom="12dp" />
+                    android:textColor="?attr/colorOnSurface" />
 
-                <!-- Service Type -->
                 <TextView
+                    style="@style/TextAppearance.Material3.LabelMedium"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
                     android:text="Service Type"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/gray"
-                    android:layout_marginBottom="4dp" />
+                    android:textColor="?attr/colorOnSurfaceVariant" />
 
                 <TextView
                     android:id="@+id/tvServiceType"
+                    style="@style/TextAppearance.Material3.BodyLarge"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="General Service"
-                    android:textSize="16sp"
-                    android:textColor="@color/black"
-                    android:layout_marginBottom="12dp" />
+                    android:textColor="?attr/colorOnSurface" />
 
-                <!-- Description -->
+
                 <TextView
+                    style="@style/TextAppearance.Material3.LabelMedium"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
                     android:text="Description"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/gray"
-                    android:layout_marginBottom="4dp" />
+                    android:textColor="?attr/colorOnSurfaceVariant" />
 
                 <TextView
                     android:id="@+id/tvDescription"
+                    style="@style/TextAppearance.Material3.BodyLarge"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="My AC needs a deep cleaning."
-                    android:textSize="16sp"
-                    android:textColor="@color/black"
-                    android:layout_marginBottom="12dp" />
+                    android:textColor="?attr/colorOnSurface" />
 
-                <!-- Created Date -->
                 <TextView
+                    style="@style/TextAppearance.Material3.LabelMedium"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
                     android:text="Assigned Date"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/gray"
-                    android:layout_marginBottom="4dp" />
+                    android:textColor="?attr/colorOnSurfaceVariant" />
 
                 <TextView
                     android:id="@+id/tvCreatedAt"
+                    style="@style/TextAppearance.Material3.BodyLarge"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Jan 15, 2026 - 10:00 AM"
-                    android:textSize="16sp"
-                    android:textColor="@color/black"
-                    android:layout_marginBottom="12dp" />
+                    android:textColor="?attr/colorOnSurface" />
 
-                <!-- Schedule Information -->
                 <TextView
+                    style="@style/TextAppearance.Material3.LabelMedium"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
                     android:text="Schedule"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/gray"
-                    android:layout_marginBottom="4dp" />
+                    android:textColor="?attr/colorOnSurfaceVariant" />
 
                 <TextView
                     android:id="@+id/tvScheduleDate"
+                    style="@style/TextAppearance.Material3.BodyLarge"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Scheduled Date: Feb 5, 2026"
-                    android:textSize="16sp"
-                    android:textColor="@color/black"
-                    android:layout_marginBottom="4dp" />
+                    android:textColor="?attr/colorOnSurface" />
 
                 <TextView
                     android:id="@+id/tvScheduleTime"
+                    style="@style/TextAppearance.Material3.BodyLarge"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
                     android:text="Scheduled Time: 9:00 AM"
-                    android:textSize="16sp"
-                    android:textColor="@color/black"
-                    android:layout_marginBottom="4dp" />
+                    android:textColor="?attr/colorOnSurface" />
 
                 <TextView
                     android:id="@+id/tvScheduleNotes"
+                    style="@style/TextAppearance.Material3.BodyMedium"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
                     android:text="Notes: Please bring ladder for roof access"
-                    android:textSize="16sp"
-                    android:textColor="@color/black"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:textStyle="italic"
                     android:visibility="gone" />
 
             </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
-        </androidx.cardview.widget.CardView>
-
-        <!-- Location Card -->
-        <androidx.cardview.widget.CardView
+        <!-- Service Location Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/locationCard"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:cardCornerRadius="8dp"
-            app:cardElevation="2dp">
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="20dp"
+            app:cardBackgroundColor="?attr/colorSurface"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="3dp"
+            app:layout_constraintTop_toBottomOf="@id/serviceDetailsCard"
+            app:strokeColor="?attr/colorOutline"
+            app:strokeWidth="1dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="20dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Service Location"
+                    android:textColor="@color/quick_services_title_color"
                     android:textSize="18sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/dark_gray"
-                    android:layout_marginBottom="12dp" />
+                    android:textStyle="bold" />
 
                 <TextView
                     android:id="@+id/tvAddress"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="123 Main Street, City, Province"
-                    android:textSize="16sp"
-                    android:textColor="@color/black"
-                    android:layout_marginBottom="12dp"
+                    android:layout_marginTop="8dp"
                     android:drawableStart="@drawable/ic_pin"
-                    android:drawablePadding="8dp"
-                    android:gravity="center_vertical" />
+                    android:drawablePadding="12dp"
+                    android:gravity="center_vertical"
+                    android:text="123 Main Street, City, Province"
+                    android:textColor="?attr/colorOnSurface"
+                    android:textSize="16sp"
+                    app:drawableTint="@color/service_icon_tint" />
 
-                <Button
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnViewMap"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
                     android:layout_width="match_parent"
-                    android:layout_height="48dp"
+                    android:layout_height="56dp"
+                    android:layout_marginTop="16dp"
                     android:text="Navigate to Customer"
-                    android:textColor="@color/white"
-                    android:textStyle="bold"
-                    android:background="@drawable/bg_button_green"
-                    android:drawableStart="@drawable/location"
-                    android:drawablePadding="8dp"
-                    android:visibility="gone" />
+                    android:textAllCaps="false"
+                    android:textColor="@color/service_icon_tint"
+                    android:visibility="gone"
+                    app:icon="@drawable/location"
+                    app:iconTint="@color/service_icon_tint"
+                    app:strokeColor="@color/service_icon_tint" />
 
             </LinearLayout>
-
-        </androidx.cardview.widget.CardView>
+        </com.google.android.material.card.MaterialCardView>
 
         <!-- Action Buttons -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginStart="24dp"
+            android:layout_marginTop="32dp"
+            android:layout_marginEnd="24dp"
             android:orientation="vertical"
-            android:layout_marginBottom="16dp">
+            app:layout_constraintTop_toBottomOf="@id/locationCard">
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnStartWork"
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
-                android:layout_marginBottom="8dp"
+                android:backgroundTint="@color/service_icon_tint"
                 android:text="Start Work"
-                android:textColor="@color/white"
-                android:textStyle="bold"
-                android:background="@drawable/bg_button_green"
-                android:drawableStart="@drawable/work"
-                android:drawablePadding="8dp" />
+                android:textAllCaps="false"
+                android:textColor="#FFFFFF"
+                app:cornerRadius="12dp"
+                app:icon="@drawable/work" />
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnCompleteWork"
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
-                android:text="Complete Work"
-                android:textColor="@color/white"
-                android:textStyle="bold"
+                android:layout_marginTop="12dp"
                 android:backgroundTint="@color/blue"
-                android:drawableStart="@drawable/ic_completed"
-                android:drawablePadding="8dp"
-                android:visibility="gone" />
+                android:text="Complete Work"
+                android:textAllCaps="false"
+                android:textColor="#FFFFFF"
+                android:visibility="gone"
+                app:cornerRadius="12dp"
+                app:icon="@drawable/ic_completed" />
 
         </LinearLayout>
 
-    </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
-</ScrollView>
+</androidx.core.widget.NestedScrollView>
