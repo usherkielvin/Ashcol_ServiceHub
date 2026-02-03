@@ -35,7 +35,8 @@ public class ServiceSelectActivity extends AppCompatActivity {
 
     private static final String TAG = "ServiceSelectActivity";
     private static final SimpleDateFormat DATE_FORMAT_API = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
-    private static final SimpleDateFormat DATE_FORMAT_DISPLAY = new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault());
+    private static final SimpleDateFormat DATE_FORMAT_DISPLAY = new SimpleDateFormat("MMM dd, yyyy",
+            Locale.getDefault());
 
     private EditText titleInput, descriptionInput, addressInput, contactInput, dateInput;
     private Button createTicketButton;
@@ -62,7 +63,6 @@ public class ServiceSelectActivity extends AppCompatActivity {
 
         // Hide the Spinner since we already have the service type from intent
 
-
         tokenManager = new TokenManager(this);
 
         // Get the selected service type from the intent
@@ -75,7 +75,8 @@ public class ServiceSelectActivity extends AppCompatActivity {
         if (dateInput != null) {
             dateInput.setOnClickListener(v -> showDatePicker());
             dateInput.setOnFocusChangeListener((v, hasFocus) -> {
-                if (hasFocus) showDatePicker();
+                if (hasFocus)
+                    showDatePicker();
             });
         }
 
@@ -117,7 +118,8 @@ public class ServiceSelectActivity extends AppCompatActivity {
             Calendar cal = Calendar.getInstance(TimeZone.getDefault());
             cal.setTimeInMillis(selection);
             String dateStr = DATE_FORMAT_DISPLAY.format(cal.getTime());
-            if (dateInput != null) dateInput.setText(dateStr);
+            if (dateInput != null)
+                dateInput.setText(dateStr);
         });
         picker.show(getSupportFragmentManager(), "DATE_PICKER");
     }
@@ -159,7 +161,8 @@ public class ServiceSelectActivity extends AppCompatActivity {
             preferredDate = DATE_FORMAT_API.format(cal.getTime());
         }
 
-        CreateTicketRequest request = new CreateTicketRequest(title, description, selectedServiceType, address, contact, preferredDate, "medium");
+        CreateTicketRequest request = new CreateTicketRequest(title, description, selectedServiceType, address, contact,
+                preferredDate);
         ApiService apiService = ApiClient.getApiService();
         String token = tokenManager.getToken();
 
@@ -190,13 +193,15 @@ public class ServiceSelectActivity extends AppCompatActivity {
                     CreateTicketResponse.TicketData ticketData = ticketResponse.getTicket();
                     if (ticketData != null) {
                         TicketListResponse.TicketItem item = TicketListResponse.fromCreateResponse(
-                                ticketData, status, ticketData.getStatus() != null ? ticketData.getStatus().getColor() : null);
+                                ticketData, status,
+                                ticketData.getStatus() != null ? ticketData.getStatus().getColor() : null);
                         if (item != null) {
                             UserTicketsFragment.setPendingNewTicket(item);
                         }
                     }
 
-                    Toast.makeText(ServiceSelectActivity.this, "Ticket created successfully!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(ServiceSelectActivity.this, "Ticket created successfully!", Toast.LENGTH_SHORT)
+                            .show();
 
                     // Navigate to confirmation screen
                     Intent intent = new Intent(ServiceSelectActivity.this, TicketConfirmationActivity.class);
@@ -225,7 +230,8 @@ public class ServiceSelectActivity extends AppCompatActivity {
                 createTicketButton.setEnabled(true);
                 createTicketButton.setText("Submit");
                 Log.e(TAG, "Ticket creation failed", t);
-                Toast.makeText(ServiceSelectActivity.this, "Network error: " + t.getMessage(), Toast.LENGTH_LONG).show();
+                Toast.makeText(ServiceSelectActivity.this, "Network error: " + t.getMessage(), Toast.LENGTH_LONG)
+                        .show();
             }
         });
     }
