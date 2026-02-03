@@ -6,13 +6,24 @@ public class GoogleSignInRequest {
     private String first_name;
     private String last_name;
     private String phone;
+    private String region;
+    private String city;
+    private String location;
 
-    public GoogleSignInRequest(String idToken, String email, String firstName, String lastName, String phone) {
+    public GoogleSignInRequest(String idToken, String email, String firstName, String lastName, String phone,
+            String region, String city, String location) {
         this.id_token = idToken;
         this.email = email;
         this.first_name = firstName;
         this.last_name = lastName;
         this.phone = phone;
+        this.region = region;
+        this.city = city;
+        this.location = location;
+    }
+
+    public GoogleSignInRequest(String idToken, String email, String firstName, String lastName, String phone) {
+        this(idToken, email, firstName, lastName, phone, null, null, null);
     }
 
     public String getId_token() {
@@ -53,5 +64,29 @@ public class GoogleSignInRequest {
 
     public void setPhone(String phone) {
         this.phone = phone;
+    }
+
+    public String getRegion() {
+        return region;
+    }
+
+    public void setRegion(String region) {
+        this.region = region;
+    }
+
+    public String getCity() {
+        return city;
+    }
+
+    public void setCity(String city) {
+        this.city = city;
+    }
+
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
     }
 }
