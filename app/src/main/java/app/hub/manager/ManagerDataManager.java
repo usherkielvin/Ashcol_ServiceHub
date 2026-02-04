@@ -32,6 +32,7 @@ public class ManagerDataManager {
     private static boolean isDataLoaded = false;
     private static boolean isLoading = false;
     private static long lastLoadTime = 0;
+    private static final List<DataLoadCallback> activeCallbacks = new ArrayList<>();
 
     // Firebase real-time listener
     private static FirebaseManagerListener firebaseListener = null;
@@ -96,6 +97,8 @@ public class ManagerDataManager {
 
     /**
      * Load all manager data at startup
+     * /**
+     * Load all manager data at startup
      */
     public static void loadAllData(Context context, DataLoadCallback callback) {
         long currentTime = System.currentTimeMillis();
@@ -110,6 +113,9 @@ public class ManagerDataManager {
                 if (cachedTickets != null) {
                     callback.onTicketsLoaded(cachedTickets);
                 }
+                if (cachedDashboardStats != null) {
+                    callback.onDashboardStatsLoaded(cachedDashboardStats, cachedRecentTickets);
+                }
                 callback.onLoadComplete();
             }
             Log.d(TAG, "Using fresh cached data");
@@ -117,7 +123,10 @@ public class ManagerDataManager {
         }
 
         if (isLoading) {
-            Log.d(TAG, "Already loading data, skipping");
+            Log.d(TAG, "Already loading data, queuing callback");
+            if (callback != null && !activeCallbacks.contains(callback)) {
+                activeCallbacks.add(callback);
+            }
             return;
         }
 
@@ -129,22 +138,23 @@ public class ManagerDataManager {
         }
 
         isLoading = true;
+        if (callback != null && !activeCallbacks.contains(callback)) {
+            activeCallbacks.add(callback);
+        }
 
         TokenManager tokenManager = new TokenManager(context);
         String token = tokenManager.getToken();
 
         if (token == null) {
             isLoading = false;
-            if (callback != null) {
-                callback.onLoadError("Not authenticated");
-            }
+            notifyLoadError("Not authenticated");
             return;
         }
 
         // Load employees and tickets simultaneously
-        loadEmployees(token, callback);
-        loadTickets(token, callback);
-        loadDashboardStats(token, callback);
+        loadEmployees(token, null);
+        loadTickets(token, null);
+        loadDashboardStats(token, null);
     }
 
     private static void loadEmployees(String token, DataLoadCallback callback) {
@@ -169,31 +179,29 @@ public class ManagerDataManager {
                         // Notify all registered listeners
                         notifyEmployeeListeners();
 
+                        // Notify active callbacks
+                        for (DataLoadCallback cb : new ArrayList<>(activeCallbacks)) {
+                            cb.onEmployeesLoaded(cachedBranchName, cachedEmployees);
+                        }
                         if (callback != null) {
                             callback.onEmployeesLoaded(cachedBranchName, cachedEmployees);
                         }
 
-                        checkLoadComplete(callback);
+                        checkLoadComplete();
                     } else {
                         Log.e(TAG, "Employee API returned success=false");
-                        if (callback != null) {
-                            callback.onLoadError("Failed to load employees");
-                        }
+                        notifyLoadError("Failed to load employees");
                     }
                 } else {
                     Log.e(TAG, "Employee API response not successful");
-                    if (callback != null) {
-                        callback.onLoadError("Failed to load employees");
-                    }
+                    notifyLoadError("Failed to load employees");
                 }
             }
 
             @Override
             public void onFailure(Call<EmployeeResponse> call, Throwable t) {
                 Log.e(TAG, "Employee API network error: " + t.getMessage(), t);
-                if (callback != null) {
-                    callback.onLoadError("Network error loading employees: " + t.getMessage());
-                }
+                notifyLoadError("Network error loading employees: " + t.getMessage());
             }
         });
     }
@@ -213,31 +221,28 @@ public class ManagerDataManager {
 
                         Log.d(TAG, "Tickets loaded: " + cachedTickets.size());
 
+                        for (DataLoadCallback cb : new ArrayList<>(activeCallbacks)) {
+                            cb.onTicketsLoaded(cachedTickets);
+                        }
                         if (callback != null) {
                             callback.onTicketsLoaded(cachedTickets);
                         }
 
-                        checkLoadComplete(callback);
+                        checkLoadComplete();
                     } else {
                         Log.e(TAG, "Ticket API returned success=false");
-                        if (callback != null) {
-                            callback.onLoadError("Failed to load tickets");
-                        }
+                        notifyLoadError("Failed to load tickets");
                     }
                 } else {
                     Log.e(TAG, "Ticket API response not successful");
-                    if (callback != null) {
-                        callback.onLoadError("Failed to load tickets");
-                    }
+                    notifyLoadError("Failed to load tickets");
                 }
             }
 
             @Override
             public void onFailure(Call<TicketListResponse> call, Throwable t) {
                 Log.e(TAG, "Ticket API network error: " + t.getMessage(), t);
-                if (callback != null) {
-                    callback.onLoadError("Network error loading tickets: " + t.getMessage());
-                }
+                notifyLoadError("Network error loading tickets: " + t.getMessage());
             }
         });
     }
@@ -259,59 +264,57 @@ public class ManagerDataManager {
                         Log.d(TAG, "Dashboard stats loaded: Total tickets = " +
                                 (cachedDashboardStats != null ? cachedDashboardStats.getTotalTickets() : 0));
 
+                        for (DataLoadCallback cb : new ArrayList<>(activeCallbacks)) {
+                            cb.onDashboardStatsLoaded(cachedDashboardStats, cachedRecentTickets);
+                        }
                         if (callback != null) {
                             callback.onDashboardStatsLoaded(cachedDashboardStats, cachedRecentTickets);
                         }
 
-                        checkLoadComplete(callback);
+                        checkLoadComplete();
                     } else {
                         Log.e(TAG, "Dashboard API returned success=false");
-                        if (callback != null) {
-                            callback.onLoadError("Failed to load dashboard stats");
-                        }
+                        notifyLoadError("Failed to load dashboard stats");
                     }
                 } else {
                     Log.e(TAG, "Dashboard API response not successful");
-                    if (callback != null) {
-                        callback.onLoadError("Failed to load dashboard stats");
-                    }
+                    notifyLoadError("Failed to load dashboard stats");
                 }
             }
 
             @Override
             public void onFailure(Call<DashboardStatsResponse> call, Throwable t) {
                 Log.e(TAG, "Dashboard API network error: " + t.getMessage(), t);
-                if (callback != null) {
-                    callback.onLoadError("Network error loading dashboard: " + t.getMessage());
-                }
+                notifyLoadError("Network error loading dashboard: " + t.getMessage());
             }
         });
     }
 
-    private static void checkLoadComplete(DataLoadCallback callback) {
-        // Check if both employees and tickets are loaded
-        // Note: We mark as complete even if one fails, so UI can still show partial
-        // data
+    private static void checkLoadComplete() {
         boolean employeesReady = cachedEmployees != null;
         boolean ticketsReady = cachedTickets != null;
+        boolean statsReady = cachedDashboardStats != null;
 
-        if (employeesReady && ticketsReady) {
+        if (employeesReady && ticketsReady && statsReady) {
             isDataLoaded = true;
             isLoading = false;
-            lastLoadTime = System.currentTimeMillis(); // Update timestamp
+            lastLoadTime = System.currentTimeMillis();
             Log.d(TAG, "All data loaded successfully");
 
-            if (callback != null) {
-                callback.onLoadComplete();
+            for (DataLoadCallback cb : new ArrayList<>(activeCallbacks)) {
+                cb.onLoadComplete();
             }
-        } else if (!isLoading) {
-            // If we're not loading anymore but data is incomplete, still mark as complete
-            // to prevent infinite waiting
-            isLoading = false;
-            if (callback != null) {
-                callback.onLoadComplete();
-            }
+            activeCallbacks.clear();
         }
+    }
+
+    private static void notifyLoadError(String error) {
+        for (DataLoadCallback cb : new ArrayList<>(activeCallbacks)) {
+            cb.onLoadError(error);
+        }
+        // If error happens, we might want to clear list to allow retry
+        // activeCallbacks.clear();
+        // isLoading = false;
     }
 
     // Getter methods for cached data

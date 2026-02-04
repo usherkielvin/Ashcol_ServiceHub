@@ -67,7 +67,7 @@
             android:id="@+id/tvTicketId"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Requested by: TCKTId_0003"
+            android:text="Ticket ID: ASH-0003"
             android:textSize="12sp"
             android:textColor="@color/gray"
             android:layout_marginTop="8dp" />
