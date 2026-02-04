@@ -38,15 +38,15 @@
                 android:scaleType="fitCenter"
                 android:src="@drawable/ash" />
 
-            <TextView
+            <app.hub.GradientTaglineTextView
                 android:id="@+id/rb7g8my31p0u"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
-                android:text="@string/keeping_you_cool"
-                android:textColor="#FFFFFF"
-                android:textSize="16sp"
-                android:textStyle="italic" />
+                android:text="“Keeping YOU Cool”"
+                android:textSize="24sp"
+                android:textStyle="bold|italic"
+                android:fontFamily="serif" />
         </LinearLayout>
 
         <!-- Main Login Card -->
