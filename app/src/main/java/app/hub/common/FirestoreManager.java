@@ -148,4 +148,52 @@ public class FirestoreManager {
             ticketListener = null;
         }
     }
+
+    public interface BranchListListener {
+        void onBranchesUpdated(java.util.List<Branch> branches);
+
+        void onError(Exception e);
+    }
+
+    public static class Branch {
+        public int id;
+        public String name;
+        public String location;
+        public String address;
+        public double latitude;
+        public double longitude;
+        public boolean isActive;
+
+        public Branch() {
+        }
+    }
+
+    private ListenerRegistration branchListener;
+
+    public void listenToBranches(BranchListListener listener) {
+        branchListener = db.collection("branches")
+                .whereEqualTo("isActive", true)
+                .addSnapshotListener((snapshots, error) -> {
+                    if (error != null) {
+                        listener.onError(error);
+                        return;
+                    }
+
+                    if (snapshots != null) {
+                        java.util.List<Branch> branches = new java.util.ArrayList<>();
+                        for (DocumentSnapshot doc : snapshots) {
+                            Branch branch = doc.toObject(Branch.class);
+                            branches.add(branch);
+                        }
+                        listener.onBranchesUpdated(branches);
+                    }
+                });
+    }
+
+    public void stopBranchListening() {
+        if (branchListener != null) {
+            branchListener.remove();
+            branchListener = null;
+        }
+    }
 }
