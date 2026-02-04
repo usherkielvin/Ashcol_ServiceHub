@@ -52,9 +52,12 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 
+import app.hub.common.FirestoreManager;
+
 public class UserProfileFragment extends Fragment {
 
     private TokenManager tokenManager;
+    private FirestoreManager firestoreManager;
     private String currentName;
     private String currentEmail;
     private String currentBranch;
@@ -81,11 +84,45 @@ public class UserProfileFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         tokenManager = new TokenManager(requireContext());
+        firestoreManager = new FirestoreManager(requireContext());
         initializeViews(view);
         loadCachedData();
         loadProfileImage();
-        fetchUserData();
+
+        // Start real-time listener
+        firestoreManager.listenToUserProfile(new FirestoreManager.UserProfileListener() {
+            @Override
+            public void onProfileUpdated(UserResponse.Data profile) {
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() -> {
+                        processUserData(profile);
+                        updateUI();
+                        // Also update token manager with latest data
+                        if (profile.getName() != null)
+                            tokenManager.saveName(profile.getName());
+                        if (profile.getBranch() != null)
+                            tokenManager.saveBranchInfo(profile.getBranch(), 0);
+                    });
+                }
+            }
+
+            @Override
+            public void onError(Exception e) {
+                Log.e(TAG, "Firestore listen error: " + e.getMessage());
+                // Fallback to API if Firestore fails
+                fetchUserData();
+            }
+        });
+
         setupClickListeners(view);
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if (firestoreManager != null) {
+            firestoreManager.stopListening();
+        }
     }
 
     private void initializeLaunchers() {
