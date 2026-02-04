@@ -43,17 +43,21 @@ public class RecentActivityAdapter extends RecyclerView.Adapter<RecentActivityAd
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         DashboardStatsResponse.RecentTicket ticket = recentTickets.get(position);
 
-        // Format the text to show ticket ID and status
-        String displayText = "• " + ticket.getTicketId() + " - " + ticket.getStatus();
-        holder.tvTicketId.setText(displayText);
+        holder.tvTicketId.setText(ticket.getTicketId());
+        holder.tvStatusBadge.setText(ticket.getStatus().toUpperCase());
+        holder.tvDate.setText(ticket.getCreatedAt());
+        holder.tvCustomerName.setText(ticket.getCustomerName());
+        holder.tvServiceType.setText(ticket.getServiceType());
+        holder.tvDescription.setText(ticket.getDescription());
+        holder.tvAddress.setText(ticket.getAddress());
 
-        // Set status color
+        // Set status badge color
         try {
             int color = Color.parseColor(ticket.getStatusColor());
-            holder.tvTicketId.setTextColor(color);
+            holder.tvStatusBadge.getBackground().setTint(color);
         } catch (Exception e) {
-            // Fallback to default color if parsing fails
-            holder.tvTicketId.setTextColor(Color.BLACK);
+            // Default to a safe color if parsing fails
+            holder.tvStatusBadge.getBackground().setTint(Color.parseColor("#757575"));
         }
 
         // Click listener to open ticket details
@@ -70,11 +74,17 @@ public class RecentActivityAdapter extends RecyclerView.Adapter<RecentActivityAd
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
-        TextView tvTicketId;
+        TextView tvTicketId, tvStatusBadge, tvDate, tvCustomerName, tvServiceType, tvDescription, tvAddress;
 
         ViewHolder(View itemView) {
             super(itemView);
             tvTicketId = itemView.findViewById(R.id.tvTicketId);
+            tvStatusBadge = itemView.findViewById(R.id.tvStatusBadge);
+            tvDate = itemView.findViewById(R.id.tvDate);
+            tvCustomerName = itemView.findViewById(R.id.tvCustomerName);
+            tvServiceType = itemView.findViewById(R.id.tvServiceType);
+            tvDescription = itemView.findViewById(R.id.tvDescription);
+            tvAddress = itemView.findViewById(R.id.tvAddress);
         }
     }
 }
