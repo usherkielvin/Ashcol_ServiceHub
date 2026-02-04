@@ -55,9 +55,11 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import app.hub.common.FirestoreManager;
 
 public class UserProfileFragment extends Fragment {
+    private static final String TAG = "UserProfileFragment";
 
     private TokenManager tokenManager;
     private FirestoreManager firestoreManager;
+
     private String currentName;
     private String currentEmail;
     private String currentBranch;
