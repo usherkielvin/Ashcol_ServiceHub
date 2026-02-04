@@ -43,7 +43,7 @@ public class AssignEmployeeActivity extends AppCompatActivity {
     private CalendarView calendarView;
     private com.google.android.material.textfield.TextInputEditText etTime, etNotes;
     private AutoCompleteTextView actvEmployee;
-    private android.widget.ImageButton btnBack;
+    private MaterialButton btnBack;
     private MaterialButton btnCancel, btnAssign;
     private ProgressBar progressBar;
 

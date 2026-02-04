@@ -52,13 +52,19 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 
+import app.hub.common.FirestoreManager;
+
 public class UserProfileFragment extends Fragment {
+    private static final String TAG = "UserProfileFragment";
 
     private TokenManager tokenManager;
+    private FirestoreManager firestoreManager;
+
     private String currentName;
     private String currentEmail;
+    private String currentBranch;
     private String connectionStatus;
-    private TextView tvName, tvUsername;
+    private TextView tvName, tvUsername, tvBranch;
     private ShapeableImageView imgProfile;
     private Uri cameraImageUri;
     private ActivityResultLauncher<Intent> galleryLauncher;
@@ -80,39 +86,72 @@ public class UserProfileFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         tokenManager = new TokenManager(requireContext());
+        firestoreManager = new FirestoreManager(requireContext());
         initializeViews(view);
         loadCachedData();
         loadProfileImage();
-        fetchUserData();
+
+        // Start real-time listener
+        firestoreManager.listenToUserProfile(new FirestoreManager.UserProfileListener() {
+            @Override
+            public void onProfileUpdated(UserResponse.Data profile) {
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() -> {
+                        processUserData(profile);
+                        updateUI();
+                        // Also update token manager with latest data
+                        if (profile.getName() != null)
+                            tokenManager.saveName(profile.getName());
+                        if (profile.getBranch() != null)
+                            tokenManager.saveBranchInfo(profile.getBranch(), 0);
+                    });
+                }
+            }
+
+            @Override
+            public void onError(Exception e) {
+                Log.e(TAG, "Firestore listen error: " + e.getMessage());
+                // Fallback to API if Firestore fails
+                fetchUserData();
+            }
+        });
+
         setupClickListeners(view);
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if (firestoreManager != null) {
+            firestoreManager.stopListening();
+        }
     }
 
     private void initializeLaunchers() {
         galleryLauncher = registerForActivityResult(
-            new ActivityResultContracts.StartActivityForResult(),
-            result -> {
-                if (result.getResultCode() == android.app.Activity.RESULT_OK && result.getData() != null) {
-                    Uri selectedImage = result.getData().getData();
-                    if (selectedImage != null) {
-                        setProfileImage(selectedImage);
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == android.app.Activity.RESULT_OK && result.getData() != null) {
+                        Uri selectedImage = result.getData().getData();
+                        if (selectedImage != null) {
+                            setProfileImage(selectedImage);
+                        }
                     }
-                }
-            }
-        );
+                });
 
         cameraLauncher = registerForActivityResult(
-            new ActivityResultContracts.StartActivityForResult(),
-            result -> {
-                if (result.getResultCode() == android.app.Activity.RESULT_OK && cameraImageUri != null) {
-                    setProfileImage(cameraImageUri);
-                }
-            }
-        );
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == android.app.Activity.RESULT_OK && cameraImageUri != null) {
+                        setProfileImage(cameraImageUri);
+                    }
+                });
     }
 
     private void initializeViews(View view) {
         tvName = view.findViewById(R.id.tv_name);
         tvUsername = view.findViewById(R.id.tv_username);
+        tvBranch = view.findViewById(R.id.tv_branch);
         imgProfile = view.findViewById(R.id.img_profile);
     }
 
@@ -125,11 +164,11 @@ public class UserProfileFragment extends Fragment {
                 tvName.setText(cachedName);
             }
         }
-        
+
         // Load and display cached email/connection status immediately
         String cachedEmail = getCachedEmail();
         String cachedConnectionStatus = getCachedConnectionStatus();
-        
+
         // Prefer connection status over email if available
         if (cachedConnectionStatus != null && !cachedConnectionStatus.isEmpty()) {
             currentEmail = cachedConnectionStatus;
@@ -140,6 +179,16 @@ public class UserProfileFragment extends Fragment {
             currentEmail = cachedEmail;
             if (tvUsername != null) {
                 tvUsername.setText(cachedEmail);
+            }
+        }
+
+        // Load and display cached branch immediately
+        String cachedBranch = tokenManager.getCachedBranch();
+        if (cachedBranch != null && !cachedBranch.isEmpty()) {
+            currentBranch = cachedBranch;
+            if (tvBranch != null) {
+                tvBranch.setText("📍 " + cachedBranch);
+                tvBranch.setVisibility(View.VISIBLE);
             }
         }
     }
@@ -179,9 +228,10 @@ public class UserProfileFragment extends Fragment {
     private void processUserData(UserResponse.Data userData) {
         currentName = buildNameFromApi(userData);
         currentEmail = getEmailToDisplay(userData);
-        
+        currentBranch = userData.getBranch();
+
         connectionStatus = null;
-        
+
         // Load profile photo from API if available
         if (userData.getProfilePhoto() != null && !userData.getProfilePhoto().isEmpty()) {
             loadProfileImageFromUrl(userData.getProfilePhoto());
@@ -204,7 +254,7 @@ public class UserProfileFragment extends Fragment {
                 // Ignore errors
             }
         }
-        
+
         updateUI();
         updateCache(connectionStatus);
     }
@@ -214,10 +264,10 @@ public class UserProfileFragment extends Fragment {
         if (isValidName(apiName)) {
             return apiName.trim();
         }
-        
+
         String firstName = userData.getFirstName();
         String lastName = userData.getLastName();
-        
+
         if (isValidName(firstName) || isValidName(lastName)) {
             StringBuilder builder = new StringBuilder();
             if (isValidName(firstName)) {
@@ -233,7 +283,7 @@ public class UserProfileFragment extends Fragment {
                 return builder.toString();
             }
         }
-        
+
         return null;
     }
 
@@ -245,19 +295,19 @@ public class UserProfileFragment extends Fragment {
 
         String apiEmail = userData.getEmail();
         String apiUsername = userData.getUsername();
-        
+
         if (isValidApiEmail(apiEmail, apiUsername)) {
             return apiEmail.trim();
         }
-        
+
         return cachedEmail;
     }
 
     private boolean isValidApiEmail(String email, String username) {
-        return email != null 
-            && !email.trim().isEmpty() 
-            && email.contains("@") 
-            && !email.equals(username);
+        return email != null
+                && !email.trim().isEmpty()
+                && email.contains("@")
+                && !email.equals(username);
     }
 
     private void updateCache(String connectionStatus) {
@@ -265,12 +315,12 @@ public class UserProfileFragment extends Fragment {
         if (isValidName(currentName)) {
             tokenManager.saveName(currentName);
         }
-        
+
         // Save email to cache if valid
         if (isValidEmail(currentEmail) && !currentEmail.equals(getCachedEmail())) {
             tokenManager.saveEmail(currentEmail);
         }
-        
+
         // Save connection status to cache
         if (connectionStatus != null && !connectionStatus.isEmpty()) {
             saveConnectionStatus(connectionStatus);
@@ -281,11 +331,13 @@ public class UserProfileFragment extends Fragment {
     }
 
     private void updateUI() {
-        if (getActivity() == null || getView() == null) return;
-        
+        if (getActivity() == null || getView() == null)
+            return;
+
         getActivity().runOnUiThread(() -> {
             updateNameDisplay();
             updateEmailDisplay();
+            updateBranchDisplay();
         });
     }
 
@@ -298,7 +350,7 @@ public class UserProfileFragment extends Fragment {
 
     private void updateEmailDisplay() {
         String displayEmail = currentEmail;
-        
+
         // If we have connection status text, use it directly
         if (connectionStatus != null && !connectionStatus.isEmpty()) {
             if (tvUsername != null) {
@@ -306,26 +358,43 @@ public class UserProfileFragment extends Fragment {
             }
             return;
         }
-        
+
         // Otherwise, use email validation logic
         if (!isValidEmail(displayEmail)) {
             displayEmail = getCachedEmail();
         }
-        
+
         if (isValidEmail(displayEmail) && tvUsername != null) {
             tvUsername.setText(displayEmail);
         }
     }
 
+    private void updateBranchDisplay() {
+        if (currentBranch != null && !currentBranch.isEmpty() && tvBranch != null) {
+            tvBranch.setText("📍 " + currentBranch);
+            tvBranch.setVisibility(View.VISIBLE);
+            // Cache the branch info
+            tokenManager.saveBranchInfo(currentBranch, 0);
+        } else {
+            // Try to load from cache
+            String cachedBranch = tokenManager.getCachedBranch();
+            if (cachedBranch != null && !cachedBranch.isEmpty() && tvBranch != null) {
+                tvBranch.setText("📍 " + cachedBranch);
+                tvBranch.setVisibility(View.VISIBLE);
+            }
+        }
+    }
+
     private void fallbackToCachedData() {
-        if (getActivity() == null) return;
+        if (getActivity() == null)
+            return;
         getActivity().runOnUiThread(() -> {
             String cachedName = getCachedName();
             if (isValidName(cachedName) && tvName != null) {
                 tvName.setText(cachedName);
                 currentName = cachedName;
             }
-            
+
             String cachedEmail = getCachedEmail();
             if (isValidEmail(cachedEmail) && tvUsername != null) {
                 tvUsername.setText(cachedEmail);
@@ -335,16 +404,16 @@ public class UserProfileFragment extends Fragment {
     }
 
     private boolean isValidName(String name) {
-        return name != null 
-            && !name.trim().isEmpty() 
-            && !name.trim().equals("null") 
-            && !name.trim().contains("null");
+        return name != null
+                && !name.trim().isEmpty()
+                && !name.trim().equals("null")
+                && !name.trim().contains("null");
     }
 
     private boolean isValidEmail(String email) {
-        return email != null 
-            && email.contains("@") 
-            && email.trim().length() > 3;
+        return email != null
+                && email.contains("@")
+                && email.trim().length() > 3;
     }
 
     private String getCachedName() {
@@ -391,12 +460,9 @@ public class UserProfileFragment extends Fragment {
 
     private void setupClickListeners(View view) {
         setClickListener(view, R.id.btn_sign_out, () -> logout());
-        setClickListener(view, R.id.btn_personal_info, () -> 
-            showToast("Personal Information clicked"));
-        setClickListener(view, R.id.btn_password_privacy, () -> 
-            navigateToChangePassword());
-        setClickListener(view, R.id.btn_help, () -> 
-            showToast("Help & Feedback clicked"));
+        setClickListener(view, R.id.btn_personal_info, () -> showToast("Personal Information clicked"));
+        setClickListener(view, R.id.btn_password_privacy, () -> navigateToChangePassword());
+        setClickListener(view, R.id.btn_help, () -> showToast("Help & Feedback clicked"));
         setClickListener(view, R.id.btn_edit_photo, () -> showImagePickerDialog());
         setClickListener(view, R.id.btn_appearance, () -> 
             showToast("Appearance clicked"));
@@ -404,8 +470,6 @@ public class UserProfileFragment extends Fragment {
             showNotificationSettings());
         setClickListener(view, R.id.btn_language, () -> 
             showToast("Language clicked"));
-        setClickListener(view, R.id.btn_payroll, () -> 
-            showToast("Payroll clicked"));
     }
 
     private void setClickListener(View view, int id, Runnable action) {
@@ -416,33 +480,32 @@ public class UserProfileFragment extends Fragment {
     }
 
     private void showNotificationSettings() {
-        if (getContext() == null) return;
-        
+        if (getContext() == null)
+            return;
+
         BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(requireContext());
         View view = getLayoutInflater().inflate(R.layout.user_notificationstoggler, null);
-        
+
         SwitchMaterial switchPush = view.findViewById(R.id.switch_push);
         SwitchMaterial switchEmail = view.findViewById(R.id.switch_email);
         SwitchMaterial switchSms = view.findViewById(R.id.switch_sms);
-        
+
         if (switchPush != null) {
             switchPush.setChecked(tokenManager.isPushEnabled());
-            switchPush.setOnCheckedChangeListener((buttonView, isChecked) -> 
-                tokenManager.setPushEnabled(isChecked));
+            switchPush.setOnCheckedChangeListener((buttonView, isChecked) -> tokenManager.setPushEnabled(isChecked));
         }
-        
+
         if (switchEmail != null) {
             switchEmail.setChecked(tokenManager.isEmailNotifEnabled());
-            switchEmail.setOnCheckedChangeListener((buttonView, isChecked) -> 
-                tokenManager.setEmailNotifEnabled(isChecked));
+            switchEmail.setOnCheckedChangeListener(
+                    (buttonView, isChecked) -> tokenManager.setEmailNotifEnabled(isChecked));
         }
-        
+
         if (switchSms != null) {
             switchSms.setChecked(tokenManager.isSmsNotifEnabled());
-            switchSms.setOnCheckedChangeListener((buttonView, isChecked) -> 
-                tokenManager.setSmsNotifEnabled(isChecked));
+            switchSms.setOnCheckedChangeListener((buttonView, isChecked) -> tokenManager.setSmsNotifEnabled(isChecked));
         }
-        
+
         bottomSheetDialog.setContentView(view);
         bottomSheetDialog.show();
     }
@@ -453,13 +516,14 @@ public class UserProfileFragment extends Fragment {
 
     private void logout() {
         // Show progress indicator
-        if (getActivity() == null) return;
-            
+        if (getActivity() == null)
+            return;
+
         android.app.ProgressDialog progressDialog = new android.app.ProgressDialog(getContext());
         progressDialog.setMessage("Logging out...");
         progressDialog.setCancelable(false);
         progressDialog.show();
-            
+
         String token = tokenManager.getToken();
         if (token != null) {
             ApiService apiService = ApiClient.getApiService();
@@ -471,18 +535,18 @@ public class UserProfileFragment extends Fragment {
                     if (progressDialog.isShowing()) {
                         progressDialog.dismiss();
                     }
-                        
+
                     // Perform cleanup operations asynchronously
                     performLogoutCleanup();
                 }
-    
+
                 @Override
                 public void onFailure(@NonNull Call<LogoutResponse> call, @NonNull Throwable t) {
                     // Dismiss progress dialog
                     if (progressDialog.isShowing()) {
                         progressDialog.dismiss();
                     }
-                        
+
                     // Still perform cleanup even if API call fails
                     performLogoutCleanup();
                 }
@@ -492,22 +556,22 @@ public class UserProfileFragment extends Fragment {
             if (progressDialog.isShowing()) {
                 progressDialog.dismiss();
             }
-                
+
             // No token, just perform cleanup
             performLogoutCleanup();
         }
     }
-        
+
     private void performLogoutCleanup() {
         // Run cleanup operations in background to prevent blocking UI
         new Thread(() -> {
             try {
                 // Clear user data first (fast operation)
                 clearUserData();
-                    
+
                 // Sign out from Google (this can be slow)
                 signOutFromGoogle();
-                    
+
                 // Navigate to login on main thread
                 if (getActivity() != null) {
                     getActivity().runOnUiThread(this::navigateToLogin);
@@ -530,25 +594,25 @@ public class UserProfileFragment extends Fragment {
                         .requestProfile()
                         .build();
                 GoogleSignInClient googleSignInClient = GoogleSignIn.getClient(getActivity(), gso);
-                
+
                 // Perform sign out with timeout
-                java.util.concurrent.CompletableFuture<Void> signOutFuture = 
-                    java.util.concurrent.CompletableFuture.runAsync(() -> {
-                        try {
-                            googleSignInClient.signOut().addOnCompleteListener(task -> {
-                                if (task.isSuccessful()) {
-                                    Log.d("UserProfileFragment", "Google sign out successful");
-                                } else {
-                                    Log.w("UserProfileFragment", "Google sign out failed: " + task.getException());
-                                }
-                            }).addOnFailureListener(e -> {
-                                Log.w("UserProfileFragment", "Google sign out error: " + e.getMessage());
-                            });
-                        } catch (Exception e) {
-                            Log.w("UserProfileFragment", "Google sign out exception: " + e.getMessage());
-                        }
-                    });
-                
+                java.util.concurrent.CompletableFuture<Void> signOutFuture = java.util.concurrent.CompletableFuture
+                        .runAsync(() -> {
+                            try {
+                                googleSignInClient.signOut().addOnCompleteListener(task -> {
+                                    if (task.isSuccessful()) {
+                                        Log.d("UserProfileFragment", "Google sign out successful");
+                                    } else {
+                                        Log.w("UserProfileFragment", "Google sign out failed: " + task.getException());
+                                    }
+                                }).addOnFailureListener(e -> {
+                                    Log.w("UserProfileFragment", "Google sign out error: " + e.getMessage());
+                                });
+                            } catch (Exception e) {
+                                Log.w("UserProfileFragment", "Google sign out exception: " + e.getMessage());
+                            }
+                        });
+
                 // Wait for sign out with timeout (don't block forever)
                 try {
                     signOutFuture.get(3, java.util.concurrent.TimeUnit.SECONDS);
@@ -569,7 +633,7 @@ public class UserProfileFragment extends Fragment {
             if (tokenManager != null) {
                 tokenManager.clear();
             }
-            
+
             // Delete locally stored profile photo
             if (requireContext() != null) {
                 File imageFile = new File(requireContext().getFilesDir(), "profile_image.jpg");
@@ -584,8 +648,9 @@ public class UserProfileFragment extends Fragment {
     }
 
     private void navigateToLogin() {
-        if (getActivity() == null) return;
-        
+        if (getActivity() == null)
+            return;
+
         try {
             Intent intent = new Intent(getActivity(), MainActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
@@ -599,9 +664,10 @@ public class UserProfileFragment extends Fragment {
     }
 
     private void showImagePickerDialog() {
-        if (getContext() == null) return;
+        if (getContext() == null)
+            return;
 
-        String[] options = {"Camera", "Gallery", "Remove Photo", "Cancel"};
+        String[] options = { "Camera", "Gallery", "Remove Photo", "Cancel" };
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
         builder.setTitle("Select Profile Photo");
         builder.setItems(options, (dialog, which) -> {
@@ -617,7 +683,8 @@ public class UserProfileFragment extends Fragment {
     }
 
     private void showRemovePhotoConfirmation() {
-        if (getContext() == null) return;
+        if (getContext() == null)
+            return;
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
         builder.setTitle("Remove Photo");
@@ -685,7 +752,8 @@ public class UserProfileFragment extends Fragment {
     }
 
     private Bitmap resizeBitmap(Bitmap bitmap, int maxWidth, int maxHeight) {
-        if (bitmap == null) return null;
+        if (bitmap == null)
+            return null;
 
         int width = bitmap.getWidth();
         int height = bitmap.getHeight();
@@ -746,23 +814,22 @@ public class UserProfileFragment extends Fragment {
 
             // Create request body for the file
             RequestBody requestFile = RequestBody.create(
-                MediaType.parse("image/*"),
-                imageFile
-            );
+                    MediaType.parse("image/*"),
+                    imageFile);
 
             // Create multipart body part
             MultipartBody.Part photoPart = MultipartBody.Part.createFormData(
-                "photo",
-                imageFile.getName(),
-                requestFile
-            );
+                    "photo",
+                    imageFile.getName(),
+                    requestFile);
 
             // Make API call
             ApiService apiService = ApiClient.getApiService();
             Call<ProfilePhotoResponse> call = apiService.uploadProfilePhoto("Bearer " + token, photoPart);
             call.enqueue(new Callback<ProfilePhotoResponse>() {
                 @Override
-                public void onResponse(@NonNull Call<ProfilePhotoResponse> call, @NonNull Response<ProfilePhotoResponse> response) {
+                public void onResponse(@NonNull Call<ProfilePhotoResponse> call,
+                        @NonNull Response<ProfilePhotoResponse> response) {
                     if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
                         ProfilePhotoResponse photoResponse = response.body();
                         if (photoResponse.getData() != null && photoResponse.getData().getProfilePhoto() != null) {
@@ -791,9 +858,11 @@ public class UserProfileFragment extends Fragment {
     private File createFileFromUri(Uri uri) {
         try {
             InputStream inputStream = requireContext().getContentResolver().openInputStream(uri);
-            if (inputStream == null) return null;
+            if (inputStream == null)
+                return null;
 
-            File tempFile = new File(requireContext().getFilesDir(), "temp_upload_" + System.currentTimeMillis() + ".jpg");
+            File tempFile = new File(requireContext().getFilesDir(),
+                    "temp_upload_" + System.currentTimeMillis() + ".jpg");
             FileOutputStream outputStream = new FileOutputStream(tempFile);
 
             byte[] buffer = new byte[4096];
@@ -852,11 +921,12 @@ public class UserProfileFragment extends Fragment {
         Call<ProfilePhotoResponse> call = apiService.deleteProfilePhoto("Bearer " + token);
         call.enqueue(new Callback<ProfilePhotoResponse>() {
             @Override
-            public void onResponse(@NonNull Call<ProfilePhotoResponse> call, @NonNull Response<ProfilePhotoResponse> response) {
+            public void onResponse(@NonNull Call<ProfilePhotoResponse> call,
+                    @NonNull Response<ProfilePhotoResponse> response) {
                 if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
                     // Photo deleted successfully
                     showToast("Profile photo removed");
-                    
+
                     // Clear local cache
                     try {
                         File imageFile = new File(requireContext().getFilesDir(), "profile_image.jpg");
@@ -866,7 +936,7 @@ public class UserProfileFragment extends Fragment {
                     } catch (Exception e) {
                         // Ignore errors
                     }
-                    
+
                     // Set default avatar
                     if (imgProfile != null && getActivity() != null) {
                         getActivity().runOnUiThread(() -> {
@@ -875,7 +945,7 @@ public class UserProfileFragment extends Fragment {
                             }
                         });
                     }
-                    
+
                     // Reload user data to get updated profile photo (should be null now)
                     fetchUserData();
                 } else {
@@ -894,9 +964,9 @@ public class UserProfileFragment extends Fragment {
         if (getActivity() != null) {
             ChangePasswordFragment changePasswordFragment = new ChangePasswordFragment();
             getActivity().getSupportFragmentManager().beginTransaction()
-                .replace(R.id.fragmentContainerView, changePasswordFragment)
-                .addToBackStack(null)
-                .commit();
+                    .replace(R.id.fragmentContainerView, changePasswordFragment)
+                    .addToBackStack(null)
+                    .commit();
         }
     }
 }

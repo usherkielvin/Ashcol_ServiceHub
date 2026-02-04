@@ -84,8 +84,14 @@ public interface ApiService {
         Call<ProfilePhotoResponse> deleteProfilePhoto(
                         @Header("Authorization") String token);
 
-        @GET("api/v1/employees")
-        Call<EmployeeResponse> getEmployees(@Header("Authorization") String token);
+    @GET("api/v1/employees")
+    Call<EmployeeResponse> getEmployees(@Header("Authorization") String token);
+
+    @GET("api/v1/employees/by-branch")
+    Call<EmployeeResponse> getEmployeesByBranch(@Header("Authorization") String token, @retrofit2.http.Query("branch") String branchName);
+
+    @GET("api/v1/branches")
+    Call<BranchResponse> getBranches(@Header("Authorization") String token);
 
         @POST("api/v1/update-location")
         Call<UpdateLocationResponse> updateLocation(@Header("Authorization") String token,

@@ -156,6 +156,7 @@ public class AdminAddManager extends AppCompatActivity {
                     RegisterResponse registerResponse = response.body();
                     if (registerResponse.isSuccess()) {
                         Toast.makeText(AdminAddManager.this, "Manager created successfully", Toast.LENGTH_SHORT).show();
+                        setResult(RESULT_OK); // Set result for parent activity to refresh
                         finish();
                     } else {
                         String errorMessage = "Failed to create manager";

@@ -41,7 +41,13 @@ android {
         abortOnError = false
         checkReleaseBuilds = false
     }
+    packaging {
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        }
+    }
 }
+
 
 dependencies {
     // Import the Firebase BoM
@@ -81,6 +87,8 @@ dependencies {
     implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
     // Google Sign-In
     implementation("com.google.android.gms:play-services-auth:21.0.0")
+    // Firebase Firestore
+    implementation("com.google.firebase:firebase-firestore")
     // Google Maps
     implementation("com.google.android.gms:play-services-maps:19.0.0")
     implementation("com.google.android.gms:play-services-location:21.3.0")

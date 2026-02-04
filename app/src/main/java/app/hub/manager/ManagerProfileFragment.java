@@ -48,7 +48,7 @@ public class ManagerProfileFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+            Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_manager_profile, container, false);
     }
@@ -59,29 +59,30 @@ public class ManagerProfileFragment extends Fragment {
 
         // Initialize views
         initializeViews(view);
-        
+
         // Load user data
         loadUserData();
-        
+
         // Setup click listeners for all buttons
         setupClickListeners(view);
     }
-    
+
     private void initializeViews(View view) {
         // Initialize profile image and text views
         // These will be populated when user data is loaded
     }
-    
+
     private void loadUserData() {
         // Load user data from TokenManager
         String name = tokenManager.getName();
         String email = tokenManager.getEmail();
         String role = tokenManager.getRole();
-        
+
         if (getView() != null) {
             TextView tvName = getView().findViewById(R.id.tv_name);
             TextView tvUsername = getView().findViewById(R.id.tv_username);
-            
+            TextView tvManagerRole = getView().findViewById(R.id.tv_manager_role);
+
             // Set name
             if (tvName != null) {
                 if (name != null && !name.isEmpty()) {
@@ -90,7 +91,7 @@ public class ManagerProfileFragment extends Fragment {
                     tvName.setText("Manager");
                 }
             }
-            
+
             // Set email/username
             if (tvUsername != null) {
                 if (email != null && !email.isEmpty()) {
@@ -99,36 +100,46 @@ public class ManagerProfileFragment extends Fragment {
                     tvUsername.setText("manager@ashcol.com");
                 }
             }
+
+            // Set manager role with branch
+            if (tvManagerRole != null) {
+                String branchName = ManagerDataManager.getCachedBranchName();
+                if (branchName != null && !branchName.isEmpty() && !branchName.equals("No Branch Assigned")) {
+                    tvManagerRole.setText("Manager of " + branchName);
+                } else {
+                    tvManagerRole.setText("Branch Manager");
+                }
+            }
         }
-        
+
         Log.d("ManagerProfile", "Loaded user data - Name: " + name + ", Email: " + email + ", Role: " + role);
     }
-    
+
     private void setupClickListeners(View view) {
         // Edit Photo Button
         MaterialButton editPhotoButton = view.findViewById(R.id.btn_edit_photo);
         if (editPhotoButton != null) {
             editPhotoButton.setOnClickListener(v -> showEditPhotoOptions());
         }
-        
+
         // Appearance Button
         MaterialButton appearanceButton = view.findViewById(R.id.btn_appearance);
         if (appearanceButton != null) {
             appearanceButton.setOnClickListener(v -> showAppearanceSettings());
         }
-        
+
         // Notifications Button
         MaterialButton notificationsButton = view.findViewById(R.id.btn_notifications);
         if (notificationsButton != null) {
             notificationsButton.setOnClickListener(v -> showNotificationSettings());
         }
-        
+
         // Language Button
         MaterialButton languageButton = view.findViewById(R.id.btn_language);
         if (languageButton != null) {
             languageButton.setOnClickListener(v -> showLanguageSettings());
         }
-        
+
         // Personal Info Button
         MaterialButton personalInfoButton = view.findViewById(R.id.btn_personal_info);
         if (personalInfoButton != null) {
@@ -140,13 +151,13 @@ public class ManagerProfileFragment extends Fragment {
         if (passwordPrivacyButton != null) {
             passwordPrivacyButton.setOnClickListener(v -> navigateToChangePassword());
         }
-        
+
         // Payroll Button
         MaterialButton payrollButton = view.findViewById(R.id.btn_payroll);
         if (payrollButton != null) {
             payrollButton.setOnClickListener(v -> showPayrollInfo());
         }
-        
+
         // Help Button
         MaterialButton helpButton = view.findViewById(R.id.btn_help);
         if (helpButton != null) {
@@ -159,111 +170,116 @@ public class ManagerProfileFragment extends Fragment {
             logoutButton.setOnClickListener(v -> logout());
         }
     }
-    
+
     private void showEditPhotoOptions() {
-        if (getContext() == null) return;
-        
+        if (getContext() == null)
+            return;
+
         new androidx.appcompat.app.AlertDialog.Builder(getContext())
-            .setTitle("Change Profile Photo")
-            .setItems(new String[]{"Take Photo", "Choose from Gallery", "Remove Photo"}, (dialog, which) -> {
-                switch (which) {
-                    case 0:
-                        Toast.makeText(getContext(), "Camera feature coming soon", Toast.LENGTH_SHORT).show();
-                        break;
-                    case 1:
-                        Toast.makeText(getContext(), "Gallery feature coming soon", Toast.LENGTH_SHORT).show();
-                        break;
-                    case 2:
-                        Toast.makeText(getContext(), "Remove photo feature coming soon", Toast.LENGTH_SHORT).show();
-                        break;
-                }
-            })
-            .setNegativeButton("Cancel", null)
-            .show();
+                .setTitle("Change Profile Photo")
+                .setItems(new String[] { "Take Photo", "Choose from Gallery", "Remove Photo" }, (dialog, which) -> {
+                    switch (which) {
+                        case 0:
+                            Toast.makeText(getContext(), "Camera feature coming soon", Toast.LENGTH_SHORT).show();
+                            break;
+                        case 1:
+                            Toast.makeText(getContext(), "Gallery feature coming soon", Toast.LENGTH_SHORT).show();
+                            break;
+                        case 2:
+                            Toast.makeText(getContext(), "Remove photo feature coming soon", Toast.LENGTH_SHORT).show();
+                            break;
+                    }
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
     }
-    
+
     private void showAppearanceSettings() {
-        if (getContext() == null) return;
-        
+        if (getContext() == null)
+            return;
+
         new androidx.appcompat.app.AlertDialog.Builder(getContext())
-            .setTitle("Appearance Settings")
-            .setMessage("Theme and appearance customization options will be available in a future update.")
-            .setPositiveButton("OK", null)
-            .show();
+                .setTitle("Appearance Settings")
+                .setMessage("Theme and appearance customization options will be available in a future update.")
+                .setPositiveButton("OK", null)
+                .show();
     }
-    
+
     private void showNotificationSettings() {
-        if (getContext() == null) return;
-        
-        com.google.android.material.bottomsheet.BottomSheetDialog bottomSheetDialog = new com.google.android.material.bottomsheet.BottomSheetDialog(requireContext());
+        if (getContext() == null)
+            return;
+
+        com.google.android.material.bottomsheet.BottomSheetDialog bottomSheetDialog = new com.google.android.material.bottomsheet.BottomSheetDialog(
+                requireContext());
         View view = getLayoutInflater().inflate(R.layout.user_notificationstoggler, null);
-        
+
         com.google.android.material.switchmaterial.SwitchMaterial switchPush = view.findViewById(R.id.switch_push);
         com.google.android.material.switchmaterial.SwitchMaterial switchEmail = view.findViewById(R.id.switch_email);
         com.google.android.material.switchmaterial.SwitchMaterial switchSms = view.findViewById(R.id.switch_sms);
-        
+
         if (switchPush != null) {
             switchPush.setChecked(tokenManager.isPushEnabled());
-            switchPush.setOnCheckedChangeListener((buttonView, isChecked) -> 
-                tokenManager.setPushEnabled(isChecked));
+            switchPush.setOnCheckedChangeListener((buttonView, isChecked) -> tokenManager.setPushEnabled(isChecked));
         }
-        
+
         if (switchEmail != null) {
             switchEmail.setChecked(tokenManager.isEmailNotifEnabled());
-            switchEmail.setOnCheckedChangeListener((buttonView, isChecked) -> 
-                tokenManager.setEmailNotifEnabled(isChecked));
+            switchEmail.setOnCheckedChangeListener(
+                    (buttonView, isChecked) -> tokenManager.setEmailNotifEnabled(isChecked));
         }
-        
+
         if (switchSms != null) {
             switchSms.setChecked(tokenManager.isSmsNotifEnabled());
-            switchSms.setOnCheckedChangeListener((buttonView, isChecked) -> 
-                tokenManager.setSmsNotifEnabled(isChecked));
+            switchSms.setOnCheckedChangeListener((buttonView, isChecked) -> tokenManager.setSmsNotifEnabled(isChecked));
         }
-        
+
         bottomSheetDialog.setContentView(view);
         bottomSheetDialog.show();
     }
-    
+
     private void showLanguageSettings() {
-        if (getContext() == null) return;
-        
-        String[] languages = {"English", "Filipino", "Spanish"};
+        if (getContext() == null)
+            return;
+
+        String[] languages = { "English", "Filipino", "Spanish" };
         int currentSelection = 0; // Default to English
-        
+
         new androidx.appcompat.app.AlertDialog.Builder(getContext())
-            .setTitle("Select Language")
-            .setSingleChoiceItems(languages, currentSelection, (dialog, which) -> {
-                Toast.makeText(getContext(), "Language: " + languages[which] + " (Coming soon)", Toast.LENGTH_SHORT).show();
-                dialog.dismiss();
-            })
-            .setNegativeButton("Cancel", null)
-            .show();
+                .setTitle("Select Language")
+                .setSingleChoiceItems(languages, currentSelection, (dialog, which) -> {
+                    Toast.makeText(getContext(), "Language: " + languages[which] + " (Coming soon)", Toast.LENGTH_SHORT)
+                            .show();
+                    dialog.dismiss();
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
     }
-    
+
     private void showPersonalInfo() {
-        if (getContext() == null) return;
-        
+        if (getContext() == null)
+            return;
+
         // Get user information from TokenManager
         String name = tokenManager.getName();
         String email = tokenManager.getEmail();
         String role = tokenManager.getRole();
-        
+
         // Format the information nicely
         StringBuilder infoBuilder = new StringBuilder();
         infoBuilder.append("📋 PERSONAL INFORMATION\n\n");
-        
+
         infoBuilder.append("👤 Name: ");
         infoBuilder.append(name != null && !name.isEmpty() ? name : "Not available");
         infoBuilder.append("\n\n");
-        
+
         infoBuilder.append("📧 Email: ");
         infoBuilder.append(email != null && !email.isEmpty() ? email : "Not available");
         infoBuilder.append("\n\n");
-        
+
         infoBuilder.append("🏢 Role: ");
         infoBuilder.append(role != null && !role.isEmpty() ? role.toUpperCase() : "MANAGER");
         infoBuilder.append("\n\n");
-        
+
         // Try to get branch information from ManagerDataManager
         String branchInfo = ManagerDataManager.getCachedBranchName();
         if (branchInfo != null && !branchInfo.isEmpty() && !branchInfo.equals("No Branch Assigned")) {
@@ -271,118 +287,131 @@ public class ManagerProfileFragment extends Fragment {
             infoBuilder.append(branchInfo);
             infoBuilder.append("\n\n");
         }
-        
+
         infoBuilder.append("ℹ️ Full profile editing will be available in a future update.");
-        
+
         new androidx.appcompat.app.AlertDialog.Builder(getContext())
-            .setTitle("Personal Information")
-            .setMessage(infoBuilder.toString())
-            .setPositiveButton("OK", null)
-            .show();
+                .setTitle("Personal Information")
+                .setMessage(infoBuilder.toString())
+                .setPositiveButton("OK", null)
+                .show();
     }
-    
+
     private void showPayrollInfo() {
-        if (getContext() == null) return;
-        
+        if (getContext() == null)
+            return;
+
         new androidx.appcompat.app.AlertDialog.Builder(getContext())
-            .setTitle("Payroll Information")
-            .setMessage("Payroll and compensation details will be available in a future update.")
-            .setPositiveButton("OK", null)
-            .show();
+                .setTitle("Payroll Information")
+                .setMessage("Payroll and compensation details will be available in a future update.")
+                .setPositiveButton("OK", null)
+                .show();
     }
-    
+
     private void showHelpAndFeedback() {
-        if (getContext() == null) return;
-        
-        String[] options = {"📞 Contact Support", "💬 Send Feedback", "🐛 Report a Bug", "❓ FAQ", "📖 User Guide"};
-        
+        if (getContext() == null)
+            return;
+
+        String[] options = { "📞 Contact Support", "💬 Send Feedback", "🐛 Report a Bug", "❓ FAQ", "📖 User Guide" };
+
         new androidx.appcompat.app.AlertDialog.Builder(getContext())
-            .setTitle("Help & Feedback")
-            .setItems(options, (dialog, which) -> {
-                switch (which) {
-                    case 0: // Contact Support
-                        showContactSupport();
-                        break;
-                    case 1: // Send Feedback
-                        Toast.makeText(getContext(), "Feedback feature coming soon", Toast.LENGTH_SHORT).show();
-                        break;
-                    case 2: // Report Bug
-                        Toast.makeText(getContext(), "Bug reporting feature coming soon", Toast.LENGTH_SHORT).show();
-                        break;
-                    case 3: // FAQ
-                        showFAQ();
-                        break;
-                    case 4: // User Guide
-                        Toast.makeText(getContext(), "User guide coming soon", Toast.LENGTH_SHORT).show();
-                        break;
-                }
-            })
-            .setNegativeButton("Cancel", null)
-            .show();
+                .setTitle("Help & Feedback")
+                .setItems(options, (dialog, which) -> {
+                    switch (which) {
+                        case 0: // Contact Support
+                            showContactSupport();
+                            break;
+                        case 1: // Send Feedback
+                            Toast.makeText(getContext(), "Feedback feature coming soon", Toast.LENGTH_SHORT).show();
+                            break;
+                        case 2: // Report Bug
+                            Toast.makeText(getContext(), "Bug reporting feature coming soon", Toast.LENGTH_SHORT)
+                                    .show();
+                            break;
+                        case 3: // FAQ
+                            showFAQ();
+                            break;
+                        case 4: // User Guide
+                            Toast.makeText(getContext(), "User guide coming soon", Toast.LENGTH_SHORT).show();
+                            break;
+                    }
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
     }
-    
+
     private void showContactSupport() {
-        if (getContext() == null) return;
-        
+        if (getContext() == null)
+            return;
+
         String supportInfo = "📞 ASHCOL SUPPORT\n\n" +
-                           "📧 Email: support@ashcol.com\n" +
-                           "📱 Phone: +63 (2) 8123-4567\n" +
-                           "🕒 Hours: Mon-Fri 8AM-6PM\n" +
-                           "🕒 Sat: 8AM-12PM\n\n" +
-                           "For urgent technical issues, please call our hotline.";
-        
+                "📧 Email: support@ashcol.com\n" +
+                "📱 Phone: +63 (2) 8123-4567\n" +
+                "🕒 Hours: Mon-Fri 8AM-6PM\n" +
+                "🕒 Sat: 8AM-12PM\n\n" +
+                "For urgent technical issues, please call our hotline.";
+
         new androidx.appcompat.app.AlertDialog.Builder(getContext())
-            .setTitle("Contact Support")
-            .setMessage(supportInfo)
-            .setPositiveButton("OK", null)
-            .show();
+                .setTitle("Contact Support")
+                .setMessage(supportInfo)
+                .setPositiveButton("OK", null)
+                .show();
     }
-    
+
     private void showFAQ() {
-        if (getContext() == null) return;
-        
+        if (getContext() == null)
+            return;
+
         String faqContent = "❓ FREQUENTLY ASKED QUESTIONS\n\n" +
-                          "Q: How do I assign tickets to employees?\n" +
-                          "A: Go to Work tab → Select ticket → Assign Employee\n\n" +
-                          "Q: How do I view employee performance?\n" +
-                          "A: Go to Employee tab → Select employee → View Details\n\n" +
-                          "Q: How do I generate reports?\n" +
-                          "A: Go to Records tab → Select date range → Generate\n\n" +
-                          "Q: How do I change my password?\n" +
-                          "A: Profile tab → Password & Privacy → Change Password\n\n" +
-                          "For more help, contact support.";
-        
+                "Q: How do I assign tickets to employees?\n" +
+                "A: Go to Work tab → Select ticket → Assign Employee\n\n" +
+                "Q: How do I view employee performance?\n" +
+                "A: Go to Employee tab → Select employee → View Details\n\n" +
+                "Q: How do I generate reports?\n" +
+                "A: Go to Records tab → Select date range → Generate\n\n" +
+                "Q: How do I change my password?\n" +
+                "A: Profile tab → Password & Privacy → Change Password\n\n" +
+                "For more help, contact support.";
+
         new androidx.appcompat.app.AlertDialog.Builder(getContext())
-            .setTitle("FAQ")
-            .setMessage(faqContent)
-            .setPositiveButton("OK", null)
-            .show();
+                .setTitle("FAQ")
+                .setMessage(faqContent)
+                .setPositiveButton("OK", null)
+                .show();
     }
 
     private void navigateToChangePassword() {
-        if (getContext() == null) return;
-        
+        if (getContext() == null)
+            return;
+
         showChangePasswordDialog();
     }
-    
+
     private void showChangePasswordDialog() {
-        if (getContext() == null) return;
+        if (getContext() == null)
+            return;
 
         View dialogView = getLayoutInflater().inflate(R.layout.dialog_change_password, null);
-        
-        com.google.android.material.textfield.TextInputEditText currentPasswordInput = dialogView.findViewById(R.id.currentPasswordInput);
-        com.google.android.material.textfield.TextInputEditText newPasswordInput = dialogView.findViewById(R.id.newPasswordInput);
-        com.google.android.material.textfield.TextInputEditText confirmPasswordInput = dialogView.findViewById(R.id.confirmPasswordInput);
-        com.google.android.material.textfield.TextInputLayout currentPasswordLayout = dialogView.findViewById(R.id.currentPasswordLayout);
-        com.google.android.material.textfield.TextInputLayout newPasswordLayout = dialogView.findViewById(R.id.newPasswordLayout);
-        com.google.android.material.textfield.TextInputLayout confirmPasswordLayout = dialogView.findViewById(R.id.confirmPasswordLayout);
+
+        com.google.android.material.textfield.TextInputEditText currentPasswordInput = dialogView
+                .findViewById(R.id.currentPasswordInput);
+        com.google.android.material.textfield.TextInputEditText newPasswordInput = dialogView
+                .findViewById(R.id.newPasswordInput);
+        com.google.android.material.textfield.TextInputEditText confirmPasswordInput = dialogView
+                .findViewById(R.id.confirmPasswordInput);
+        com.google.android.material.textfield.TextInputLayout currentPasswordLayout = dialogView
+                .findViewById(R.id.currentPasswordLayout);
+        com.google.android.material.textfield.TextInputLayout newPasswordLayout = dialogView
+                .findViewById(R.id.newPasswordLayout);
+        com.google.android.material.textfield.TextInputLayout confirmPasswordLayout = dialogView
+                .findViewById(R.id.confirmPasswordLayout);
 
         androidx.appcompat.app.AlertDialog dialog = new androidx.appcompat.app.AlertDialog.Builder(getContext())
-            .setTitle("Change Password")
-            .setView(dialogView)
-            .setPositiveButton("Save", null)
-            .setNegativeButton("Cancel", null)
-            .create();
+                .setTitle("Change Password")
+                .setView(dialogView)
+                .setPositiveButton("Save", null)
+                .setNegativeButton("Cancel", null)
+                .create();
 
         dialog.setOnShowListener(d -> {
             android.widget.Button positiveButton = dialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_POSITIVE);
@@ -390,39 +419,48 @@ public class ManagerProfileFragment extends Fragment {
                 String currentPassword = currentPasswordInput != null ? currentPasswordInput.getText().toString() : "";
                 String newPassword = newPasswordInput != null ? newPasswordInput.getText().toString() : "";
                 String confirmPassword = confirmPasswordInput != null ? confirmPasswordInput.getText().toString() : "";
-                
+
                 // Clear previous errors
-                if (currentPasswordLayout != null) currentPasswordLayout.setError(null);
-                if (newPasswordLayout != null) newPasswordLayout.setError(null);
-                if (confirmPasswordLayout != null) confirmPasswordLayout.setError(null);
-                
+                if (currentPasswordLayout != null)
+                    currentPasswordLayout.setError(null);
+                if (newPasswordLayout != null)
+                    newPasswordLayout.setError(null);
+                if (confirmPasswordLayout != null)
+                    confirmPasswordLayout.setError(null);
+
                 // Validate inputs
                 boolean isValid = true;
-                
+
                 if (currentPassword.isEmpty()) {
-                    if (currentPasswordLayout != null) currentPasswordLayout.setError("Current password is required");
+                    if (currentPasswordLayout != null)
+                        currentPasswordLayout.setError("Current password is required");
                     isValid = false;
                 }
-                
+
                 if (newPassword.isEmpty()) {
-                    if (newPasswordLayout != null) newPasswordLayout.setError("New password is required");
+                    if (newPasswordLayout != null)
+                        newPasswordLayout.setError("New password is required");
                     isValid = false;
                 } else if (newPassword.length() < 6) {
-                    if (newPasswordLayout != null) newPasswordLayout.setError("Password must be at least 6 characters");
+                    if (newPasswordLayout != null)
+                        newPasswordLayout.setError("Password must be at least 6 characters");
                     isValid = false;
                 }
-                
+
                 if (confirmPassword.isEmpty()) {
-                    if (confirmPasswordLayout != null) confirmPasswordLayout.setError("Please confirm your new password");
+                    if (confirmPasswordLayout != null)
+                        confirmPasswordLayout.setError("Please confirm your new password");
                     isValid = false;
                 } else if (!newPassword.equals(confirmPassword)) {
-                    if (confirmPasswordLayout != null) confirmPasswordLayout.setError("Passwords do not match");
+                    if (confirmPasswordLayout != null)
+                        confirmPasswordLayout.setError("Passwords do not match");
                     isValid = false;
                 }
-                
+
                 if (isValid) {
                     // TODO: Implement actual password change API call
-                    Toast.makeText(getContext(), "Password change functionality will be implemented soon", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), "Password change functionality will be implemented soon",
+                            Toast.LENGTH_SHORT).show();
                     dialog.dismiss();
                 }
             });
@@ -433,13 +471,14 @@ public class ManagerProfileFragment extends Fragment {
 
     private void logout() {
         // Show progress indicator
-        if (getActivity() == null) return;
-        
+        if (getActivity() == null)
+            return;
+
         android.app.ProgressDialog progressDialog = new android.app.ProgressDialog(getContext());
         progressDialog.setMessage("Logging out...");
         progressDialog.setCancelable(false);
         progressDialog.show();
-        
+
         String token = tokenManager.getToken();
         if (token != null) {
             ApiService apiService = ApiClient.getApiService();
@@ -451,7 +490,7 @@ public class ManagerProfileFragment extends Fragment {
                     if (progressDialog.isShowing()) {
                         progressDialog.dismiss();
                     }
-                    
+
                     // Perform cleanup operations asynchronously
                     performLogoutCleanup();
                 }
@@ -462,7 +501,7 @@ public class ManagerProfileFragment extends Fragment {
                     if (progressDialog.isShowing()) {
                         progressDialog.dismiss();
                     }
-                    
+
                     // Still perform cleanup even if API call fails
                     performLogoutCleanup();
                 }
@@ -472,22 +511,22 @@ public class ManagerProfileFragment extends Fragment {
             if (progressDialog.isShowing()) {
                 progressDialog.dismiss();
             }
-            
+
             // No token, just perform cleanup
             performLogoutCleanup();
         }
     }
-    
+
     private void performLogoutCleanup() {
         // Run cleanup operations in background to prevent blocking UI
         new Thread(() -> {
             try {
                 // Clear user data first (fast operation)
                 clearUserData();
-                
+
                 // Sign out from Google (this can be slow)
                 signOutFromGoogle();
-                
+
                 // Navigate to login on main thread
                 if (getActivity() != null) {
                     getActivity().runOnUiThread(this::navigateToLogin);
@@ -510,25 +549,26 @@ public class ManagerProfileFragment extends Fragment {
                         .requestProfile()
                         .build();
                 GoogleSignInClient googleSignInClient = GoogleSignIn.getClient(getActivity(), gso);
-                
+
                 // Perform sign out with timeout
-                java.util.concurrent.CompletableFuture<Void> signOutFuture = 
-                    java.util.concurrent.CompletableFuture.runAsync(() -> {
-                        try {
-                            googleSignInClient.signOut().addOnCompleteListener(task -> {
-                                if (task.isSuccessful()) {
-                                    Log.d("ManagerProfileFragment", "Google sign out successful");
-                                } else {
-                                    Log.w("ManagerProfileFragment", "Google sign out failed: " + task.getException());
-                                }
-                            }).addOnFailureListener(e -> {
-                                Log.w("ManagerProfileFragment", "Google sign out error: " + e.getMessage());
-                            });
-                        } catch (Exception e) {
-                            Log.w("ManagerProfileFragment", "Google sign out exception: " + e.getMessage());
-                        }
-                    });
-                
+                java.util.concurrent.CompletableFuture<Void> signOutFuture = java.util.concurrent.CompletableFuture
+                        .runAsync(() -> {
+                            try {
+                                googleSignInClient.signOut().addOnCompleteListener(task -> {
+                                    if (task.isSuccessful()) {
+                                        Log.d("ManagerProfileFragment", "Google sign out successful");
+                                    } else {
+                                        Log.w("ManagerProfileFragment",
+                                                "Google sign out failed: " + task.getException());
+                                    }
+                                }).addOnFailureListener(e -> {
+                                    Log.w("ManagerProfileFragment", "Google sign out error: " + e.getMessage());
+                                });
+                            } catch (Exception e) {
+                                Log.w("ManagerProfileFragment", "Google sign out exception: " + e.getMessage());
+                            }
+                        });
+
                 // Wait for sign out with timeout (don't block forever)
                 try {
                     signOutFuture.get(3, java.util.concurrent.TimeUnit.SECONDS);
@@ -544,7 +584,8 @@ public class ManagerProfileFragment extends Fragment {
     }
 
     private void navigateToLogin() {
-        if (getActivity() == null) return;
+        if (getActivity() == null)
+            return;
         Intent intent = new Intent(getActivity(), MainActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
@@ -554,7 +595,7 @@ public class ManagerProfileFragment extends Fragment {
     private void clearUserData() {
         // Clear token manager data
         tokenManager.clear();
-        
+
         // Delete locally stored profile photo
         try {
             File imageFile = new File(requireContext().getFilesDir(), "profile_image.jpg");
