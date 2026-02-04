@@ -38,7 +38,7 @@ public class UserHomeFragment extends Fragment {
     private LinearLayout dotsLayout;
     private Handler handler;
     private Runnable slideRunnable;
-    private List<Integer> images = Arrays.asList(R.drawable.slide1, R.drawable.slide2, R.drawable.slide3);
+    private List<Integer> images = Arrays.asList(R.drawable.banner_cleaning, R.drawable.banner_installation, R.drawable.banner_maintainance, R.drawable.banner_repair);
     private TextView tvAssignedBranch;
     private TokenManager tokenManager;
 
