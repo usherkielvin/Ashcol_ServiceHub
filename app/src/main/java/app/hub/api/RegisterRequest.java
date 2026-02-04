@@ -12,6 +12,10 @@ public class RegisterRequest {
     private String role;
     private String branch;
 
+    // Default constructor
+    public RegisterRequest() {
+    }
+
     public RegisterRequest(String username, String firstName, String lastName, String email, String phone, String location, String password, String passwordConfirmation, String role, String branch) {
         this.username = username;
         this.firstName = firstName;

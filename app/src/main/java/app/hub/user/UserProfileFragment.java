@@ -464,10 +464,12 @@ public class UserProfileFragment extends Fragment {
         setClickListener(view, R.id.btn_password_privacy, () -> navigateToChangePassword());
         setClickListener(view, R.id.btn_help, () -> showToast("Help & Feedback clicked"));
         setClickListener(view, R.id.btn_edit_photo, () -> showImagePickerDialog());
-        setClickListener(view, R.id.btn_appearance, () -> showToast("Appearance clicked"));
-        setClickListener(view, R.id.btn_notifications, () -> showNotificationSettings());
-        setClickListener(view, R.id.btn_language, () -> showToast("Language clicked"));
-        setClickListener(view, R.id.btn_payroll, () -> showToast("Payroll clicked"));
+        setClickListener(view, R.id.btn_appearance, () -> 
+            showToast("Appearance clicked"));
+        setClickListener(view, R.id.btn_notifications, () -> 
+            showNotificationSettings());
+        setClickListener(view, R.id.btn_language, () -> 
+            showToast("Language clicked"));
     }
 
     private void setClickListener(View view, int id, Runnable action) {
