@@ -90,6 +90,11 @@ public class EmployeeDashboardFragment extends Fragment {
             btnViewAllSchedules.setOnClickListener(v -> {
                 // Navigate to EmployeeScheduleFragment
                 if (getActivity() != null) {
+                    // Update navigation indicator
+                    if (getActivity() instanceof EmployeeDashboardActivity) {
+                        ((EmployeeDashboardActivity) getActivity()).updateNavigationIndicator(R.id.nav_sched);
+                    }
+                    
                     androidx.fragment.app.FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
                     androidx.fragment.app.FragmentTransaction transaction = fragmentManager.beginTransaction();
                     transaction.replace(R.id.fragment_container, new EmployeeScheduleFragment());
