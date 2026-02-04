@@ -8,6 +8,7 @@ import java.util.List;
 
 import app.hub.api.ApiClient;
 import app.hub.api.ApiService;
+import app.hub.api.DashboardStatsResponse;
 import app.hub.api.EmployeeResponse;
 import app.hub.api.TicketListResponse;
 import app.hub.util.TokenManager;
@@ -26,6 +27,8 @@ public class ManagerDataManager {
     private static String cachedBranchName = null;
     private static List<EmployeeResponse.Employee> cachedEmployees = null;
     private static List<TicketListResponse.TicketItem> cachedTickets = null;
+    private static DashboardStatsResponse.Stats cachedDashboardStats = null;
+    private static List<DashboardStatsResponse.RecentTicket> cachedRecentTickets = null;
     private static boolean isDataLoaded = false;
     private static boolean isLoading = false;
     private static long lastLoadTime = 0;
@@ -50,6 +53,9 @@ public class ManagerDataManager {
         void onEmployeesLoaded(String branchName, List<EmployeeResponse.Employee> employees);
 
         void onTicketsLoaded(List<TicketListResponse.TicketItem> tickets);
+
+        void onDashboardStatsLoaded(DashboardStatsResponse.Stats stats,
+                List<DashboardStatsResponse.RecentTicket> recentTickets);
 
         void onLoadComplete();
 
@@ -138,6 +144,7 @@ public class ManagerDataManager {
         // Load employees and tickets simultaneously
         loadEmployees(token, callback);
         loadTickets(token, callback);
+        loadDashboardStats(token, callback);
     }
 
     private static void loadEmployees(String token, DataLoadCallback callback) {
@@ -235,6 +242,52 @@ public class ManagerDataManager {
         });
     }
 
+    private static void loadDashboardStats(String token, DataLoadCallback callback) {
+        ApiService apiService = ApiClient.getApiService();
+        Call<DashboardStatsResponse> call = apiService.getManagerDashboard("Bearer " + token);
+
+        call.enqueue(new Callback<DashboardStatsResponse>() {
+            @Override
+            public void onResponse(Call<DashboardStatsResponse> call, Response<DashboardStatsResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    DashboardStatsResponse dashboardResponse = response.body();
+
+                    if (dashboardResponse.isSuccess()) {
+                        cachedDashboardStats = dashboardResponse.getStats();
+                        cachedRecentTickets = dashboardResponse.getRecentTickets();
+
+                        Log.d(TAG, "Dashboard stats loaded: Total tickets = " +
+                                (cachedDashboardStats != null ? cachedDashboardStats.getTotalTickets() : 0));
+
+                        if (callback != null) {
+                            callback.onDashboardStatsLoaded(cachedDashboardStats, cachedRecentTickets);
+                        }
+
+                        checkLoadComplete(callback);
+                    } else {
+                        Log.e(TAG, "Dashboard API returned success=false");
+                        if (callback != null) {
+                            callback.onLoadError("Failed to load dashboard stats");
+                        }
+                    }
+                } else {
+                    Log.e(TAG, "Dashboard API response not successful");
+                    if (callback != null) {
+                        callback.onLoadError("Failed to load dashboard stats");
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<DashboardStatsResponse> call, Throwable t) {
+                Log.e(TAG, "Dashboard API network error: " + t.getMessage(), t);
+                if (callback != null) {
+                    callback.onLoadError("Network error loading dashboard: " + t.getMessage());
+                }
+            }
+        });
+    }
+
     private static void checkLoadComplete(DataLoadCallback callback) {
         // Check if both employees and tickets are loaded
         // Note: We mark as complete even if one fails, so UI can still show partial
@@ -272,6 +325,14 @@ public class ManagerDataManager {
 
     public static List<TicketListResponse.TicketItem> getCachedTickets() {
         return cachedTickets != null ? new ArrayList<>(cachedTickets) : new ArrayList<>();
+    }
+
+    public static DashboardStatsResponse.Stats getCachedDashboardStats() {
+        return cachedDashboardStats;
+    }
+
+    public static List<DashboardStatsResponse.RecentTicket> getCachedRecentTickets() {
+        return cachedRecentTickets != null ? new ArrayList<>(cachedRecentTickets) : new ArrayList<>();
     }
 
     public static boolean isDataLoaded() {
