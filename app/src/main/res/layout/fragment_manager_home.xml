@@ -41,35 +41,21 @@
             
             <TextView
                 android:id="@+id/tv_manager_welcome"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginTop="120dp"
-                android:text="Manager Dashboard"
+                android:layout_gravity="center_horizontal|bottom"
+                android:layout_marginBottom="12dp"
+                android:gravity="center"
+                android:text="ASHCOL SERVICE HUB"
                 android:textColor="#FFFFFF"
-                android:textSize="14sp"
+                android:textSize="18sp"
                 android:textStyle="bold"
                 android:shadowColor="#000000"
                 android:shadowDx="1"
                 android:shadowDy="1"
-                android:shadowRadius="2" />
+                android:shadowRadius="3" />
 
         </FrameLayout>
-
-        <SearchView
-            android:id="@+id/searchViewWork"
-            android:layout_width="0dp"
-            android:layout_height="40dp"
-            android:layout_marginStart="24dp"
-            android:layout_marginTop="-20dp"
-            android:layout_marginEnd="24dp"
-            android:background="@drawable/rounded_white_bg"
-            android:elevation="10dp"
-            app:iconifiedByDefault="false"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/frameLayout3"
-            app:queryHint="@string/search_hint" />
 
         <TextView
             android:id="@+id/workloadTitle"
@@ -82,7 +68,7 @@
             android:textSize="20sp"
             android:textStyle="bold"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/searchViewWork" />
+            app:layout_constraintTop_toBottomOf="@+id/frameLayout3" />
 
         <TextView
             android:id="@+id/workloadSubtitle"

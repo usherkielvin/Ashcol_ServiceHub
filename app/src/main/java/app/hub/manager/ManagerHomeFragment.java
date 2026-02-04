@@ -136,9 +136,9 @@ public class ManagerHomeFragment extends Fragment implements ManagerDataManager.
         if (tvWelcome != null) {
             String branchName = ManagerDataManager.getCachedBranchName();
             if (branchName != null && !branchName.isEmpty() && !branchName.equals("No Branch Assigned")) {
-                tvWelcome.setText("Manager of " + branchName);
+                tvWelcome.setText(branchName.toUpperCase());
             } else {
-                tvWelcome.setText("Manager Dashboard");
+                tvWelcome.setText("ASHCOL SERVICE HUB");
             }
         }
     }
