@@ -37,6 +37,33 @@
                 android:layout_marginTop="16dp"
                 android:contentDescription="@string/desc_logo"
                 android:src="@drawable/ash" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom|start"
+                android:layout_marginStart="24dp"
+                android:layout_marginBottom="32dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tvHeaderName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Hello, Employee"
+                    android:textColor="#FFFFFF"
+                    android:textSize="22sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvHeaderBranch"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Branch: --"
+                    android:textColor="#E0E0E0"
+                    android:textSize="14sp"
+                    android:textStyle="normal" />
+            </LinearLayout>
         </FrameLayout>
 
         <androidx.appcompat.widget.SearchView

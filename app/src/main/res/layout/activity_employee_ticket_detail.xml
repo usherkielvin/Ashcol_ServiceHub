@@ -22,15 +22,23 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnBack"
-            style="@style/Widget.Material3.Button.IconButton.Filled"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_marginStart="20dp"
             android:layout_marginTop="48dp"
             android:contentDescription="@string/desc_back"
+            android:insetLeft="0dp"
+            android:insetTop="0dp"
+            android:insetRight="0dp"
+            android:insetBottom="0dp"
+            app:backgroundTint="@android:color/transparent"
             app:icon="@drawable/outline_arrow_back_24"
+            app:iconSize="32dp"
+            app:iconTint="#FFFFFF"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            app:rippleColor="#40FFFFFF" />
 
         <TextView
             android:id="@+id/tvHeaderTitle"
@@ -38,7 +46,7 @@
             android:layout_height="wrap_content"
             android:text="Work Assignment"
             android:textColor="#FFFFFF"
-            android:textSize="20sp"
+            android:textSize="30sp"
             android:textStyle="bold"
             app:layout_constraintBottom_toBottomOf="@+id/btnBack"
             app:layout_constraintEnd_toEndOf="parent"

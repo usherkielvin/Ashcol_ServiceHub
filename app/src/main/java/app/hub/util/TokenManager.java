@@ -14,6 +14,7 @@ public class TokenManager {
     private static final String KEY_CONNECTION_STATUS = "connection_status";
     private static final String KEY_CURRENT_CITY = "current_city";
     private static final String KEY_FAILED_GOOGLE_LOGIN_PREFIX = "failed_google_login_";
+    private static final String KEY_USER_BRANCH = "user_branch";
 
     // Branch Cache
     private static final String KEY_BRANCH = "branch";
@@ -78,6 +79,14 @@ public class TokenManager {
 
     public String getUserRole() {
         return getRole();
+    }
+
+    public void saveUserBranch(String branch) {
+        sharedPreferences.edit().putString(KEY_USER_BRANCH, branch).apply();
+    }
+
+    public String getUserBranch() {
+        return sharedPreferences.getString(KEY_USER_BRANCH, null);
     }
 
     public void clear() {

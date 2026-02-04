@@ -72,7 +72,6 @@
                     android:id="@+id/tvTicketId"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="TCKTId_0001"
                     android:textColor="@color/service_icon_tint"
                     android:textSize="24sp"
                     android:textStyle="bold" />
@@ -85,7 +84,6 @@
                     android:background="@drawable/bg_status_badge"
                     android:paddingHorizontal="16dp"
                     android:paddingVertical="4dp"
-                    android:text="Status: Pending"
                     android:textColor="#FFFFFF"
                     android:textSize="14sp"
                     android:textStyle="bold" />
@@ -127,7 +125,6 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    android:text="Customer: John Doe"
                     android:textColor="?attr/colorOnSurface"
                     android:textSize="16sp" />
 
@@ -139,7 +136,6 @@
                     android:drawableStart="@drawable/phone"
                     android:drawablePadding="12dp"
                     android:gravity="center_vertical"
-                    android:text="+63 912 345 6789"
                     android:textColor="?attr/colorOnSurface"
                     android:textSize="16sp"
                     app:drawableTint="@color/service_icon_tint" />
@@ -189,7 +185,6 @@
                     style="@style/TextAppearance.Material3.BodyLarge"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="AC Repair &amp; Diagnostics"
                     android:textColor="?attr/colorOnSurface" />
 
                 <TextView
@@ -205,7 +200,6 @@
                     style="@style/TextAppearance.Material3.BodyLarge"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="General Service"
                     android:textColor="?attr/colorOnSurface" />
 
                 <TextView
@@ -221,7 +215,6 @@
                     style="@style/TextAppearance.Material3.BodyLarge"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="My AC needs a deep cleaning."
                     android:textColor="?attr/colorOnSurface" />
 
                 <TextView
@@ -237,7 +230,6 @@
                     style="@style/TextAppearance.Material3.BodyLarge"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Jan 15, 2026 - 10:00 AM"
                     android:textColor="?attr/colorOnSurface" />
 
             </LinearLayout>
@@ -288,7 +280,6 @@
                     android:drawableStart="@drawable/ic_pin"
                     android:drawablePadding="12dp"
                     android:gravity="center_vertical"
-                    android:text="123 Main Street, City, Province"
                     android:textColor="?attr/colorOnSurface"
                     android:textSize="16sp"
                     app:drawableTint="@color/service_icon_tint" />
@@ -347,7 +338,18 @@
                     android:drawableStart="@drawable/ic_branch"
                     android:drawablePadding="12dp"
                     android:gravity="center_vertical"
-                    android:text="Branch: Main Branch"
+                    android:textColor="?attr/colorOnSurface"
+                    android:textSize="16sp"
+                    app:drawableTint="@color/service_icon_tint" />
+
+                <TextView
+                    android:id="@+id/tvAssignedTechnician"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:drawableStart="@drawable/ic_person"
+                    android:drawablePadding="12dp"
+                    android:gravity="center_vertical"
                     android:textColor="?attr/colorOnSurface"
                     android:textSize="16sp"
                     app:drawableTint="@color/service_icon_tint" />
