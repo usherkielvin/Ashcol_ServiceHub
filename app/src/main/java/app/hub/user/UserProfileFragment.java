@@ -459,17 +459,14 @@ public class UserProfileFragment extends Fragment {
     }
 
     private void setupClickListeners(View view) {
-        setClickListener(view, R.id.btn_sign_out, () -> logout());
+        setClickListener(view, R.id.btn_sign_out, () -> showLogoutConfirmation());
         setClickListener(view, R.id.btn_personal_info, () -> showToast("Personal Information clicked"));
         setClickListener(view, R.id.btn_password_privacy, () -> navigateToChangePassword());
         setClickListener(view, R.id.btn_help, () -> showToast("Help & Feedback clicked"));
         setClickListener(view, R.id.btn_edit_photo, () -> showImagePickerDialog());
-        setClickListener(view, R.id.btn_appearance, () -> 
-            showToast("Appearance clicked"));
-        setClickListener(view, R.id.btn_notifications, () -> 
-            showNotificationSettings());
-        setClickListener(view, R.id.btn_language, () -> 
-            showToast("Language clicked"));
+        setClickListener(view, R.id.btn_appearance, () -> showThemeToggler());
+        setClickListener(view, R.id.btn_notifications, () -> showNotificationSettings());
+        setClickListener(view, R.id.btn_language, () -> showLanguageToggler());
     }
 
     private void setClickListener(View view, int id, Runnable action) {
@@ -968,5 +965,144 @@ public class UserProfileFragment extends Fragment {
                     .addToBackStack(null)
                     .commit();
         }
+    }
+
+    private void showThemeToggler() {
+        if (getContext() == null) return;
+
+        BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(requireContext());
+        View view = getLayoutInflater().inflate(R.layout.profile_themetoggler, null);
+        
+        // Set up radio buttons
+        android.widget.RadioGroup radioGroup = view.findViewById(R.id.radioGroupTheme);
+        android.widget.RadioButton rbLight = view.findViewById(R.id.rbLight);
+        android.widget.RadioButton rbDark = view.findViewById(R.id.rbDark);
+        android.widget.RadioButton rbSystem = view.findViewById(R.id.rbSystem);
+        
+        // Load current theme preference
+        String currentTheme = tokenManager.getThemePreference();
+        if ("light".equals(currentTheme)) {
+            rbLight.setChecked(true);
+        } else if ("dark".equals(currentTheme)) {
+            rbDark.setChecked(true);
+        } else {
+            rbSystem.setChecked(true);
+        }
+        
+        // Handle theme selection
+        if (radioGroup != null) {
+            radioGroup.setOnCheckedChangeListener((group, checkedId) -> {
+                String selectedTheme = "system";
+                if (checkedId == R.id.rbLight) {
+                    selectedTheme = "light";
+                } else if (checkedId == R.id.rbDark) {
+                    selectedTheme = "dark";
+                }
+                
+                tokenManager.setThemePreference(selectedTheme);
+                showToast("Theme updated to " + selectedTheme);
+                bottomSheetDialog.dismiss();
+            });
+        }
+        
+        bottomSheetDialog.setContentView(view);
+        bottomSheetDialog.show();
+    }
+
+    private void showLanguageToggler() {
+        if (getContext() == null) return;
+
+        BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(requireContext());
+        View view = getLayoutInflater().inflate(R.layout.profile_languagetoggler, null);
+        
+        // Set up radio buttons
+        android.widget.RadioGroup radioGroup = view.findViewById(R.id.radioGroupLanguage);
+        android.widget.RadioButton rbCebuano = view.findViewById(R.id.rbCebuano);
+        android.widget.RadioButton rbFilipino = view.findViewById(R.id.rbFilipino);
+        android.widget.RadioButton rbEnglishUS = view.findViewById(R.id.rbEnglishUS);
+        android.widget.RadioButton rbEnglishUK = view.findViewById(R.id.rbEnglishUK);
+        
+        // Load current language preference
+        String currentLanguage = tokenManager.getLanguagePreference();
+        if ("cebuano".equals(currentLanguage)) {
+            rbCebuano.setChecked(true);
+        } else if ("filipino".equals(currentLanguage)) {
+            rbFilipino.setChecked(true);
+        } else if ("english_us".equals(currentLanguage)) {
+            rbEnglishUS.setChecked(true);
+        } else if ("english_uk".equals(currentLanguage)) {
+            rbEnglishUK.setChecked(true);
+        } else {
+            rbFilipino.setChecked(true); // Default
+        }
+        
+        // Handle language selection
+        if (radioGroup != null) {
+            radioGroup.setOnCheckedChangeListener((group, checkedId) -> {
+                String selectedLanguage = "filipino";
+                if (checkedId == R.id.rbCebuano) {
+                    selectedLanguage = "cebuano";
+                } else if (checkedId == R.id.rbFilipino) {
+                    selectedLanguage = "filipino";
+                } else if (checkedId == R.id.rbEnglishUS) {
+                    selectedLanguage = "english_us";
+                } else if (checkedId == R.id.rbEnglishUK) {
+                    selectedLanguage = "english_uk";
+                }
+                
+                tokenManager.setLanguagePreference(selectedLanguage);
+                showToast("Language updated");
+                bottomSheetDialog.dismiss();
+            });
+        }
+        
+        bottomSheetDialog.setContentView(view);
+        bottomSheetDialog.show();
+    }
+
+    private void showLogoutConfirmation() {
+        if (getContext() == null) return;
+
+        // Create overlay view
+        View overlayView = getLayoutInflater().inflate(R.layout.logout_accval, null);
+        
+        // Create dialog with transparent background
+        AlertDialog dialog = new AlertDialog.Builder(requireContext())
+                .setView(overlayView)
+                .setCancelable(true)
+                .create();
+        
+        // Make dialog background transparent
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+        
+        // Set up buttons
+        TextView btnConfirmLogout = overlayView.findViewById(R.id.btnConfirmLogout);
+        TextView btnCancelLogout = overlayView.findViewById(R.id.btnCancelLogout);
+        
+        if (btnConfirmLogout != null) {
+            btnConfirmLogout.setOnClickListener(v -> {
+                dialog.dismiss();
+                logout();
+            });
+        }
+        
+        if (btnCancelLogout != null) {
+            btnCancelLogout.setOnClickListener(v -> dialog.dismiss());
+        }
+        
+        // Handle background click to dismiss
+        overlayView.setOnClickListener(v -> dialog.dismiss());
+        
+        // Prevent clicks on the content from dismissing
+        View contentView = overlayView.findViewById(R.id.LogoutTitle);
+        if (contentView != null && contentView.getParent() instanceof View) {
+            ((View) contentView.getParent()).setOnClickListener(v -> {
+                // Do nothing - prevent dismissal
+            });
+        }
+        
+        dialog.show();
     }
 }

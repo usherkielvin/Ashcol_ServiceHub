@@ -125,7 +125,7 @@ public class ManagerProfileFragment extends Fragment {
         // Appearance Button
         MaterialButton appearanceButton = view.findViewById(R.id.btn_appearance);
         if (appearanceButton != null) {
-            appearanceButton.setOnClickListener(v -> showAppearanceSettings());
+            appearanceButton.setOnClickListener(v -> showThemeToggler());
         }
 
         // Notifications Button
@@ -137,7 +137,7 @@ public class ManagerProfileFragment extends Fragment {
         // Language Button
         MaterialButton languageButton = view.findViewById(R.id.btn_language);
         if (languageButton != null) {
-            languageButton.setOnClickListener(v -> showLanguageSettings());
+            languageButton.setOnClickListener(v -> showLanguageToggler());
         }
 
         // Personal Info Button
@@ -167,7 +167,7 @@ public class ManagerProfileFragment extends Fragment {
         // Logout Button (already implemented)
         MaterialButton logoutButton = view.findViewById(R.id.logoutButton);
         if (logoutButton != null) {
-            logoutButton.setOnClickListener(v -> logout());
+            logoutButton.setOnClickListener(v -> showLogoutConfirmation());
         }
     }
 
@@ -194,15 +194,47 @@ public class ManagerProfileFragment extends Fragment {
                 .show();
     }
 
-    private void showAppearanceSettings() {
-        if (getContext() == null)
-            return;
+    private void showThemeToggler() {
+        if (getContext() == null) return;
 
-        new androidx.appcompat.app.AlertDialog.Builder(getContext())
-                .setTitle("Appearance Settings")
-                .setMessage("Theme and appearance customization options will be available in a future update.")
-                .setPositiveButton("OK", null)
-                .show();
+        com.google.android.material.bottomsheet.BottomSheetDialog bottomSheetDialog = 
+            new com.google.android.material.bottomsheet.BottomSheetDialog(requireContext());
+        View view = getLayoutInflater().inflate(R.layout.profile_themetoggler, null);
+        
+        // Set up radio buttons
+        android.widget.RadioGroup radioGroup = view.findViewById(R.id.radioGroupTheme);
+        android.widget.RadioButton rbLight = view.findViewById(R.id.rbLight);
+        android.widget.RadioButton rbDark = view.findViewById(R.id.rbDark);
+        android.widget.RadioButton rbSystem = view.findViewById(R.id.rbSystem);
+        
+        // Load current theme preference
+        String currentTheme = tokenManager.getThemePreference();
+        if ("light".equals(currentTheme)) {
+            rbLight.setChecked(true);
+        } else if ("dark".equals(currentTheme)) {
+            rbDark.setChecked(true);
+        } else {
+            rbSystem.setChecked(true);
+        }
+        
+        // Handle theme selection
+        if (radioGroup != null) {
+            radioGroup.setOnCheckedChangeListener((group, checkedId) -> {
+                String selectedTheme = "system";
+                if (checkedId == R.id.rbLight) {
+                    selectedTheme = "light";
+                } else if (checkedId == R.id.rbDark) {
+                    selectedTheme = "dark";
+                }
+                
+                tokenManager.setThemePreference(selectedTheme);
+                Toast.makeText(getContext(), "Theme updated to " + selectedTheme, Toast.LENGTH_SHORT).show();
+                bottomSheetDialog.dismiss();
+            });
+        }
+        
+        bottomSheetDialog.setContentView(view);
+        bottomSheetDialog.show();
     }
 
     private void showNotificationSettings() {
@@ -237,22 +269,56 @@ public class ManagerProfileFragment extends Fragment {
         bottomSheetDialog.show();
     }
 
-    private void showLanguageSettings() {
-        if (getContext() == null)
-            return;
+    private void showLanguageToggler() {
+        if (getContext() == null) return;
 
-        String[] languages = { "English", "Filipino", "Spanish" };
-        int currentSelection = 0; // Default to English
-
-        new androidx.appcompat.app.AlertDialog.Builder(getContext())
-                .setTitle("Select Language")
-                .setSingleChoiceItems(languages, currentSelection, (dialog, which) -> {
-                    Toast.makeText(getContext(), "Language: " + languages[which] + " (Coming soon)", Toast.LENGTH_SHORT)
-                            .show();
-                    dialog.dismiss();
-                })
-                .setNegativeButton("Cancel", null)
-                .show();
+        com.google.android.material.bottomsheet.BottomSheetDialog bottomSheetDialog = 
+            new com.google.android.material.bottomsheet.BottomSheetDialog(requireContext());
+        View view = getLayoutInflater().inflate(R.layout.profile_languagetoggler, null);
+        
+        // Set up radio buttons
+        android.widget.RadioGroup radioGroup = view.findViewById(R.id.radioGroupLanguage);
+        android.widget.RadioButton rbCebuano = view.findViewById(R.id.rbCebuano);
+        android.widget.RadioButton rbFilipino = view.findViewById(R.id.rbFilipino);
+        android.widget.RadioButton rbEnglishUS = view.findViewById(R.id.rbEnglishUS);
+        android.widget.RadioButton rbEnglishUK = view.findViewById(R.id.rbEnglishUK);
+        
+        // Load current language preference
+        String currentLanguage = tokenManager.getLanguagePreference();
+        if ("cebuano".equals(currentLanguage)) {
+            rbCebuano.setChecked(true);
+        } else if ("filipino".equals(currentLanguage)) {
+            rbFilipino.setChecked(true);
+        } else if ("english_us".equals(currentLanguage)) {
+            rbEnglishUS.setChecked(true);
+        } else if ("english_uk".equals(currentLanguage)) {
+            rbEnglishUK.setChecked(true);
+        } else {
+            rbFilipino.setChecked(true); // Default
+        }
+        
+        // Handle language selection
+        if (radioGroup != null) {
+            radioGroup.setOnCheckedChangeListener((group, checkedId) -> {
+                String selectedLanguage = "filipino";
+                if (checkedId == R.id.rbCebuano) {
+                    selectedLanguage = "cebuano";
+                } else if (checkedId == R.id.rbFilipino) {
+                    selectedLanguage = "filipino";
+                } else if (checkedId == R.id.rbEnglishUS) {
+                    selectedLanguage = "english_us";
+                } else if (checkedId == R.id.rbEnglishUK) {
+                    selectedLanguage = "english_uk";
+                }
+                
+                tokenManager.setLanguagePreference(selectedLanguage);
+                Toast.makeText(getContext(), "Language updated", Toast.LENGTH_SHORT).show();
+                bottomSheetDialog.dismiss();
+            });
+        }
+        
+        bottomSheetDialog.setContentView(view);
+        bottomSheetDialog.show();
     }
 
     private void showPersonalInfo() {
@@ -605,5 +671,51 @@ public class ManagerProfileFragment extends Fragment {
         } catch (Exception e) {
             // Ignore errors when clearing profile photo
         }
+    }
+
+    private void showLogoutConfirmation() {
+        if (getContext() == null) return;
+
+        // Create overlay view
+        View overlayView = getLayoutInflater().inflate(R.layout.logout_accval, null);
+        
+        // Create dialog with transparent background
+        androidx.appcompat.app.AlertDialog dialog = new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                .setView(overlayView)
+                .setCancelable(true)
+                .create();
+        
+        // Make dialog background transparent
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+        
+        // Set up buttons
+        android.widget.TextView btnConfirmLogout = overlayView.findViewById(R.id.btnConfirmLogout);
+        android.widget.TextView btnCancelLogout = overlayView.findViewById(R.id.btnCancelLogout);
+        
+        if (btnConfirmLogout != null) {
+            btnConfirmLogout.setOnClickListener(v -> {
+                dialog.dismiss();
+                logout();
+            });
+        }
+        
+        if (btnCancelLogout != null) {
+            btnCancelLogout.setOnClickListener(v -> dialog.dismiss());
+        }
+        
+        // Handle background click to dismiss
+        overlayView.setOnClickListener(v -> dialog.dismiss());
+        
+        // Prevent clicks on the content from dismissing
+        View contentView = overlayView.findViewById(R.id.LogoutTitle);
+        if (contentView != null && contentView.getParent() instanceof View) {
+            ((View) contentView.getParent()).setOnClickListener(v -> {
+                // Do nothing - prevent dismissal
+            });
+        }
+        
+        dialog.show();
     }
 }
