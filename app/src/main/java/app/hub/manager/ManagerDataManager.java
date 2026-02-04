@@ -97,8 +97,6 @@ public class ManagerDataManager {
 
     /**
      * Load all manager data at startup
-     * /**
-     * Load all manager data at startup
      */
     public static void loadAllData(Context context, DataLoadCallback callback) {
         long currentTime = System.currentTimeMillis();
@@ -151,7 +149,7 @@ public class ManagerDataManager {
             return;
         }
 
-        // Load employees and tickets simultaneously
+        // Load components
         loadEmployees(token, null);
         loadTickets(token, null);
         loadDashboardStats(token, null);
@@ -312,9 +310,8 @@ public class ManagerDataManager {
         for (DataLoadCallback cb : new ArrayList<>(activeCallbacks)) {
             cb.onLoadError(error);
         }
-        // If error happens, we might want to clear list to allow retry
-        // activeCallbacks.clear();
-        // isLoading = false;
+        isLoading = false;
+        activeCallbacks.clear();
     }
 
     // Getter methods for cached data

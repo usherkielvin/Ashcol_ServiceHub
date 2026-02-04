@@ -20,7 +20,6 @@ import app.hub.api.TicketListResponse;
 
 public class ManagerHomeFragment extends Fragment implements ManagerDataManager.EmployeeDataChangeListener {
 
-    private TextView tvTotalTickets, tvPendingTickets, tvInProgressTickets, tvCompletedTickets;
     private RecyclerView recentActivityRecyclerView;
     private RecentActivityAdapter recentActivityAdapter;
 
@@ -90,13 +89,13 @@ public class ManagerHomeFragment extends Fragment implements ManagerDataManager.
         List<DashboardStatsResponse.RecentTicket> recentTickets = ManagerDataManager.getCachedRecentTickets();
 
         android.util.Log.d("ManagerHome", "Loading dashboard data - Stats: " + (stats != null) +
-                ", Recent tickets: " + (recentTickets != null ? recentTickets.size() : "null"));
+                ", Recent tickets: " + recentTickets.size());
 
         if (stats != null) {
             updateDashboardStats(stats);
         }
 
-        if (recentTickets != null && !recentTickets.isEmpty()) {
+        if (!recentTickets.isEmpty()) {
             android.util.Log.d("ManagerHome", "Setting " + recentTickets.size() + " recent tickets to adapter");
             recentActivityAdapter.setRecentTickets(recentTickets);
         } else {
@@ -138,7 +137,7 @@ public class ManagerHomeFragment extends Fragment implements ManagerDataManager.
             if (branchName != null && !branchName.isEmpty() && !branchName.equals("No Branch Assigned")) {
                 tvWelcome.setText(branchName.toUpperCase());
             } else {
-                tvWelcome.setText("ASHCOL SERVICE HUB");
+                tvWelcome.setText(R.string.default_branch_name);
             }
         }
     }
@@ -201,9 +200,8 @@ public class ManagerHomeFragment extends Fragment implements ManagerDataManager.
      */
     private void loadEmployeeData() {
         List<EmployeeResponse.Employee> employees = ManagerDataManager.getCachedEmployees();
-        String branchName = ManagerDataManager.getCachedBranchName();
 
-        if (employees != null && !employees.isEmpty()) {
+        if (!employees.isEmpty()) {
             employeePreviewAdapter.setEmployees(employees);
             updateEmployeeCount(employees.size());
         } else {
@@ -216,7 +214,8 @@ public class ManagerHomeFragment extends Fragment implements ManagerDataManager.
      */
     private void updateEmployeeCount(int count) {
         if (tvEmployeeCount != null) {
-            tvEmployeeCount.setText(count + " employee" + (count != 1 ? "s" : ""));
+            String countText = count + (count == 1 ? " employee" : " employees");
+            tvEmployeeCount.setText(countText);
         }
     }
 
