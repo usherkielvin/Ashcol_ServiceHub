@@ -342,8 +342,7 @@ public class ManagerDataManager {
 
     public static void stopFirebaseListeners() {
         if (firebaseListener != null) {
-            firebaseListener.stopFirebaseListeners();
+            firebaseListener.stopListening();
         }
     }
 }
-

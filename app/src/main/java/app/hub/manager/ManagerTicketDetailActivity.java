@@ -32,7 +32,7 @@ import retrofit2.Response;
 public class ManagerTicketDetailActivity extends AppCompatActivity {
 
     private TextView tvTicketId, tvTitle, tvDescription, tvServiceType, tvAddress, tvContact, tvStatus, tvBranch,
-            tvCustomerName, tvCreatedAt;
+            tvCustomerName, tvCreatedAt, tvAssignedTechnician;
     private Button btnViewMap, btnBack, btnReject, btnAssignStaff;
     private TokenManager tokenManager;
     private String ticketId;
@@ -89,6 +89,7 @@ public class ManagerTicketDetailActivity extends AppCompatActivity {
             tvBranch = findViewById(R.id.tvBranch);
             tvCustomerName = findViewById(R.id.tvCustomerName);
             tvCreatedAt = findViewById(R.id.tvCreatedAt);
+            tvAssignedTechnician = findViewById(R.id.tvAssignedTechnician);
             btnViewMap = findViewById(R.id.btnViewMap);
             btnBack = findViewById(R.id.btnBack);
             btnReject = findViewById(R.id.btnReject);
@@ -254,6 +255,15 @@ public class ManagerTicketDetailActivity extends AppCompatActivity {
         tvCustomerName
                 .setText("Customer: " + (ticket.getCustomerName() != null ? ticket.getCustomerName() : "Unknown"));
         tvCreatedAt.setText("Created: " + (ticket.getCreatedAt() != null ? ticket.getCreatedAt() : "Unknown"));
+
+        // Display assigned technician
+        if (ticket.getAssignedStaff() != null && !ticket.getAssignedStaff().isEmpty()) {
+            tvAssignedTechnician.setText("Technician: " + ticket.getAssignedStaff());
+            tvAssignedTechnician.setVisibility(View.VISIBLE);
+        } else {
+            tvAssignedTechnician.setText("Technician: Not assigned");
+            tvAssignedTechnician.setVisibility(View.VISIBLE);
+        }
 
         // Set status color
         setStatusColor(tvStatus, ticket.getStatus(), ticket.getStatusColor());
