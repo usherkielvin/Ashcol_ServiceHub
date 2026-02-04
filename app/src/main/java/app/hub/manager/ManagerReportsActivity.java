@@ -11,7 +11,7 @@ import app.hub.api.TicketListResponse;
 public class ManagerReportsActivity extends AppCompatActivity {
 
     private TextView tvTotalTickets;
-    private View rowPending, rowOngoing, rowCompleted, rowCancelled;
+    private View rowCompleted, rowCancelled;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -25,13 +25,9 @@ public class ManagerReportsActivity extends AppCompatActivity {
     private void initViews() {
         findViewById(R.id.btnBack).setOnClickListener(v -> finish());
         tvTotalTickets = findViewById(R.id.tvTotalTickets);
-        rowPending = findViewById(R.id.rowPending);
-        rowOngoing = findViewById(R.id.rowOngoing);
         rowCompleted = findViewById(R.id.rowCompleted);
         rowCancelled = findViewById(R.id.rowCancelled);
 
-        setupRow(rowPending, "Pending", "#FFC107"); // Amber
-        setupRow(rowOngoing, "Ongoing", "#2196F3"); // Blue
         setupRow(rowCompleted, "Completed", "#4CAF50"); // Green
         setupRow(rowCancelled, "Cancelled/Rejected", "#F44336"); // Red
     }
@@ -46,28 +42,21 @@ public class ManagerReportsActivity extends AppCompatActivity {
     private void loadStats() {
         List<TicketListResponse.TicketItem> tickets = ManagerDataManager.getCachedTickets();
 
-        int total = tickets.size();
-        int pending = 0;
-        int ongoing = 0;
         int completed = 0;
         int cancelled = 0;
 
         for (TicketListResponse.TicketItem ticket : tickets) {
             String status = ticket.getStatus().toLowerCase();
-            if (status.contains("pending") || status.contains("open")) {
-                pending++;
-            } else if (status.contains("progress") || status.contains("accepted") || status.contains("ongoing")) {
-                ongoing++;
-            } else if (status.contains("completed") || status.contains("resolved") || status.contains("closed")) {
+            if (status.contains("completed") || status.contains("resolved") || status.contains("closed")) {
                 completed++;
             } else if (status.contains("cancelled") || status.contains("rejected") || status.contains("failed")) {
                 cancelled++;
             }
         }
 
-        tvTotalTickets.setText(String.valueOf(total));
-        updateRowCount(rowPending, pending);
-        updateRowCount(rowOngoing, ongoing);
+        int totalFinished = completed + cancelled;
+
+        tvTotalTickets.setText(String.valueOf(totalFinished));
         updateRowCount(rowCompleted, completed);
         updateRowCount(rowCancelled, cancelled);
     }
