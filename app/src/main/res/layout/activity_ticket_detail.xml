@@ -345,9 +345,11 @@
 
                     <!-- Map Card -->
                     <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/mapCardContainer"
                         android:layout_width="match_parent"
                         android:layout_height="200dp"
                         android:layout_marginTop="16dp"
+                        android:visibility="visible"
                         app:cardCornerRadius="20dp"
                         app:cardElevation="0dp"
                         app:strokeColor="?attr/colorOutlineVariant"
@@ -356,7 +358,12 @@
                         <com.google.android.gms.maps.MapView
                             android:id="@+id/mapView"
                             android:layout_width="match_parent"
-                            android:layout_height="match_parent" />
+                            android:layout_height="match_parent"
+<<<<<<< HEAD
+                            app:liteMode="true" />
+=======
+                            android:contentDescription="mapview"/>
+>>>>>>> 0abee284e1301cd4f3301fb8dbc18287ced36dbe
 
                     </com.google.android.material.card.MaterialCardView>
 
@@ -369,7 +376,7 @@
                         android:text="Expand Map View"
                         android:textAllCaps="false"
                         android:textColor="@color/service_icon_tint"
-                        android:visibility="gone"
+                        android:visibility="visible"
                         app:icon="@drawable/location"
                         app:iconSize="16dp" />
 

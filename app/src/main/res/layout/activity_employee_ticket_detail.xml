@@ -328,19 +328,39 @@
                     android:textSize="16sp"
                     app:drawableTint="@color/service_icon_tint" />
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnViewMap"
-                    style="@style/Widget.Material3.Button.OutlinedButton"
-                    android:layout_width="match_parent"
-                    android:layout_height="56dp"
-                    android:layout_marginTop="16dp"
-                    android:text="Navigate to Customer"
-                    android:textAllCaps="false"
-                    android:textColor="@color/service_icon_tint"
-                    android:visibility="gone"
-                    app:icon="@drawable/location"
-                    app:iconTint="@color/service_icon_tint"
-                    app:strokeColor="@color/service_icon_tint" />
+                    <!-- Map Card -->
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/mapCardContainer"
+                        android:layout_width="match_parent"
+                        android:layout_height="200dp"
+                        android:layout_marginTop="16dp"
+                        android:visibility="gone"
+                        app:cardCornerRadius="20dp"
+                        app:cardElevation="0dp"
+                        app:strokeColor="?attr/colorOutlineVariant"
+                        app:strokeWidth="1dp">
+
+                        <com.google.android.gms.maps.MapView
+                            android:id="@+id/mapView"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            app:liteMode="true" />
+
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnViewMap"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="56dp"
+                        android:layout_marginTop="16dp"
+                        android:text="Navigate to Customer"
+                        android:textAllCaps="false"
+                        android:textColor="@color/service_icon_tint"
+                        android:visibility="gone"
+                        app:icon="@drawable/location"
+                        app:iconTint="@color/service_icon_tint"
+                        app:strokeColor="@color/service_icon_tint" />
 
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>

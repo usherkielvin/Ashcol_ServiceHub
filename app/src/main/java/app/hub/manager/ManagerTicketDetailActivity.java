@@ -29,16 +29,21 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class ManagerTicketDetailActivity extends AppCompatActivity {
+public class ManagerTicketDetailActivity extends AppCompatActivity
+        implements com.google.android.gms.maps.OnMapReadyCallback {
 
     private TextView tvTicketId, tvTitle, tvDescription, tvServiceType, tvAddress, tvContact, tvStatus, tvBranch,
             tvCustomerName, tvCreatedAt, tvAssignedTechnician;
     private Button btnViewMap, btnBack, btnReject, btnAssignStaff;
+    private View mapCardContainer;
     private TokenManager tokenManager;
     private String ticketId;
     private double latitude, longitude;
     private TicketDetailResponse.TicketDetail currentTicket;
     private List<EmployeeResponse.Employee> employees;
+
+    private com.google.android.gms.maps.MapView mapView;
+    private com.google.android.gms.maps.GoogleMap googleMap;
 
     private static final int REQUEST_CODE_ASSIGN_EMPLOYEE = 1001;
 
@@ -52,6 +57,13 @@ public class ManagerTicketDetailActivity extends AppCompatActivity {
 
             initViews();
             android.util.Log.d("ManagerTicketDetail", "Views initialized successfully");
+
+            // Initialize MapView
+            mapView = findViewById(R.id.mapView);
+            if (mapView != null) {
+                mapView.onCreate(savedInstanceState);
+                mapView.getMapAsync(this);
+            }
 
             setupClickListeners();
             android.util.Log.d("ManagerTicketDetail", "Click listeners set up successfully");
@@ -94,6 +106,7 @@ public class ManagerTicketDetailActivity extends AppCompatActivity {
             btnBack = findViewById(R.id.btnBack);
             btnReject = findViewById(R.id.btnReject);
             btnAssignStaff = findViewById(R.id.btnAssignStaff);
+            mapCardContainer = findViewById(R.id.mapCardContainer);
 
             // Check if any critical views are null
             if (tvTicketId == null || tvTitle == null || btnBack == null) {
@@ -277,12 +290,8 @@ public class ManagerTicketDetailActivity extends AppCompatActivity {
             longitude = 0;
         }
 
-        // Show/hide map button based on location availability
-        if (latitude != 0 && longitude != 0) {
-            btnViewMap.setVisibility(View.VISIBLE);
-        } else {
-            btnViewMap.setVisibility(View.GONE);
-        }
+        // Update map if ready and coordinates are valid
+        updateMapLocation();
 
         // Show/hide action buttons based on ticket status
         updateActionButtons(ticket.getStatus());
@@ -432,17 +441,6 @@ public class ManagerTicketDetailActivity extends AppCompatActivity {
         }
     }
 
-    // Remove the old assignment methods since we're using AssignEmployeeActivity
-    /*
-     * private void showStaffAssignmentDialog() {
-     * // Old method - removed
-     * }
-     * 
-     * private void assignStaffToTicket(int staffId) {
-     * // Old method - removed
-     * }
-     */
-
     private void setStatusColor(TextView textView, String status, String statusColor) {
         if (statusColor != null && !statusColor.isEmpty()) {
             try {
@@ -477,9 +475,120 @@ public class ManagerTicketDetailActivity extends AppCompatActivity {
         }
     }
 
+    // MapView Lifecycle methods
+    private void updateMapLocation() {
+        if (googleMap == null)
+            return;
+
+        if (latitude != 0 && longitude != 0) {
+            // Use explicit coordinates
+            showLocationOnMap(latitude, longitude);
+        } else {
+            // Fallback: Try to geocode the address
+            String address = tvAddress.getText().toString();
+            if (!address.isEmpty() && !address.equals("No Address")) {
+                geocodeAndShowLocation(address);
+            } else {
+                hideMap();
+            }
+        }
+    }
+
+    private void showLocationOnMap(double lat, double lng) {
+        if (googleMap != null) {
+            com.google.android.gms.maps.model.LatLng location = new com.google.android.gms.maps.model.LatLng(lat, lng);
+            googleMap.clear();
+            googleMap.addMarker(
+                    new com.google.android.gms.maps.model.MarkerOptions().position(location).title("Service Location"));
+            googleMap.moveCamera(com.google.android.gms.maps.CameraUpdateFactory.newLatLngZoom(location, 15f));
+            googleMap.getUiSettings().setMapToolbarEnabled(false);
+
+            // Ensure map is visible
+            btnViewMap.setVisibility(View.VISIBLE);
+            if (mapCardContainer != null)
+                mapCardContainer.setVisibility(View.VISIBLE);
+        }
+    }
+
+    private void hideMap() {
+        btnViewMap.setVisibility(View.GONE);
+        if (mapCardContainer != null)
+            mapCardContainer.setVisibility(View.GONE);
+    }
+
+    private void geocodeAndShowLocation(String addressStr) {
+        new Thread(() -> {
+            try {
+                android.location.Geocoder geocoder = new android.location.Geocoder(this, java.util.Locale.getDefault());
+                java.util.List<android.location.Address> addresses = geocoder.getFromLocationName(addressStr, 1);
+
+                if (addresses != null && !addresses.isEmpty()) {
+                    android.location.Address location = addresses.get(0);
+                    double lat = location.getLatitude();
+                    double lng = location.getLongitude();
+
+                    // Update UI on main thread
+                    runOnUiThread(() -> {
+                        // Update the stored coordinates
+                        this.latitude = lat;
+                        this.longitude = lng;
+                        showLocationOnMap(lat, lng);
+                    });
+                } else {
+                    runOnUiThread(this::hideMap);
+                }
+            } catch (java.io.IOException e) {
+                runOnUiThread(this::hideMap);
+            }
+        }).start();
+    }
+
+    @Override
+    public void onMapReady(com.google.android.gms.maps.GoogleMap map) {
+        this.googleMap = map;
+        updateMapLocation();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        if (mapView != null)
+            mapView.onStart();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (mapView != null)
+            mapView.onResume();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (mapView != null)
+            mapView.onPause();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (mapView != null)
+            mapView.onStop();
+    }
+
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        if (mapView != null)
+            mapView.onDestroy();
         android.util.Log.d("ManagerTicketDetail", "Activity destroyed");
+    }
+
+    @Override
+    public void onLowMemory() {
+        super.onLowMemory();
+        if (mapView != null)
+            mapView.onLowMemory();
     }
 }

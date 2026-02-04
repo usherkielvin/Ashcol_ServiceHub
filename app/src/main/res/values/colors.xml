@@ -43,31 +43,7 @@
     <color name="dot_selected_color">#2D6A4F</color>
     <color name="dot_unselected_color">#E0E0E0</color>
 
-    <!-- Material Design 3 Colors -->
-    <color name="colorPrimary">#00B050</color>
-    <color name="colorOnPrimary">#FFFFFF</color>
-    <color name="colorPrimaryContainer">#C8E6C9</color>
-    <color name="colorOnPrimaryContainer">#1B5E20</color>
-
-    <color name="colorSecondary">#4CAF50</color>
-    <color name="colorOnSecondary">#FFFFFF</color>
-    <color name="colorSecondaryContainer">#A5D6A7</color>
-    <color name="colorOnSecondaryContainer">#1B5E20</color>
-
-    <color name="colorTertiary">#66BB6A</color>
-    <color name="colorOnTertiary">#FFFFFF</color>
-    <color name="colorTertiaryContainer">#C8E6C9</color>
-    <color name="colorOnTertiaryContainer">#1B5E20</color>
-
-    <color name="colorError">#F44336</color>
-    <color name="colorOnError">#FFFFFF</color>
-
-    <!-- Background and Surface Colors -->
-    <color name="colorBackground">#FFFFFF</color>
-    <color name="colorSurface">#FFFFFF</color>
-    <color name="colorOnSurface">#1A1A1A</color>
-    <color name="colorSurfaceVariant">#F5F5F5</color>
-    <color name="colorOnSurfaceVariant">#757575</color>
-    <color name="colorOutline">#E0E0E0</color>
-
+    <!-- Header Colors -->
+    <color name="header_bg_color">#1B4332</color>
+    <color name="header_badge_bg_color">#2D6A4F</color>
 </resources>

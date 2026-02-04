@@ -4,7 +4,6 @@ import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
-import android.location.Location;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -16,6 +15,12 @@ import androidx.core.app.ActivityCompat;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapView;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
 
 import app.hub.R;
 import app.hub.api.ApiClient;
@@ -31,15 +36,21 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class EmployeeTicketDetailActivity extends AppCompatActivity implements EmployeePaymentFragment.OnPaymentConfirmedListener {
+public class EmployeeTicketDetailActivity extends AppCompatActivity
+        implements EmployeePaymentFragment.OnPaymentConfirmedListener, OnMapReadyCallback {
 
-    private TextView tvTicketId, tvTitle, tvDescription, tvServiceType, tvAddress, tvContact, tvStatus, tvCustomerName, tvCreatedAt, tvScheduleDate, tvScheduleTime, tvScheduleNotes;
+    private TextView tvTicketId, tvTitle, tvDescription, tvServiceType, tvAddress, tvContact, tvStatus, tvCustomerName,
+            tvCreatedAt, tvScheduleDate, tvScheduleTime, tvScheduleNotes;
     private Button btnViewMap, btnBack, btnStartWork, btnCompleteWork;
+    private View mapCardContainer;
     private TokenManager tokenManager;
     private String ticketId;
     private double customerLatitude, customerLongitude;
     private TicketDetailResponse.TicketDetail currentTicket;
     private FusedLocationProviderClient fusedLocationClient;
+
+    private MapView mapView;
+    private GoogleMap googleMap;
 
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1001;
 
@@ -49,12 +60,20 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity implements E
         setContentView(R.layout.activity_employee_ticket_detail);
 
         initViews();
+
+        // Initialize MapView
+        mapView = findViewById(R.id.mapView);
+        if (mapView != null) {
+            mapView.onCreate(savedInstanceState);
+            mapView.getMapAsync(this);
+        }
+
         setupClickListeners();
-        
+
         tokenManager = new TokenManager(this);
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         ticketId = getIntent().getStringExtra("ticket_id");
-        
+
         if (ticketId != null) {
             loadTicketDetails();
         } else {
@@ -80,19 +99,22 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity implements E
         btnBack = findViewById(R.id.btnBack);
         btnStartWork = findViewById(R.id.btnStartWork);
         btnCompleteWork = findViewById(R.id.btnCompleteWork);
+        mapCardContainer = findViewById(R.id.mapCardContainer);
     }
 
     private void setupClickListeners() {
         btnBack.setOnClickListener(v -> finish());
-        
+
         btnViewMap.setOnClickListener(v -> {
             if (customerLatitude != 0 && customerLongitude != 0) {
                 // Check location permission before opening map
-                if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                    ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_PERMISSION_REQUEST_CODE);
+                if (ActivityCompat.checkSelfPermission(this,
+                        Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                    ActivityCompat.requestPermissions(this, new String[] { Manifest.permission.ACCESS_FINE_LOCATION },
+                            LOCATION_PERMISSION_REQUEST_CODE);
                     return;
                 }
-                
+
                 Intent intent = new Intent(this, EmployeeMapActivity.class);
                 intent.putExtra("customer_latitude", customerLatitude);
                 intent.putExtra("customer_longitude", customerLongitude);
@@ -128,18 +150,21 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity implements E
                         currentTicket = ticketResponse.getTicket();
                         displayTicketDetails(currentTicket);
                     } else {
-                        Toast.makeText(EmployeeTicketDetailActivity.this, "Failed to load ticket details", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(EmployeeTicketDetailActivity.this, "Failed to load ticket details",
+                                Toast.LENGTH_SHORT).show();
                         finish();
                     }
                 } else {
-                    Toast.makeText(EmployeeTicketDetailActivity.this, "Failed to load ticket details", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(EmployeeTicketDetailActivity.this, "Failed to load ticket details",
+                            Toast.LENGTH_SHORT).show();
                     finish();
                 }
             }
 
             @Override
             public void onFailure(Call<TicketDetailResponse> call, Throwable t) {
-                Toast.makeText(EmployeeTicketDetailActivity.this, "Network error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(EmployeeTicketDetailActivity.this, "Network error: " + t.getMessage(),
+                        Toast.LENGTH_SHORT).show();
                 finish();
             }
         });
@@ -153,7 +178,8 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity implements E
         tvAddress.setText(ticket.getAddress());
         tvContact.setText(ticket.getContact());
         tvStatus.setText("Status: " + ticket.getStatus());
-        tvCustomerName.setText("Customer: " + (ticket.getCustomerName() != null ? ticket.getCustomerName() : "Unknown"));
+        tvCustomerName
+                .setText("Customer: " + (ticket.getCustomerName() != null ? ticket.getCustomerName() : "Unknown"));
         tvCreatedAt.setText("Created: " + ticket.getCreatedAt());
 
         // Display schedule information
@@ -163,14 +189,14 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity implements E
         } else {
             tvScheduleDate.setVisibility(View.GONE);
         }
-        
+
         if (ticket.getScheduledTime() != null && !ticket.getScheduledTime().isEmpty()) {
             tvScheduleTime.setText("Scheduled Time: " + formatTime(ticket.getScheduledTime()));
             tvScheduleTime.setVisibility(View.VISIBLE);
         } else {
             tvScheduleTime.setVisibility(View.GONE);
         }
-        
+
         if (ticket.getScheduleNotes() != null && !ticket.getScheduleNotes().isEmpty()) {
             tvScheduleNotes.setText("Notes: " + ticket.getScheduleNotes());
             tvScheduleNotes.setVisibility(View.VISIBLE);
@@ -185,19 +211,16 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity implements E
         customerLatitude = ticket.getLatitude();
         customerLongitude = ticket.getLongitude();
 
-        // Show/hide map button based on location availability
-        if (customerLatitude != 0 && customerLongitude != 0) {
-            btnViewMap.setVisibility(View.VISIBLE);
-        } else {
-            btnViewMap.setVisibility(View.GONE);
-        }
+        // Update map if ready and coordinates are valid
+        updateMapLocation();
 
         // Show/hide action buttons based on ticket status
         updateActionButtons(ticket.getStatus());
     }
 
     private void updateActionButtons(String status) {
-        if (status == null) return;
+        if (status == null)
+            return;
 
         switch (status.toLowerCase()) {
             case "accepted":
@@ -234,24 +257,29 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity implements E
 
         call.enqueue(new Callback<UpdateTicketStatusResponse>() {
             @Override
-            public void onResponse(Call<UpdateTicketStatusResponse> call, Response<UpdateTicketStatusResponse> response) {
+            public void onResponse(Call<UpdateTicketStatusResponse> call,
+                    Response<UpdateTicketStatusResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     UpdateTicketStatusResponse statusResponse = response.body();
                     if (statusResponse.isSuccess()) {
-                        String message = status.equals("in_progress") ? "Work started successfully" : "Work completed successfully";
+                        String message = status.equals("in_progress") ? "Work started successfully"
+                                : "Work completed successfully";
                         Toast.makeText(EmployeeTicketDetailActivity.this, message, Toast.LENGTH_SHORT).show();
                         loadTicketDetails(); // Refresh ticket details
                     } else {
-                        Toast.makeText(EmployeeTicketDetailActivity.this, "Failed to update ticket status", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(EmployeeTicketDetailActivity.this, "Failed to update ticket status",
+                                Toast.LENGTH_SHORT).show();
                     }
                 } else {
-                    Toast.makeText(EmployeeTicketDetailActivity.this, "Failed to update ticket status", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(EmployeeTicketDetailActivity.this, "Failed to update ticket status",
+                            Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onFailure(Call<UpdateTicketStatusResponse> call, Throwable t) {
-                Toast.makeText(EmployeeTicketDetailActivity.this, "Network error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(EmployeeTicketDetailActivity.this, "Network error: " + t.getMessage(),
+                        Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -260,74 +288,75 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity implements E
         if (dateString == null || dateString.isEmpty()) {
             return "";
         }
-        
+
         try {
-            // Parse the date string (assuming YYYY-MM-DD format from API)
-            java.text.SimpleDateFormat inputFormat = new java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault());
-            java.text.SimpleDateFormat outputFormat = new java.text.SimpleDateFormat("MMM dd, yyyy", java.util.Locale.getDefault());
-            
+            java.text.SimpleDateFormat inputFormat = new java.text.SimpleDateFormat("yyyy-MM-dd",
+                    java.util.Locale.getDefault());
+            java.text.SimpleDateFormat outputFormat = new java.text.SimpleDateFormat("MMM dd, yyyy",
+                    java.util.Locale.getDefault());
+
             java.util.Date date = inputFormat.parse(dateString);
             if (date != null) {
                 return outputFormat.format(date);
             }
         } catch (java.text.ParseException e) {
-            return dateString; // Return original if parsing fails
+            return dateString;
         }
-        
+
         return dateString;
     }
-    
+
     private String formatTime(String timeString) {
         if (timeString == null || timeString.isEmpty()) {
             return "";
         }
-        
+
         try {
-            // Parse the time string (assuming HH:mm format from API)
-            java.text.SimpleDateFormat inputFormat = new java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault());
-            java.text.SimpleDateFormat outputFormat = new java.text.SimpleDateFormat("h:mm a", java.util.Locale.getDefault());
-            
+            java.text.SimpleDateFormat inputFormat = new java.text.SimpleDateFormat("HH:mm",
+                    java.util.Locale.getDefault());
+            java.text.SimpleDateFormat outputFormat = new java.text.SimpleDateFormat("h:mm a",
+                    java.util.Locale.getDefault());
+
             java.util.Date time = inputFormat.parse(timeString);
             if (time != null) {
                 return outputFormat.format(time);
             }
         } catch (java.text.ParseException e) {
-            return timeString; // Return original if parsing fails
+            return timeString;
         }
-        
+
         return timeString;
     }
-    
+
     private void setStatusColor(TextView textView, String status, String statusColor) {
         if (statusColor != null && !statusColor.isEmpty()) {
             try {
                 textView.setTextColor(Color.parseColor(statusColor));
                 return;
             } catch (IllegalArgumentException e) {
-                // Fallback to default colors
             }
         }
 
-        // Default color mapping
-        if (status == null) return;
-        
+        if (status == null)
+            return;
+
         switch (status.toLowerCase()) {
             case "pending":
-                textView.setTextColor(Color.parseColor("#FFA500")); // Orange
+                textView.setTextColor(Color.parseColor("#FFA500"));
                 break;
             case "accepted":
             case "in progress":
-                textView.setTextColor(Color.parseColor("#2196F3")); // Blue
+                textView.setTextColor(Color.parseColor("#2196F3"));
                 break;
             case "completed":
-                textView.setTextColor(Color.parseColor("#4CAF50")); // Green
+                textView.setTextColor(Color.parseColor("#4CAF50"));
                 break;
             case "cancelled":
             case "rejected":
-                textView.setTextColor(Color.parseColor("#F44336")); // Red
+                textView.setTextColor(Color.parseColor("#F44336"));
                 break;
             default:
-                textView.setTextColor(Color.parseColor("#757575")); // Gray
+                textView.setTextColor(Color.parseColor("#757575"));
                 break;
         }
     }
@@ -337,7 +366,6 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity implements E
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                // Permission granted, open map
                 btnViewMap.performClick();
             } else {
                 Toast.makeText(this, "Location permission is required to view map", Toast.LENGTH_SHORT).show();
@@ -346,7 +374,6 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity implements E
     }
 
     private void showPaymentFragment() {
-        // Use a full-screen style fragment for payment so it appears properly
         EmployeePaymentFragment fragment = EmployeePaymentFragment.newInstance(ticketId);
         getSupportFragmentManager()
                 .beginTransaction()
@@ -357,7 +384,6 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity implements E
 
     @Override
     public void onPaymentConfirmed(String paymentMethod, double amount, String notes) {
-        // Callback from EmployeePaymentFragment
         completeWorkWithPayment(paymentMethod, amount, notes);
     }
 
@@ -368,7 +394,6 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity implements E
             return;
         }
 
-        // Show progress
         btnCompleteWork.setEnabled(false);
         btnCompleteWork.setText("Processing...");
 
@@ -388,36 +413,16 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity implements E
                         String message = "Work completed successfully!";
                         if ("cash".equals(paymentMethod)) {
                             message += "\nPayment collected: ₱" + String.format("%.2f", amount);
-                            message += "\nPlease submit payment to your manager.";
-                        } else {
-                            message += "\nOnline payment recorded.";
                         }
                         Toast.makeText(EmployeeTicketDetailActivity.this, message, Toast.LENGTH_LONG).show();
-                        loadTicketDetails(); // Refresh ticket details
+                        loadTicketDetails();
                     } else {
-                        Toast.makeText(EmployeeTicketDetailActivity.this, 
-                            "Failed to complete work: " + workResponse.getMessage(), Toast.LENGTH_LONG).show();
+                        Toast.makeText(EmployeeTicketDetailActivity.this, "Failed: " + workResponse.getMessage(),
+                                Toast.LENGTH_LONG).show();
                     }
                 } else {
-                    String errorMessage = "Failed to complete work";
-                    if (response.errorBody() != null) {
-                        try {
-                            String errorBody = response.errorBody().string();
-                            android.util.Log.e("EmployeeTicketDetail", "Error: " + errorBody);
-                            // Try to parse JSON error
-                            try {
-                                com.google.gson.JsonObject errorJson = new com.google.gson.Gson().fromJson(errorBody, com.google.gson.JsonObject.class);
-                                if (errorJson.has("message")) {
-                                    errorMessage = errorJson.get("message").getAsString();
-                                }
-                            } catch (Exception e) {
-                                errorMessage = errorBody.length() > 100 ? errorBody.substring(0, 100) + "..." : errorBody;
-                            }
-                        } catch (Exception e) {
-                            android.util.Log.e("EmployeeTicketDetail", "Error reading error body", e);
-                        }
-                    }
-                    Toast.makeText(EmployeeTicketDetailActivity.this, errorMessage, Toast.LENGTH_LONG).show();
+                    Toast.makeText(EmployeeTicketDetailActivity.this, "Failed to complete work", Toast.LENGTH_LONG)
+                            .show();
                 }
             }
 
@@ -425,10 +430,123 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity implements E
             public void onFailure(Call<CompleteWorkResponse> call, Throwable t) {
                 btnCompleteWork.setEnabled(true);
                 btnCompleteWork.setText("Complete Work");
-                android.util.Log.e("EmployeeTicketDetail", "Network error completing work", t);
-                Toast.makeText(EmployeeTicketDetailActivity.this, 
-                    "Network error: " + t.getMessage(), Toast.LENGTH_LONG).show();
+                Toast.makeText(EmployeeTicketDetailActivity.this, "Network error: " + t.getMessage(), Toast.LENGTH_LONG)
+                        .show();
             }
         });
+    }
+
+    private void updateMapLocation() {
+        if (googleMap == null)
+            return;
+
+        if (customerLatitude != 0 && customerLongitude != 0) {
+            // Use explicit coordinates
+            showLocationOnMap(customerLatitude, customerLongitude);
+        } else {
+            // Fallback: Try to geocode the address
+            String address = tvAddress.getText().toString();
+            if (!address.isEmpty() && !address.equals("No Address")) {
+                geocodeAndShowLocation(address);
+            } else {
+                hideMap();
+            }
+        }
+    }
+
+    private void showLocationOnMap(double lat, double lng) {
+        if (googleMap != null) {
+            LatLng location = new LatLng(lat, lng);
+            googleMap.clear();
+            googleMap.addMarker(new MarkerOptions().position(location).title("Service Location"));
+            googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(location, 15f));
+            googleMap.getUiSettings().setMapToolbarEnabled(false);
+
+            // Ensure map is visible
+            btnViewMap.setVisibility(View.VISIBLE);
+            if (mapCardContainer != null)
+                mapCardContainer.setVisibility(View.VISIBLE);
+        }
+    }
+
+    private void hideMap() {
+        btnViewMap.setVisibility(View.GONE);
+        if (mapCardContainer != null)
+            mapCardContainer.setVisibility(View.GONE);
+    }
+
+    private void geocodeAndShowLocation(String addressStr) {
+        new Thread(() -> {
+            try {
+                android.location.Geocoder geocoder = new android.location.Geocoder(this, java.util.Locale.getDefault());
+                java.util.List<android.location.Address> addresses = geocoder.getFromLocationName(addressStr, 1);
+
+                if (addresses != null && !addresses.isEmpty()) {
+                    android.location.Address location = addresses.get(0);
+                    double lat = location.getLatitude();
+                    double lng = location.getLongitude();
+
+                    // Update UI on main thread
+                    runOnUiThread(() -> {
+                        // Update the stored coordinates
+                        this.customerLatitude = lat;
+                        this.customerLongitude = lng;
+                        showLocationOnMap(lat, lng);
+                    });
+                } else {
+                    runOnUiThread(this::hideMap);
+                }
+            } catch (java.io.IOException e) {
+                runOnUiThread(this::hideMap);
+            }
+        }).start();
+    }
+
+    @Override
+    public void onMapReady(GoogleMap map) {
+        this.googleMap = map;
+        updateMapLocation();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        if (mapView != null)
+            mapView.onStart();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (mapView != null)
+            mapView.onResume();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (mapView != null)
+            mapView.onPause();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (mapView != null)
+            mapView.onStop();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (mapView != null)
+            mapView.onDestroy();
+    }
+
+    @Override
+    public void onLowMemory() {
+        super.onLowMemory();
+        if (mapView != null)
+            mapView.onLowMemory();
     }
 }
