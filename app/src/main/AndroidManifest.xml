@@ -58,6 +58,18 @@
             android:name=".admin.AdminDashboardActivity"
             android:exported="false" />
         <activity
+            android:name=".admin.BranchesActivity"
+            android:exported="false" />
+        <activity
+            android:name=".admin.BranchDetailActivity"
+            android:exported="false" />
+        <activity
+            android:name=".admin.ManagersActivity"
+            android:exported="false" />
+        <activity
+            android:name=".admin.ManagerDetailActivity"
+            android:exported="false" />
+        <activity
             android:name=".user.ServiceSelectActivity"
             android:exported="false" />
         <activity

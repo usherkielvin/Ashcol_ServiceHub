@@ -404,8 +404,6 @@ public class UserProfileFragment extends Fragment {
             showNotificationSettings());
         setClickListener(view, R.id.btn_language, () -> 
             showToast("Language clicked"));
-        setClickListener(view, R.id.btn_payroll, () -> 
-            showToast("Payroll clicked"));
     }
 
     private void setClickListener(View view, int id, Runnable action) {
