@@ -14,6 +14,7 @@ public class TokenManager {
     private static final String KEY_CONNECTION_STATUS = "connection_status";
     private static final String KEY_CURRENT_CITY = "current_city";
     private static final String KEY_FAILED_GOOGLE_LOGIN_PREFIX = "failed_google_login_";
+    private static final String KEY_USER_BRANCH = "user_branch";
 
     // Branch Cache
     private static final String KEY_BRANCH = "branch";
@@ -28,6 +29,10 @@ public class TokenManager {
 
     // Firebase Cloud Messaging Token
     private static final String KEY_FCM_TOKEN = "fcm_token";
+
+    // Theme and Language Preferences
+    private static final String KEY_THEME_PREFERENCE = "theme_preference";
+    private static final String KEY_LANGUAGE_PREFERENCE = "language_preference";
 
     private final SharedPreferences sharedPreferences;
 
@@ -74,6 +79,14 @@ public class TokenManager {
 
     public String getUserRole() {
         return getRole();
+    }
+
+    public void saveUserBranch(String branch) {
+        sharedPreferences.edit().putString(KEY_USER_BRANCH, branch).apply();
+    }
+
+    public String getUserBranch() {
+        return sharedPreferences.getString(KEY_USER_BRANCH, null);
     }
 
     public void clear() {
@@ -249,5 +262,22 @@ public class TokenManager {
         editor.remove(KEY_EMPLOYEE_COUNT);
         editor.remove(KEY_BRANCH_CACHE_TIME);
         editor.apply();
+    }
+
+    // Theme and Language Preference Methods
+    public void setThemePreference(String theme) {
+        sharedPreferences.edit().putString(KEY_THEME_PREFERENCE, theme).apply();
+    }
+
+    public String getThemePreference() {
+        return sharedPreferences.getString(KEY_THEME_PREFERENCE, "system");
+    }
+
+    public void setLanguagePreference(String language) {
+        sharedPreferences.edit().putString(KEY_LANGUAGE_PREFERENCE, language).apply();
+    }
+
+    public String getLanguagePreference() {
+        return sharedPreferences.getString(KEY_LANGUAGE_PREFERENCE, "filipino");
     }
 }

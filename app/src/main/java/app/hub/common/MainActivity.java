@@ -400,6 +400,9 @@ public class MainActivity extends AppCompatActivity {
         tokenManager.saveToken("Bearer " + response.getData().getToken());
         tokenManager.saveEmail(user.getEmail());
         tokenManager.saveRole(user.getRole());
+        if (user.getBranch() != null) {
+            tokenManager.saveUserBranch(user.getBranch());
+        }
 
         // Build and save name
         String firstName = user.getFirstName();
@@ -483,6 +486,9 @@ public class MainActivity extends AppCompatActivity {
                         }
 
                         tokenManager.saveRole(user.getRole());
+                        if (user.getBranch() != null) {
+                            tokenManager.saveUserBranch(user.getBranch());
+                        }
 
                         // Get name - prefer name field, fallback to firstName + lastName
                         String userName = user.getName();
