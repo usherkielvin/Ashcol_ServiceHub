@@ -109,6 +109,12 @@ public class ManagerEmployeeFragment extends Fragment implements ManagerDataMana
             }
 
             @Override
+            public void onDashboardStatsLoaded(app.hub.api.DashboardStatsResponse.Stats stats,
+                    List<app.hub.api.DashboardStatsResponse.RecentTicket> recentTickets) {
+                // Not needed
+            }
+
+            @Override
             public void onLoadComplete() {
                 if (swipeRefreshLayout != null) {
                     swipeRefreshLayout.setRefreshing(false);

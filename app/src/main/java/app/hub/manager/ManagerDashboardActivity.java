@@ -37,11 +37,11 @@ public class ManagerDashboardActivity extends AppCompatActivity {
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container,
                     new ManagerHomeFragment()).commit();
-            
+
             // Set initial indicator position
             bottomNav.post(() -> moveIndicatorToItem(R.id.nav_home, false));
         }
-        
+
         // Load all manager data at startup so tabs are instantly ready
         loadAllManagerData();
     }
@@ -86,7 +86,8 @@ public class ManagerDashboardActivity extends AppCompatActivity {
 
     private void moveIndicatorToItem(int itemId, boolean animate) {
         View itemView = bottomNav.findViewById(itemId);
-        if (itemView == null || navIndicator == null) return;
+        if (itemView == null || navIndicator == null)
+            return;
 
         int itemWidth = itemView.getWidth();
         int indicatorWidth = navIndicator.getWidth();
@@ -105,7 +106,7 @@ public class ManagerDashboardActivity extends AppCompatActivity {
             navIndicator.setTranslationY(targetY);
         }
     }
-    
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -114,26 +115,36 @@ public class ManagerDashboardActivity extends AppCompatActivity {
         android.util.Log.d("ManagerDashboard", "App resumed - checking cache freshness");
         ManagerDataManager.loadAllData(this, new ManagerDataManager.DataLoadCallback() {
             @Override
-            public void onEmployeesLoaded(String branchName, List<EmployeeResponse.Employee> employees) {}
+            public void onEmployeesLoaded(String branchName, List<EmployeeResponse.Employee> employees) {
+            }
+
             @Override
-            public void onTicketsLoaded(List<TicketListResponse.TicketItem> tickets) {}
+            public void onTicketsLoaded(List<TicketListResponse.TicketItem> tickets) {
+            }
+
+            @Override
+            public void onDashboardStatsLoaded(app.hub.api.DashboardStatsResponse.Stats stats,
+                    List<app.hub.api.DashboardStatsResponse.RecentTicket> recentTickets) {
+            }
+
             @Override
             public void onLoadComplete() {
                 android.util.Log.d("ManagerDashboard", "Data refresh check completed");
             }
+
             @Override
             public void onLoadError(String error) {
                 android.util.Log.e("ManagerDashboard", "Error refreshing data: " + error);
             }
         });
     }
-    
+
     /**
      * Load all manager data at startup so tabs are instantly ready
      */
     private void loadAllManagerData() {
         android.util.Log.d("ManagerDashboard", "Loading all manager data at startup");
-        
+
         ManagerDataManager.loadAllData(this, new ManagerDataManager.DataLoadCallback() {
             @Override
             public void onEmployeesLoaded(String branchName, List<EmployeeResponse.Employee> employees) {
@@ -143,6 +154,12 @@ public class ManagerDashboardActivity extends AppCompatActivity {
             @Override
             public void onTicketsLoaded(List<TicketListResponse.TicketItem> tickets) {
                 android.util.Log.d("ManagerDashboard", "Tickets loaded: " + tickets.size());
+            }
+
+            @Override
+            public void onDashboardStatsLoaded(app.hub.api.DashboardStatsResponse.Stats stats,
+                    List<app.hub.api.DashboardStatsResponse.RecentTicket> recentTickets) {
+                android.util.Log.d("ManagerDashboard", "Dashboard stats loaded");
             }
 
             @Override

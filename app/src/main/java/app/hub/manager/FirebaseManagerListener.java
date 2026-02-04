@@ -11,6 +11,7 @@ import com.google.firebase.firestore.QuerySnapshot;
 import java.util.ArrayList;
 import java.util.List;
 
+import app.hub.api.DashboardStatsResponse;
 import app.hub.api.EmployeeResponse;
 import app.hub.api.TicketListResponse;
 import app.hub.util.TokenManager;
@@ -144,6 +145,11 @@ public class FirebaseManagerListener {
             @Override
             public void onTicketsLoaded(List<TicketListResponse.TicketItem> tickets) {
                 Log.i(TAG, "Tickets refreshed from API: " + tickets.size() + " tickets");
+            }
+
+            @Override
+            public void onDashboardStatsLoaded(DashboardStatsResponse.Stats stats, List<DashboardStatsResponse.RecentTicket> recentTickets) {
+                // Not used in this callback
             }
 
             @Override

@@ -304,6 +304,12 @@ public class ManagerAddEmployee extends AppCompatActivity {
                                                 }
 
                                                 @Override
+                                                public void onDashboardStatsLoaded(
+                                                        app.hub.api.DashboardStatsResponse.Stats stats,
+                                                        List<app.hub.api.DashboardStatsResponse.RecentTicket> recentTickets) {
+                                                }
+
+                                                @Override
                                                 public void onLoadComplete() {
                                                     android.util.Log.d("ManagerAddEmployee",
                                                             "Refresh complete, new employee should be visible");

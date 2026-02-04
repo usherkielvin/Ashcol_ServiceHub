@@ -193,6 +193,12 @@ public class ManagerWorkFragment extends Fragment {
                     }
 
                     @Override
+                    public void onDashboardStatsLoaded(app.hub.api.DashboardStatsResponse.Stats stats,
+                            List<app.hub.api.DashboardStatsResponse.RecentTicket> recentTickets) {
+                        // Not needed for work fragment
+                    }
+
+                    @Override
                     public void onLoadComplete() {
                         if (swipeRefreshLayout != null && swipeRefreshLayout.isRefreshing()) {
                             swipeRefreshLayout.setRefreshing(false);
@@ -315,6 +321,12 @@ public class ManagerWorkFragment extends Fragment {
             @Override
             public void onTicketsLoaded(List<TicketListResponse.TicketItem> tickets) {
                 displayTicketData();
+            }
+
+            @Override
+            public void onDashboardStatsLoaded(app.hub.api.DashboardStatsResponse.Stats stats,
+                    List<app.hub.api.DashboardStatsResponse.RecentTicket> recentTickets) {
+                // Not needed
             }
 
             @Override
