@@ -65,15 +65,7 @@
                     android:paddingVertical="4dp"
                     android:layout_marginBottom="4dp" />
 
-                <TextView
-                    android:id="@+id/tvUrgency"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="HIGH"
-                    android:textSize="10sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/red"
-                    android:visibility="gone" />
+
 
             </LinearLayout>
 

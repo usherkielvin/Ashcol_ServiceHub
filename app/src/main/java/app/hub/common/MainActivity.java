@@ -16,6 +16,7 @@ import app.hub.employee.EmployeeDashboardActivity;
 import app.hub.manager.ManagerDashboardActivity;
 import app.hub.user.DashboardActivity;
 import app.hub.util.EmailValidator;
+import app.hub.util.FCMTokenHelper;
 import app.hub.util.LocationConfig;
 import app.hub.util.UserLocationManager;
 import app.hub.util.TokenManager;
@@ -421,6 +422,9 @@ public class MainActivity extends AppCompatActivity {
         // Force immediate token persistence
         tokenManager.forceCommit();
 
+        // Register FCM token for push notifications
+        FCMTokenHelper.registerTokenWithBackend(MainActivity.this);
+
         // Update location for signed-in user and navigate after completion
         updateLocationAndNavigate(user);
     }
@@ -506,6 +510,9 @@ public class MainActivity extends AppCompatActivity {
                         if (userName != null && !userName.isEmpty()) {
                             tokenManager.saveName(userName);
                         }
+
+                        // Register FCM token for push notifications
+                        FCMTokenHelper.registerTokenWithBackend(MainActivity.this);
 
                         // Navigate to dashboard
                         runOnUiThread(() -> {

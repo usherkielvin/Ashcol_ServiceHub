@@ -20,29 +20,51 @@ public class ManagerHomeFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+            Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_manager_home, container, false);
-        
+
+        // Set welcome message with branch info
+        updateWelcomeMessage(view);
+
         // Secretly refresh data in background when on home tab
         refreshDataInBackground();
-        
+
         return view;
     }
-    
+
     @Override
     public void onResume() {
         super.onResume();
+        // Update welcome message when fragment becomes visible
+        if (getView() != null) {
+            updateWelcomeMessage(getView());
+        }
         // Also refresh when home tab becomes visible again
         refreshDataInBackground();
     }
-    
+
+    /**
+     * Update welcome message with branch information
+     */
+    private void updateWelcomeMessage(View view) {
+        android.widget.TextView tvWelcome = view.findViewById(R.id.tv_manager_welcome);
+        if (tvWelcome != null) {
+            String branchName = ManagerDataManager.getCachedBranchName();
+            if (branchName != null && !branchName.isEmpty() && !branchName.equals("No Branch Assigned")) {
+                tvWelcome.setText("Manager of " + branchName);
+            } else {
+                tvWelcome.setText("Manager Dashboard");
+            }
+        }
+    }
+
     /**
      * Secretly refresh all manager data in background
      */
     private void refreshDataInBackground() {
         android.util.Log.d("ManagerHome", "Secretly refreshing data in background");
-        
+
         ManagerDataManager.loadAllData(getContext(), new ManagerDataManager.DataLoadCallback() {
             @Override
             public void onEmployeesLoaded(String branchName, List<EmployeeResponse.Employee> employees) {

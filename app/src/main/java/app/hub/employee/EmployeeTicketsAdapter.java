@@ -48,7 +48,7 @@ public class EmployeeTicketsAdapter extends RecyclerView.Adapter<EmployeeTickets
     public void onBindViewHolder(@NonNull EmployeeTicketViewHolder holder, int position) {
         TicketListResponse.TicketItem ticket = tickets.get(position);
         holder.bind(ticket);
-        
+
         // Set click listener
         holder.itemView.setOnClickListener(v -> {
             if (onTicketClickListener != null) {
@@ -71,7 +71,7 @@ public class EmployeeTicketsAdapter extends RecyclerView.Adapter<EmployeeTickets
         private TextView tvDescription;
         private TextView tvCustomerName;
         private TextView tvAddress;
-        private TextView tvUrgency;
+
         private TextView tvScheduleDate;
         private TextView tvScheduleNotes;
         private LinearLayout scheduleContainer;
@@ -86,7 +86,7 @@ public class EmployeeTicketsAdapter extends RecyclerView.Adapter<EmployeeTickets
             tvDescription = itemView.findViewById(R.id.tvDescription);
             tvCustomerName = itemView.findViewById(R.id.tvCustomerName);
             tvAddress = itemView.findViewById(R.id.tvAddress);
-            tvUrgency = itemView.findViewById(R.id.tvUrgency);
+
             tvScheduleDate = itemView.findViewById(R.id.tvScheduleDate);
             tvScheduleNotes = itemView.findViewById(R.id.tvScheduleNotes);
             scheduleContainer = itemView.findViewById(R.id.scheduleContainer);
@@ -98,35 +98,9 @@ public class EmployeeTicketsAdapter extends RecyclerView.Adapter<EmployeeTickets
             tvServiceType.setText(ticket.getServiceType());
             tvStatus.setText("Status: " + ticket.getStatus());
             tvDescription.setText(ticket.getDescription());
-            tvCustomerName.setText("Customer: " + (ticket.getCustomerName() != null ? ticket.getCustomerName() : "Unknown"));
+            tvCustomerName
+                    .setText("Customer: " + (ticket.getCustomerName() != null ? ticket.getCustomerName() : "Unknown"));
             tvAddress.setText("Location: " + (ticket.getAddress() != null ? ticket.getAddress() : "Not specified"));
-
-            // Set urgency indicator
-            if (tvUrgency != null) {
-                String priority = ticket.getPriority();
-                if (priority != null && !priority.isEmpty()) {
-                    tvUrgency.setText(priority.toUpperCase());
-                    tvUrgency.setVisibility(View.VISIBLE);
-                    
-                    // Set urgency color
-                    switch (priority.toLowerCase()) {
-                        case "high":
-                            tvUrgency.setTextColor(Color.parseColor("#F44336")); // Red
-                            break;
-                        case "medium":
-                            tvUrgency.setTextColor(Color.parseColor("#FF9800")); // Orange
-                            break;
-                        case "low":
-                            tvUrgency.setTextColor(Color.parseColor("#4CAF50")); // Green
-                            break;
-                        default:
-                            tvUrgency.setTextColor(Color.parseColor("#757575")); // Gray
-                            break;
-                    }
-                } else {
-                    tvUrgency.setVisibility(View.GONE);
-                }
-            }
 
             // Set status color
             String statusColor = ticket.getStatusColor();
@@ -144,7 +118,7 @@ public class EmployeeTicketsAdapter extends RecyclerView.Adapter<EmployeeTickets
             // Format date
             String formattedDate = formatDate(ticket.getCreatedAt());
             tvDate.setText("Assigned: " + formattedDate);
-            
+
             // Display schedule information
             if (ticket.getScheduledDate() != null && !ticket.getScheduledDate().isEmpty()) {
                 String scheduleText = "Scheduled: " + formatDate(ticket.getScheduledDate());
@@ -153,7 +127,7 @@ public class EmployeeTicketsAdapter extends RecyclerView.Adapter<EmployeeTickets
                 }
                 tvScheduleDate.setText(scheduleText);
                 scheduleContainer.setVisibility(View.VISIBLE);
-                
+
                 if (ticket.getScheduleNotes() != null && !ticket.getScheduleNotes().isEmpty()) {
                     tvScheduleNotes.setText("Notes: " + ticket.getScheduleNotes());
                     tvScheduleNotes.setVisibility(View.VISIBLE);
@@ -166,8 +140,9 @@ public class EmployeeTicketsAdapter extends RecyclerView.Adapter<EmployeeTickets
         }
 
         private void setStatusColor(TextView textView, String status) {
-            if (status == null) return;
-            
+            if (status == null)
+                return;
+
             switch (status.toLowerCase()) {
                 case "pending":
                     textView.setTextColor(Color.parseColor("#FFA500")); // Orange
@@ -198,7 +173,7 @@ public class EmployeeTicketsAdapter extends RecyclerView.Adapter<EmployeeTickets
                 // Parse the date string (assuming ISO format from API)
                 SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
                 SimpleDateFormat outputFormat = new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault());
-                
+
                 Date date = inputFormat.parse(dateString);
                 if (date != null) {
                     return outputFormat.format(date);
@@ -206,9 +181,10 @@ public class EmployeeTicketsAdapter extends RecyclerView.Adapter<EmployeeTickets
             } catch (ParseException e) {
                 // If parsing fails, try alternative format
                 try {
-                    SimpleDateFormat altInputFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault());
+                    SimpleDateFormat altInputFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss",
+                            Locale.getDefault());
                     SimpleDateFormat outputFormat = new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault());
-                    
+
                     Date date = altInputFormat.parse(dateString);
                     if (date != null) {
                         return outputFormat.format(date);
@@ -218,20 +194,20 @@ public class EmployeeTicketsAdapter extends RecyclerView.Adapter<EmployeeTickets
                     return dateString;
                 }
             }
-            
+
             return dateString;
         }
-        
+
         private String formatTime(String timeString) {
             if (timeString == null || timeString.isEmpty()) {
                 return "";
             }
-            
+
             try {
                 // Parse the time string (assuming HH:mm format from API)
                 SimpleDateFormat inputFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
                 SimpleDateFormat outputFormat = new SimpleDateFormat("h:mm a", Locale.getDefault());
-                
+
                 Date time = inputFormat.parse(timeString);
                 if (time != null) {
                     return outputFormat.format(time);
@@ -239,7 +215,7 @@ public class EmployeeTicketsAdapter extends RecyclerView.Adapter<EmployeeTickets
             } catch (ParseException e) {
                 return timeString; // Return original if parsing fails
             }
-            
+
             return timeString;
         }
     }
