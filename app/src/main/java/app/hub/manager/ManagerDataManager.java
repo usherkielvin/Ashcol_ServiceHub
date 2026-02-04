@@ -30,6 +30,9 @@ public class ManagerDataManager {
     private static boolean isLoading = false;
     private static long lastLoadTime = 0;
 
+    // Firebase real-time listener
+    private static FirebaseManagerListener firebaseListener = null;
+
     // Cache duration - refresh if data is older than 3 minutes (matches backend
     // cache)
     private static final long CACHE_DURATION = 3 * 60 * 1000; // 3 minutes
@@ -328,4 +331,19 @@ public class ManagerDataManager {
         clearAllCache();
         loadAllData(context, callback);
     }
+
+    // Firebase real-time sync methods
+    public static void startFirebaseListeners(Context context) {
+        if (firebaseListener == null) {
+            firebaseListener = new FirebaseManagerListener(context);
+        }
+        firebaseListener.startListening();
+    }
+
+    public static void stopFirebaseListeners() {
+        if (firebaseListener != null) {
+            firebaseListener.stopFirebaseListeners();
+        }
+    }
 }
+
