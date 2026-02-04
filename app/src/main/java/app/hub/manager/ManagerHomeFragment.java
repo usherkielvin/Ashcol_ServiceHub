@@ -10,6 +10,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import app.hub.R;
@@ -17,11 +18,15 @@ import app.hub.api.DashboardStatsResponse;
 import app.hub.api.EmployeeResponse;
 import app.hub.api.TicketListResponse;
 
-public class ManagerHomeFragment extends Fragment {
+public class ManagerHomeFragment extends Fragment implements ManagerDataManager.EmployeeDataChangeListener {
 
     private TextView tvTotalTickets, tvPendingTickets, tvInProgressTickets, tvCompletedTickets;
     private RecyclerView recentActivityRecyclerView;
     private RecentActivityAdapter recentActivityAdapter;
+
+    private RecyclerView rvEmployeePreview;
+    private EmployeePreviewAdapter employeePreviewAdapter;
+    private TextView tvEmployeeCount;
 
     public ManagerHomeFragment() {
         // Required empty public constructor
@@ -42,10 +47,11 @@ public class ManagerHomeFragment extends Fragment {
         // Setup RecyclerView for recent activity
         setupRecyclerView();
 
-        // Load and display dashboard data
+        // Load and display dashboard data AFTER RecyclerView is set up
         loadDashboardData();
 
-        // Secretly refresh data in background when on home tab
+        // Refresh data in background to get latest (this will update the UI when
+        // complete)
         refreshDataInBackground();
 
         return view;
@@ -55,6 +61,8 @@ public class ManagerHomeFragment extends Fragment {
         // You may need to add these TextViews to your layout if they don't exist
         // For now, dashboard stats will be shown in recent activity section
         recentActivityRecyclerView = view.findViewById(R.id.recentActivityFlow);
+        rvEmployeePreview = view.findViewById(R.id.rvEmployeePreview);
+        tvEmployeeCount = view.findViewById(R.id.tvEmployeeCount);
     }
 
     private void setupRecyclerView() {
@@ -62,6 +70,18 @@ public class ManagerHomeFragment extends Fragment {
         recentActivityRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         recentActivityRecyclerView.setAdapter(recentActivityAdapter);
         recentActivityRecyclerView.setNestedScrollingEnabled(false);
+
+        // Setup employee preview RecyclerView
+        employeePreviewAdapter = new EmployeePreviewAdapter(getContext());
+        rvEmployeePreview.setLayoutManager(new LinearLayoutManager(getContext()));
+        rvEmployeePreview.setAdapter(employeePreviewAdapter);
+        rvEmployeePreview.setNestedScrollingEnabled(false);
+
+        // Register as listener for real-time employee updates
+        ManagerDataManager.registerEmployeeListener(this);
+
+        // Load employee data immediately
+        loadEmployeeData();
     }
 
     private void loadDashboardData() {
@@ -69,12 +89,20 @@ public class ManagerHomeFragment extends Fragment {
         DashboardStatsResponse.Stats stats = ManagerDataManager.getCachedDashboardStats();
         List<DashboardStatsResponse.RecentTicket> recentTickets = ManagerDataManager.getCachedRecentTickets();
 
+        android.util.Log.d("ManagerHome", "Loading dashboard data - Stats: " + (stats != null) +
+                ", Recent tickets: " + (recentTickets != null ? recentTickets.size() : "null"));
+
         if (stats != null) {
             updateDashboardStats(stats);
         }
 
         if (recentTickets != null && !recentTickets.isEmpty()) {
+            android.util.Log.d("ManagerHome", "Setting " + recentTickets.size() + " recent tickets to adapter");
             recentActivityAdapter.setRecentTickets(recentTickets);
+        } else {
+            android.util.Log.w("ManagerHome", "No recent tickets available to display");
+            // Set empty list to clear any old data
+            recentActivityAdapter.setRecentTickets(new ArrayList<>());
         }
     }
 
@@ -125,6 +153,12 @@ public class ManagerHomeFragment extends Fragment {
             @Override
             public void onEmployeesLoaded(String branchName, List<EmployeeResponse.Employee> employees) {
                 android.util.Log.d("ManagerHome", "Background refresh: Employees loaded (" + employees.size() + ")");
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() -> {
+                        employeePreviewAdapter.setEmployees(employees);
+                        updateEmployeeCount(employees.size());
+                    });
+                }
             }
 
             @Override
@@ -135,11 +169,16 @@ public class ManagerHomeFragment extends Fragment {
             @Override
             public void onDashboardStatsLoaded(DashboardStatsResponse.Stats stats,
                     List<DashboardStatsResponse.RecentTicket> recentTickets) {
-                android.util.Log.d("ManagerHome", "Dashboard stats loaded in background");
+                android.util.Log.d("ManagerHome", "Dashboard stats loaded in background - Recent tickets: " +
+                        (recentTickets != null ? recentTickets.size() : "null"));
                 if (getActivity() != null) {
                     getActivity().runOnUiThread(() -> {
                         updateDashboardStats(stats);
-                        recentActivityAdapter.setRecentTickets(recentTickets);
+                        if (recentTickets != null && !recentTickets.isEmpty()) {
+                            android.util.Log.d("ManagerHome",
+                                    "Updating recent activity with " + recentTickets.size() + " tickets");
+                            recentActivityAdapter.setRecentTickets(recentTickets);
+                        }
                     });
                 }
             }
@@ -155,5 +194,49 @@ public class ManagerHomeFragment extends Fragment {
                 // Silent error - don't show to user since it's background refresh
             }
         });
+    }
+
+    /**
+     * Load and display employee data
+     */
+    private void loadEmployeeData() {
+        List<EmployeeResponse.Employee> employees = ManagerDataManager.getCachedEmployees();
+        String branchName = ManagerDataManager.getCachedBranchName();
+
+        if (employees != null && !employees.isEmpty()) {
+            employeePreviewAdapter.setEmployees(employees);
+            updateEmployeeCount(employees.size());
+        } else {
+            updateEmployeeCount(0);
+        }
+    }
+
+    /**
+     * Update employee count display
+     */
+    private void updateEmployeeCount(int count) {
+        if (tvEmployeeCount != null) {
+            tvEmployeeCount.setText(count + " employee" + (count != 1 ? "s" : ""));
+        }
+    }
+
+    @Override
+    public void onEmployeeDataChanged(String branchName, List<EmployeeResponse.Employee> employees) {
+        // Real-time update when employee data changes
+        android.util.Log.d("ManagerHome", "Employee data changed - updating preview");
+
+        if (getActivity() != null) {
+            getActivity().runOnUiThread(() -> {
+                employeePreviewAdapter.setEmployees(employees);
+                updateEmployeeCount(employees.size());
+            });
+        }
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        // Unregister listener to prevent memory leaks
+        ManagerDataManager.unregisterEmployeeListener(this);
     }
 }
