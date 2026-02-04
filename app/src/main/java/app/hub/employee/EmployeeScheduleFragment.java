@@ -291,17 +291,20 @@ public class EmployeeScheduleFragment extends Fragment {
 
             for (EmployeeScheduleResponse.ScheduledTicket ticket : dayTickets) {
                 boolean matches = false;
-                String status = ticket.getStatus() != null ? ticket.getStatus().toLowerCase() : "";
+                String status = ticket.getStatus() != null ? ticket.getStatus().toLowerCase().trim() : "";
 
                 if (currentStatusFilter.equals("all")) {
                     matches = true;
                 } else if (currentStatusFilter.equals("pending")) {
-                    matches = status.equals("pending") || status.equals("open");
+                    matches = status.contains("pending") || status.contains("open");
                 } else if (currentStatusFilter.equals("in_progress")) {
-                    matches = status.equals("in progress") || status.equals("accepted") || status.contains("progress");
+                    matches = status.contains("progress") || status.contains("accepted") || status.contains("ongoing");
                 } else if (currentStatusFilter.equals("completed")) {
-                    matches = status.equals("completed") || status.equals("resolved") || status.equals("closed");
+                    matches = status.contains("completed") || status.contains("resolved") || status.contains("closed");
                 }
+
+                android.util.Log.d("ScheduleFilter", "Ticket: " + ticket.getTicketId() + " Status: '" + status
+                        + "' Filter: " + currentStatusFilter + " Match: " + matches);
 
                 if (matches) {
                     filteredDayTickets.add(ticket);

@@ -295,15 +295,15 @@
                             android:layout_width="16dp"
                             android:layout_height="16dp"
                             android:layout_gravity="center_vertical"
-                            android:background="#4CAF50"
-                            android:backgroundTint="#4CAF50" />
+                            android:background="#9E9E9E"
+                            android:backgroundTint="#9E9E9E" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_gravity="center_vertical"
                             android:layout_marginStart="8dp"
-                            android:text="Scheduled"
+                            android:text="Assigned"
                             android:textColor="#666666"
                             android:textSize="12sp" />
 
@@ -359,7 +359,7 @@
                             android:layout_height="wrap_content"
                             android:layout_gravity="center_vertical"
                             android:layout_marginStart="8dp"
-                            android:text="Urgent"
+                            android:text="Pending"
                             android:textColor="#666666"
                             android:textSize="12sp" />
 
@@ -375,8 +375,8 @@
                             android:layout_width="16dp"
                             android:layout_height="16dp"
                             android:layout_gravity="center_vertical"
-                            android:background="#F44336"
-                            android:backgroundTint="#F44336" />
+                            android:background="#4CAF50"
+                            android:backgroundTint="#4CAF50" />
 
                         <TextView
                             android:layout_width="wrap_content"

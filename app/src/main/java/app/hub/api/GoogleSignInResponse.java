@@ -58,6 +58,7 @@ public class GoogleSignInResponse {
         private String name;
         private String email;
         private String role;
+        private String branch;
 
         public int getId() {
             return id;
@@ -113,6 +114,14 @@ public class GoogleSignInResponse {
 
         public void setRole(String role) {
             this.role = role;
+        }
+
+        public String getBranch() {
+            return branch;
+        }
+
+        public void setBranch(String branch) {
+            this.branch = branch;
         }
     }
 }
