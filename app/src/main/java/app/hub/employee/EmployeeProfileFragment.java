@@ -117,10 +117,7 @@ public class EmployeeProfileFragment extends Fragment {
 
         // Placeholder buttons
         setupPlaceholderButton(view, R.id.btn_personal_info, "Personal Info");
-        setupPlaceholderButton(view, R.id.btn_payroll, "Payroll");
         setupPlaceholderButton(view, R.id.btn_help, "Help & Feedback");
-        setupPlaceholderButton(view, R.id.btn_appearance, "Appearance");
-        setupPlaceholderButton(view, R.id.btn_language, "Language");
         setupPlaceholderButton(view, R.id.btn_edit_photo, "Edit Photo");
 
         Button logoutButton = view.findViewById(R.id.logoutButton);
