@@ -201,12 +201,19 @@ public class CalendarAdapter extends RecyclerView.Adapter<CalendarAdapter.Calend
             String status = ticket.getStatus() != null ? ticket.getStatus().toLowerCase() : "";
 
             if (status.contains("completed")) {
-                indicator.setBackgroundResource(R.drawable.cr100b00000012); // Red
+                indicator
+                        .setBackgroundTintList(android.content.res.ColorStateList.valueOf(Color.parseColor("#4CAF50")));
             } else if (status.contains("progress") || status.contains("accepted")) {
-                indicator.setBackgroundResource(R.drawable.cr7b0000001a); // Blue
+                indicator
+                        .setBackgroundTintList(android.content.res.ColorStateList.valueOf(Color.parseColor("#2196F3")));
+            } else if (status.contains("pending")) {
+                indicator
+                        .setBackgroundTintList(android.content.res.ColorStateList.valueOf(Color.parseColor("#FF9800")));
             } else {
-                indicator.setBackgroundResource(R.drawable.shape_circle_gray); // Gray/Green
+                indicator
+                        .setBackgroundTintList(android.content.res.ColorStateList.valueOf(Color.parseColor("#9E9E9E")));
             }
+            indicator.setBackgroundResource(R.drawable.shape_circle_gray);
         }
     }
 }
