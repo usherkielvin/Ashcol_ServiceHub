@@ -1,60 +1,82 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:background="?android:attr/colorBackground"
     tools:context=".admin_addEmployee">
 
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/constraintLayout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="#FFFFFF">
+        android:layout_height="wrap_content"
+        android:paddingBottom="32dp">
+
+        <!-- Header Section -->
+        <View
+            android:id="@+id/headerBackground"
+            android:layout_width="match_parent"
+            android:layout_height="140dp"
+            android:background="@drawable/header_green"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/closeButton"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="48dp"
+            android:contentDescription="@string/desc_back"
+            android:insetLeft="0dp"
+            android:insetTop="0dp"
+            android:insetRight="0dp"
+            android:insetBottom="0dp"
+            app:icon="@drawable/outline_arrow_back_24"
+            app:iconSize="32dp"
+            app:iconTint="#FFFFFF"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
             android:id="@+id/tvHeader"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:fontFamily="sans-serif-medium"
             android:text="Create Employee Account"
-            android:textColor="#000000"
-            android:textSize="22sp"
+            android:textColor="#FFFFFF"
+            android:textSize="25sp"
             android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="@+id/closeButton"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.636"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
+            app:layout_constraintTop_toTopOf="@+id/closeButton" />
 
         <LinearLayout
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:padding="24dp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/tvHeader"
-            app:layout_constraintVertical_bias="0.0">
+            app:layout_constraintTop_toBottomOf="@id/headerBackground">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Account Details"
-                android:textColor="#000000"
-                android:textSize="16sp"
+                android:textColor="@color/quick_services_title_color"
+                android:textSize="18sp"
                 android:textStyle="bold" />
 
+            <!-- Fullname Section -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:text="Fullname"
-                android:textColor="#000000"
-                android:textSize="14sp" />
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="14sp"
+                android:textStyle="bold" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -76,10 +98,10 @@
                         android:layout_width="match_parent"
                         android:layout_height="50dp"
                         android:background="@drawable/bg_input_field"
-                        android:hint="Enter first name"
+                        android:hint="First name"
                         android:inputType="textPersonName"
-                        android:paddingTop="12dp"
-                        android:paddingBottom="12dp"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textColorHint="?attr/colorOnSurfaceVariant"
                         android:textSize="14sp" />
                 </com.google.android.material.textfield.TextInputLayout>
 
@@ -98,12 +120,13 @@
                         android:hint="Last name"
                         android:inputType="textPersonName"
                         android:paddingHorizontal="16dp"
-                        android:paddingTop="12dp"
-                        android:paddingBottom="12dp"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textColorHint="?attr/colorOnSurfaceVariant"
                         android:textSize="14sp" />
                 </com.google.android.material.textfield.TextInputLayout>
             </LinearLayout>
 
+            <!-- Required text for Fullname -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -133,13 +156,15 @@
                     tools:visibility="visible" />
             </LinearLayout>
 
+            <!-- Username Section -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:text="Username"
-                android:textColor="#000000"
-                android:textSize="14sp" />
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="14sp"
+                android:textStyle="bold" />
 
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
@@ -155,25 +180,27 @@
                     android:background="@drawable/bg_input_field"
                     android:hint="Enter username"
                     android:inputType="text"
-                    android:paddingTop="12dp"
-                    android:paddingBottom="12dp"
+                    android:textColor="?attr/colorOnSurface"
+                    android:textColorHint="?attr/colorOnSurfaceVariant"
                     android:textSize="14sp" />
             </com.google.android.material.textfield.TextInputLayout>
 
+            <!-- Email Section -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:text="Email"
-                android:textColor="#000000"
-                android:textSize="14sp" />
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="14sp"
+                android:textStyle="bold" />
 
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 app:hintEnabled="false"
-                app:startIconDrawable="@drawable/profile_icon">
+                app:startIconDrawable="@drawable/ic_email">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/Email_val"
@@ -182,8 +209,8 @@
                     android:background="@drawable/bg_input_field"
                     android:hint="example@gmail.com"
                     android:inputType="textEmailAddress"
-                    android:paddingTop="12dp"
-                    android:paddingBottom="12dp"
+                    android:textColor="?attr/colorOnSurface"
+                    android:textColorHint="?attr/colorOnSurfaceVariant"
                     android:textSize="14sp" />
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -197,6 +224,7 @@
                 android:visibility="gone"
                 tools:visibility="visible" />
 
+            <!-- Role and Branch Section -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -215,8 +243,9 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Role"
-                        android:textColor="#000000"
-                        android:textSize="14sp" />
+                        android:textColor="?attr/colorOnSurface"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
 
                     <com.google.android.material.textfield.TextInputLayout
                         android:layout_width="match_parent"
@@ -233,8 +262,8 @@
                             android:clickable="true"
                             android:focusable="false"
                             android:hint="Choose role"
-                            android:paddingTop="12dp"
-                            android:paddingBottom="12dp"
+                            android:textColor="?attr/colorOnSurface"
+                            android:textColorHint="?attr/colorOnSurfaceVariant"
                             android:textSize="14sp" />
                     </com.google.android.material.textfield.TextInputLayout>
                 </LinearLayout>
@@ -250,8 +279,9 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Branch"
-                        android:textColor="#000000"
-                        android:textSize="14sp" />
+                        android:textColor="?attr/colorOnSurface"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
 
                     <com.google.android.material.textfield.TextInputLayout
                         android:layout_width="match_parent"
@@ -268,8 +298,8 @@
                             android:clickable="true"
                             android:focusable="false"
                             android:hint="Choose branch"
-                            android:paddingTop="12dp"
-                            android:paddingBottom="12dp"
+                            android:textColor="?attr/colorOnSurface"
+                            android:textColorHint="?attr/colorOnSurfaceVariant"
                             android:textSize="14sp" />
                     </com.google.android.material.textfield.TextInputLayout>
                 </LinearLayout>
@@ -304,13 +334,15 @@
                     tools:visibility="visible" />
             </LinearLayout>
 
+            <!-- Password Section -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:text="Password"
-                android:textColor="#000000"
-                android:textSize="14sp" />
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="14sp"
+                android:textStyle="bold" />
 
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
@@ -327,8 +359,8 @@
                     android:background="@drawable/bg_input_field"
                     android:hint="Enter password"
                     android:inputType="textPassword"
-                    android:paddingTop="12dp"
-                    android:paddingBottom="12dp"
+                    android:textColor="?attr/colorOnSurface"
+                    android:textColorHint="?attr/colorOnSurfaceVariant"
                     android:textSize="14sp" />
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -342,13 +374,15 @@
                 android:visibility="gone"
                 tools:visibility="visible" />
 
+            <!-- Confirm Password Section -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:text="Confirm password"
-                android:textColor="#000000"
-                android:textSize="14sp" />
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="14sp"
+                android:textStyle="bold" />
 
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
@@ -365,8 +399,8 @@
                     android:background="@drawable/bg_input_field"
                     android:hint="Enter confirm password"
                     android:inputType="textPassword"
-                    android:paddingTop="12dp"
-                    android:paddingBottom="12dp"
+                    android:textColor="?attr/colorOnSurface"
+                    android:textColorHint="?attr/colorOnSurfaceVariant"
                     android:textSize="14sp" />
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -380,40 +414,29 @@
                 android:visibility="gone"
                 tools:visibility="visible" />
 
+            <!-- Buttons Section -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="32dp"
                 android:orientation="horizontal">
 
-                <androidx.appcompat.widget.AppCompatButton
-                    android:id="@+id/closeButton"
-                    android:layout_width="0dp"
-                    android:layout_height="55dp"
-                    android:layout_marginEnd="8dp"
-                    android:layout_weight="1"
-                    android:background="@drawable/bg_button_green"
-                    android:backgroundTint="#BDBDBD"
-                    android:text="Back"
-                    android:textAllCaps="false"
-                    android:textColor="#FFFFFF"
-                    android:textSize="16sp"
-                    android:textStyle="bold" />
-
-                <androidx.appcompat.widget.AppCompatButton
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/createEmployeeButton"
                     android:layout_width="0dp"
                     android:layout_height="55dp"
                     android:layout_marginStart="8dp"
                     android:layout_weight="1"
-                    android:background="@drawable/bg_button_green"
+                    android:backgroundTint="@color/service_icon_tint"
                     android:text="Create Employee"
                     android:textAllCaps="false"
                     android:textColor="#FFFFFF"
                     android:textSize="16sp"
-                    android:textStyle="bold" />
+                    android:textStyle="bold"
+                    app:cornerRadius="8dp" />
             </LinearLayout>
 
+            <!-- Logo and Footer -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -437,12 +460,10 @@
                     android:layout_marginTop="8dp"
                     android:gravity="center"
                     android:text="@string/footer_terms"
-                    android:textColor="#3A383F"
+                    android:textColor="?attr/colorOnSurfaceVariant"
                     android:textSize="12sp" />
             </LinearLayout>
 
         </LinearLayout>
-
     </androidx.constraintlayout.widget.ConstraintLayout>
-
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+</androidx.core.widget.NestedScrollView>
