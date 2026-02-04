@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#80000000">
+
+    <!-- Sidebar Container (Half Width) -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/sidebarContainer"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        app:cardBackgroundColor="#1B4332"
+        app:cardCornerRadius="0dp"
+        app:cardElevation="24dp"
+        app:layout_constraintHorizontal_bias="0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintWidth_percent="0.5"
+        app:strokeWidth="0dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+            <!-- Sidebar Header -->
+            <TextView
+                android:id="@+id/tvSidebarTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="20dp"
+                android:text="Services"
+                android:textColor="#FFFFFF"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:alpha="0.2"
+                android:background="#FFFFFF" />
+
+            <ScrollView
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:scrollbars="none">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="12dp">
+
+                    <!-- Cleaning -->
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/btnSidebarCleaning"
+                        android:layout_width="match_parent"
+                        android:layout_height="70dp"
+                        android:layout_marginBottom="12dp"
+                        app:cardCornerRadius="12dp"
+                        app:cardElevation="4dp"
+                        app:strokeColor="#FFFFFF"
+                        app:strokeWidth="1dp">
+
+                        <FrameLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent">
+
+                            <ImageView
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:scaleType="centerCrop"
+                                android:src="@drawable/cleaning" />
+
+                            <View
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:background="#66000000" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center_vertical"
+                                android:layout_marginStart="12dp"
+                                android:text="CLEANING"
+                                android:textColor="#FFFFFF"
+                                android:textSize="14sp"
+                                android:textStyle="bold"
+                                android:letterSpacing="0.05" />
+                        </FrameLayout>
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <!-- Maintenance -->
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/btnSidebarMaintenance"
+                        android:layout_width="match_parent"
+                        android:layout_height="70dp"
+                        android:layout_marginBottom="12dp"
+                        app:cardCornerRadius="12dp"
+                        app:cardElevation="4dp"
+                        app:strokeColor="#FFFFFF"
+                        app:strokeWidth="1dp">
+
+                        <FrameLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent">
+
+                            <ImageView
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:scaleType="centerCrop"
+                                android:src="@drawable/maintenance" />
+
+                            <View
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:background="#66000000" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center_vertical"
+                                android:layout_marginStart="12dp"
+                                android:text="MAINTENANCE"
+                                android:textColor="#FFFFFF"
+                                android:textSize="14sp"
+                                android:textStyle="bold"
+                                android:letterSpacing="0.05" />
+                        </FrameLayout>
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <!-- Installation -->
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/btnSidebarInstallation"
+                        android:layout_width="match_parent"
+                        android:layout_height="70dp"
+                        android:layout_marginBottom="12dp"
+                        app:cardCornerRadius="12dp"
+                        app:cardElevation="4dp"
+                        app:strokeColor="#FFFFFF"
+                        app:strokeWidth="1dp">
+
+                        <FrameLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent">
+
+                            <ImageView
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:scaleType="centerCrop"
+                                android:src="@drawable/installation" />
+
+                            <View
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:background="#66000000" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center_vertical"
+                                android:layout_marginStart="12dp"
+                                android:text="INSTALLATION"
+                                android:textColor="#FFFFFF"
+                                android:textSize="14sp"
+                                android:textStyle="bold"
+                                android:letterSpacing="0.05" />
+                        </FrameLayout>
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <!-- Repair -->
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/btnSidebarRepair"
+                        android:layout_width="match_parent"
+                        android:layout_height="70dp"
+                        android:layout_marginBottom="12dp"
+                        app:cardCornerRadius="12dp"
+                        app:cardElevation="4dp"
+                        app:strokeColor="#FFFFFF"
+                        app:strokeWidth="1dp">
+
+                        <FrameLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent">
+
+                            <ImageView
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:scaleType="centerCrop"
+                                android:src="@drawable/repair" />
+
+                            <View
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:background="#66000000" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center_vertical"
+                                android:layout_marginStart="12dp"
+                                android:text="REPAIR"
+                                android:textColor="#FFFFFF"
+                                android:textSize="14sp"
+                                android:textStyle="bold"
+                                android:letterSpacing="0.05" />
+                        </FrameLayout>
+                    </com.google.android.material.card.MaterialCardView>
+
+                </LinearLayout>
+            </ScrollView>
+
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
