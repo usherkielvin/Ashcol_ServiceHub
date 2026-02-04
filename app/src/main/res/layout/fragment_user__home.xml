@@ -31,6 +31,20 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
+        <TextView
+            android:id="@+id/tvAssignedBranch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="Loading branch..."
+            android:textColor="#FFFFFF"
+            android:textSize="12sp"
+            android:alpha="0.9"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/appLogo" />
+
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnNotification"
             android:layout_width="48dp"
