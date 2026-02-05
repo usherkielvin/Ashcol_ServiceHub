@@ -20,7 +20,7 @@
     <color name="colorOnError">#000000</color>
 
     <!-- Background and Surface Colors -->
-    <color name="android:colorBackground">#121212</color>
+    <color name="app_background">#121212</color>
     <color name="colorSurface">#1E1E1E</color>
     <color name="colorOnSurface">#E0E0E0</color>
     <color name="colorSurfaceVariant">#2C2C2C</color>

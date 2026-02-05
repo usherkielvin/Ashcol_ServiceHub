@@ -131,7 +131,7 @@ public class ManagerHomeFragment extends Fragment implements ManagerDataManager.
      * Update welcome message with branch information
      */
     private void updateWelcomeMessage(View view) {
-        android.widget.TextView tvWelcome = view.findViewById(R.id.tv_manager_welcome);
+        android.widget.TextView tvWelcome = view.findViewById(R.id.tvManagerLocation);
         if (tvWelcome != null) {
             String branchName = ManagerDataManager.getCachedBranchName();
             if (branchName != null && !branchName.isEmpty() && !branchName.equals("No Branch Assigned")) {

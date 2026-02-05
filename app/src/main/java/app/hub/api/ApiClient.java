@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit;
 
 public class ApiClient {
     private static final String TAG = "ApiClient";
-    
+
     // Change this to your Laravel API URL
     // For Android emulator: http://10.0.2.2:8000/
     // For physical device: http://YOUR_COMPUTER_IP:8000/
@@ -22,8 +22,8 @@ public class ApiClient {
     // Note: Trailing slash is required when endpoints don't start with /
     // LOCAL DEVELOPMENT - Using local Laravel server
     // Make sure to run: php artisan serve --host=0.0.0.0 --port=8000
-    private static final String BASE_URL = "http://192.168.0.103:8000/";
-    
+    private static final String BASE_URL = "http://172.20.10.4:8000/";
+
     private static Retrofit retrofit = null;
 
     public static Retrofit getClient() {
@@ -31,16 +31,16 @@ public class ApiClient {
             // Create logging interceptor for debugging
             HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor();
             loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
-            
+
             // Create OkHttpClient with longer timeouts for debugging
             OkHttpClient okHttpClient = new OkHttpClient.Builder()
-                    .connectTimeout(60, TimeUnit.SECONDS)      // Connection timeout: 60 seconds
-                    .readTimeout(60, TimeUnit.SECONDS)         // Read timeout: 60 seconds
-                    .writeTimeout(60, TimeUnit.SECONDS)        // Write timeout: 60 seconds
-                    .retryOnConnectionFailure(true)            // Auto-retry on connection failure
+                    .connectTimeout(60, TimeUnit.SECONDS) // Connection timeout: 60 seconds
+                    .readTimeout(60, TimeUnit.SECONDS) // Read timeout: 60 seconds
+                    .writeTimeout(60, TimeUnit.SECONDS) // Write timeout: 60 seconds
+                    .retryOnConnectionFailure(true) // Auto-retry on connection failure
                     .addInterceptor(loggingInterceptor)
                     .build();
-            
+
             Gson gson = new GsonBuilder()
                     .setLenient()
                     .create();
@@ -50,7 +50,7 @@ public class ApiClient {
                     .client(okHttpClient)
                     .addConverterFactory(GsonConverterFactory.create(gson))
                     .build();
-            
+
             Log.d(TAG, "Retrofit client initialized with BASE_URL: " + BASE_URL);
         }
         return retrofit;
@@ -60,7 +60,7 @@ public class ApiClient {
         Log.d(TAG, "Creating ApiService with BASE_URL: " + BASE_URL);
         return getClient().create(ApiService.class);
     }
-    
+
     // Get the base URL for debugging
     public static String getBaseUrl() {
         return BASE_URL;
