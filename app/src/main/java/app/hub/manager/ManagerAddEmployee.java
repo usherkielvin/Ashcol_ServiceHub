@@ -9,9 +9,12 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.textfield.TextInputEditText;
 
+import java.util.List;
+
 import app.hub.R;
 import app.hub.api.ApiClient;
 import app.hub.api.ApiService;
+import app.hub.api.EmployeeResponse;
 import app.hub.api.RegisterRequest;
 import app.hub.api.RegisterResponse;
 import app.hub.api.UserResponse;
@@ -22,7 +25,8 @@ import retrofit2.Response;
 
 public class ManagerAddEmployee extends AppCompatActivity {
 
-    private TextInputEditText firstNameInput, lastNameInput, usernameInput, emailInput, passwordInput, confirmPasswordInput;
+    private TextInputEditText firstNameInput, lastNameInput, usernameInput, emailInput, passwordInput,
+            confirmPasswordInput;
     private TextView branchInfoText;
     private TokenManager tokenManager;
     private String managerBranch = null;
@@ -39,7 +43,7 @@ public class ManagerAddEmployee extends AppCompatActivity {
             initializeViews();
             setupButtons();
             loadManagerInfo();
-            
+
         } catch (Exception e) {
             android.util.Log.e("ManagerAddEmployee", "Exception in onCreate", e);
             Toast.makeText(this, "Error initializing activity: " + e.getMessage(), Toast.LENGTH_SHORT).show();
@@ -50,7 +54,7 @@ public class ManagerAddEmployee extends AppCompatActivity {
     private void initializeViews() {
         try {
             android.util.Log.d("ManagerAddEmployee", "Initializing views");
-            
+
             firstNameInput = findViewById(R.id.firstNameInput);
             lastNameInput = findViewById(R.id.lastNameInput);
             usernameInput = findViewById(R.id.usernameInput);
@@ -58,18 +62,25 @@ public class ManagerAddEmployee extends AppCompatActivity {
             passwordInput = findViewById(R.id.Pass_val);
             confirmPasswordInput = findViewById(R.id.confirmPasswordInput);
             branchInfoText = findViewById(R.id.branchInfoText);
-            
+
             // Check if all views were found
-            if (firstNameInput == null) android.util.Log.e("ManagerAddEmployee", "firstNameInput is null");
-            if (lastNameInput == null) android.util.Log.e("ManagerAddEmployee", "lastNameInput is null");
-            if (usernameInput == null) android.util.Log.e("ManagerAddEmployee", "usernameInput is null");
-            if (emailInput == null) android.util.Log.e("ManagerAddEmployee", "emailInput is null");
-            if (passwordInput == null) android.util.Log.e("ManagerAddEmployee", "passwordInput is null");
-            if (confirmPasswordInput == null) android.util.Log.e("ManagerAddEmployee", "confirmPasswordInput is null");
-            if (branchInfoText == null) android.util.Log.e("ManagerAddEmployee", "branchInfoText is null");
-            
+            if (firstNameInput == null)
+                android.util.Log.e("ManagerAddEmployee", "firstNameInput is null");
+            if (lastNameInput == null)
+                android.util.Log.e("ManagerAddEmployee", "lastNameInput is null");
+            if (usernameInput == null)
+                android.util.Log.e("ManagerAddEmployee", "usernameInput is null");
+            if (emailInput == null)
+                android.util.Log.e("ManagerAddEmployee", "emailInput is null");
+            if (passwordInput == null)
+                android.util.Log.e("ManagerAddEmployee", "passwordInput is null");
+            if (confirmPasswordInput == null)
+                android.util.Log.e("ManagerAddEmployee", "confirmPasswordInput is null");
+            if (branchInfoText == null)
+                android.util.Log.e("ManagerAddEmployee", "branchInfoText is null");
+
             android.util.Log.d("ManagerAddEmployee", "Views initialized successfully");
-            
+
         } catch (Exception e) {
             android.util.Log.e("ManagerAddEmployee", "Exception in initializeViews", e);
             throw e; // Re-throw to be caught by onCreate
@@ -79,7 +90,7 @@ public class ManagerAddEmployee extends AppCompatActivity {
     private void setupButtons() {
         try {
             android.util.Log.d("ManagerAddEmployee", "Setting up buttons");
-            
+
             Button createEmployeeButton = findViewById(R.id.createEmployeeButton);
             if (createEmployeeButton != null) {
                 createEmployeeButton.setOnClickListener(v -> {
@@ -106,9 +117,9 @@ public class ManagerAddEmployee extends AppCompatActivity {
             } else {
                 android.util.Log.e("ManagerAddEmployee", "backButton is null");
             }
-            
+
             android.util.Log.d("ManagerAddEmployee", "Buttons setup completed");
-            
+
         } catch (Exception e) {
             android.util.Log.e("ManagerAddEmployee", "Exception in setupButtons", e);
             throw e; // Re-throw to be caught by onCreate
@@ -135,7 +146,7 @@ public class ManagerAddEmployee extends AppCompatActivity {
                     UserResponse userResponse = response.body();
                     if (userResponse.isSuccess() && userResponse.getData() != null) {
                         managerBranch = userResponse.getData().getBranch();
-                        
+
                         if (managerBranch != null && !managerBranch.isEmpty()) {
                             branchInfoText.setText("Employee will be assigned to: " + managerBranch);
                         } else {
@@ -163,7 +174,7 @@ public class ManagerAddEmployee extends AppCompatActivity {
     private void createEmployee() {
         try {
             android.util.Log.d("ManagerAddEmployee", "Starting employee creation process");
-            
+
             String firstName = firstNameInput.getText().toString().trim();
             String lastName = lastNameInput.getText().toString().trim();
             String username = usernameInput.getText().toString().trim();
@@ -171,7 +182,8 @@ public class ManagerAddEmployee extends AppCompatActivity {
             String password = passwordInput.getText().toString().trim();
             String confirmPassword = confirmPasswordInput.getText().toString().trim();
 
-            android.util.Log.d("ManagerAddEmployee", "Form data collected - Username: " + username + ", Email: " + email);
+            android.util.Log.d("ManagerAddEmployee",
+                    "Form data collected - Username: " + username + ", Email: " + email);
 
             // Validation
             if (firstName.isEmpty()) {
@@ -218,7 +230,8 @@ public class ManagerAddEmployee extends AppCompatActivity {
 
             // Check if manager has a branch
             if (managerBranch == null || managerBranch.isEmpty()) {
-                Toast.makeText(this, "Cannot create employee: You don't have a branch assigned. Please contact admin.", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, "Cannot create employee: You don't have a branch assigned. Please contact admin.",
+                        Toast.LENGTH_LONG).show();
                 return;
             }
 
@@ -226,11 +239,11 @@ public class ManagerAddEmployee extends AppCompatActivity {
 
             // Create employee with manager's branch
             RegisterRequest registerRequest = new RegisterRequest(
-                username, firstName, lastName, email, "", "", 
-                password, confirmPassword, "employee", managerBranch
-            );
+                    username, firstName, lastName, email, "", "",
+                    password, confirmPassword, "employee", managerBranch);
 
-            android.util.Log.d("ManagerAddEmployee", "RegisterRequest created - Role: employee, Branch: " + managerBranch);
+            android.util.Log.d("ManagerAddEmployee",
+                    "RegisterRequest created - Role: employee, Branch: " + managerBranch);
 
             ApiService apiService = ApiClient.getApiService();
             if (apiService == null) {
@@ -247,39 +260,76 @@ public class ManagerAddEmployee extends AppCompatActivity {
             }
 
             android.util.Log.d("ManagerAddEmployee", "Making API call to register employee");
-            
+
             call.enqueue(new Callback<RegisterResponse>() {
                 @Override
                 public void onResponse(Call<RegisterResponse> call, Response<RegisterResponse> response) {
                     try {
                         android.util.Log.d("ManagerAddEmployee", "Response received - Code: " + response.code());
                         android.util.Log.d("ManagerAddEmployee", "Response successful: " + response.isSuccessful());
-                        
+
                         if (response.isSuccessful() && response.body() != null) {
                             RegisterResponse registerResponse = response.body();
-                            android.util.Log.d("ManagerAddEmployee", "Register response success: " + registerResponse.isSuccess());
-                            
+                            android.util.Log.d("ManagerAddEmployee",
+                                    "Register response success: " + registerResponse.isSuccess());
+
                             if (registerResponse.isSuccess()) {
                                 android.util.Log.d("ManagerAddEmployee", "Employee created successfully");
-                                
+
                                 // Clear employee cache to refresh the list
                                 try {
                                     // Clear the centralized cache
                                     ManagerDataManager.clearEmployeeCache();
-                                    
+
                                     // Also clear TokenManager cache for compatibility
                                     if (tokenManager != null) {
                                         tokenManager.clearBranchCache();
                                     }
+
+                                    // Immediately trigger a refresh to load the new employee
+                                    // This will notify all listeners (including ManagerEmployeeFragment)
+                                    android.util.Log.d("ManagerAddEmployee", "Triggering immediate employee refresh");
+                                    ManagerDataManager.refreshEmployees(ManagerAddEmployee.this,
+                                            new ManagerDataManager.DataLoadCallback() {
+                                                @Override
+                                                public void onEmployeesLoaded(String branchName,
+                                                        List<EmployeeResponse.Employee> employees) {
+                                                    android.util.Log.d("ManagerAddEmployee",
+                                                            "Employees refreshed after creation: " + employees.size());
+                                                }
+
+                                                @Override
+                                                public void onTicketsLoaded(
+                                                        List<app.hub.api.TicketListResponse.TicketItem> tickets) {
+                                                }
+
+                                                @Override
+                                                public void onDashboardStatsLoaded(
+                                                        app.hub.api.DashboardStatsResponse.Stats stats,
+                                                        List<app.hub.api.DashboardStatsResponse.RecentTicket> recentTickets) {
+                                                }
+
+                                                @Override
+                                                public void onLoadComplete() {
+                                                    android.util.Log.d("ManagerAddEmployee",
+                                                            "Refresh complete, new employee should be visible");
+                                                }
+
+                                                @Override
+                                                public void onLoadError(String error) {
+                                                    android.util.Log.e("ManagerAddEmployee",
+                                                            "Error refreshing after creation: " + error);
+                                                }
+                                            });
                                 } catch (Exception e) {
                                     android.util.Log.e("ManagerAddEmployee", "Error clearing cache", e);
                                 }
-                                
-                                Toast.makeText(ManagerAddEmployee.this, 
-                                    "Employee created successfully and assigned to " + managerBranch, 
-                                    Toast.LENGTH_LONG).show();
-                                
-                                // Use a delayed finish to ensure toast is shown
+
+                                Toast.makeText(ManagerAddEmployee.this,
+                                        "Employee created successfully and assigned to " + managerBranch,
+                                        Toast.LENGTH_LONG).show();
+
+                                // Use a delayed finish to ensure toast is shown and data is refreshed
                                 new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
                                     try {
                                         android.util.Log.d("ManagerAddEmployee", "Attempting to finish activity");
@@ -287,23 +337,28 @@ public class ManagerAddEmployee extends AppCompatActivity {
                                             finish();
                                             android.util.Log.d("ManagerAddEmployee", "Activity finished successfully");
                                         } else {
-                                            android.util.Log.w("ManagerAddEmployee", "Activity already finishing or destroyed");
+                                            android.util.Log.w("ManagerAddEmployee",
+                                                    "Activity already finishing or destroyed");
                                         }
                                     } catch (Exception e) {
                                         android.util.Log.e("ManagerAddEmployee", "Error finishing activity", e);
                                     }
                                 }, 1500); // Increased delay to 1.5 seconds
-                                
+
                             } else {
                                 android.util.Log.e("ManagerAddEmployee", "Registration failed - success=false");
                                 String errorMessage = "Failed to create employee";
                                 if (registerResponse.getErrors() != null) {
                                     StringBuilder sb = new StringBuilder();
                                     if (registerResponse.getErrors().getEmail() != null) {
-                                        sb.append("Email: ").append(String.join(", ", registerResponse.getErrors().getEmail())).append("\n");
+                                        sb.append("Email: ")
+                                                .append(String.join(", ", registerResponse.getErrors().getEmail()))
+                                                .append("\n");
                                     }
                                     if (registerResponse.getErrors().getUsername() != null) {
-                                        sb.append("Username: ").append(String.join(", ", registerResponse.getErrors().getUsername())).append("\n");
+                                        sb.append("Username: ")
+                                                .append(String.join(", ", registerResponse.getErrors().getUsername()))
+                                                .append("\n");
                                     }
                                     if (sb.length() > 0) {
                                         errorMessage = sb.toString().trim();
@@ -321,11 +376,13 @@ public class ManagerAddEmployee extends AppCompatActivity {
                                     android.util.Log.e("ManagerAddEmployee", "Could not read error body", e);
                                 }
                             }
-                            Toast.makeText(ManagerAddEmployee.this, "Failed to create employee", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(ManagerAddEmployee.this, "Failed to create employee", Toast.LENGTH_SHORT)
+                                    .show();
                         }
                     } catch (Exception e) {
                         android.util.Log.e("ManagerAddEmployee", "Exception in onResponse", e);
-                        Toast.makeText(ManagerAddEmployee.this, "Error processing response: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(ManagerAddEmployee.this, "Error processing response: " + e.getMessage(),
+                                Toast.LENGTH_SHORT).show();
                     }
                 }
 
@@ -333,13 +390,14 @@ public class ManagerAddEmployee extends AppCompatActivity {
                 public void onFailure(Call<RegisterResponse> call, Throwable t) {
                     try {
                         android.util.Log.e("ManagerAddEmployee", "Network error", t);
-                        Toast.makeText(ManagerAddEmployee.this, "Network error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(ManagerAddEmployee.this, "Network error: " + t.getMessage(), Toast.LENGTH_SHORT)
+                                .show();
                     } catch (Exception e) {
                         android.util.Log.e("ManagerAddEmployee", "Exception in onFailure", e);
                     }
                 }
             });
-            
+
         } catch (Exception e) {
             android.util.Log.e("ManagerAddEmployee", "Exception in createEmployee method", e);
             Toast.makeText(this, "Error creating employee: " + e.getMessage(), Toast.LENGTH_SHORT).show();

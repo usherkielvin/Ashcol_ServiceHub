@@ -41,10 +41,12 @@ public interface ApiService {
     Call<LogoutResponse> logout(@Header("Authorization") String token);
 
     @POST("api/v1/change-password")
-    Call<ChangePasswordResponse> changePassword(@Header("Authorization") String token, @Body ChangePasswordRequest request);
+    Call<ChangePasswordResponse> changePassword(@Header("Authorization") String token,
+            @Body ChangePasswordRequest request);
 
     @POST("api/v1/set-initial-password")
-    Call<SetInitialPasswordResponse> setInitialPassword(@Header("Authorization") String token, @Body SetInitialPasswordRequest request);
+    Call<SetInitialPasswordResponse> setInitialPassword(@Header("Authorization") String token,
+            @Body SetInitialPasswordRequest request);
 
     @POST("api/v1/reset-password")
     Call<ResetPasswordResponse> resetPassword(@Body ResetPasswordRequest request);
@@ -59,7 +61,8 @@ public interface ApiService {
     Call<ChatResponse> sendMessage(@Body ChatRequest request);
 
     @POST("api/v1/tickets")
-    Call<CreateTicketResponse> createTicket(@Header("Authorization") String token, @Body CreateTicketRequest request);
+    Call<CreateTicketResponse> createTicket(@Header("Authorization") String token,
+            @Body CreateTicketRequest request);
 
     @Multipart
     @POST("api/v1/tickets")
@@ -69,26 +72,34 @@ public interface ApiService {
             @Part("address") RequestBody address,
             @Part("contact") RequestBody contact,
             @Part("service_type") RequestBody serviceType,
-            @Part MultipartBody.Part image
-    );
+            @Part MultipartBody.Part image);
 
     @Multipart
     @POST("api/v1/profile/photo")
     Call<ProfilePhotoResponse> uploadProfilePhoto(
             @Header("Authorization") String token,
-            @Part MultipartBody.Part photo
-    );
+            @Part MultipartBody.Part photo);
 
     @DELETE("api/v1/profile/photo")
     Call<ProfilePhotoResponse> deleteProfilePhoto(
-            @Header("Authorization") String token
-    );
+            @Header("Authorization") String token);
 
     @GET("api/v1/employees")
     Call<EmployeeResponse> getEmployees(@Header("Authorization") String token);
 
+    @GET("api/v1/employees/by-branch")
+    Call<EmployeeResponse> getEmployeesByBranch(@Header("Authorization") String token,
+            @retrofit2.http.Query("branch") String branchName);
+
+    @GET("api/v1/branches")
+    Call<BranchResponse> getBranches(@Header("Authorization") String token);
+
     @POST("api/v1/update-location")
-    Call<UpdateLocationResponse> updateLocation(@Header("Authorization") String token, @Body UpdateLocationRequest request);
+    Call<UpdateLocationResponse> updateLocation(@Header("Authorization") String token,
+            @Body UpdateLocationRequest request);
+
+    @POST("api/v1/register-fcm-token")
+    Call<FCMTokenResponse> registerFCMToken(@Header("Authorization") String token, @Body FCMTokenRequest request);
 
     @GET("api/v1/test")
     Call<TestResponse> test(@Header("Authorization") String token);
@@ -97,44 +108,58 @@ public interface ApiService {
     Call<TicketListResponse> getTickets(@Header("Authorization") String token);
 
     @GET("api/v1/tickets")
-    Call<TicketListResponse> getTickets(@Header("Authorization") String token, @retrofit2.http.Query("status") String status);
+    Call<TicketListResponse> getTickets(@Header("Authorization") String token,
+            @retrofit2.http.Query("status") String status);
 
     @GET("api/v1/tickets/{ticketId}")
-    Call<TicketDetailResponse> getTicketDetail(@Header("Authorization") String token, @retrofit2.http.Path("ticketId") String ticketId);
+    Call<TicketDetailResponse> getTicketDetail(@Header("Authorization") String token,
+            @retrofit2.http.Path("ticketId") String ticketId);
 
     @GET("api/v1/manager/tickets")
     Call<TicketListResponse> getManagerTickets(@Header("Authorization") String token);
 
+    @GET("api/v1/manager/dashboard")
+    Call<DashboardStatsResponse> getManagerDashboard(@Header("Authorization") String token);
+
     @PUT("api/v1/tickets/{ticketId}/status")
-    Call<UpdateTicketStatusResponse> updateTicketStatus(@Header("Authorization") String token, @retrofit2.http.Path("ticketId") String ticketId, @Body UpdateTicketStatusRequest request);
+    Call<UpdateTicketStatusResponse> updateTicketStatus(@Header("Authorization") String token,
+            @retrofit2.http.Path("ticketId") String ticketId, @Body UpdateTicketStatusRequest request);
 
     @GET("api/v1/employee/tickets")
     Call<TicketListResponse> getEmployeeTickets(@Header("Authorization") String token);
-        
+
     @GET("api/v1/employee/tickets")
-    Call<TicketListResponse> getEmployeeTicketsByStatus(@Header("Authorization") String token, @retrofit2.http.Query("status") String status);
-        
+    Call<TicketListResponse> getEmployeeTicketsByStatus(@Header("Authorization") String token,
+            @retrofit2.http.Query("status") String status);
+
     @POST("api/v1/tickets/{ticketId}/accept")
-    Call<TicketStatusResponse> acceptTicket(@Header("Authorization") String token, @retrofit2.http.Path("ticketId") String ticketId);
+    Call<TicketStatusResponse> acceptTicket(@Header("Authorization") String token,
+            @retrofit2.http.Path("ticketId") String ticketId);
 
     @POST("api/v1/tickets/{ticketId}/reject")
-    Call<TicketStatusResponse> rejectTicket(@Header("Authorization") String token, @retrofit2.http.Path("ticketId") String ticketId);
-    
+    Call<TicketStatusResponse> rejectTicket(@Header("Authorization") String token,
+            @retrofit2.http.Path("ticketId") String ticketId);
+
     @PUT("api/v1/tickets/{ticketId}/schedule")
-    Call<SetScheduleResponse> setTicketSchedule(@Header("Authorization") String token, @retrofit2.http.Path("ticketId") String ticketId, @Body SetScheduleRequest request);
-    
+    Call<SetScheduleResponse> setTicketSchedule(@Header("Authorization") String token,
+            @retrofit2.http.Path("ticketId") String ticketId, @Body SetScheduleRequest request);
+
     @GET("api/v1/employee/schedule")
     Call<EmployeeScheduleResponse> getEmployeeSchedule(@Header("Authorization") String token);
-    
+
     @POST("api/v1/tickets/{ticketId}/complete-work")
-    Call<app.hub.api.CompleteWorkResponse> completeWorkWithPayment(@Header("Authorization") String token, @retrofit2.http.Path("ticketId") String ticketId, @Body app.hub.api.CompleteWorkRequest request);
-    
+    Call<app.hub.api.CompleteWorkResponse> completeWorkWithPayment(@Header("Authorization") String token,
+            @retrofit2.http.Path("ticketId") String ticketId,
+            @Body app.hub.api.CompleteWorkRequest request);
+
     @GET("api/v1/manager/payments")
     Call<app.hub.api.PaymentHistoryResponse> getPaymentHistory(@Header("Authorization") String token);
-    
+
     @POST("api/v1/payments/{paymentId}/submit")
-    Call<app.hub.api.CompleteWorkResponse> submitPaymentToManager(@Header("Authorization") String token, @retrofit2.http.Path("paymentId") int paymentId);
-    
+    Call<app.hub.api.CompleteWorkResponse> submitPaymentToManager(@Header("Authorization") String token,
+            @retrofit2.http.Path("paymentId") int paymentId);
+
     @POST("api/v1/payments/{paymentId}/complete")
-    Call<app.hub.api.CompleteWorkResponse> completePayment(@Header("Authorization") String token, @retrofit2.http.Path("paymentId") int paymentId);
+    Call<app.hub.api.CompleteWorkResponse> completePayment(@Header("Authorization") String token,
+            @retrofit2.http.Path("paymentId") int paymentId);
 }

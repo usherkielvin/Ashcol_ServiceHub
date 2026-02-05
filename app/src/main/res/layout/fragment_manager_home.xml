@@ -4,195 +4,95 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground"
     android:overScrollMode="never"
     tools:context=".manager.ManagerHomeFragment">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/white"
         android:paddingBottom="24dp">
 
-        <FrameLayout
-            android:id="@+id/frameLayout3"
+        <!-- Branded Header Section (Matches Image) -->
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/headerContainer"
             android:layout_width="match_parent"
-            android:layout_height="150dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
+            android:layout_height="wrap_content"
+            android:background="#1B4332"
+            android:paddingHorizontal="16dp"
+            android:paddingTop="48dp"
+            android:paddingBottom="16dp"
             app:layout_constraintTop_toTopOf="parent">
 
             <ImageView
-                android:id="@+id/imageView5"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:importantForAccessibility="no"
-                android:contentDescription="@null"
-                android:scaleType="fitXY"
-                android:src="@drawable/header_green" />
+                android:id="@+id/btnMenu"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:contentDescription="Menu"
+                android:src="@drawable/menu_burger"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:tint="#FFFFFF" />
 
             <ImageView
-                android:id="@+id/imageView6"
-                android:layout_width="wrap_content"
-                android:layout_height="94dp"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginTop="16dp"
+                android:id="@+id/appLogo"
+                android:layout_width="100dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="12dp"
                 android:contentDescription="@string/desc_app_logo"
-                android:src="@drawable/ash" />
+                android:scaleType="fitCenter"
+                android:src="@drawable/ash"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toEndOf="@id/btnMenu"
+                app:layout_constraintTop_toTopOf="parent" />
 
-        </FrameLayout>
-
-        <SearchView
-            android:id="@+id/searchViewWork"
-            android:layout_width="0dp"
-            android:layout_height="40dp"
-            android:layout_marginStart="24dp"
-            android:layout_marginTop="-20dp"
-            android:layout_marginEnd="24dp"
-            android:background="@drawable/rounded_white_bg"
-            android:elevation="10dp"
-            app:iconifiedByDefault="false"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/frameLayout3"
-            app:queryHint="@string/search_hint" />
-
-        <androidx.cardview.widget.CardView
-            android:id="@+id/cardView"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            app:cardCornerRadius="0dp"
-            app:cardElevation="0dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/searchViewWork">
-
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:layout_width="match_parent"
+            <LinearLayout
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:paddingTop="20dp"
-                android:paddingBottom="10dp">
+                android:gravity="end"
+                android:orientation="vertical"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
 
                 <TextView
-                    android:id="@+id/quickserve"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="20dp"
-                    android:text="@string/quick_services"
-                    android:textColor="#215531"
-                    android:textSize="20sp"
-                    android:textStyle="bold"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    android:text="Location"
+                    android:textColor="#CCFFFFFF"
+                    android:textSize="11sp" />
 
-                <com.google.android.material.floatingactionbutton.FloatingActionButton
-                    android:id="@+id/QSCleaning"
+                <LinearLayout
+                    android:id="@+id/locationBadge"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:clickable="true"
-                    android:contentDescription="@string/service_cleaning"
-                    android:focusable="true"
-                    android:src="@drawable/ic_home"
-                    app:backgroundTint="@color/white"
-                    app:fabSize="normal"
-                    app:layout_constraintEnd_toStartOf="@+id/QSRepair"
-                    app:layout_constraintHorizontal_chainStyle="spread"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/quickserve"
-                    app:tint="@color/light_green"
-                    tools:ignore="AccessibilityViewType" />
+                    android:layout_marginTop="2dp"
+                    android:background="@drawable/bg_status_badge"
+                    android:backgroundTint="#2D6A4F"
+                    android:gravity="center_vertical"
+                    android:paddingHorizontal="10dp"
+                    android:paddingVertical="4dp">
 
-                <TextView
-                    android:id="@+id/textClean"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:text="@string/service_cleaning"
-                    android:textSize="12sp"
-                    app:layout_constraintEnd_toEndOf="@+id/QSCleaning"
-                    app:layout_constraintStart_toStartOf="@+id/QSCleaning"
-                    app:layout_constraintTop_toBottomOf="@+id/QSCleaning" />
+                    <TextView
+                        android:id="@+id/tvManagerLocation"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Taal, Batangas, CALABARZON"
+                        android:textColor="#FFFFFF"
+                        android:textSize="10sp"
+                        android:textStyle="bold" />
 
-                <com.google.android.material.floatingactionbutton.FloatingActionButton
-                    android:id="@+id/QSRepair"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:clickable="true"
-                    android:contentDescription="@string/service_repair"
-                    android:focusable="true"
-                    android:src="@drawable/wrench"
-                    app:backgroundTint="@color/white"
-                    app:fabSize="normal"
-                    app:layout_constraintEnd_toStartOf="@+id/QSInstallation"
-                    app:layout_constraintStart_toEndOf="@+id/QSCleaning"
-                    app:layout_constraintTop_toTopOf="@+id/QSCleaning"
-                    tools:ignore="AccessibilityViewType" />
+                    <ImageView
+                        android:layout_width="12dp"
+                        android:layout_height="12dp"
+                        android:layout_marginStart="4dp"
+                        android:src="@drawable/ic_pin"
+                        app:tint="#FFFFFF" />
+                </LinearLayout>
+            </LinearLayout>
 
-                <TextView
-                    android:id="@+id/textRepair"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:text="@string/service_repair"
-                    android:textSize="12sp"
-                    app:layout_constraintEnd_toEndOf="@+id/QSRepair"
-                    app:layout_constraintStart_toStartOf="@+id/QSRepair"
-                    app:layout_constraintTop_toBottomOf="@+id/QSRepair" />
-
-                <com.google.android.material.floatingactionbutton.FloatingActionButton
-                    android:id="@+id/QSInstallation"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:clickable="true"
-                    android:contentDescription="@string/service_installation"
-                    android:focusable="true"
-                    android:src="@drawable/wind"
-                    app:backgroundTint="@color/white"
-                    app:fabSize="normal"
-                    app:layout_constraintEnd_toStartOf="@+id/QSMaintenance"
-                    app:layout_constraintStart_toEndOf="@+id/QSRepair"
-                    app:layout_constraintTop_toTopOf="@+id/QSCleaning"
-                    tools:ignore="AccessibilityViewType" />
-
-                <TextView
-                    android:id="@+id/textInstall"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:text="@string/service_installation"
-                    android:textSize="12sp"
-                    app:layout_constraintEnd_toEndOf="@+id/QSInstallation"
-                    app:layout_constraintStart_toStartOf="@+id/QSInstallation"
-                    app:layout_constraintTop_toBottomOf="@+id/QSInstallation" />
-
-                <com.google.android.material.floatingactionbutton.FloatingActionButton
-                    android:id="@+id/QSMaintenance"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:clickable="true"
-                    android:contentDescription="@string/service_maintenance"
-                    android:focusable="true"
-                    android:src="@drawable/nut"
-                    app:backgroundTint="@color/white"
-                    app:fabSize="normal"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toEndOf="@+id/QSInstallation"
-                    app:layout_constraintTop_toTopOf="@+id/QSCleaning"
-                    tools:ignore="AccessibilityViewType" />
-
-                <TextView
-                    android:id="@+id/textMaintenance"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:text="@string/service_maintenance"
-                    android:textSize="12sp"
-                    app:layout_constraintEnd_toEndOf="@+id/QSMaintenance"
-                    app:layout_constraintStart_toStartOf="@+id/QSMaintenance"
-                    app:layout_constraintTop_toBottomOf="@+id/QSMaintenance" />
-
-            </androidx.constraintlayout.widget.ConstraintLayout>
-        </androidx.cardview.widget.CardView>
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
         <TextView
             android:id="@+id/workloadTitle"
@@ -201,18 +101,18 @@
             android:layout_marginStart="20dp"
             android:layout_marginTop="20dp"
             android:text="@string/workload_status"
-            android:textColor="#215531"
+            android:textColor="@color/service_icon_tint"
             android:textSize="20sp"
             android:textStyle="bold"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/cardView" />
+            app:layout_constraintTop_toBottomOf="@+id/headerContainer" />
 
         <TextView
             android:id="@+id/workloadSubtitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/workload_subtitle"
-            android:textColor="#000000"
+            android:textColor="?attr/colorOnSurfaceVariant"
             android:textSize="12sp"
             android:textStyle="italic"
             app:layout_constraintStart_toStartOf="@+id/workloadTitle"
@@ -225,6 +125,7 @@
             android:layout_marginStart="20dp"
             android:layout_marginTop="12dp"
             android:layout_marginEnd="20dp"
+            app:cardBackgroundColor="?attr/colorSurface"
             app:cardCornerRadius="12dp"
             app:cardElevation="4dp"
             app:layout_constraintEnd_toEndOf="parent"
@@ -241,7 +142,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/recent_activity"
-                    android:textColor="#000000"
+                    android:textColor="?attr/colorOnSurface"
                     android:textSize="18sp"
                     android:textStyle="bold"
                     app:layout_constraintStart_toStartOf="parent"
@@ -266,7 +167,7 @@
                     android:gravity="center_vertical"
                     android:layout_marginTop="8dp"
                     android:text="@string/see_more"
-                    android:textColor="#616161"
+                    android:textColor="?attr/colorOnSurfaceVariant"
                     android:textSize="12sp"
                     android:textStyle="italic"
                     app:layout_constraintBottom_toBottomOf="parent"
@@ -283,7 +184,7 @@
             android:layout_marginStart="20dp"
             android:layout_marginTop="26dp"
             android:text="@string/employee_overview"
-            android:textColor="#215531"
+            android:textColor="@color/service_icon_tint"
             android:textSize="20sp"
             android:textStyle="bold"
             app:layout_constraintStart_toStartOf="parent"
@@ -293,12 +194,11 @@
             android:id="@+id/empOverSub"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="20dp"
-            android:text="@string/key_metrics"
-            android:textColor="#000000"
+            android:text="@string/employee_overview_subtitle"
+            android:textColor="?attr/colorOnSurfaceVariant"
             android:textSize="12sp"
             android:textStyle="italic"
-            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintStart_toStartOf="@+id/empOverTitle"
             app:layout_constraintTop_toBottomOf="@+id/empOverTitle" />
 
         <androidx.cardview.widget.CardView
@@ -308,6 +208,7 @@
             android:layout_marginTop="12dp"
             android:layout_marginEnd="20dp"
             android:layout_marginBottom="20dp"
+            app:cardBackgroundColor="?attr/colorSurface"
             app:cardCornerRadius="12dp"
             app:cardElevation="4dp"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -318,144 +219,38 @@
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@color/white"
                 android:padding="16dp">
 
                 <TextView
-                    android:id="@+id/chartMonth"
+                    android:id="@+id/employeeListHeader"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/chart_month"
-                    android:textColor="#000000"
-                    android:textSize="14sp"
+                    android:text="Team Members"
+                    android:textColor="?attr/colorOnSurface"
+                    android:textSize="16sp"
                     android:textStyle="bold"
-                    app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
 
-                <FrameLayout
-                    android:id="@+id/chartContainer"
-                    android:layout_width="150dp"
-                    android:layout_height="150dp"
-                    android:layout_marginTop="16dp"
+                <TextView
+                    android:id="@+id/tvEmployeeCount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0 employees"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:textSize="12sp"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/chartMonth">
+                    app:layout_constraintTop_toTopOf="parent" />
 
-                    <ProgressBar
-                        android:id="@+id/chartBackground"
-                        style="?android:attr/progressBarStyleHorizontal"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:indeterminate="false"
-                        android:max="100"
-                        android:progress="100"
-                        android:progressDrawable="@drawable/ring_progress_yellow" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:text="@string/chart_percentage"
-                        android:textColor="#000000"
-                        android:textSize="20sp"
-                        android:textStyle="bold" />
-                </FrameLayout>
-
-                <GridLayout
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvEmployeePreview"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:columnCount="2"
+                    android:layout_marginTop="12dp"
+                    android:nestedScrollingEnabled="false"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/chartContainer">
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_margin="4dp"
-                        android:layout_columnWeight="1"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
-
-                        <View
-                            android:layout_width="12dp"
-                            android:layout_height="12dp"
-                            android:background="#FFC107" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="8dp"
-                            android:text="@string/legend_total_emp"
-                            android:textSize="11sp" />
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_margin="4dp"
-                        android:layout_columnWeight="1"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
-
-                        <View
-                            android:layout_width="12dp"
-                            android:layout_height="12dp"
-                            android:background="#2196F3" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="8dp"
-                            android:text="@string/legend_on_duty"
-                            android:textSize="11sp" />
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_margin="4dp"
-                        android:layout_columnWeight="1"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
-
-                        <View
-                            android:layout_width="12dp"
-                            android:layout_height="12dp"
-                            android:background="#FF9800" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="8dp"
-                            android:text="@string/legend_new"
-                            android:textSize="11sp" />
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_margin="4dp"
-                        android:layout_columnWeight="1"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
-
-                        <View
-                            android:layout_width="12dp"
-                            android:layout_height="12dp"
-                            android:background="#EF9A9A" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="8dp"
-                            android:text="@string/legend_on_leave"
-                            android:textSize="11sp" />
-                    </LinearLayout>
-
-                </GridLayout>
+                    app:layout_constraintTop_toBottomOf="@+id/employeeListHeader" />
 
             </androidx.constraintlayout.widget.ConstraintLayout>
         </androidx.cardview.widget.CardView>

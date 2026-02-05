@@ -42,4 +42,8 @@
     <color name="service_icon_tint">#2D6A4F</color>
     <color name="dot_selected_color">#2D6A4F</color>
     <color name="dot_unselected_color">#E0E0E0</color>
+
+    <!-- Header Colors -->
+    <color name="header_bg_color">#1B4332</color>
+    <color name="header_badge_bg_color">#2D6A4F</color>
 </resources>

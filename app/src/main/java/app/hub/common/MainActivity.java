@@ -16,6 +16,7 @@ import app.hub.employee.EmployeeDashboardActivity;
 import app.hub.manager.ManagerDashboardActivity;
 import app.hub.user.DashboardActivity;
 import app.hub.util.EmailValidator;
+import app.hub.util.FCMTokenHelper;
 import app.hub.util.LocationConfig;
 import app.hub.util.UserLocationManager;
 import app.hub.util.TokenManager;
@@ -399,6 +400,9 @@ public class MainActivity extends AppCompatActivity {
         tokenManager.saveToken("Bearer " + response.getData().getToken());
         tokenManager.saveEmail(user.getEmail());
         tokenManager.saveRole(user.getRole());
+        if (user.getBranch() != null) {
+            tokenManager.saveUserBranch(user.getBranch());
+        }
 
         // Build and save name
         String firstName = user.getFirstName();
@@ -420,6 +424,9 @@ public class MainActivity extends AppCompatActivity {
 
         // Force immediate token persistence
         tokenManager.forceCommit();
+
+        // Register FCM token for push notifications
+        FCMTokenHelper.registerTokenWithBackend(MainActivity.this);
 
         // Update location for signed-in user and navigate after completion
         updateLocationAndNavigate(user);
@@ -479,6 +486,9 @@ public class MainActivity extends AppCompatActivity {
                         }
 
                         tokenManager.saveRole(user.getRole());
+                        if (user.getBranch() != null) {
+                            tokenManager.saveUserBranch(user.getBranch());
+                        }
 
                         // Get name - prefer name field, fallback to firstName + lastName
                         String userName = user.getName();
@@ -506,6 +516,9 @@ public class MainActivity extends AppCompatActivity {
                         if (userName != null && !userName.isEmpty()) {
                             tokenManager.saveName(userName);
                         }
+
+                        // Register FCM token for push notifications
+                        FCMTokenHelper.registerTokenWithBackend(MainActivity.this);
 
                         // Navigate to dashboard
                         runOnUiThread(() -> {

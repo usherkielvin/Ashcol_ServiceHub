@@ -45,6 +45,8 @@ public class ServiceSelectActivity extends AppCompatActivity {
     private TokenManager tokenManager;
     private String selectedServiceType;
     private Long selectedDateMillis = null;
+    private double selectedLatitude = 0.0;
+    private double selectedLongitude = 0.0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -130,9 +132,13 @@ public class ServiceSelectActivity extends AppCompatActivity {
         Log.d(TAG, "onActivityResult: requestCode=" + requestCode + ", resultCode=" + resultCode);
         if (requestCode == 1001 && resultCode == RESULT_OK && data != null) {
             String address = data.getStringExtra("address");
+            selectedLatitude = data.getDoubleExtra("latitude", 0.0);
+            selectedLongitude = data.getDoubleExtra("longitude", 0.0);
+
             if (addressInput != null && address != null) {
                 addressInput.setText(address);
                 Log.d(TAG, "onActivityResult: Address set to " + address);
+                Log.d(TAG, "onActivityResult: Coordinates - lat: " + selectedLatitude + ", lng: " + selectedLongitude);
             }
             Toast.makeText(this, "Location selected", Toast.LENGTH_SHORT).show();
         }
@@ -162,7 +168,8 @@ public class ServiceSelectActivity extends AppCompatActivity {
         }
 
         CreateTicketRequest request = new CreateTicketRequest(title, description, selectedServiceType, address, contact,
-                preferredDate);
+                preferredDate, selectedLatitude != 0.0 ? selectedLatitude : null,
+                selectedLongitude != 0.0 ? selectedLongitude : null);
         ApiService apiService = ApiClient.getApiService();
         String token = tokenManager.getToken();
 
@@ -173,6 +180,10 @@ public class ServiceSelectActivity extends AppCompatActivity {
 
         // Ensure token has Bearer prefix for API authentication
         String authToken = token.startsWith("Bearer ") ? token : "Bearer " + token;
+
+        // Debug: Show coordinates being sent
+        Toast.makeText(this, "Sending: " + selectedLatitude + ", " + selectedLongitude, Toast.LENGTH_SHORT).show();
+        Log.d(TAG, "Creating ticket with: Lat=" + selectedLatitude + ", Lng=" + selectedLongitude);
 
         createTicketButton.setEnabled(false);
         createTicketButton.setText("Creating...");

@@ -78,10 +78,21 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
-            android:layout_marginBottom="32dp"
             android:text="email@mail.com"
             android:textColor="#666666"
             android:textSize="14sp" />
+
+        <TextView
+            android:id="@+id/tv_branch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="32dp"
+            android:text="Loading branch..."
+            android:textColor="#00B050"
+            android:textSize="13sp"
+            android:textStyle="italic"
+            android:visibility="gone" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -181,7 +192,7 @@
             android:insetBottom="0dp"
             android:minHeight="48dp"
             android:paddingStart="8dp"
-            android:text="Account Management"
+            android:text="@string/profile_personal_info"
             android:textAlignment="viewStart"
             android:textAllCaps="false"
             android:textColor="#000000"
@@ -208,27 +219,6 @@
             android:textColor="#000000"
             android:textSize="16sp"
             app:icon="@drawable/ic_lock"
-            app:iconGravity="start"
-            app:iconPadding="16dp"
-            app:iconSize="24dp"
-            app:iconTint="#1A4330" />
-
-        <!-- Payroll Button -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_payroll"
-            style="@style/Widget.Material3.Button.TextButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:insetTop="0dp"
-            android:insetBottom="0dp"
-            android:minHeight="48dp"
-            android:paddingStart="8dp"
-            android:text="@string/profile_payroll"
-            android:textAlignment="viewStart"
-            android:textAllCaps="false"
-            android:textColor="#000000"
-            android:textSize="16sp"
-            app:icon="@drawable/ic_wallet"
             app:iconGravity="start"
             app:iconPadding="16dp"
             app:iconSize="24dp"

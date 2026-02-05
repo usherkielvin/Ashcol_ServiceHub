@@ -43,6 +43,8 @@ public class UserCreateTicketFragment extends Fragment {
     private Button mapButton;
     private TokenManager tokenManager;
     private Long selectedDateMillis = null;
+    private double selectedLatitude = 0.0;
+    private double selectedLongitude = 0.0;
 
     public UserCreateTicketFragment() {
         // Required empty public constructor
@@ -120,8 +122,8 @@ public class UserCreateTicketFragment extends Fragment {
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == 1001 && resultCode == getActivity().RESULT_OK && data != null) {
-            double latitude = data.getDoubleExtra("latitude", 0.0);
-            double longitude = data.getDoubleExtra("longitude", 0.0);
+            selectedLatitude = data.getDoubleExtra("latitude", 0.0);
+            selectedLongitude = data.getDoubleExtra("longitude", 0.0);
             String address = data.getStringExtra("address");
 
             // Set the selected address to the location field
@@ -153,7 +155,7 @@ public class UserCreateTicketFragment extends Fragment {
         }
 
         CreateTicketRequest request = new CreateTicketRequest(title, description, serviceType, address, contact,
-                preferredDate);
+                preferredDate, selectedLatitude != 0.0 ? selectedLatitude : null, selectedLongitude != 0.0 ? selectedLongitude : null);
         ApiService apiService = ApiClient.getApiService();
         String token = tokenManager.getToken();
 

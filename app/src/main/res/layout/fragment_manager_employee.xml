@@ -105,14 +105,21 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/searchCard" />
 
-    <!-- Employee List -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rvEmployees"
+    <!-- Employee List with Pull-to-Refresh -->
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/swipeRefreshEmployees"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginTop="8dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/btnAddEmployee"
-        tools:listitem="@layout/item_employee_manager" />
+        app:layout_constraintTop_toBottomOf="@id/btnAddEmployee">
+        
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvEmployees"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            tools:listitem="@layout/item_employee_manager" />
+    
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

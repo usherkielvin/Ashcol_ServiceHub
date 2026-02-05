@@ -21,18 +21,31 @@ public class CreateTicketRequest {
     @SerializedName("preferred_date")
     private String preferredDate;
 
+    @SerializedName("latitude")
+    private Double latitude;
+
+    @SerializedName("longitude")
+    private Double longitude;
+
     public CreateTicketRequest(String title, String description, String serviceType, String address, String contact) {
-        this(title, description, serviceType, address, contact, null);
+        this(title, description, serviceType, address, contact, null, null, null);
     }
 
     public CreateTicketRequest(String title, String description, String serviceType, String address, String contact,
             String preferredDate) {
+        this(title, description, serviceType, address, contact, preferredDate, null, null);
+    }
+
+    public CreateTicketRequest(String title, String description, String serviceType, String address, String contact,
+            String preferredDate, Double latitude, Double longitude) {
         this.title = title;
         this.description = description;
         this.serviceType = serviceType;
         this.address = address;
         this.contact = contact;
         this.preferredDate = preferredDate;
+        this.latitude = latitude;
+        this.longitude = longitude;
     }
 
     public String getTitle() {
@@ -81,5 +94,21 @@ public class CreateTicketRequest {
 
     public void setPreferredDate(String preferredDate) {
         this.preferredDate = preferredDate;
+    }
+
+    public Double getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(Double latitude) {
+        this.latitude = latitude;
+    }
+
+    public Double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(Double longitude) {
+        this.longitude = longitude;
     }
 }

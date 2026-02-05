@@ -40,9 +40,9 @@ public class ManagerWorkFragment extends Fragment {
     private SearchView searchViewWork;
     private FloatingActionButton filterWork;
     private ChipGroup chipGroupFilter;
-    private Chip chipAll, chipIncoming, chipOngoing, chipCompleted;
+    private Chip chipAll, chipIncoming, chipOngoing, chipCompleted, chipCancelled;
     private SwipeRefreshLayout swipeRefreshLayout;
-    
+
     private ManagerTicketsAdapter adapter;
     private TokenManager tokenManager;
     private List<TicketListResponse.TicketItem> tickets;
@@ -55,7 +55,7 @@ public class ManagerWorkFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+            Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_manager_work, container, false);
     }
 
@@ -67,11 +67,11 @@ public class ManagerWorkFragment extends Fragment {
         setupRecyclerView();
         setupFilters();
         setupSearch();
-        
+
         // Ensure "All" filter is selected by default
         chipAll.setChecked(true);
         currentFilter = "all";
-        
+
         // Display tickets immediately if available
         displayTicketData();
     }
@@ -85,39 +85,42 @@ public class ManagerWorkFragment extends Fragment {
         chipIncoming = view.findViewById(R.id.chipIncoming);
         chipOngoing = view.findViewById(R.id.chipOngoing);
         chipCompleted = view.findViewById(R.id.chipCompleted);
+        chipCancelled = view.findViewById(R.id.chipCancelled);
         swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout);
-        
+
         // Debug view initialization
         android.util.Log.d("ManagerWork", "RecyclerView found: " + (rvWorkLoadList != null));
         android.util.Log.d("ManagerWork", "SwipeRefreshLayout found: " + (swipeRefreshLayout != null));
-        
+
         if (rvWorkLoadList != null) {
             android.util.Log.d("ManagerWork", "RecyclerView visibility: " + rvWorkLoadList.getVisibility());
         }
-        
+
         tokenManager = new TokenManager(getContext());
         tickets = new ArrayList<>();
         filteredTickets = new ArrayList<>();
-        
+
         // Setup SwipeRefreshLayout
         setupSwipeRefresh();
-        
-        android.util.Log.d("ManagerWork", "Lists initialized - tickets: " + tickets.size() + ", filtered: " + filteredTickets.size());
+
+        android.util.Log.d("ManagerWork",
+                "Lists initialized - tickets: " + tickets.size() + ", filtered: " + filteredTickets.size());
     }
 
     private void setupRecyclerView() {
         adapter = new ManagerTicketsAdapter(filteredTickets);
         rvWorkLoadList.setLayoutManager(new LinearLayoutManager(getContext()));
         rvWorkLoadList.setAdapter(adapter);
-        
-        android.util.Log.d("ManagerWork", "RecyclerView setup complete - Adapter: " + (adapter != null ? "OK" : "NULL"));
+
+        android.util.Log.d("ManagerWork",
+                "RecyclerView setup complete - Adapter: " + (adapter != null ? "OK" : "NULL"));
         android.util.Log.d("ManagerWork", "RecyclerView: " + (rvWorkLoadList != null ? "OK" : "NULL"));
         android.util.Log.d("ManagerWork", "Filtered tickets size: " + filteredTickets.size());
 
         // Set click listener for ticket items
         adapter.setOnTicketClickListener(ticket -> {
             android.util.Log.d("ManagerWork", "Ticket clicked: " + ticket.getTicketId());
-            
+
             try {
                 Intent intent = new Intent(getContext(), ManagerTicketDetailActivity.class);
                 intent.putExtra("ticket_id", ticket.getTicketId());
@@ -131,8 +134,9 @@ public class ManagerWorkFragment extends Fragment {
 
     private void setupFilters() {
         chipGroupFilter.setOnCheckedStateChangeListener((group, checkedIds) -> {
-            if (checkedIds.isEmpty()) return;
-            
+            if (checkedIds.isEmpty())
+                return;
+
             int checkedId = checkedIds.get(0);
             if (checkedId == R.id.chipAll) {
                 currentFilter = "all";
@@ -142,8 +146,10 @@ public class ManagerWorkFragment extends Fragment {
                 currentFilter = "in_progress";
             } else if (checkedId == R.id.chipCompleted) {
                 currentFilter = "completed";
+            } else if (checkedId == R.id.chipCancelled) {
+                currentFilter = "cancelled";
             }
-            
+
             filterTickets();
         });
     }
@@ -168,11 +174,10 @@ public class ManagerWorkFragment extends Fragment {
         if (swipeRefreshLayout != null) {
             // Set refresh colors
             swipeRefreshLayout.setColorSchemeResources(
-                R.color.green,
-                R.color.blue,
-                R.color.orange
-            );
-            
+                    R.color.green,
+                    R.color.blue,
+                    R.color.orange);
+
             // Set refresh listener - refresh from centralized manager
             swipeRefreshLayout.setOnRefreshListener(() -> {
                 android.util.Log.d("ManagerWork", "Pull-to-refresh triggered - refreshing tickets");
@@ -185,6 +190,12 @@ public class ManagerWorkFragment extends Fragment {
                     @Override
                     public void onTicketsLoaded(List<TicketListResponse.TicketItem> tickets) {
                         displayTicketData();
+                    }
+
+                    @Override
+                    public void onDashboardStatsLoaded(app.hub.api.DashboardStatsResponse.Stats stats,
+                            List<app.hub.api.DashboardStatsResponse.RecentTicket> recentTickets) {
+                        // Not needed for work fragment
                     }
 
                     @Override
@@ -204,7 +215,7 @@ public class ManagerWorkFragment extends Fragment {
                     }
                 });
             });
-            
+
             android.util.Log.d("ManagerWork", "SwipeRefreshLayout configured");
         }
     }
@@ -212,15 +223,15 @@ public class ManagerWorkFragment extends Fragment {
     private void displayTicketData() {
         // Get data from centralized manager
         List<TicketListResponse.TicketItem> cachedTickets = ManagerDataManager.getCachedTickets();
-        
+
         if (cachedTickets != null && !cachedTickets.isEmpty()) {
             // Display cached data immediately
             tickets.clear();
             tickets.addAll(cachedTickets);
-            
+
             // Apply filtering
             filterTickets();
-            
+
             android.util.Log.d("ManagerWork", "Displayed " + tickets.size() + " cached tickets");
         } else {
             // No data available yet
@@ -232,7 +243,8 @@ public class ManagerWorkFragment extends Fragment {
         filteredTickets.clear();
         String searchQuery = searchViewWork.getQuery().toString().toLowerCase().trim();
 
-        android.util.Log.d("ManagerWork", "Filtering tickets - Total: " + tickets.size() + ", Filter: " + currentFilter + ", Search: '" + searchQuery + "'");
+        android.util.Log.d("ManagerWork", "Filtering tickets - Total: " + tickets.size() + ", Filter: " + currentFilter
+                + ", Search: '" + searchQuery + "'");
 
         for (TicketListResponse.TicketItem ticket : tickets) {
             boolean matchesFilter = true;
@@ -250,7 +262,12 @@ public class ManagerWorkFragment extends Fragment {
                         matchesFilter = ticketStatus.contains("progress") || ticketStatus.contains("accepted");
                         break;
                     case "completed":
-                        matchesFilter = ticketStatus.contains("completed") || ticketStatus.contains("resolved") || ticketStatus.contains("closed");
+                        matchesFilter = ticketStatus.contains("completed") || ticketStatus.contains("resolved")
+                                || ticketStatus.contains("closed");
+                        break;
+                    case "cancelled":
+                        matchesFilter = ticketStatus.contains("cancelled") || ticketStatus.contains("rejected")
+                                || ticketStatus.contains("failed");
                         break;
                 }
             }
@@ -258,8 +275,8 @@ public class ManagerWorkFragment extends Fragment {
             // Apply search filter
             if (!searchQuery.isEmpty()) {
                 matchesSearch = ticket.getTitle().toLowerCase().contains(searchQuery) ||
-                               ticket.getDescription().toLowerCase().contains(searchQuery) ||
-                               ticket.getTicketId().toLowerCase().contains(searchQuery);
+                        ticket.getDescription().toLowerCase().contains(searchQuery) ||
+                        ticket.getTicketId().toLowerCase().contains(searchQuery);
             }
 
             if (matchesFilter && matchesSearch) {
@@ -268,7 +285,7 @@ public class ManagerWorkFragment extends Fragment {
         }
 
         android.util.Log.d("ManagerWork", "Filtered tickets count: " + filteredTickets.size());
-        
+
         // Force RecyclerView to be visible and refresh
         if (rvWorkLoadList != null) {
             rvWorkLoadList.setVisibility(View.VISIBLE);
@@ -277,7 +294,7 @@ public class ManagerWorkFragment extends Fragment {
                 android.util.Log.d("ManagerWork", "RecyclerView forced refresh completed");
             });
         }
-        
+
         adapter.notifyDataSetChanged();
     }
 
@@ -290,7 +307,8 @@ public class ManagerWorkFragment extends Fragment {
     }
 
     /**
-     * Public method to manually refresh tickets (can be called from parent activity if needed)
+     * Public method to manually refresh tickets (can be called from parent activity
+     * if needed)
      */
     public void refreshTickets() {
         android.util.Log.d("ManagerWork", "Manual refresh requested");
@@ -306,6 +324,12 @@ public class ManagerWorkFragment extends Fragment {
             }
 
             @Override
+            public void onDashboardStatsLoaded(app.hub.api.DashboardStatsResponse.Stats stats,
+                    List<app.hub.api.DashboardStatsResponse.RecentTicket> recentTickets) {
+                // Not needed
+            }
+
+            @Override
             public void onLoadComplete() {
                 Toast.makeText(getContext(), "Tickets refreshed", Toast.LENGTH_SHORT).show();
             }
@@ -316,9 +340,10 @@ public class ManagerWorkFragment extends Fragment {
             }
         });
     }
-    
+
     /**
-     * Clear ticket cache - call this when tickets are updated (e.g., status changed)
+     * Clear ticket cache - call this when tickets are updated (e.g., status
+     * changed)
      */
     public static void clearTicketCache() {
         ManagerDataManager.clearTicketCache();

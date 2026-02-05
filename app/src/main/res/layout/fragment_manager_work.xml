@@ -135,6 +135,15 @@
                     android:textColor="@color/black"
                     app:chipBackgroundColor="@color/bg_chip_state_list" />
 
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipCancelled"
+                    style="@style/Widget.MaterialComponents.Chip.Choice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Cancelled"
+                    android:textColor="@color/black"
+                    app:chipBackgroundColor="@color/bg_chip_state_list" />
+
             </com.google.android.material.chip.ChipGroup>
 
         </HorizontalScrollView>
