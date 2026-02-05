@@ -95,4 +95,12 @@ public class EmployeeDashboardActivity extends AppCompatActivity {
             navIndicator.setTranslationY(targetY);
         }
     }
+
+    // Public method to allow fragments to update navigation indicator
+    public void updateNavigationIndicator(int itemId) {
+        if (bottomNav != null) {
+            bottomNav.setSelectedItemId(itemId);
+            moveIndicatorToItem(itemId, true);
+        }
+    }
 }

@@ -35,7 +35,8 @@ public class ServiceSelectActivity extends AppCompatActivity {
 
     private static final String TAG = "ServiceSelectActivity";
     private static final SimpleDateFormat DATE_FORMAT_API = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
-    private static final SimpleDateFormat DATE_FORMAT_DISPLAY = new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault());
+    private static final SimpleDateFormat DATE_FORMAT_DISPLAY = new SimpleDateFormat("MMM dd, yyyy",
+            Locale.getDefault());
 
     private EditText titleInput, descriptionInput, addressInput, contactInput, dateInput;
     private Button createTicketButton;
@@ -44,6 +45,8 @@ public class ServiceSelectActivity extends AppCompatActivity {
     private TokenManager tokenManager;
     private String selectedServiceType;
     private Long selectedDateMillis = null;
+    private double selectedLatitude = 0.0;
+    private double selectedLongitude = 0.0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,7 +65,6 @@ public class ServiceSelectActivity extends AppCompatActivity {
 
         // Hide the Spinner since we already have the service type from intent
 
-
         tokenManager = new TokenManager(this);
 
         // Get the selected service type from the intent
@@ -75,7 +77,8 @@ public class ServiceSelectActivity extends AppCompatActivity {
         if (dateInput != null) {
             dateInput.setOnClickListener(v -> showDatePicker());
             dateInput.setOnFocusChangeListener((v, hasFocus) -> {
-                if (hasFocus) showDatePicker();
+                if (hasFocus)
+                    showDatePicker();
             });
         }
 
@@ -117,7 +120,8 @@ public class ServiceSelectActivity extends AppCompatActivity {
             Calendar cal = Calendar.getInstance(TimeZone.getDefault());
             cal.setTimeInMillis(selection);
             String dateStr = DATE_FORMAT_DISPLAY.format(cal.getTime());
-            if (dateInput != null) dateInput.setText(dateStr);
+            if (dateInput != null)
+                dateInput.setText(dateStr);
         });
         picker.show(getSupportFragmentManager(), "DATE_PICKER");
     }
@@ -128,9 +132,13 @@ public class ServiceSelectActivity extends AppCompatActivity {
         Log.d(TAG, "onActivityResult: requestCode=" + requestCode + ", resultCode=" + resultCode);
         if (requestCode == 1001 && resultCode == RESULT_OK && data != null) {
             String address = data.getStringExtra("address");
+            selectedLatitude = data.getDoubleExtra("latitude", 0.0);
+            selectedLongitude = data.getDoubleExtra("longitude", 0.0);
+
             if (addressInput != null && address != null) {
                 addressInput.setText(address);
                 Log.d(TAG, "onActivityResult: Address set to " + address);
+                Log.d(TAG, "onActivityResult: Coordinates - lat: " + selectedLatitude + ", lng: " + selectedLongitude);
             }
             Toast.makeText(this, "Location selected", Toast.LENGTH_SHORT).show();
         }
@@ -159,7 +167,9 @@ public class ServiceSelectActivity extends AppCompatActivity {
             preferredDate = DATE_FORMAT_API.format(cal.getTime());
         }
 
-        CreateTicketRequest request = new CreateTicketRequest(title, description, selectedServiceType, address, contact, preferredDate, "medium");
+        CreateTicketRequest request = new CreateTicketRequest(title, description, selectedServiceType, address, contact,
+                preferredDate, selectedLatitude != 0.0 ? selectedLatitude : null,
+                selectedLongitude != 0.0 ? selectedLongitude : null);
         ApiService apiService = ApiClient.getApiService();
         String token = tokenManager.getToken();
 
@@ -170,6 +180,10 @@ public class ServiceSelectActivity extends AppCompatActivity {
 
         // Ensure token has Bearer prefix for API authentication
         String authToken = token.startsWith("Bearer ") ? token : "Bearer " + token;
+
+        // Debug: Show coordinates being sent
+        Toast.makeText(this, "Sending: " + selectedLatitude + ", " + selectedLongitude, Toast.LENGTH_SHORT).show();
+        Log.d(TAG, "Creating ticket with: Lat=" + selectedLatitude + ", Lng=" + selectedLongitude);
 
         createTicketButton.setEnabled(false);
         createTicketButton.setText("Creating...");
@@ -190,13 +204,15 @@ public class ServiceSelectActivity extends AppCompatActivity {
                     CreateTicketResponse.TicketData ticketData = ticketResponse.getTicket();
                     if (ticketData != null) {
                         TicketListResponse.TicketItem item = TicketListResponse.fromCreateResponse(
-                                ticketData, status, ticketData.getStatus() != null ? ticketData.getStatus().getColor() : null);
+                                ticketData, status,
+                                ticketData.getStatus() != null ? ticketData.getStatus().getColor() : null);
                         if (item != null) {
                             UserTicketsFragment.setPendingNewTicket(item);
                         }
                     }
 
-                    Toast.makeText(ServiceSelectActivity.this, "Ticket created successfully!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(ServiceSelectActivity.this, "Ticket created successfully!", Toast.LENGTH_SHORT)
+                            .show();
 
                     // Navigate to confirmation screen
                     Intent intent = new Intent(ServiceSelectActivity.this, TicketConfirmationActivity.class);
@@ -225,7 +241,8 @@ public class ServiceSelectActivity extends AppCompatActivity {
                 createTicketButton.setEnabled(true);
                 createTicketButton.setText("Submit");
                 Log.e(TAG, "Ticket creation failed", t);
-                Toast.makeText(ServiceSelectActivity.this, "Network error: " + t.getMessage(), Toast.LENGTH_LONG).show();
+                Toast.makeText(ServiceSelectActivity.this, "Network error: " + t.getMessage(), Toast.LENGTH_LONG)
+                        .show();
             }
         });
     }

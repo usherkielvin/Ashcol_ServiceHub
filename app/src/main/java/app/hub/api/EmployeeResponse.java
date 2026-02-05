@@ -63,6 +63,9 @@ public class EmployeeResponse {
         @SerializedName("id")
         private int id;
         
+        @SerializedName("username")
+        private String username;
+        
         @SerializedName("firstName")
         private String firstName;
         
@@ -80,6 +83,9 @@ public class EmployeeResponse {
 
         public int getId() { return id; }
         public void setId(int id) { this.id = id; }
+        
+        public String getUsername() { return username; }
+        public void setUsername(String username) { this.username = username; }
         
         public String getFirstName() { return firstName; }
         public void setFirstName(String firstName) { this.firstName = firstName; }

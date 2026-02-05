@@ -58,6 +58,18 @@
             android:name=".admin.AdminDashboardActivity"
             android:exported="false" />
         <activity
+            android:name=".admin.BranchesActivity"
+            android:exported="false" />
+        <activity
+            android:name=".admin.BranchDetailActivity"
+            android:exported="false" />
+        <activity
+            android:name=".admin.ManagersActivity"
+            android:exported="false" />
+        <activity
+            android:name=".admin.ManagerDetailActivity"
+            android:exported="false" />
+        <activity
             android:name=".user.ServiceSelectActivity"
             android:exported="false" />
         <activity
@@ -114,6 +126,14 @@
             android:name=".ForgotPasswordActivity"
             android:exported="false" />
         
+        <!-- Firebase Cloud Messaging Service -->
+        <service
+            android:name=".services.MyFirebaseMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
 
         
         <provider
@@ -125,6 +145,10 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
+        <activity
+            android:name=".manager.ManagerReportsActivity"
+            android:exported="false"
+            android:theme="@style/Theme.ServiceHubApp" />
     </application>
 
 </manifest>

@@ -35,7 +35,14 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.textfield.MaterialAutoCompleteTextView;
 import com.google.android.material.textfield.TextInputEditText;
+import android.widget.ArrayAdapter;
+import java.util.HashMap;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.Arrays;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -57,16 +64,17 @@ public class RegisterActivity extends AppCompatActivity {
 	private String userPhone;
 	private String userLocation;
 	private String userPassword;
-	
+
 	// Track if user signed in with Google (skip OTP for Google users)
 	private boolean isGoogleSignIn = false;
 
-
-    // Views for activity_register.xml (Tell us step)
+	// Views for activity_register.xml (Tell us step)
 	private View fragmentContainer;
 	private ConstraintLayout templateLayout;
-    private TextInputEditText firstNameInput, lastNameInput, usernameInput, phoneInput, locationInput, regionInput, cityInput;
-    private TextView fval, lval, uval, phoneVal;
+	private TextInputEditText firstNameInput, lastNameInput, usernameInput, phoneInput, locationInput;
+	private MaterialAutoCompleteTextView regionInput, cityInput;
+	private Map<String, List<String>> regionCityMap;
+	private TextView fval, lval, uval, phoneVal;
 	private MaterialButton registerButton;
 
 	@Override
@@ -157,7 +165,8 @@ public class RegisterActivity extends AppCompatActivity {
 		}
 	}
 
-	// Step 3: Show personal info using activity_register.xml directly (Tell us about yourself)
+	// Step 3: Show personal info using activity_register.xml directly (Tell us
+	// about yourself)
 	public void showTellUsFragment() {
 		try {
 			Log.d(TAG, "Showing Tell Us form using activity_register.xml");
@@ -185,9 +194,9 @@ public class RegisterActivity extends AppCompatActivity {
 		lastNameInput = findViewById(R.id.lastNameInput);
 		usernameInput = findViewById(R.id.usernameInput);
 		phoneInput = findViewById(R.id.etPhone);
-        locationInput = findViewById(R.id.etLocation); // hidden, kept for backward compatibility
-        regionInput = findViewById(R.id.etRegion);
-        cityInput = findViewById(R.id.etCity);
+		locationInput = findViewById(R.id.etLocation); // hidden, kept for backward compatibility
+		regionInput = findViewById(R.id.etRegion);
+		cityInput = findViewById(R.id.etCity);
 
 		registerButton = findViewById(R.id.registerButton);
 
@@ -196,22 +205,48 @@ public class RegisterActivity extends AppCompatActivity {
 		uval = findViewById(R.id.Uname_val);
 		phoneVal = findViewById(R.id.phone_val);
 
+		// Setup Region/City Logic
+		setupRegionCityLogic();
+
 		// Auto-fill location if detected
 		try {
-				String detectedCity = tokenManager.getCurrentCity();
-				if (detectedCity != null && !detectedCity.isEmpty() && locationInput != null) {
+			String detectedCity = tokenManager.getCurrentCity();
+			if (detectedCity != null && !detectedCity.isEmpty()) {
+				// Legacy field support
+				if (locationInput != null) {
 					locationInput.setText(detectedCity);
-					Log.d(TAG, "Location auto-detected: " + detectedCity);
 				}
+				Log.d(TAG, "Location auto-detected: " + detectedCity);
+
+				// Try to match detected city to a region
+				if (regionCityMap != null) {
+					for (Map.Entry<String, List<String>> entry : regionCityMap.entrySet()) {
+						for (String city : entry.getValue()) {
+							if (city.equalsIgnoreCase(detectedCity)) {
+								if (regionInput != null)
+									regionInput.setText(entry.getKey(), false);
+								updateCityAdapter(entry.getKey());
+								if (cityInput != null)
+									cityInput.setText(city, false);
+								break;
+							}
+						}
+					}
+				}
+			}
 		} catch (Exception e) {
 			Log.e(TAG, "Error auto-filling location", e);
 		}
 
 		// Hide validation messages initially
-		if (fval != null) fval.setVisibility(View.GONE);
-		if (lval != null) lval.setVisibility(View.GONE);
-		if (uval != null) uval.setVisibility(View.GONE);
-		if (phoneVal != null) phoneVal.setVisibility(View.GONE);
+		if (fval != null)
+			fval.setVisibility(View.GONE);
+		if (lval != null)
+			lval.setVisibility(View.GONE);
+		if (uval != null)
+			uval.setVisibility(View.GONE);
+		if (phoneVal != null)
+			phoneVal.setVisibility(View.GONE);
 	}
 
 	// Setup validation listeners for Tell Us form
@@ -219,9 +254,13 @@ public class RegisterActivity extends AppCompatActivity {
 		if (firstNameInput != null) {
 			firstNameInput.addTextChangedListener(new TextWatcher() {
 				@Override
-				public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+				public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+				}
+
 				@Override
-				public void onTextChanged(CharSequence s, int start, int before, int count) {}
+				public void onTextChanged(CharSequence s, int start, int before, int count) {
+				}
+
 				@Override
 				public void afterTextChanged(Editable s) {
 					validateFirstName(s.toString());
@@ -232,9 +271,13 @@ public class RegisterActivity extends AppCompatActivity {
 		if (lastNameInput != null) {
 			lastNameInput.addTextChangedListener(new TextWatcher() {
 				@Override
-				public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+				public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+				}
+
 				@Override
-				public void onTextChanged(CharSequence s, int start, int before, int count) {}
+				public void onTextChanged(CharSequence s, int start, int before, int count) {
+				}
+
 				@Override
 				public void afterTextChanged(Editable s) {
 					validateLastName(s.toString());
@@ -245,9 +288,13 @@ public class RegisterActivity extends AppCompatActivity {
 		if (usernameInput != null) {
 			usernameInput.addTextChangedListener(new TextWatcher() {
 				@Override
-				public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+				public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+				}
+
 				@Override
-				public void onTextChanged(CharSequence s, int start, int before, int count) {}
+				public void onTextChanged(CharSequence s, int start, int before, int count) {
+				}
+
 				@Override
 				public void afterTextChanged(Editable s) {
 					validateUsername(s.toString());
@@ -258,9 +305,13 @@ public class RegisterActivity extends AppCompatActivity {
 		if (phoneInput != null) {
 			phoneInput.addTextChangedListener(new TextWatcher() {
 				@Override
-				public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+				public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+				}
+
 				@Override
-				public void onTextChanged(CharSequence s, int start, int before, int count) {}
+				public void onTextChanged(CharSequence s, int start, int before, int count) {
+				}
+
 				@Override
 				public void afterTextChanged(Editable s) {
 					validatePhone(s.toString());
@@ -318,13 +369,15 @@ public class RegisterActivity extends AppCompatActivity {
 	}
 
 	private int getPhoneDigitCount(String phone) {
-		if (phone == null) return 0;
+		if (phone == null)
+			return 0;
 		return phone.replaceAll("[^0-9]", "").length();
 	}
 
 	// Validation methods
 	private void validateFirstName(String firstName) {
-		if (fval == null) return;
+		if (fval == null)
+			return;
 
 		if (containsNumbers(firstName)) {
 			showValidationError(fval, "Name no numbers");
@@ -336,7 +389,8 @@ public class RegisterActivity extends AppCompatActivity {
 	}
 
 	private void validateLastName(String lastName) {
-		if (lval == null) return;
+		if (lval == null)
+			return;
 
 		if (containsNumbers(lastName)) {
 			showValidationError(lval, "Name no numbers");
@@ -346,7 +400,8 @@ public class RegisterActivity extends AppCompatActivity {
 	}
 
 	private void validateUsername(String username) {
-		if (uval == null) return;
+		if (uval == null)
+			return;
 
 		if (username == null || username.isEmpty()) {
 			hideValidationError(uval);
@@ -360,7 +415,8 @@ public class RegisterActivity extends AppCompatActivity {
 	}
 
 	private void validatePhone(String phone) {
-		if (phoneVal == null) return;
+		if (phoneVal == null)
+			return;
 
 		if (phone == null || phone.isEmpty()) {
 			hideValidationError(phoneVal);
@@ -375,14 +431,12 @@ public class RegisterActivity extends AppCompatActivity {
 		}
 	}
 
-
-
 	// Validate all fields in Tell Us form
 	private boolean validateTellUsForm() {
 		String firstName = getText(firstNameInput);
 		String lastName = getText(lastNameInput);
 		String username = getText(usernameInput);
-        String phone = getText(phoneInput);
+		String phone = getText(phoneInput);
 
 		boolean isValid = true;
 
@@ -412,43 +466,50 @@ public class RegisterActivity extends AppCompatActivity {
 			isValid = false;
 		}
 
+		if (getText(regionInput).isEmpty()) {
+			regionInput.setError("Required");
+			isValid = false;
+		}
+		if (getText(cityInput).isEmpty()) {
+			cityInput.setError("Required");
+			isValid = false;
+		}
+
 		return isValid;
 	}
 
 	// Save personal info and continue to password step
 	private void savePersonalInfoAndContinue() {
 		try {
-            // Build a simple "Region, City" location string for backend auto-branching
-            String region = getText(regionInput);
-            String city = getText(cityInput);
-            String combinedLocation = "";
-            if (!region.isEmpty() && !city.isEmpty()) {
-                combinedLocation = region + ", " + city;
-            } else if (!city.isEmpty()) {
-                combinedLocation = city;
-            } else if (!region.isEmpty()) {
-                combinedLocation = region;
-            }
+			// Build a simple "Region, City" location string for backend auto-branching
+			String region = getText(regionInput);
+			String city = getText(cityInput);
+			String combinedLocation = "";
+			if (!region.isEmpty() && !city.isEmpty()) {
+				combinedLocation = region + ", " + city;
+			} else if (!city.isEmpty()) {
+				combinedLocation = city;
+			} else if (!region.isEmpty()) {
+				combinedLocation = region;
+			}
 
-            setUserPersonalInfo(
-                getText(firstNameInput),
-                getText(lastNameInput),
-                getText(usernameInput),
-                getText(phoneInput),
-                combinedLocation
-            );
+			setUserPersonalInfo(
+					getText(firstNameInput),
+					getText(lastNameInput),
+					getText(usernameInput),
+					getText(phoneInput),
+					combinedLocation);
 		} catch (Exception e) {
 			Log.e(TAG, "Error saving personal info", e);
 			// Continue anyway with empty location
 			setUserPersonalInfo(
-				getText(firstNameInput),
-				getText(lastNameInput),
-				getText(usernameInput),
-				getText(phoneInput),
-				""
-			);
+					getText(firstNameInput),
+					getText(lastNameInput),
+					getText(usernameInput),
+					getText(phoneInput),
+					"");
 		}
-		
+
 		// If Google Sign-In user, register/login with backend immediately
 		if (isGoogleSignIn) {
 			registerGoogleUser();
@@ -458,7 +519,54 @@ public class RegisterActivity extends AppCompatActivity {
 			showCreatePasswordFragment();
 		}
 	}
-	
+
+	// Store Google ID token
+	private String googleIdToken;
+
+	// Check if user signed in with Google
+	public boolean isGoogleSignInUser() {
+		return isGoogleSignIn;
+	}
+
+	// Update password for Google user (set initial password)
+	public void updateGoogleUserPassword(String password, String confirmPassword) {
+		String token = tokenManager.getToken();
+		if (token == null || token.isEmpty()) {
+			Log.w(TAG, "updateGoogleUserPassword: missing auth token");
+			return;
+		}
+
+		Log.d(TAG, "Updating password for Google user");
+
+		ApiService apiService = ApiClient.getApiService();
+		SetInitialPasswordRequest request = new SetInitialPasswordRequest(password, confirmPassword);
+
+		Call<SetInitialPasswordResponse> call = apiService.setInitialPassword(token, request);
+		call.enqueue(new Callback<>() {
+			@Override
+			public void onResponse(@NonNull Call<SetInitialPasswordResponse> call,
+					@NonNull Response<SetInitialPasswordResponse> response) {
+				if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+					Log.d(TAG, "Password updated successfully for Google user");
+
+					// Navigate to Account Created
+					showAccountCreatedFragment();
+				} else {
+					String errorMsg = "Failed to set password. Please try again.";
+					if (response.body() != null && response.body().getMessage() != null) {
+						errorMsg = response.body().getMessage();
+					}
+					Log.e(TAG, "setInitialPassword failed: " + errorMsg);
+				}
+			}
+
+			@Override
+			public void onFailure(@NonNull Call<SetInitialPasswordResponse> call, @NonNull Throwable t) {
+				Log.e(TAG, "Error updating password: " + t.getMessage(), t);
+			}
+		});
+	}
+
 	// Register/login Google user
 	private void registerGoogleUser() {
 		// Ensure we have required data
@@ -466,33 +574,63 @@ public class RegisterActivity extends AppCompatActivity {
 		String firstName = getUserFirstName();
 		String lastName = getUserLastName();
 		String phone = getUserPhone();
-		
+		String location = getUserLocation();
+
+		// Extract region and city from views directly if available, or try to parse
+		// from location string
+		String region = "";
+		String city = "";
+
+		if (regionInput != null && cityInput != null) {
+			region = getText(regionInput);
+			city = getText(cityInput);
+		}
+
+		// Fallback: if inputs are empty but we have a location string, try to split it
+		if ((region.isEmpty() || city.isEmpty()) && location != null && location.contains(",")) {
+			String[] parts = location.split(",", 2);
+			if (parts.length == 2) {
+				if (region.isEmpty())
+					region = parts[0].trim();
+				if (city.isEmpty())
+					city = parts[1].trim();
+			}
+		}
+
 		if (email == null || email.isEmpty()) {
 			Log.w(TAG, "Email is required for Google registration");
 			return;
 		}
-		
+
 		Log.d(TAG, "Registering Google user with backend - Email: " + email);
 		Log.d(TAG, "First Name: " + firstName + ", Last Name: " + lastName + ", Phone: " + phone);
-		
-		// Now actually register the user with the backend using the REGISTRATION endpoint
+		Log.d(TAG, "Location: " + location + ", Region: " + region + ", City: " + city);
+
+		// Now actually register the user with the backend using the REGISTRATION
+		// endpoint
 		ApiService apiService = ApiClient.getApiService();
 		String idToken = googleIdToken != null && !googleIdToken.isEmpty() ? googleIdToken : "";
+
+		// Use the updated constructor with location fields
 		GoogleSignInRequest request = new GoogleSignInRequest(
-			idToken,
-			email,
-			firstName != null ? firstName : "",
-			lastName != null ? lastName : "",
-			phone != null ? phone : ""
-		);
-		
-		Log.d(TAG, "Sending Google registration request - Email: " + email + ", First: " + firstName + ", Last: " + lastName + ", Phone: " + phone);
+				idToken,
+				email,
+				firstName != null ? firstName : "",
+				lastName != null ? lastName : "",
+				phone != null ? phone : "",
+				region,
+				city,
+				location != null ? location : "");
+
+		Log.d(TAG, "Sending Google registration request - Email: " + email + ", First: " + firstName + ", Last: "
+				+ lastName + ", Phone: " + phone);
 
 		// Use the REGISTRATION endpoint for new users
 		Call<GoogleSignInResponse> call = apiService.googleRegister(request);
 		call.enqueue(new Callback<>() {
 			@Override
-			public void onResponse(@NonNull Call<GoogleSignInResponse> call, @NonNull Response<GoogleSignInResponse> response) {
+			public void onResponse(@NonNull Call<GoogleSignInResponse> call,
+					@NonNull Response<GoogleSignInResponse> response) {
 				if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
 					handleGoogleRegistrationSuccess(response.body());
 				} else {
@@ -524,25 +662,29 @@ public class RegisterActivity extends AppCompatActivity {
 		});
 	}
 
-	private void checkGoogleAccountExistsForRegistration(String email, String firstName, String lastName, String phone) {
+	private void checkGoogleAccountExistsForRegistration(String email, String firstName, String lastName,
+			String phone) {
 		ApiService apiService = ApiClient.getApiService();
 		// id_token may be null if not configured, that's okay
 		String idToken = googleIdToken != null && !googleIdToken.isEmpty() ? googleIdToken : "";
+
+		// For check existence, we don't need location data, so pass nulls/empty
 		GoogleSignInRequest request = new GoogleSignInRequest(
-			idToken,
-			email,
-			firstName != null ? firstName : "",
-			lastName != null ? lastName : "",
-			phone != null ? phone : ""
-		);
-		
-		Log.d(TAG, "Checking Google account existence - Email: " + email + ", First: " + firstName + ", Last: " + lastName + ", Phone: " + phone);
+				idToken,
+				email,
+				firstName != null ? firstName : "",
+				lastName != null ? lastName : "",
+				phone != null ? phone : "");
+
+		Log.d(TAG, "Checking Google account existence - Email: " + email + ", First: " + firstName + ", Last: "
+				+ lastName + ", Phone: " + phone);
 
 		// Use the SIGN-IN endpoint to check if account exists
 		Call<GoogleSignInResponse> call = apiService.googleSignIn(request);
 		call.enqueue(new Callback<>() {
 			@Override
-			public void onResponse(@NonNull Call<GoogleSignInResponse> call, @NonNull Response<GoogleSignInResponse> response) {
+			public void onResponse(@NonNull Call<GoogleSignInResponse> call,
+					@NonNull Response<GoogleSignInResponse> response) {
 				if (response.isSuccessful() && response.body() != null) {
 					GoogleSignInResponse signInResponse = response.body();
 					if (signInResponse.isSuccess()) {
@@ -568,16 +710,15 @@ public class RegisterActivity extends AppCompatActivity {
 		});
 	}
 
-	private void proceedWithGoogleRegistration(String email, String firstName, String lastName, String phone, String idToken) {
+	private void proceedWithGoogleRegistration(String email, String firstName, String lastName, String phone,
+			String idToken) {
 		Log.d(TAG, "Account doesn't exist, proceeding to Tell Us form");
-		
+
 		// Navigate to "Tell Us" to collect phone number and other details
 		Log.d(TAG, "Prompting user for phone number after Google registration");
 		showTellUsFragment();
 	}
-	
 
-	
 	// Handle successful Google login (account already exists)
 	private void handleGoogleLoginSuccess(GoogleSignInResponse response) {
 		if (response.getData() == null || response.getData().getUser() == null) {
@@ -619,11 +760,11 @@ public class RegisterActivity extends AppCompatActivity {
 	// Navigate to appropriate dashboard based on user role
 	private void navigateToUserDashboard(String role) {
 		Intent intent;
-		
+
 		if (role == null) {
 			role = "customer"; // Default role
 		}
-		
+
 		switch (role.toLowerCase()) {
 			case "admin":
 				intent = new Intent(this, app.hub.admin.AdminDashboardActivity.class);
@@ -639,7 +780,7 @@ public class RegisterActivity extends AppCompatActivity {
 				intent = new Intent(this, app.hub.user.DashboardActivity.class);
 				break;
 		}
-		
+
 		startActivity(intent);
 		finish();
 	}
@@ -648,8 +789,6 @@ public class RegisterActivity extends AppCompatActivity {
 	public void clearAllSignInStates() {
 		clearGoogleSignInState();
 	}
-
-
 
 	// Clear Google sign-in state to allow user to select different account
 	private void clearGoogleSignInState() {
@@ -707,16 +846,6 @@ public class RegisterActivity extends AppCompatActivity {
 		}
 		showCreatePasswordFragment();
 	}
-	
-
-
-
-
-
-
-
-
-
 
 	// Handle Google registration error
 	private void handleGoogleRegistrationError(int statusCode, String errorBody) {
@@ -735,7 +864,8 @@ public class RegisterActivity extends AppCompatActivity {
 	}
 
 	/**
-	 * When backend says Google account already exists (HTTP 409), send user back to login screen.
+	 * When backend says Google account already exists (HTTP 409), send user back to
+	 * login screen.
 	 */
 	private void navigateToLoginFromGoogleConflict() {
 		try {
@@ -748,7 +878,7 @@ public class RegisterActivity extends AppCompatActivity {
 		}
 	}
 
-	private String getText(TextInputEditText editText) {
+	private String getText(TextView editText) {
 		if (editText == null || editText.getText() == null) {
 			return "";
 		}
@@ -788,6 +918,57 @@ public class RegisterActivity extends AppCompatActivity {
 		}
 	}
 
+	private void setupRegionCityLogic() {
+		regionCityMap = new HashMap<>();
+
+		// Populate Regions and Cities - RESTRICTED TO AVAILABLE BRANCH LOCATIONS
+
+		// 1. NCR (Taguig, Valenzuela)
+		regionCityMap.put("NCR", Arrays.asList(
+				"Taguig City",
+				"Valenzuela City"));
+
+		// 2. Calabarzon (Rizal, Cavite, Laguna, Batangas)
+		regionCityMap.put("Calabarzon", Arrays.asList(
+				"Rodriguez",
+				"General Trias",
+				"Dasmariñas",
+				"Santa Rosa",
+				"Santa Cruz",
+				"Batangas City"));
+
+		// 3. Central Luzon (Pampanga, Bulacan)
+		regionCityMap.put("Central Luzon", Arrays.asList(
+				"San Fernando",
+				"Malolos City"));
+
+		// Setup Region Adapter
+		List<String> regions = new ArrayList<>(regionCityMap.keySet());
+		ArrayAdapter<String> regionAdapter = new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line,
+				regions);
+		regionInput.setAdapter(regionAdapter);
+
+		// Region Selection Listener
+		regionInput.setOnItemClickListener((parent, view, position, id) -> {
+			String selectedRegion = parent.getItemAtPosition(position).toString();
+			updateCityAdapter(selectedRegion);
+		});
+
+		// Disable keyboard input for Region/City
+		regionInput.setKeyListener(null);
+		cityInput.setKeyListener(null);
+	}
+
+	private void updateCityAdapter(String region) {
+		List<String> cities = regionCityMap.get(region);
+		if (cities != null) {
+			ArrayAdapter<String> cityAdapter = new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line,
+					cities);
+			cityInput.setAdapter(cityAdapter);
+			cityInput.setText(""); // Clear previous selection
+		}
+	}
+
 	// Step 5: Show OTP verification (Almost there)
 	public void showOtpVerification() {
 		// Skip OTP for Google Sign-In users
@@ -796,7 +977,7 @@ public class RegisterActivity extends AppCompatActivity {
 			showAccountCreatedFragment();
 			return;
 		}
-		
+
 		// Get email from stored data (from email fragment)
 		String email = getUserEmail();
 		if (email == null || email.isEmpty()) {
@@ -819,7 +1000,7 @@ public class RegisterActivity extends AppCompatActivity {
 			Log.e(TAG, "Error showing OTP fragment: " + e.getMessage(), e);
 		}
 	}
-	
+
 	// Step 6: Show Account Created fragment
 	public void showAccountCreatedFragment() {
 		try {
@@ -843,16 +1024,14 @@ public class RegisterActivity extends AppCompatActivity {
 	// Handle successful OTP verification (called from fragment)
 	public void handleOtpVerificationSuccess(VerifyEmailResponse response) {
 		if (!response.isSuccess() || response.getData() == null) {
-			String errorMsg = response.getMessage() != null ?
-				response.getMessage() :
-				"Invalid verification code";
+			String errorMsg = response.getMessage() != null ? response.getMessage() : "Invalid verification code";
 			Log.w(TAG, "OTP verification failed: " + errorMsg);
 			return;
 		}
 
 		// Check if user exists (for resend scenario) or is being created (registration)
 		VerifyEmailResponse.User user = response.getData().getUser();
-		
+
 		if (user != null) {
 			// User exists - save user data and token
 			tokenManager.saveToken("Bearer " + response.getData().getToken());
@@ -886,7 +1065,7 @@ public class RegisterActivity extends AppCompatActivity {
 		// Navigate to Account Created fragment
 		showAccountCreatedFragment();
 	}
-	
+
 	// Create account after OTP verification
 	private void createAccountAfterOtpVerification() {
 		// Get all collected user data
@@ -923,10 +1102,12 @@ public class RegisterActivity extends AppCompatActivity {
 		// Default role to "customer" for regular registration
 		String role = "customer";
 
-		Log.d(TAG, "Creating account with - Email: " + email + ", Username: " + username + ", Role: " + role + ", Location: " + location);
-		
+		Log.d(TAG, "Creating account with - Email: " + email + ", Username: " + username + ", Role: " + role
+				+ ", Location: " + location);
+
 		ApiService apiService = ApiClient.getApiService();
-		RegisterRequest request = new RegisterRequest(username, firstName, lastName, email, phone, location, password, password, role);
+		RegisterRequest request = new RegisterRequest(username, firstName, lastName, email, phone, location, password,
+				password, role);
 
 		Call<RegisterResponse> call = apiService.register(request);
 		call.enqueue(new Callback<>() {
@@ -938,13 +1119,13 @@ public class RegisterActivity extends AppCompatActivity {
 						// Account created successfully
 						RegisterResponse.User user = body.getData().getUser();
 						String token = body.getData().getToken();
-						
+
 						// Save user data and token
 						if (token != null) {
 							tokenManager.saveToken("Bearer " + token);
 						}
 						tokenManager.saveEmail(user != null ? user.getEmail() : email);
-						
+
 						// Build and save name
 						if (user != null) {
 							String userFirstName = user.getFirstName();
@@ -965,10 +1146,10 @@ public class RegisterActivity extends AppCompatActivity {
 								Log.d(TAG, "Saved name to cache: " + fullName);
 							}
 						}
-						
+
 						// Force immediate token persistence
 						tokenManager.forceCommit();
-						
+
 						Log.d(TAG, "Account created successfully");
 						// Navigate to Account Created fragment
 						showAccountCreatedFragment();
@@ -985,7 +1166,7 @@ public class RegisterActivity extends AppCompatActivity {
 						if (response.errorBody() != null) {
 							com.google.gson.Gson gson = new com.google.gson.Gson();
 							java.io.BufferedReader reader = new java.io.BufferedReader(
-								new java.io.InputStreamReader(response.errorBody().byteStream()));
+									new java.io.InputStreamReader(response.errorBody().byteStream()));
 							String errorJson = reader.readLine();
 							if (errorJson != null) {
 								RegisterResponse errorResponse = gson.fromJson(errorJson, RegisterResponse.class);
@@ -1009,7 +1190,6 @@ public class RegisterActivity extends AppCompatActivity {
 		});
 	}
 
-
 	// Setters for registration data (called by fragments)
 	public void setUserEmail(String email) {
 		this.userEmail = email;
@@ -1031,7 +1211,8 @@ public class RegisterActivity extends AppCompatActivity {
 		Log.d(TAG, "Password set");
 	}
 
-	// Getters for registration data (used by fragments - may be used in future fragments)
+	// Getters for registration data (used by fragments - may be used in future
+	// fragments)
 	@SuppressWarnings("unused")
 	public String getUserEmail() {
 		Log.d(TAG, "getUserEmail() called, returning: " + (userEmail != null ? userEmail : "NULL"));
@@ -1058,8 +1239,6 @@ public class RegisterActivity extends AppCompatActivity {
 		return userPhone;
 	}
 
-
-
 	@SuppressWarnings("unused")
 	public String getUserLocation() {
 		return userLocation;
@@ -1071,88 +1250,39 @@ public class RegisterActivity extends AppCompatActivity {
 	}
 
 	// Handle Google Sign-In success
-	public void handleGoogleSignInSuccess(String email, String givenName, String familyName, 
-	                                     String displayName, String idToken) {
+	public void handleGoogleSignInSuccess(String email, String givenName, String familyName,
+			String displayName, String idToken) {
 		Log.d(TAG, "Handling Google Sign-In success");
-		
+
 		// Show loading message
 		Toast.makeText(this, "Signing in...", Toast.LENGTH_SHORT).show();
-		
+
 		// Mark as Google Sign-In user (skip OTP)
 		isGoogleSignIn = true;
-		
+
 		// Store Google account data
 		setUserEmail(email);
-		
+
 		// Use Google name if available, otherwise use display name
-		String firstName = givenName != null && !givenName.isEmpty() ? givenName : 
-			(displayName != null && displayName.contains(" ") ? displayName.split(" ")[0] : displayName);
-		String lastName = familyName != null && !familyName.isEmpty() ? familyName : 
-			(displayName != null && displayName.contains(" ") ? 
-				displayName.substring(displayName.indexOf(" ") + 1) : "");
-		
+		String firstName = givenName != null && !givenName.isEmpty() ? givenName
+				: (displayName != null && displayName.contains(" ") ? displayName.split(" ")[0] : displayName);
+		String lastName = familyName != null && !familyName.isEmpty() ? familyName
+				: (displayName != null && displayName.contains(" ")
+						? displayName.substring(displayName.indexOf(" ") + 1)
+						: "");
+
 		// Generate username from email (before @)
-		String username = email != null && email.contains("@") ? 
-			email.substring(0, email.indexOf("@")) : "user_" + System.currentTimeMillis();
-		
+		String username = email != null && email.contains("@") ? email.substring(0, email.indexOf("@"))
+				: "user_" + System.currentTimeMillis();
+
 		// Store personal info from Google
 		setUserPersonalInfo(firstName, lastName, username, "", "");
-		
+
 		// Store Google ID token for backend API call
 		googleIdToken = idToken;
-		
+
 		// Check if account already exists before proceeding
 		checkGoogleAccountExistsForRegistration(email, firstName, lastName, "");
-	}
-
-
-	
-
-	
-	// Store Google ID token
-	private String googleIdToken;
-	
-	// Check if user signed in with Google
-	public boolean isGoogleSignInUser() {
-		return isGoogleSignIn;
-	}
-
-	// Update password for Google user (set initial password)
-	public void updateGoogleUserPassword(String password, String confirmPassword) {
-		String token = tokenManager.getToken();
-		if (token == null || token.isEmpty()) {
-			Log.w(TAG, "updateGoogleUserPassword: missing auth token");
-			return;
-		}
-
-		Log.d(TAG, "Updating password for Google user");
-
-		ApiService apiService = ApiClient.getApiService();
-		SetInitialPasswordRequest request = new SetInitialPasswordRequest(password, confirmPassword);
-
-		Call<SetInitialPasswordResponse> call = apiService.setInitialPassword(token, request);
-		call.enqueue(new Callback<>() {
-			@Override
-			public void onResponse(@NonNull Call<SetInitialPasswordResponse> call, @NonNull Response<SetInitialPasswordResponse> response) {
-				if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
-					Log.d(TAG, "Password updated successfully for Google user");
-					
-					// Navigate to Account Created
-					showAccountCreatedFragment();
-				} else {
-					String errorMsg = "Failed to set password. Please try again.";
-					if (response.body() != null && response.body().getMessage() != null) {
-						errorMsg = response.body().getMessage();
-					}
-					Log.e(TAG, "setInitialPassword failed: " + errorMsg);
-				}
-			}
-
-			@Override
-			public void onFailure(@NonNull Call<SetInitialPasswordResponse> call, @NonNull Throwable t) {
-				Log.e(TAG, "Error updating password: " + t.getMessage(), t);
-			}
-		});
 	}
 
 	/**

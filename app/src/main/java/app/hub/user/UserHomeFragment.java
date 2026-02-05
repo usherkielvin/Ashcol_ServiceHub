@@ -3,6 +3,8 @@ package app.hub.user;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,10 +12,18 @@ import android.view.ViewGroup;
 import androidx.viewpager2.widget.ViewPager2;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 import java.util.Arrays;
 import java.util.List;
 
 import app.hub.R;
+import app.hub.api.ApiClient;
+import app.hub.api.ApiService;
+import app.hub.api.UserResponse;
+import app.hub.util.TokenManager;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -22,39 +32,23 @@ import app.hub.R;
  */
 public class UserHomeFragment extends Fragment {
 
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
-
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
+    private static final String TAG = "UserHomeFragment";
     private ViewPager2 bannerViewPager;
     private BannerAdapter bannerAdapter;
     private LinearLayout dotsLayout;
     private Handler handler;
     private Runnable slideRunnable;
-    private List<Integer> images = Arrays.asList(R.drawable.slide1, R.drawable.slide2, R.drawable.slide3);
-     
+    private List<Integer> images = Arrays.asList(R.drawable.banner_cleaning, R.drawable.banner_installation, R.drawable.banner_maintainance, R.drawable.banner_repair);
+    private TextView tvAssignedBranch;
+    private TokenManager tokenManager;
+
     public UserHomeFragment() {
         // Required empty public constructor
     }
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment UserHomeFragment.
-     */
-    // TODO: Rename and change types and number of parameters
     public static UserHomeFragment newInstance(String param1, String param2) {
         UserHomeFragment fragment = new UserHomeFragment();
         Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
         fragment.setArguments(args);
         return fragment;
     }
@@ -62,28 +56,30 @@ public class UserHomeFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+            Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_user__home, container, false);
+
+        tokenManager = new TokenManager(requireContext());
         bannerViewPager = view.findViewById(R.id.bannerViewPager);
         dotsLayout = view.findViewById(R.id.dotsLayout);
+        tvAssignedBranch = view.findViewById(R.id.tvAssignedBranch);
+
         setupViewPager();
         updateDots(0); // Initialize dots
+        loadBranchInfo();
+
         return view;
     }
 
     private void setupViewPager() {
         bannerAdapter = new BannerAdapter(images);
         bannerViewPager.setAdapter(bannerAdapter);
-        
+
         bannerViewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
             @Override
             public void onPageSelected(int position) {
@@ -92,7 +88,7 @@ public class UserHomeFragment extends Fragment {
                 restartAutoSlide();
             }
         });
-        
+
         handler = new Handler(Looper.getMainLooper());
         slideRunnable = new Runnable() {
             @Override
@@ -107,11 +103,21 @@ public class UserHomeFragment extends Fragment {
 
     private void updateDots(int position) {
         for (int i = 0; i < dotsLayout.getChildCount(); i++) {
-            ImageView dot = (ImageView) dotsLayout.getChildAt(i);
+            View dot = dotsLayout.getChildAt(i);
             if (i == position) {
-                dot.setImageResource(R.drawable.dot_selected);
+                dot.setBackgroundResource(R.drawable.dot_selected);
+                // Adjust width for selected dot if needed, but here it's handled by drawable or
+                // fixed in XML
+                LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) dot.getLayoutParams();
+                params.width = (int) (24 * getResources().getDisplayMetrics().density);
+                params.height = (int) (8 * getResources().getDisplayMetrics().density);
+                dot.setLayoutParams(params);
             } else {
-                dot.setImageResource(R.drawable.dot_unselected);
+                dot.setBackgroundResource(R.drawable.dot_unselected);
+                LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) dot.getLayoutParams();
+                params.width = (int) (8 * getResources().getDisplayMetrics().density);
+                params.height = (int) (8 * getResources().getDisplayMetrics().density);
+                dot.setLayoutParams(params);
             }
         }
     }
@@ -122,7 +128,7 @@ public class UserHomeFragment extends Fragment {
             handler.postDelayed(slideRunnable, 4000);
         }
     }
-    
+
     @Override
     public void onPause() {
         super.onPause();
@@ -130,7 +136,7 @@ public class UserHomeFragment extends Fragment {
             handler.removeCallbacks(slideRunnable);
         }
     }
-    
+
     @Override
     public void onResume() {
         super.onResume();
@@ -138,12 +144,70 @@ public class UserHomeFragment extends Fragment {
             handler.postDelayed(slideRunnable, 4000);
         }
     }
-    
+
     @Override
     public void onDestroy() {
         super.onDestroy();
         if (handler != null && slideRunnable != null) {
             handler.removeCallbacks(slideRunnable);
+        }
+    }
+
+    private void loadBranchInfo() {
+        // First try to load from cache
+        String cachedBranch = tokenManager.getCachedBranch();
+        if (cachedBranch != null && !cachedBranch.isEmpty()) {
+            displayBranch(cachedBranch);
+        }
+
+        // Then fetch fresh data from API
+        fetchUserData();
+    }
+
+    private void fetchUserData() {
+        String token = tokenManager.getToken();
+        if (token == null) {
+            Log.w(TAG, "No auth token available");
+            return;
+        }
+
+        ApiService apiService = ApiClient.getApiService();
+        Call<UserResponse> call = apiService.getUser(token);
+        call.enqueue(new Callback<UserResponse>() {
+            @Override
+            public void onResponse(@NonNull Call<UserResponse> call, @NonNull Response<UserResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    UserResponse userResponse = response.body();
+                    if (userResponse.isSuccess() && userResponse.getData() != null) {
+                        UserResponse.Data userData = userResponse.getData();
+                        String branch = userData.getBranch();
+
+                        if (branch != null && !branch.isEmpty()) {
+                            // Cache the branch info
+                            tokenManager.saveBranchInfo(branch, 0);
+                            displayBranch(branch);
+                        }
+                    }
+                } else {
+                    Log.e(TAG, "Failed to fetch user data: " + response.code());
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<UserResponse> call, @NonNull Throwable t) {
+                Log.e(TAG, "API call failed: " + t.getMessage());
+            }
+        });
+    }
+
+    private void displayBranch(String branch) {
+        if (tvAssignedBranch != null && getActivity() != null) {
+            getActivity().runOnUiThread(() -> {
+                if (tvAssignedBranch != null) {
+                    tvAssignedBranch.setText("Assigned to: " + branch);
+                    tvAssignedBranch.setVisibility(View.VISIBLE);
+                }
+            });
         }
     }
 }

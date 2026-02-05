@@ -29,36 +29,51 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class ManagerTicketDetailActivity extends AppCompatActivity {
+public class ManagerTicketDetailActivity extends AppCompatActivity
+        implements com.google.android.gms.maps.OnMapReadyCallback {
 
-    private TextView tvTicketId, tvTitle, tvDescription, tvServiceType, tvAddress, tvContact, tvStatus, tvBranch, tvCustomerName, tvCreatedAt;
+    private TextView tvTicketId, tvTitle, tvDescription, tvServiceType, tvAddress, tvContact, tvStatus, tvBranch,
+            tvCustomerName, tvCreatedAt, tvAssignedTechnician;
     private Button btnViewMap, btnBack, btnReject, btnAssignStaff;
+    private View mapCardContainer;
     private TokenManager tokenManager;
     private String ticketId;
     private double latitude, longitude;
     private TicketDetailResponse.TicketDetail currentTicket;
     private List<EmployeeResponse.Employee> employees;
 
+    private com.google.android.gms.maps.MapView mapView;
+    private com.google.android.gms.maps.GoogleMap googleMap;
+
+    private static final int REQUEST_CODE_ASSIGN_EMPLOYEE = 1001;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        
+
         try {
             setContentView(R.layout.activity_manager_ticket_detail);
             android.util.Log.d("ManagerTicketDetail", "Layout set successfully");
 
             initViews();
             android.util.Log.d("ManagerTicketDetail", "Views initialized successfully");
-            
+
+            // Initialize MapView
+            mapView = findViewById(R.id.mapView);
+            if (mapView != null) {
+                mapView.onCreate(savedInstanceState);
+                mapView.getMapAsync(this);
+            }
+
             setupClickListeners();
             android.util.Log.d("ManagerTicketDetail", "Click listeners set up successfully");
-            
+
             tokenManager = new TokenManager(this);
             ticketId = getIntent().getStringExtra("ticket_id");
             employees = new ArrayList<>();
-            
+
             android.util.Log.d("ManagerTicketDetail", "Ticket ID: " + ticketId);
-            
+
             if (ticketId != null) {
                 loadTicketDetails();
                 loadEmployees();
@@ -86,11 +101,13 @@ public class ManagerTicketDetailActivity extends AppCompatActivity {
             tvBranch = findViewById(R.id.tvBranch);
             tvCustomerName = findViewById(R.id.tvCustomerName);
             tvCreatedAt = findViewById(R.id.tvCreatedAt);
+            tvAssignedTechnician = findViewById(R.id.tvAssignedTechnician);
             btnViewMap = findViewById(R.id.btnViewMap);
             btnBack = findViewById(R.id.btnBack);
             btnReject = findViewById(R.id.btnReject);
             btnAssignStaff = findViewById(R.id.btnAssignStaff);
-            
+            mapCardContainer = findViewById(R.id.mapCardContainer);
+
             // Check if any critical views are null
             if (tvTicketId == null || tvTitle == null || btnBack == null) {
                 Toast.makeText(this, "Layout error - missing views", Toast.LENGTH_SHORT).show();
@@ -104,7 +121,7 @@ public class ManagerTicketDetailActivity extends AppCompatActivity {
 
     private void setupClickListeners() {
         btnBack.setOnClickListener(v -> finish());
-        
+
         btnViewMap.setOnClickListener(v -> {
             if (latitude != 0 && longitude != 0) {
                 Intent intent = new Intent(this, MapViewActivity.class);
@@ -144,25 +161,28 @@ public class ManagerTicketDetailActivity extends AppCompatActivity {
                     android.util.Log.w("ManagerTicketDetail", "Activity is finishing/destroyed, ignoring response");
                     return;
                 }
-                
+
                 android.util.Log.d("ManagerTicketDetail", "API Response received - Code: " + response.code());
-                
+
                 if (response.isSuccessful() && response.body() != null) {
                     TicketDetailResponse ticketResponse = response.body();
                     android.util.Log.d("ManagerTicketDetail", "Response success: " + ticketResponse.isSuccess());
-                    
+
                     if (ticketResponse.isSuccess()) {
                         currentTicket = ticketResponse.getTicket();
                         if (currentTicket != null) {
                             displayTicketDetails(currentTicket);
                         } else {
                             android.util.Log.e("ManagerTicketDetail", "Ticket data is null");
-                            Toast.makeText(ManagerTicketDetailActivity.this, "Invalid ticket data", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(ManagerTicketDetailActivity.this, "Invalid ticket data", Toast.LENGTH_SHORT)
+                                    .show();
                             finish();
                         }
                     } else {
-                        android.util.Log.e("ManagerTicketDetail", "API returned success=false: " + ticketResponse.getMessage());
-                        Toast.makeText(ManagerTicketDetailActivity.this, "Ticket not found: " + ticketResponse.getMessage(), Toast.LENGTH_SHORT).show();
+                        android.util.Log.e("ManagerTicketDetail",
+                                "API returned success=false: " + ticketResponse.getMessage());
+                        Toast.makeText(ManagerTicketDetailActivity.this,
+                                "Ticket not found: " + ticketResponse.getMessage(), Toast.LENGTH_SHORT).show();
                         finish();
                     }
                 } else {
@@ -171,13 +191,16 @@ public class ManagerTicketDetailActivity extends AppCompatActivity {
                         try {
                             String errorBody = response.errorBody().string();
                             android.util.Log.e("ManagerTicketDetail", "Error body: " + errorBody);
-                            Toast.makeText(ManagerTicketDetailActivity.this, "Error: " + errorBody, Toast.LENGTH_SHORT).show();
+                            Toast.makeText(ManagerTicketDetailActivity.this, "Error: " + errorBody, Toast.LENGTH_SHORT)
+                                    .show();
                         } catch (Exception e) {
                             android.util.Log.e("ManagerTicketDetail", "Could not read error body", e);
-                            Toast.makeText(ManagerTicketDetailActivity.this, "Failed to load ticket details", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(ManagerTicketDetailActivity.this, "Failed to load ticket details",
+                                    Toast.LENGTH_SHORT).show();
                         }
                     } else {
-                        Toast.makeText(ManagerTicketDetailActivity.this, "Failed to load ticket details", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(ManagerTicketDetailActivity.this, "Failed to load ticket details",
+                                Toast.LENGTH_SHORT).show();
                     }
                     finish();
                 }
@@ -190,9 +213,10 @@ public class ManagerTicketDetailActivity extends AppCompatActivity {
                     android.util.Log.w("ManagerTicketDetail", "Activity is finishing/destroyed, ignoring failure");
                     return;
                 }
-                
+
                 android.util.Log.e("ManagerTicketDetail", "Network error: " + t.getMessage(), t);
-                Toast.makeText(ManagerTicketDetailActivity.this, "Network error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(ManagerTicketDetailActivity.this, "Network error: " + t.getMessage(), Toast.LENGTH_SHORT)
+                        .show();
                 finish();
             }
         });
@@ -200,7 +224,8 @@ public class ManagerTicketDetailActivity extends AppCompatActivity {
 
     private void loadEmployees() {
         String token = tokenManager.getToken();
-        if (token == null) return;
+        if (token == null)
+            return;
 
         ApiService apiService = ApiClient.getApiService();
         Call<EmployeeResponse> call = apiService.getEmployees("Bearer " + token);
@@ -240,8 +265,18 @@ public class ManagerTicketDetailActivity extends AppCompatActivity {
         tvContact.setText(ticket.getContact() != null ? ticket.getContact() : "No Contact");
         tvStatus.setText("Status: " + (ticket.getStatus() != null ? ticket.getStatus() : "Unknown"));
         tvBranch.setText("Branch: " + (ticket.getBranch() != null ? ticket.getBranch() : "Not assigned"));
-        tvCustomerName.setText("Customer: " + (ticket.getCustomerName() != null ? ticket.getCustomerName() : "Unknown"));
+        tvCustomerName
+                .setText("Customer: " + (ticket.getCustomerName() != null ? ticket.getCustomerName() : "Unknown"));
         tvCreatedAt.setText("Created: " + (ticket.getCreatedAt() != null ? ticket.getCreatedAt() : "Unknown"));
+
+        // Display assigned technician
+        if (ticket.getAssignedStaff() != null && !ticket.getAssignedStaff().isEmpty()) {
+            tvAssignedTechnician.setText("Technician: " + ticket.getAssignedStaff());
+            tvAssignedTechnician.setVisibility(View.VISIBLE);
+        } else {
+            tvAssignedTechnician.setText("Technician: Not assigned");
+            tvAssignedTechnician.setVisibility(View.VISIBLE);
+        }
 
         // Set status color
         setStatusColor(tvStatus, ticket.getStatus(), ticket.getStatusColor());
@@ -255,12 +290,8 @@ public class ManagerTicketDetailActivity extends AppCompatActivity {
             longitude = 0;
         }
 
-        // Show/hide map button based on location availability
-        if (latitude != 0 && longitude != 0) {
-            btnViewMap.setVisibility(View.VISIBLE);
-        } else {
-            btnViewMap.setVisibility(View.GONE);
-        }
+        // Update map if ready and coordinates are valid
+        updateMapLocation();
 
         // Show/hide action buttons based on ticket status
         updateActionButtons(ticket.getStatus());
@@ -305,29 +336,33 @@ public class ManagerTicketDetailActivity extends AppCompatActivity {
         }
 
         android.util.Log.d("ManagerTicketDetail", "Updating ticket status to: " + status);
-        
+
         UpdateTicketStatusRequest request = new UpdateTicketStatusRequest(status);
         ApiService apiService = ApiClient.getApiService();
         Call<UpdateTicketStatusResponse> call = apiService.updateTicketStatus("Bearer " + token, ticketId, request);
 
         call.enqueue(new Callback<UpdateTicketStatusResponse>() {
             @Override
-            public void onResponse(Call<UpdateTicketStatusResponse> call, Response<UpdateTicketStatusResponse> response) {
+            public void onResponse(Call<UpdateTicketStatusResponse> call,
+                    Response<UpdateTicketStatusResponse> response) {
                 android.util.Log.d("ManagerTicketDetail", "Status update response code: " + response.code());
-                
+
                 if (response.isSuccessful() && response.body() != null) {
                     UpdateTicketStatusResponse statusResponse = response.body();
                     android.util.Log.d("ManagerTicketDetail", "Status update success: " + statusResponse.isSuccess());
-                    
+
                     if (statusResponse.isSuccess()) {
                         // Clear ticket cache so the list will refresh with updated status
                         ManagerDataManager.clearTicketCache();
-                        
-                        Toast.makeText(ManagerTicketDetailActivity.this, "Ticket status updated successfully", Toast.LENGTH_SHORT).show();
+
+                        Toast.makeText(ManagerTicketDetailActivity.this, "Ticket status updated successfully",
+                                Toast.LENGTH_SHORT).show();
                         loadTicketDetails(); // Refresh ticket details
                     } else {
-                        android.util.Log.e("ManagerTicketDetail", "Status update failed: " + statusResponse.getMessage());
-                        Toast.makeText(ManagerTicketDetailActivity.this, "Failed to update: " + statusResponse.getMessage(), Toast.LENGTH_SHORT).show();
+                        android.util.Log.e("ManagerTicketDetail",
+                                "Status update failed: " + statusResponse.getMessage());
+                        Toast.makeText(ManagerTicketDetailActivity.this,
+                                "Failed to update: " + statusResponse.getMessage(), Toast.LENGTH_SHORT).show();
                     }
                 } else {
                     android.util.Log.e("ManagerTicketDetail", "Status update response not successful");
@@ -335,13 +370,16 @@ public class ManagerTicketDetailActivity extends AppCompatActivity {
                         try {
                             String errorBody = response.errorBody().string();
                             android.util.Log.e("ManagerTicketDetail", "Status update error body: " + errorBody);
-                            Toast.makeText(ManagerTicketDetailActivity.this, "Error: " + errorBody, Toast.LENGTH_LONG).show();
+                            Toast.makeText(ManagerTicketDetailActivity.this, "Error: " + errorBody, Toast.LENGTH_LONG)
+                                    .show();
                         } catch (Exception e) {
                             android.util.Log.e("ManagerTicketDetail", "Could not read error body", e);
-                            Toast.makeText(ManagerTicketDetailActivity.this, "Failed to update ticket status", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(ManagerTicketDetailActivity.this, "Failed to update ticket status",
+                                    Toast.LENGTH_SHORT).show();
                         }
                     } else {
-                        Toast.makeText(ManagerTicketDetailActivity.this, "Failed to update ticket status", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(ManagerTicketDetailActivity.this, "Failed to update ticket status",
+                                Toast.LENGTH_SHORT).show();
                     }
                 }
             }
@@ -349,7 +387,8 @@ public class ManagerTicketDetailActivity extends AppCompatActivity {
             @Override
             public void onFailure(Call<UpdateTicketStatusResponse> call, Throwable t) {
                 android.util.Log.e("ManagerTicketDetail", "Status update network error: " + t.getMessage(), t);
-                Toast.makeText(ManagerTicketDetailActivity.this, "Network error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(ManagerTicketDetailActivity.this, "Network error: " + t.getMessage(), Toast.LENGTH_SHORT)
+                        .show();
             }
         });
     }
@@ -365,41 +404,42 @@ public class ManagerTicketDetailActivity extends AppCompatActivity {
 
     private void launchAssignEmployeeActivity() {
         android.util.Log.d("ManagerTicketDetail", "Attempting to launch AssignEmployeeActivity");
-        
+
         if (currentTicket == null) {
             android.util.Log.e("ManagerTicketDetail", "currentTicket is null");
             Toast.makeText(this, "Ticket details not loaded", Toast.LENGTH_SHORT).show();
             return;
         }
-        
+
         android.util.Log.d("ManagerTicketDetail", "Ticket ID: " + currentTicket.getTicketId());
         android.util.Log.d("ManagerTicketDetail", "Ticket Title: " + currentTicket.getTitle());
-        
+
         try {
             Intent intent = new Intent(this, AssignEmployeeActivity.class);
             intent.putExtra("ticket_id", currentTicket.getTicketId());
             intent.putExtra("ticket_title", currentTicket.getTitle());
             intent.putExtra("ticket_description", currentTicket.getDescription());
             intent.putExtra("ticket_address", currentTicket.getAddress());
-            
+
             android.util.Log.d("ManagerTicketDetail", "Starting AssignEmployeeActivity");
-            startActivity(intent);
+            startActivityForResult(intent, REQUEST_CODE_ASSIGN_EMPLOYEE);
         } catch (Exception e) {
             android.util.Log.e("ManagerTicketDetail", "Error launching AssignEmployeeActivity", e);
             Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
     }
-    
-    // Remove the old assignment methods since we're using AssignEmployeeActivity
-    /*
-    private void showStaffAssignmentDialog() {
-        // Old method - removed
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == REQUEST_CODE_ASSIGN_EMPLOYEE && resultCode == RESULT_OK) {
+            // Assignment was successful, refresh ticket details to show updated status
+            android.util.Log.d("ManagerTicketDetail", "Assignment completed successfully, refreshing ticket details");
+            Toast.makeText(this, "Refreshing ticket status...", Toast.LENGTH_SHORT).show();
+            loadTicketDetails();
+        }
     }
-    
-    private void assignStaffToTicket(int staffId) {
-        // Old method - removed
-    }
-    */
 
     private void setStatusColor(TextView textView, String status, String statusColor) {
         if (statusColor != null && !statusColor.isEmpty()) {
@@ -412,8 +452,9 @@ public class ManagerTicketDetailActivity extends AppCompatActivity {
         }
 
         // Default color mapping
-        if (status == null) return;
-        
+        if (status == null)
+            return;
+
         switch (status.toLowerCase()) {
             case "pending":
                 textView.setTextColor(Color.parseColor("#FFA500")); // Orange
@@ -433,10 +474,121 @@ public class ManagerTicketDetailActivity extends AppCompatActivity {
                 break;
         }
     }
-    
+
+    // MapView Lifecycle methods
+    private void updateMapLocation() {
+        if (googleMap == null)
+            return;
+
+        if (latitude != 0 && longitude != 0) {
+            // Use explicit coordinates
+            showLocationOnMap(latitude, longitude);
+        } else {
+            // Fallback: Try to geocode the address
+            String address = tvAddress.getText().toString();
+            if (!address.isEmpty() && !address.equals("No Address")) {
+                geocodeAndShowLocation(address);
+            } else {
+                hideMap();
+            }
+        }
+    }
+
+    private void showLocationOnMap(double lat, double lng) {
+        if (googleMap != null) {
+            com.google.android.gms.maps.model.LatLng location = new com.google.android.gms.maps.model.LatLng(lat, lng);
+            googleMap.clear();
+            googleMap.addMarker(
+                    new com.google.android.gms.maps.model.MarkerOptions().position(location).title("Service Location"));
+            googleMap.moveCamera(com.google.android.gms.maps.CameraUpdateFactory.newLatLngZoom(location, 15f));
+            googleMap.getUiSettings().setMapToolbarEnabled(false);
+
+            // Ensure map is visible
+            btnViewMap.setVisibility(View.VISIBLE);
+            if (mapCardContainer != null)
+                mapCardContainer.setVisibility(View.VISIBLE);
+        }
+    }
+
+    private void hideMap() {
+        btnViewMap.setVisibility(View.GONE);
+        if (mapCardContainer != null)
+            mapCardContainer.setVisibility(View.GONE);
+    }
+
+    private void geocodeAndShowLocation(String addressStr) {
+        new Thread(() -> {
+            try {
+                android.location.Geocoder geocoder = new android.location.Geocoder(this, java.util.Locale.getDefault());
+                java.util.List<android.location.Address> addresses = geocoder.getFromLocationName(addressStr, 1);
+
+                if (addresses != null && !addresses.isEmpty()) {
+                    android.location.Address location = addresses.get(0);
+                    double lat = location.getLatitude();
+                    double lng = location.getLongitude();
+
+                    // Update UI on main thread
+                    runOnUiThread(() -> {
+                        // Update the stored coordinates
+                        this.latitude = lat;
+                        this.longitude = lng;
+                        showLocationOnMap(lat, lng);
+                    });
+                } else {
+                    runOnUiThread(this::hideMap);
+                }
+            } catch (java.io.IOException e) {
+                runOnUiThread(this::hideMap);
+            }
+        }).start();
+    }
+
+    @Override
+    public void onMapReady(com.google.android.gms.maps.GoogleMap map) {
+        this.googleMap = map;
+        updateMapLocation();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        if (mapView != null)
+            mapView.onStart();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (mapView != null)
+            mapView.onResume();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (mapView != null)
+            mapView.onPause();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (mapView != null)
+            mapView.onStop();
+    }
+
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        if (mapView != null)
+            mapView.onDestroy();
         android.util.Log.d("ManagerTicketDetail", "Activity destroyed");
+    }
+
+    @Override
+    public void onLowMemory() {
+        super.onLowMemory();
+        if (mapView != null)
+            mapView.onLowMemory();
     }
 }

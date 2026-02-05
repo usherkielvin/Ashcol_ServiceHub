@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FFFFFF"
+    android:background="?android:attr/colorBackground"
     tools:context="app.hub.user.UserHomeFragment">
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -16,66 +16,68 @@
         <View
             android:id="@+id/headerBackground"
             android:layout_width="match_parent"
-            android:layout_height="220dp"
+            android:layout_height="180dp"
             android:background="@drawable/header_green"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <com.google.android.material.imageview.ShapeableImageView
-            android:id="@+id/profileImage"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_marginStart="24dp"
-            android:layout_marginTop="32dp"
-            android:padding="2dp"
-            android:scaleType="centerCrop"
-            android:src="@drawable/ic_profile"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:shapeAppearanceOverlay="@style/ShapeAppearance.ServiceHub.Circle"
-            app:strokeColor="#FFFFFF"
-            app:strokeWidth="2dp" />
-
         <ImageView
             android:id="@+id/appLogo"
-            android:layout_width="120dp"
-            android:layout_height="50dp"
-            android:layout_marginTop="32dp"
+            android:layout_width="163dp"
+            android:layout_height="63dp"
+            android:layout_marginTop="56dp"
+            android:contentDescription="@string/ashcol_corporation_logo"
             android:src="@drawable/ash"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
+        <TextView
+            android:id="@+id/tvAssignedBranch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="Loading branch..."
+            android:textColor="#FFFFFF"
+            android:textSize="12sp"
+            android:alpha="0.9"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/appLogo" />
+
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnNotification"
-            style="@style/BottomNavText"
             android:layout_width="48dp"
             android:layout_height="48dp"
-            android:layout_marginTop="32dp"
-            android:layout_marginEnd="24dp"
+            android:layout_marginTop="56dp"
+            android:layout_marginEnd="20dp"
+            android:contentDescription="@string/desc_notifications"
             android:insetLeft="0dp"
             android:insetTop="0dp"
             android:insetRight="0dp"
             android:insetBottom="0dp"
-            app:backgroundTint="#FFFFFF"
+            app:backgroundTint="?attr/colorSurface"
             app:cornerRadius="24dp"
             app:icon="@drawable/ic_notifications"
             app:iconGravity="textStart"
             app:iconPadding="0dp"
-            app:iconTint="#215531"
+            app:iconTint="@color/service_icon_tint"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
         <!-- Search Bar -->
-        <androidx.cardview.widget.CardView
+        <com.google.android.material.card.MaterialCardView
             android:id="@+id/searchCard"
             android:layout_width="match_parent"
-            android:layout_height="56dp"
+            android:layout_height="54dp"
             android:layout_marginStart="24dp"
             android:layout_marginEnd="24dp"
+            app:cardBackgroundColor="?attr/colorSurface"
             app:cardCornerRadius="12dp"
-            app:cardElevation="4dp"
+            app:cardElevation="6dp"
             app:layout_constraintBottom_toBottomOf="@id/headerBackground"
-            app:layout_constraintTop_toBottomOf="@id/headerBackground">
+            app:layout_constraintTop_toBottomOf="@id/headerBackground"
+            app:strokeWidth="0dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -86,10 +88,11 @@
                 android:paddingEnd="16dp">
 
                 <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:src="@drawable/search_bar"
-                    app:tint="#9E9E9E" />
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:contentDescription="@string/desc_search"
+                    android:src="@drawable/ic_search"
+                    app:tint="?attr/colorOnSurfaceVariant" />
 
                 <EditText
                     android:id="@+id/searchEditText"
@@ -97,17 +100,22 @@
                     android:layout_height="match_parent"
                     android:layout_marginStart="12dp"
                     android:layout_weight="1"
+                    android:autofillHints="none"
                     android:background="@null"
-                    android:hint="Search any Services..."
-                    android:textSize="16sp" />
+                    android:hint="@string/search_hint"
+                    android:inputType="text"
+                    android:textColor="?attr/colorOnSurface"
+                    android:textColorHint="?attr/colorOnSurfaceVariant"
+                    android:textSize="15sp" />
 
                 <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:contentDescription="@string/desc_chat"
                     android:src="@drawable/ic_chat"
-                    app:tint="#9E9E9E" />
+                    app:tint="?attr/colorOnSurfaceVariant" />
             </LinearLayout>
-        </androidx.cardview.widget.CardView>
+        </com.google.android.material.card.MaterialCardView>
 
         <!-- Quick Services -->
         <TextView
@@ -115,10 +123,10 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="24dp"
-            android:layout_marginTop="24dp"
-            android:text="Quick Services"
-            android:textColor="#1B4332"
-            android:textSize="20sp"
+            android:layout_marginTop="20dp"
+            android:text="@string/quick_services"
+            android:textColor="@color/quick_services_title_color"
+            android:textSize="18sp"
             android:textStyle="bold"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/searchCard" />
@@ -128,10 +136,12 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
+            android:baselineAligned="false"
             android:gravity="center"
             android:orientation="horizontal"
             app:layout_constraintTop_toBottomOf="@id/tvQuickServices">
 
+            <!-- Cleaning -->
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -139,25 +149,34 @@
                 android:gravity="center"
                 android:orientation="vertical">
 
-                <com.google.android.material.imageview.ShapeableImageView
-                    android:layout_width="64dp"
-                    android:layout_height="64dp"
-                    android:background="#F8F9FA"
-                    android:padding="16dp"
-                    android:src="@drawable/ic_home"
-                    app:shapeAppearanceOverlay="@style/ShapeAppearance.ServiceHub.Circle"
-                    app:strokeColor="#EEEEEE"
-                    app:strokeWidth="1dp" />
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    app:cardBackgroundColor="?attr/colorSurface"
+                    app:cardCornerRadius="28dp"
+                    app:cardElevation="3dp"
+                    app:strokeColor="?attr/colorOutline"
+                    app:strokeWidth="1dp">
+
+                    <ImageView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:contentDescription="@string/service_cleaning"
+                        android:padding="14dp"
+                        android:src="@drawable/ic_home"
+                        app:tint="@color/service_icon_tint" />
+                </com.google.android.material.card.MaterialCardView>
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="Cleaning"
-                    android:textColor="#333333"
-                    android:textSize="12sp" />
+                    android:layout_marginTop="6dp"
+                    android:text="@string/service_cleaning"
+                    android:textColor="?attr/colorOnSurface"
+                    android:textSize="13sp" />
             </LinearLayout>
 
+            <!-- Repair -->
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -165,25 +184,34 @@
                 android:gravity="center"
                 android:orientation="vertical">
 
-                <com.google.android.material.imageview.ShapeableImageView
-                    android:layout_width="64dp"
-                    android:layout_height="64dp"
-                    android:background="#F8F9FA"
-                    android:padding="16dp"
-                    android:src="@drawable/wrench"
-                    app:shapeAppearanceOverlay="@style/ShapeAppearance.ServiceHub.Circle"
-                    app:strokeColor="#EEEEEE"
-                    app:strokeWidth="1dp" />
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    app:cardBackgroundColor="?attr/colorSurface"
+                    app:cardCornerRadius="28dp"
+                    app:cardElevation="3dp"
+                    app:strokeColor="?attr/colorOutline"
+                    app:strokeWidth="1dp">
+
+                    <ImageView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:contentDescription="@string/service_repair"
+                        android:padding="14dp"
+                        android:src="@drawable/wrench"
+                        app:tint="@color/service_icon_tint" />
+                </com.google.android.material.card.MaterialCardView>
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="Repair"
-                    android:textColor="#333333"
-                    android:textSize="12sp" />
+                    android:layout_marginTop="6dp"
+                    android:text="@string/service_repair"
+                    android:textColor="?attr/colorOnSurface"
+                    android:textSize="13sp" />
             </LinearLayout>
 
+            <!-- Installation -->
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -191,25 +219,34 @@
                 android:gravity="center"
                 android:orientation="vertical">
 
-                <com.google.android.material.imageview.ShapeableImageView
-                    android:layout_width="64dp"
-                    android:layout_height="64dp"
-                    android:background="#F8F9FA"
-                    android:padding="16dp"
-                    android:src="@drawable/wind"
-                    app:shapeAppearanceOverlay="@style/ShapeAppearance.ServiceHub.Circle"
-                    app:strokeColor="#EEEEEE"
-                    app:strokeWidth="1dp" />
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    app:cardBackgroundColor="?attr/colorSurface"
+                    app:cardCornerRadius="28dp"
+                    app:cardElevation="3dp"
+                    app:strokeColor="?attr/colorOutline"
+                    app:strokeWidth="1dp">
+
+                    <ImageView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:contentDescription="@string/service_installation"
+                        android:padding="14dp"
+                        android:src="@drawable/wind"
+                        app:tint="@color/service_icon_tint" />
+                </com.google.android.material.card.MaterialCardView>
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="Installation"
-                    android:textColor="#333333"
-                    android:textSize="12sp" />
+                    android:layout_marginTop="6dp"
+                    android:text="@string/service_installation"
+                    android:textColor="?attr/colorOnSurface"
+                    android:textSize="13sp" />
             </LinearLayout>
 
+            <!-- Maintenance -->
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -217,83 +254,95 @@
                 android:gravity="center"
                 android:orientation="vertical">
 
-                <com.google.android.material.imageview.ShapeableImageView
-                    android:layout_width="64dp"
-                    android:layout_height="64dp"
-                    android:background="#F8F9FA"
-                    android:padding="16dp"
-                    android:src="@drawable/nut"
-                    app:shapeAppearanceOverlay="@style/ShapeAppearance.ServiceHub.Circle"
-                    app:strokeColor="#EEEEEE"
-                    app:strokeWidth="1dp" />
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    app:cardBackgroundColor="?attr/colorSurface"
+                    app:cardCornerRadius="28dp"
+                    app:cardElevation="3dp"
+                    app:strokeColor="?attr/colorOutline"
+                    app:strokeWidth="1dp">
+
+                    <ImageView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:contentDescription="@string/service_maintenance"
+                        android:padding="14dp"
+                        android:src="@drawable/nut"
+                        app:tint="@color/service_icon_tint" />
+                </com.google.android.material.card.MaterialCardView>
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="Maintenance"
-                    android:textColor="#333333"
-                    android:textSize="12sp" />
+                    android:layout_marginTop="6dp"
+                    android:text="@string/service_maintenance"
+                    android:textColor="?attr/colorOnSurface"
+                    android:textSize="13sp" />
             </LinearLayout>
         </LinearLayout>
 
         <!-- Promotion Banner -->
-        <androidx.cardview.widget.CardView
+        <com.google.android.material.card.MaterialCardView
             android:id="@+id/bannerCard"
             android:layout_width="match_parent"
             android:layout_height="160dp"
-            android:layout_marginStart="24dp"
-            android:layout_marginTop="24dp"
-            android:layout_marginEnd="24dp"
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="28dp"
+            android:layout_marginEnd="20dp"
             app:cardCornerRadius="16dp"
-            app:layout_constraintTop_toBottomOf="@id/servicesLayout">
+            app:cardElevation="6dp"
+            app:layout_constraintTop_toBottomOf="@id/servicesLayout"
+            app:strokeWidth="0dp">
 
             <androidx.viewpager2.widget.ViewPager2
                 android:id="@+id/bannerViewPager"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent" />
-        </androidx.cardview.widget.CardView>
+
+        </com.google.android.material.card.MaterialCardView>
 
         <!-- Indicator dots -->
         <LinearLayout
             android:id="@+id/dotsLayout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="12dp"
             android:gravity="center"
             android:orientation="horizontal"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/bannerCard">
 
-            <ImageView
+            <View
                 android:layout_width="24dp"
-                android:layout_height="6dp"
-                android:layout_margin="4dp"
-                android:src="@drawable/dot_selected" />
+                android:layout_height="8dp"
+                android:layout_marginEnd="4dp"
+                android:background="@drawable/dot_selected" />
 
-            <ImageView
-                android:layout_width="24dp"
-                android:layout_height="6dp"
-                android:layout_margin="4dp"
-                android:src="@drawable/dot_unselected" />
+            <View
+                android:layout_width="8dp"
+                android:layout_height="8dp"
+                android:layout_marginStart="4dp"
+                android:layout_marginEnd="4dp"
+                android:background="@drawable/dot_unselected" />
 
-            <ImageView
-                android:layout_width="24dp"
-                android:layout_height="6dp"
-                android:layout_margin="4dp"
-                android:src="@drawable/dot_unselected" />
+            <View
+                android:layout_width="8dp"
+                android:layout_height="8dp"
+                android:layout_marginStart="4dp"
+                android:background="@drawable/dot_unselected" />
         </LinearLayout>
 
-        <!-- Recent Tickets Section -->
+        <!-- My Tickets Section -->
         <TextView
             android:id="@+id/tvMyTickets"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="24dp"
             android:layout_marginTop="24dp"
-            android:text="My Tickets"
-            android:textColor="#1B4332"
+            android:text="@string/my_tickets"
+            android:textColor="@color/quick_services_title_color"
             android:textSize="20sp"
             android:textStyle="bold"
             app:layout_constraintStart_toStartOf="parent"
@@ -303,34 +352,37 @@
             android:id="@+id/tvTicketsSubtitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Overview of history tickets"
-            android:textColor="#757575"
-            android:textSize="12sp"
+            android:text="@string/overview_history_tickets"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:textSize="13sp"
             android:textStyle="italic"
             app:layout_constraintStart_toStartOf="@id/tvMyTickets"
             app:layout_constraintTop_toBottomOf="@id/tvMyTickets" />
 
-        <androidx.cardview.widget.CardView
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="24dp"
+            android:layout_marginStart="20dp"
             android:layout_marginTop="12dp"
-            android:layout_marginEnd="24dp"
-            app:cardCornerRadius="12dp"
-            app:cardElevation="2dp"
+            android:layout_marginEnd="20dp"
+            app:cardBackgroundColor="?attr/colorSurface"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="3dp"
+            app:strokeColor="?attr/colorOutline"
+            app:strokeWidth="1dp"
             app:layout_constraintTop_toBottomOf="@id/tvTicketsSubtitle">
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:padding="16dp">
+                android:padding="20dp">
 
                 <TextView
                     android:id="@+id/tvRecentHeader"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Recent Tickets"
-                    android:textColor="#000000"
+                    android:text="@string/recent_tickets"
+                    android:textColor="?attr/colorOnSurface"
                     android:textSize="18sp"
                     android:textStyle="bold"
                     app:layout_constraintStart_toStartOf="parent"
@@ -340,10 +392,10 @@
                     android:id="@+id/ticketList"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:lineSpacingExtra="4dp"
+                    android:layout_marginTop="12dp"
+                    android:lineSpacingExtra="6dp"
                     android:text="• TCKTid_001\n• TCKTid_013\n• TCKTid_015"
-                    android:textColor="#333333"
+                    android:textColor="?attr/colorOnSurface"
                     android:textSize="16sp"
                     android:textStyle="italic"
                     app:layout_constraintStart_toStartOf="parent"
@@ -352,15 +404,15 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="See more"
-                    android:textColor="#BDBDBD"
-                    android:textSize="12sp"
+                    android:text="@string/see_more"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:textSize="13sp"
                     android:textStyle="italic"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent" />
 
             </androidx.constraintlayout.widget.ConstraintLayout>
-        </androidx.cardview.widget.CardView>
+        </com.google.android.material.card.MaterialCardView>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.core.widget.NestedScrollView>

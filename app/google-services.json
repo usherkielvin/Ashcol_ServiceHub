@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "927228841081",
+    "project_id": "ashcol-hub",
+    "storage_bucket": "ashcol-hub.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:927228841081:android:8a606ec3f0def7eef158a8",
+        "android_client_info": {
+          "package_name": "app.hub"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAq0JJ4FHrTSqR7aOI7r4eAZd1T8pZLid4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

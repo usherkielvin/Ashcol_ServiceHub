@@ -36,4 +36,47 @@
     <color name="orange">#FF9800</color>
     <color name="blue">#2196F3</color>
     <color name="red">#F44336</color>
+
+    <!-- Semantic colors for fragment_user_home -->
+    <color name="quick_services_title_color">#1B4332</color>
+    <color name="service_icon_tint">#2D6A4F</color>
+    <color name="dot_selected_color">#2D6A4F</color>
+    <color name="dot_unselected_color">#E0E0E0</color>
+
+    <!-- Header Colors -->
+    <color name="header_bg_color">#1B4332</color>
+    <color name="header_badge_bg_color">#2D6A4F</color>
+
+    <!-- Foundational Colors (Light Mode Defaults) -->
+    <color name="colorPrimary">#38B45D</color>
+    <color name="colorOnPrimary">#FFFFFF</color>
+    <color name="colorPrimaryContainer">#D1E7D1</color>
+    <color name="colorOnPrimaryContainer">#002107</color>
+
+    <color name="colorSecondary">#4CAF50</color>
+    <color name="colorOnSecondary">#FFFFFF</color>
+    <color name="colorSecondaryContainer">#D7E8D7</color>
+    <color name="colorOnSecondaryContainer">#0E1F0E</color>
+
+    <color name="colorTertiary">#3D6657</color>
+    <color name="colorOnTertiary">#FFFFFF</color>
+    <color name="colorTertiaryContainer">#BFECCF</color>
+    <color name="colorOnTertiaryContainer">#002114</color>
+
+    <color name="colorError">#B3261E</color>
+    <color name="colorOnError">#FFFFFF</color>
+
+    <!-- Background and Surface Colors (Light Mode Defaults) -->
+    <color name="colorSurface">#FCFDF6</color>
+    <color name="colorOnSurface">#1A1C19</color>
+    <color name="colorSurfaceVariant">#DEE5DA</color>
+    <color name="colorOnSurfaceVariant">#424940</color>
+    <color name="colorOutline">#72796F</color>
+
+    <!-- Custom Semantic Colors -->
+    <color name="header_text_color">#FFFFFF</color>
+    <color name="service_text_color">@color/colorOnSurface</color>
+    <color name="notification_icon_tint">@color/colorOnPrimaryContainer</color>
+    <color name="notification_background_tint">@color/colorPrimaryContainer</color>
+    <color name="recent_tickets_text_color">@color/colorOnSurface</color>
 </resources>

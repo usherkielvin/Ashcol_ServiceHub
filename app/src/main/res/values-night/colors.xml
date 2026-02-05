@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Foundational Colors -->
+    <color name="colorPrimary">#4CAF50</color>
+    <color name="colorOnPrimary">#000000</color>
+    <color name="colorPrimaryContainer">#2E7D32</color>
+    <color name="colorOnPrimaryContainer">#E8F5E9</color>
+
+    <color name="colorSecondary">#81C784</color>
+    <color name="colorOnSecondary">#000000</color>
+    <color name="colorSecondaryContainer">#388E3C</color>
+    <color name="colorOnSecondaryContainer">#E8F5E9</color>
+
+    <color name="colorTertiary">#A5D6A7</color>
+    <color name="colorOnTertiary">#000000</color>
+    <color name="colorTertiaryContainer">#4CAF50</color>
+    <color name="colorOnTertiaryContainer">#000000</color>
+
+    <color name="colorError">#EF5350</color>
+    <color name="colorOnError">#000000</color>
+
+    <!-- Background and Surface Colors -->
+    <color name="app_background">#121212</color>
+    <color name="colorSurface">#1E1E1E</color>
+    <color name="colorOnSurface">#E0E0E0</color>
+    <color name="colorSurfaceVariant">#2C2C2C</color>
+    <color name="colorOnSurfaceVariant">#BDBDBD</color>
+    <color name="colorOutline">#424242</color>
+
+    <!-- Custom Semantic Colors -->
+    <color name="header_text_color">#FFFFFF</color>
+    <color name="quick_services_title_color">#81C784</color>
+    <color name="service_icon_tint">#A5D6A7</color>
+    <color name="service_text_color">@color/colorOnSurface</color>
+    <color name="notification_icon_tint">@color/colorOnPrimaryContainer</color>
+    <color name="notification_background_tint">@color/colorPrimaryContainer</color>
+    <color name="recent_tickets_text_color">@color/colorOnSurface</color>
+
+    <!-- Header Colors Dark Mode -->
+    <color name="header_bg_color">#121212</color>
+    <color name="header_badge_bg_color">#2C2C2C</color>
+</resources>
