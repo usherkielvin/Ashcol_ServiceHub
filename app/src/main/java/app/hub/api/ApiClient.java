@@ -1,15 +1,5 @@
 package app.hub.api;
 
-import android.util.Log;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
-import okhttp3.OkHttpClient;
-import okhttp3.logging.HttpLoggingInterceptor;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
-
 import java.util.concurrent.TimeUnit;
 
 public class ApiClient {
@@ -22,7 +12,7 @@ public class ApiClient {
     // Note: Trailing slash is required when endpoints don't start with /
     // LOCAL DEVELOPMENT - Using local Laravel server
     // Make sure to run: php artisan serve --host=0.0.0.0 --port=8000
-    private static final String BASE_URL = "http://172.20.10.3:8000/";
+    private static final String BASE_URL = "http://172.26.193.100:8000/";
 
     private static Retrofit retrofit = null;
 

@@ -49,8 +49,8 @@ public class EmployeePreviewAdapter extends RecyclerView.Adapter<EmployeePreview
         // Set role
         holder.tvEmployeeRole.setText(employee.getRole() != null ? employee.getRole() : "Employee");
 
-        // Set ticket count (placeholder - you can enhance this with actual data)
-        int ticketCount = 0; // TODO: Get actual ticket count from employee data
+        // Set ticket count
+        int ticketCount = employee.getTicketCount();
         holder.tvTicketCount.setText(ticketCount + " ticket" + (ticketCount != 1 ? "s" : ""));
 
         // Set status indicator color based on online status
