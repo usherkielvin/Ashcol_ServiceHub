@@ -8,9 +8,9 @@
         <domain includeSubdomains="true">192.168.0.104</domain>
 <<<<<<< HEAD
         <domain includeSubdomains="true">192.168.254.153</domain>
-=======
         <domain includeSubdomains="true">192.168.0.100</domain>
 >>>>>>> 9e1352f7e2ba43c0175d25a48c75ea00d79e93a6
+
 
     </domain-config>
     <!-- For production, remove this or only allow specific domains -->
