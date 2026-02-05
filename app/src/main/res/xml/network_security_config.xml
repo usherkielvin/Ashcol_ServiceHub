@@ -6,10 +6,10 @@
         <domain includeSubdomains="true">192.168.0.103</domain>
         <domain includeSubdomains="true">localhost</domain>
         <domain includeSubdomains="true">192.168.0.104</domain>
-<<<<<<< HEAD
-        <domain includeSubdomains="true">192.168.254.153</domain>
+
+        <domain includeSubdomains="true">172.20.10.3</domain>
         <domain includeSubdomains="true">192.168.0.100</domain>
->>>>>>> 9e1352f7e2ba43c0175d25a48c75ea00d79e93a6
+
 
 
     </domain-config>
