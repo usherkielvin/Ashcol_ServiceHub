@@ -257,4 +257,41 @@
     <string name="filter_location_label">Tagged Location</string>
     <string name="filter_location_value">Anywhere</string>
     <string name="btn_show_results">Show results</string>
+
+    <string name="title_service_request">SERVICE REQUEST FORM</string>
+
+    <string name="section_customer">Customer Information</string>
+    <string name="label_fullname">Fullname</string>
+    <string name="hint_fullname">Enter fullname</string>
+    <string name="label_phone">Phone number</string>
+
+    <string name="section_location">Location Details</string>
+    <string name="hint_map">Tap for Maps</string>
+    <string name="hint_landmark">Please provide nearest landmarks or building color.</string>
+
+    <string name="section_service">Service Details</string>
+    <string name="label_service_type_tag">Service Type:\nCleaning</string>
+    <string name="label_specific_service">Specific Service</string>
+    <string name="hint_specific_service">Enter specific service</string>
+    <string name="label_unit_type">Unit Type</string>
+    <string name="hint_unit_type">Choose your unit type</string>
+    <string name="label_other_details">Other details</string>
+    <string name="hint_other_details">Add optional details of request</string>
+    <string name="label_attachment">Attachment</string>
+    <string name="text_attachment">Attach photos or upload file</string>
+
+    <string name="section_schedule">Schedule</string>
+    <string name="label_pref_date">Preferred Date</string>
+    <string name="label_pref_time">Preferred Time</string>
+
+    <string name="label_est_price">Estimated Price</string>
+    <string name="val_est_price">Php 8,000.00</string>
+    <string name="btn_continue">Continue</string>
+
+    <string name="title_summary">Summary</string>
+    <string name="item_name_ac">Split AC Cleaning</string>
+    <string name="price_ac">Php 8,000.00</string>
+    <string name="title_payment_summary">Payment Summary</string>
+    <string name="label_total_vat">Total (inc. VAT)</string>
+    <string name="val_total_vat">Php 8,000.00</string>
 </resources>
