@@ -1,30 +1,8 @@
 package app.hub.common;
 
-import app.hub.ForgotPasswordActivity;
-import app.hub.R;
-import app.hub.api.ApiClient;
-import app.hub.api.ApiService;
-
-import app.hub.api.GoogleSignInRequest;
-import app.hub.api.GoogleSignInResponse;
-import app.hub.api.LoginRequest;
-import app.hub.api.LoginResponse;
-import app.hub.api.UpdateProfileRequest;
-import app.hub.api.UserResponse;
-import app.hub.admin.AdminDashboardActivity;
-import app.hub.employee.EmployeeDashboardActivity;
-import app.hub.manager.ManagerDashboardActivity;
-import app.hub.user.DashboardActivity;
-import app.hub.util.EmailValidator;
-import app.hub.util.FCMTokenHelper;
-import app.hub.util.LocationConfig;
-import app.hub.util.UserLocationManager;
-import app.hub.util.TokenManager;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.location.Location;
-import android.location.LocationManager;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -35,12 +13,13 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.splashscreen.SplashScreen;
 
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
@@ -50,9 +29,6 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.button.MaterialButton;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.gson.Gson;
@@ -60,6 +36,22 @@ import com.google.gson.JsonObject;
 
 import java.io.IOException;
 
+import app.hub.ForgotPasswordActivity;
+import app.hub.R;
+import app.hub.admin.AdminDashboardActivity;
+import app.hub.api.ApiClient;
+import app.hub.api.ApiService;
+import app.hub.api.GoogleSignInRequest;
+import app.hub.api.GoogleSignInResponse;
+import app.hub.api.LoginRequest;
+import app.hub.api.LoginResponse;
+import app.hub.employee.EmployeeDashboardActivity;
+import app.hub.manager.ManagerDashboardActivity;
+import app.hub.user.DashboardActivity;
+import app.hub.util.EmailValidator;
+import app.hub.util.FCMTokenHelper;
+import app.hub.util.TokenManager;
+import app.hub.util.UserLocationManager;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -68,12 +60,11 @@ import retrofit2.Response;
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
-    private static final int RC_SIGN_IN = 9001;
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1001;
     private TokenManager tokenManager;
     private GoogleSignInClient googleSignInClient;
-
     private UserLocationManager userLocationManager;
+    private ActivityResultLauncher<Intent> googleSignInLauncher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,6 +76,16 @@ public class MainActivity extends AppCompatActivity {
 
         tokenManager = new TokenManager(this);
         userLocationManager = new UserLocationManager(this);
+
+        // Register Google Sign-In launcher
+        googleSignInLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                        Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(result.getData());
+                        handleGoogleSignInResult(task);
+                    }
+                });
 
         // Check if already logged in
         if (tokenManager.isLoggedIn()) {
@@ -214,31 +215,17 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupSocialLoginButtons() {
-        // Google Sign-In button
         Button googleButton = findViewById(R.id.btnGoogle);
         if (googleButton != null) {
-            googleButton.setOnClickListener(v -> {
-                signInWithGoogle();
-            });
+            googleButton.setOnClickListener(v -> signInWithGoogle());
         }
     }
 
     private void signInWithGoogle() {
-        // Sign out first to ensure the user can select an account every time
         googleSignInClient.signOut().addOnCompleteListener(task -> {
             Intent signInIntent = googleSignInClient.getSignInIntent();
-            startActivityForResult(signInIntent, RC_SIGN_IN);
+            googleSignInLauncher.launch(signInIntent);
         });
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        if (requestCode == RC_SIGN_IN) {
-            Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
-            handleGoogleSignInResult(task);
-        }
     }
 
     private void handleGoogleSignInResult(Task<GoogleSignInAccount> completedTask) {
@@ -246,7 +233,6 @@ public class MainActivity extends AppCompatActivity {
             GoogleSignInAccount account = completedTask.getResult(ApiException.class);
             if (account != null) {
                 String email = account.getEmail();
-                String displayName = account.getDisplayName();
                 String givenName = account.getGivenName();
                 String familyName = account.getFamilyName();
                 String idToken = account.getIdToken();
@@ -312,35 +298,7 @@ public class MainActivity extends AppCompatActivity {
                 if (response.isSuccessful() && response.body() != null) {
                     GoogleSignInResponse signInResponse = response.body();
 
-                    // IF SUCCESS: Backend might have found the user OR just created them.
                     if (signInResponse.isSuccess()) {
-                        // DETECT LEAK: Check if the message implies a NEW user was created
-                        String message = signInResponse.getMessage();
-                        boolean isActuallyNewRegistration = false;
-                        if (message != null) {
-                            String lowerMsg = message.toLowerCase();
-                            if (lowerMsg.contains("created") || lowerMsg.contains("registered")
-                                    || lowerMsg.contains("welcome")) {
-                                isActuallyNewRegistration = true;
-                            }
-                        }
-
-                        // DETECT LEAK: Check if we have valid user data.
-                        // If it's a "login" and the user is NOT in our database yet,
-                        // we should block it even if the server auto-created it.
-                        // DISABLED: Blocking was causing false positives on valid Google logins
-                        /*
-                         * if (isActuallyNewRegistration || signInResponse.getData() == null ||
-                         * signInResponse.getData().getUser() == null) {
-                         * Log.w(TAG, "Blocking suspected auto-registration: " + message);
-                         * runOnUiThread(() -> showError("Account Not Found",
-                         * "Account not found. Please register first before signing in with Google."));
-                         * signOutFromGoogle();
-                         * return;
-                         * }
-                         */
-
-                        // If we got here, it's a truly existing user
                         handleGoogleLoginSuccess(signInResponse);
                     } else {
                         // API returned success: false
@@ -785,22 +743,6 @@ public class MainActivity extends AppCompatActivity {
                 Log.e(TAG, "Location detection failed: " + error);
             }
         });
-    }
-
-    // Reverse geocode latitude and longitude to get city name
-    private String reverseGeocodeLocation(double latitude, double longitude) {
-        try {
-            Log.d(TAG, "Reverse geocoding - Lat: " + latitude + ", Lng: " + longitude);
-
-            // Use the LocationConfig to find the location name
-            String locationName = LocationConfig.findLocationName(latitude, longitude);
-            Log.d(TAG, "Found location: " + locationName);
-            return locationName;
-
-        } catch (Exception e) {
-            Log.e(TAG, "Reverse geocoding failed", e);
-            return "Metro Manila Area"; // Default fallback
-        }
     }
 
     /**
