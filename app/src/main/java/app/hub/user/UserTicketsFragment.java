@@ -301,16 +301,43 @@ public class UserTicketsFragment extends Fragment {
     }
 
     private void setupFilterTabs() {
-        tabRecent.setOnClickListener(v -> selectFilter("recent", tabRecent));
-        tabPending.setOnClickListener(v -> selectFilter("pending", tabPending));
-        tabInProgress.setOnClickListener(v -> selectFilter("in progress", tabInProgress));
-        tabCompleted.setOnClickListener(v -> selectFilter("completed", tabCompleted));
+        // Add null checks to prevent NullPointerException
+        if (tabRecent != null) {
+            tabRecent.setOnClickListener(v -> selectFilter("recent", tabRecent));
+        } else {
+            Log.e(TAG, "tabRecent is null - check layout file for R.id.tabRecent");
+        }
 
-        // Set initial selection to pending
-        selectFilter("pending", tabPending);
+        if (tabPending != null) {
+            tabPending.setOnClickListener(v -> selectFilter("pending", tabPending));
+        } else {
+            Log.e(TAG, "tabPending is null - check layout file for R.id.tabPending");
+        }
+
+        if (tabInProgress != null) {
+            tabInProgress.setOnClickListener(v -> selectFilter("in progress", tabInProgress));
+        } else {
+            Log.e(TAG, "tabInProgress is null - check layout file for R.id.tabInProgress");
+        }
+
+        if (tabCompleted != null) {
+            tabCompleted.setOnClickListener(v -> selectFilter("completed", tabCompleted));
+        } else {
+            Log.e(TAG, "tabCompleted is null - check layout file for R.id.tabCompleted");
+        }
+
+        // Set initial selection to pending only if tabPending exists
+        if (tabPending != null) {
+            selectFilter("pending", tabPending);
+        }
     }
 
     private void selectFilter(String filter, TextView selectedTab) {
+        if (selectedTab == null) {
+            Log.e(TAG, "selectedTab is null in selectFilter()");
+            return;
+        }
+
         currentFilter = filter;
 
         // Reset all tabs to inactive state
@@ -331,13 +358,20 @@ public class UserTicketsFragment extends Fragment {
         TextView[] tabs = { tabRecent, tabPending, tabInProgress, tabCompleted };
 
         for (TextView tab : tabs) {
-            tab.setBackgroundResource(R.drawable.bg_input_field);
-            tab.setTextColor(getResources().getColor(R.color.dark_gray));
-            tab.setTypeface(null, android.graphics.Typeface.NORMAL);
+            if (tab != null) {
+                tab.setBackgroundResource(R.drawable.bg_input_field);
+                tab.setTextColor(getResources().getColor(R.color.dark_gray));
+                tab.setTypeface(null, android.graphics.Typeface.NORMAL);
+            }
         }
     }
 
     private void setupSearch() {
+        if (etSearch == null) {
+            Log.e(TAG, "etSearch is null - check layout file for R.id.etSearch");
+            return;
+        }
+
         etSearch.addTextChangedListener(new android.text.TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -359,7 +393,11 @@ public class UserTicketsFragment extends Fragment {
             return;
         }
 
-        String searchQuery = etSearch.getText().toString().toLowerCase().trim();
+        String searchQuery = "";
+        if (etSearch != null) {
+            searchQuery = etSearch.getText().toString().toLowerCase().trim();
+        }
+
         List<TicketListResponse.TicketItem> filteredTickets = new ArrayList<>();
 
         for (TicketListResponse.TicketItem ticket : allTickets) {

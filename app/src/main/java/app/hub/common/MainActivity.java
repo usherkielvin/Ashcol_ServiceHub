@@ -1,30 +1,8 @@
 package app.hub.common;
 
-import app.hub.ForgotPasswordActivity;
-import app.hub.R;
-import app.hub.api.ApiClient;
-import app.hub.api.ApiService;
-
-import app.hub.api.GoogleSignInRequest;
-import app.hub.api.GoogleSignInResponse;
-import app.hub.api.LoginRequest;
-import app.hub.api.LoginResponse;
-import app.hub.api.UpdateProfileRequest;
-import app.hub.api.UserResponse;
-import app.hub.admin.AdminDashboardActivity;
-import app.hub.employee.EmployeeDashboardActivity;
-import app.hub.manager.ManagerDashboardActivity;
-import app.hub.user.DashboardActivity;
-import app.hub.util.EmailValidator;
-import app.hub.util.FCMTokenHelper;
-import app.hub.util.LocationConfig;
-import app.hub.util.UserLocationManager;
-import app.hub.util.TokenManager;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.location.Location;
-import android.location.LocationManager;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -35,12 +13,13 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.splashscreen.SplashScreen;
 
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
@@ -50,9 +29,6 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.button.MaterialButton;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.gson.Gson;
@@ -60,6 +36,22 @@ import com.google.gson.JsonObject;
 
 import java.io.IOException;
 
+import app.hub.ForgotPasswordActivity;
+import app.hub.R;
+import app.hub.admin.AdminDashboardActivity;
+import app.hub.api.ApiClient;
+import app.hub.api.ApiService;
+import app.hub.api.GoogleSignInRequest;
+import app.hub.api.GoogleSignInResponse;
+import app.hub.api.LoginRequest;
+import app.hub.api.LoginResponse;
+import app.hub.employee.EmployeeDashboardActivity;
+import app.hub.manager.ManagerDashboardActivity;
+import app.hub.user.DashboardActivity;
+import app.hub.util.EmailValidator;
+import app.hub.util.FCMTokenHelper;
+import app.hub.util.TokenManager;
+import app.hub.util.UserLocationManager;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -68,12 +60,11 @@ import retrofit2.Response;
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
-    private static final int RC_SIGN_IN = 9001;
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1001;
     private TokenManager tokenManager;
     private GoogleSignInClient googleSignInClient;
-
     private UserLocationManager userLocationManager;
+    private ActivityResultLauncher<Intent> googleSignInLauncher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,6 +76,16 @@ public class MainActivity extends AppCompatActivity {
 
         tokenManager = new TokenManager(this);
         userLocationManager = new UserLocationManager(this);
+
+        // Register Google Sign-In launcher
+        googleSignInLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                        Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(result.getData());
+                        handleGoogleSignInResult(task);
+                    }
+                });
 
         // Check if already logged in
         if (tokenManager.isLoggedIn()) {
@@ -214,31 +215,17 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupSocialLoginButtons() {
-        // Google Sign-In button
         Button googleButton = findViewById(R.id.btnGoogle);
         if (googleButton != null) {
-            googleButton.setOnClickListener(v -> {
-                signInWithGoogle();
-            });
+            googleButton.setOnClickListener(v -> signInWithGoogle());
         }
     }
 
     private void signInWithGoogle() {
-        // Sign out first to ensure the user can select an account every time
         googleSignInClient.signOut().addOnCompleteListener(task -> {
             Intent signInIntent = googleSignInClient.getSignInIntent();
-            startActivityForResult(signInIntent, RC_SIGN_IN);
+            googleSignInLauncher.launch(signInIntent);
         });
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        if (requestCode == RC_SIGN_IN) {
-            Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
-            handleGoogleSignInResult(task);
-        }
     }
 
     private void handleGoogleSignInResult(Task<GoogleSignInAccount> completedTask) {
@@ -246,7 +233,6 @@ public class MainActivity extends AppCompatActivity {
             GoogleSignInAccount account = completedTask.getResult(ApiException.class);
             if (account != null) {
                 String email = account.getEmail();
-                String displayName = account.getDisplayName();
                 String givenName = account.getGivenName();
                 String familyName = account.getFamilyName();
                 String idToken = account.getIdToken();
@@ -258,25 +244,13 @@ public class MainActivity extends AppCompatActivity {
             }
         } catch (ApiException e) {
             Log.e(TAG, "Google Sign-In failed: " + e.getStatusCode(), e);
-            String errorMessage = "Google Sign-In failed";
-
-            switch (e.getStatusCode()) {
-                case 10: // DEVELOPER_ERROR
-                    errorMessage = "Google Sign-In not configured. Please contact support.";
-                    break;
-                case 12501: // SIGN_IN_CANCELLED
-                    errorMessage = "Sign-in was cancelled";
-                    break;
-                case 7: // NETWORK_ERROR
-                    errorMessage = "Network error. Please check your connection.";
-                    break;
-                case 8: // INTERNAL_ERROR
-                    errorMessage = "Google Sign-In error. Please try again.";
-                    break;
-                default:
-                    errorMessage = "Google Sign-In failed. Error code: " + e.getStatusCode();
-                    break;
-            }
+            String errorMessage = switch (e.getStatusCode()) {
+                case 10 -> "Google Sign-In not configured. Please contact support."; // DEVELOPER_ERROR
+                case 12501 -> "Sign-in was cancelled"; // SIGN_IN_CANCELLED
+                case 7 -> "Network error. Please check your connection."; // NETWORK_ERROR
+                case 8 -> "Google Sign-In error. Please try again."; // INTERNAL_ERROR
+                default -> "Google Sign-In failed. Error code: " + e.getStatusCode();
+            };
             Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show();
         }
     }
@@ -312,35 +286,7 @@ public class MainActivity extends AppCompatActivity {
                 if (response.isSuccessful() && response.body() != null) {
                     GoogleSignInResponse signInResponse = response.body();
 
-                    // IF SUCCESS: Backend might have found the user OR just created them.
                     if (signInResponse.isSuccess()) {
-                        // DETECT LEAK: Check if the message implies a NEW user was created
-                        String message = signInResponse.getMessage();
-                        boolean isActuallyNewRegistration = false;
-                        if (message != null) {
-                            String lowerMsg = message.toLowerCase();
-                            if (lowerMsg.contains("created") || lowerMsg.contains("registered")
-                                    || lowerMsg.contains("welcome")) {
-                                isActuallyNewRegistration = true;
-                            }
-                        }
-
-                        // DETECT LEAK: Check if we have valid user data.
-                        // If it's a "login" and the user is NOT in our database yet,
-                        // we should block it even if the server auto-created it.
-                        // DISABLED: Blocking was causing false positives on valid Google logins
-                        /*
-                         * if (isActuallyNewRegistration || signInResponse.getData() == null ||
-                         * signInResponse.getData().getUser() == null) {
-                         * Log.w(TAG, "Blocking suspected auto-registration: " + message);
-                         * runOnUiThread(() -> showError("Account Not Found",
-                         * "Account not found. Please register first before signing in with Google."));
-                         * signOutFromGoogle();
-                         * return;
-                         * }
-                         */
-
-                        // If we got here, it's a truly existing user
                         handleGoogleLoginSuccess(signInResponse);
                     } else {
                         // API returned success: false
@@ -350,14 +296,12 @@ public class MainActivity extends AppCompatActivity {
                         signOutFromGoogle();
                     }
                 } else {
-                    // API returned error code (e.g. 401, 404, 500)
                     String errorMsg = "Login failed. Please try again.";
-                    try {
-                        if (response.errorBody() != null) {
-                            String errorBody = response.errorBody().string();
+                    try (ResponseBody body = response.errorBody()) {
+                        if (body != null) {
+                            String errorBody = body.string();
                             Log.e(TAG, "Google login error: " + errorBody);
 
-                            // Check for account existence keywords in error body
                             String lowerError = errorBody.toLowerCase();
                             if (lowerError.contains("not found") || lowerError.contains("does not exist")
                                     || lowerError.contains("account")) {
@@ -461,9 +405,9 @@ public class MainActivity extends AppCompatActivity {
         LoginRequest request = new LoginRequest(email, password);
 
         Call<LoginResponse> call = apiService.login(request);
-        call.enqueue(new Callback<LoginResponse>() {
+        call.enqueue(new Callback<>() {
             @Override
-            public void onResponse(Call<LoginResponse> call, Response<LoginResponse> response) {
+            public void onResponse(@NonNull Call<LoginResponse> call, @NonNull Response<LoginResponse> response) {
                 runOnUiThread(() -> {
                     if (loginButton != null) {
                         loginButton.setEnabled(true);
@@ -513,7 +457,7 @@ public class MainActivity extends AppCompatActivity {
                             userName = userName.trim();
                         }
 
-                        if (userName != null && !userName.isEmpty()) {
+                        if (!userName.isEmpty()) {
                             tokenManager.saveName(userName);
                         }
 
@@ -521,12 +465,9 @@ public class MainActivity extends AppCompatActivity {
                         FCMTokenHelper.registerTokenWithBackend(MainActivity.this);
 
                         // Navigate to dashboard
-                        runOnUiThread(() -> {
-                            // Update location and then navigate
-                            updateLocationAndNavigate(user.getRole(), user.getEmail());
-                        });
+                        updateLocationAndNavigate(user.getRole(), user.getEmail());
                     } else {
-                        final String message = loginResponse != null && loginResponse.getMessage() != null
+                        final String message = loginResponse.getMessage() != null
                                 ? loginResponse.getMessage()
                                 : "Login failed";
                         runOnUiThread(() -> showError("Login Failed", message));
@@ -551,7 +492,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onFailure(Call<LoginResponse> call, Throwable t) {
+            public void onFailure(@NonNull Call<LoginResponse> call, @NonNull Throwable t) {
                 runOnUiThread(() -> {
                     if (loginButton != null) {
                         loginButton.setEnabled(true);
@@ -559,14 +500,15 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
 
-                // Check if it's a JSON parsing error
                 String errorMsg;
                 if (t.getMessage() != null && t.getMessage().contains("Expected BEGIN_OBJECT but was STRING")) {
-                    errorMsg = "Server returned an unexpected response format.\n\n" +
-                            "Please check:\n" +
-                            "1. Laravel server is running correctly\n" +
-                            "2. Server is returning JSON responses\n" +
-                            "3. Check server logs for errors";
+                    errorMsg = """
+                            Server returned an unexpected response format.
+
+                            Please check:
+                            1. Laravel server is running correctly
+                            2. Server is returning JSON responses
+                            3. Check server logs for errors""";
                 } else {
                     errorMsg = getConnectionErrorMessage(t);
                 }
@@ -598,14 +540,13 @@ public class MainActivity extends AppCompatActivity {
      * Handles cases where server returns JSON error or plain text
      */
     private String parseErrorResponse(Response<LoginResponse> response) {
-        ResponseBody errorBody = response.errorBody();
-        if (errorBody == null) {
-            return null;
-        }
+        try (ResponseBody errorBody = response.errorBody()) {
+            if (errorBody == null) {
+                return null;
+            }
 
-        try {
             String errorString = errorBody.string();
-            if (errorString == null || errorString.isEmpty()) {
+            if (errorString.isEmpty()) {
                 return null;
             }
 
@@ -685,34 +626,41 @@ public class MainActivity extends AppCompatActivity {
 
         String message = t.getMessage();
         String baseUrl = ApiClient.getBaseUrl();
-        StringBuilder errorMsg = new StringBuilder();
 
         if (message.contains("Failed to connect") || message.contains("Unable to resolve host")) {
-            errorMsg.append("❌ Cannot connect to server\n\n");
-            errorMsg.append("Trying to reach: ").append(baseUrl).append("/api/v1/login\n\n");
-            errorMsg.append("Please check:\n");
-            errorMsg.append("1. Laravel server is running: php artisan serve\n");
-            errorMsg.append("2. Server is on port 8000 (default)\n");
-            errorMsg.append("3. For emulator, use: http://10.0.2.2:8000\n");
-            errorMsg.append("4. For physical device, use your computer's IP\n");
-            errorMsg.append("5. Check ApiClient.java BASE_URL setting\n");
-            errorMsg.append("6. Verify network_security_config.xml allows cleartext\n\n");
-            errorMsg.append("Test in browser: ").append(baseUrl).append("/api/v1/login");
-        } else if (message.contains("timeout")) {
-            errorMsg.append("⏱ Connection timeout\n\n");
-            errorMsg.append("Server may be slow or unreachable.\n");
-            errorMsg.append("Check if Laravel server is running and accessible.");
-        } else if (message.contains("Connection refused")) {
-            errorMsg.append("🔌 Connection refused\n\n");
-            errorMsg.append("Server is not running or not accessible.\n ");
-            errorMsg.append("Please start Laravel server: php artisan serve\n");
-            errorMsg.append("Expected URL: ").append(baseUrl);
-        } else {
-            errorMsg.append("❌ Connection error\n\n");
-            errorMsg.append("Details: ").append(message);
-        }
+            return String.format("""
+                    ❌ Cannot connect to server
 
-        return errorMsg.toString();
+                    Trying to reach: %s/api/v1/login
+
+                    Please check:
+                    1. Laravel server is running: php artisan serve
+                    2. Server is on port 8000 (default)
+                    3. For emulator, use: http://10.0.2.2:8000
+                    4. For physical device, use your computer's IP
+                    5. Check ApiClient.java BASE_URL setting
+                    6. Verify network_security_config.xml allows cleartext
+
+                    Test in browser: %s/api/v1/login""", baseUrl, baseUrl);
+        } else if (message.contains("timeout")) {
+            return """
+                    ⏱ Connection timeout
+
+                    Server may be slow or unreachable.
+                    Check if Laravel server is running and accessible.""";
+        } else if (message.contains("Connection refused")) {
+            return String.format("""
+                    🔌 Connection refused
+
+                    Server is not running or not accessible.
+                    Please start Laravel server: php artisan serve
+                    Expected URL: %s""", baseUrl);
+        } else {
+            return String.format("""
+                    ❌ Connection error
+
+                    Details: %s""", message);
+        }
     }
 
     // Request location permission when app starts
@@ -787,39 +735,24 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    // Reverse geocode latitude and longitude to get city name
-    private String reverseGeocodeLocation(double latitude, double longitude) {
-        try {
-            Log.d(TAG, "Reverse geocoding - Lat: " + latitude + ", Lng: " + longitude);
-
-            // Use the LocationConfig to find the location name
-            String locationName = LocationConfig.findLocationName(latitude, longitude);
-            Log.d(TAG, "Found location: " + locationName);
-            return locationName;
-
-        } catch (Exception e) {
-            Log.e(TAG, "Reverse geocoding failed", e);
-            return "Metro Manila Area"; // Default fallback
-        }
-    }
-
     /**
      * Update user's location and then navigate to dashboard
      * Ensures location update completes before navigation
      */
     private void updateLocationAndNavigate(Object user) {
+        // Navigate immediately for instant feedback
+        navigateToDashboard(user);
+
+        // Update location in the background
         userLocationManager.updateUserLocation(new UserLocationManager.LocationUpdateCallback() {
             @Override
             public void onLocationUpdated(String location) {
-                Log.d(TAG, "Location updated successfully: " + location);
-                navigateToDashboard(user);
+                Log.d(TAG, "Background location update successful: " + location);
             }
 
             @Override
             public void onLocationUpdateFailed(String error) {
-                Log.e(TAG, "Location update failed: " + error);
-                // Still navigate even if location update fails
-                navigateToDashboard(user);
+                Log.e(TAG, "Background location update failed: " + error);
             }
         });
     }
@@ -829,18 +762,19 @@ public class MainActivity extends AppCompatActivity {
      * Overloaded method for role and email parameters
      */
     private void updateLocationAndNavigate(String role, String email) {
+        // Navigate immediately for instant feedback
+        navigateToRoleDashboard(role, email);
+
+        // Update location in the background
         userLocationManager.updateUserLocation(new UserLocationManager.LocationUpdateCallback() {
             @Override
             public void onLocationUpdated(String location) {
-                Log.d(TAG, "Location updated successfully: " + location);
-                navigateToRoleDashboard(role, email);
+                Log.d(TAG, "Background location update successful: " + location);
             }
 
             @Override
             public void onLocationUpdateFailed(String error) {
-                Log.e(TAG, "Location update failed: " + error);
-                // Still navigate even if location update fails
-                navigateToRoleDashboard(role, email);
+                Log.e(TAG, "Background location update failed: " + error);
             }
         });
     }

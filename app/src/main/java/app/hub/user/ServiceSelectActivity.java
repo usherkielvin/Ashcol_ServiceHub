@@ -182,7 +182,8 @@ public class ServiceSelectActivity extends AppCompatActivity {
         String authToken = token.startsWith("Bearer ") ? token : "Bearer " + token;
 
         // Debug: Show coordinates being sent
-        Toast.makeText(this, "Sending: " + selectedLatitude + ", " + selectedLongitude, Toast.LENGTH_SHORT).show();
+        // Toast.makeText(this, "Sending: " + selectedLatitude + ", " +
+        // selectedLongitude, Toast.LENGTH_SHORT).show();
         Log.d(TAG, "Creating ticket with: Lat=" + selectedLatitude + ", Lng=" + selectedLongitude);
 
         createTicketButton.setEnabled(false);
