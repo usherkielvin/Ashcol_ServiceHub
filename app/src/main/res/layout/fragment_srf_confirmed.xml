@@ -65,7 +65,7 @@
                         android:textSize="20sp" />
 
                     <TextView
-                        android:id="@+id/tvTicketId"
+                        android:id="@+id/tvTicketID"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/poppins_bold"
@@ -118,7 +118,7 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnDone"
-            android:layout_width="match_parent"
+            android:layout_width="200dp"
             android:layout_height="56dp"
             android:layout_marginTop="40dp"
             android:backgroundTint="@color/colorPrimaryContainer"

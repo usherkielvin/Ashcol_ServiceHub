@@ -12,287 +12,106 @@
         android:layout_height="wrap_content"
         android:paddingBottom="100dp">
 
-        <!-- Green Header Section -->
+        <!-- Header Section (Stays Green in Dark Mode) -->
         <View
             android:id="@+id/headerBackground"
             android:layout_width="match_parent"
-            android:layout_height="180dp"
-            android:background="@drawable/header_green"
+            android:layout_height="90dp"
+            android:background="#1B4332"
             app:layout_constraintTop_toTopOf="parent" />
 
         <ImageView
             android:id="@+id/appLogo"
-            android:layout_width="163dp"
-            android:layout_height="63dp"
-            android:layout_marginTop="56dp"
+            android:layout_width="130dp"
+            android:layout_height="50dp"
+            android:layout_marginStart="16dp"
             android:contentDescription="@string/ashcol_corporation_logo"
             android:src="@drawable/ash"
-            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toBottomOf="@+id/headerBackground"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <TextView
-            android:id="@+id/tvAssignedBranch"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text="Loading branch..."
-            android:textColor="#FFFFFF"
-            android:textSize="12sp"
-            android:alpha="0.9"
-            android:visibility="gone"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/appLogo" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnNotification"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_marginTop="56dp"
-            android:layout_marginEnd="20dp"
-            android:contentDescription="@string/desc_notifications"
-            android:insetLeft="0dp"
-            android:insetTop="0dp"
-            android:insetRight="0dp"
-            android:insetBottom="0dp"
-            app:backgroundTint="?attr/colorSurface"
-            app:cornerRadius="24dp"
-            app:icon="@drawable/ic_notifications"
-            app:iconGravity="textStart"
-            app:iconPadding="0dp"
-            app:iconTint="@color/service_icon_tint"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <!-- Search Bar -->
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/searchCard"
-            android:layout_width="match_parent"
-            android:layout_height="54dp"
-            android:layout_marginStart="24dp"
-            android:layout_marginEnd="24dp"
-            app:cardBackgroundColor="?attr/colorSurface"
-            app:cardCornerRadius="12dp"
-            app:cardElevation="6dp"
-            app:layout_constraintBottom_toBottomOf="@id/headerBackground"
-            app:layout_constraintTop_toBottomOf="@id/headerBackground"
-            app:strokeWidth="0dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp">
-
-                <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:contentDescription="@string/desc_search"
-                    android:src="@drawable/ic_search"
-                    app:tint="?attr/colorOnSurfaceVariant" />
-
-                <EditText
-                    android:id="@+id/searchEditText"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_marginStart="12dp"
-                    android:layout_weight="1"
-                    android:autofillHints="none"
-                    android:background="@null"
-                    android:hint="@string/search_hint"
-                    android:inputType="text"
-                    android:textColor="?attr/colorOnSurface"
-                    android:textColorHint="?attr/colorOnSurfaceVariant"
-                    android:textSize="15sp" />
-
-                <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:contentDescription="@string/desc_chat"
-                    android:src="@drawable/ic_chat"
-                    app:tint="?attr/colorOnSurfaceVariant" />
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-        <!-- Quick Services -->
-        <TextView
-            android:id="@+id/tvQuickServices"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="24dp"
-            android:layout_marginTop="20dp"
-            android:text="@string/quick_services"
-            android:textColor="@color/quick_services_title_color"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/searchCard" />
+            app:layout_constraintTop_toTopOf="@+id/headerBackground" />
 
         <LinearLayout
-            android:id="@+id/servicesLayout"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:baselineAligned="false"
-            android:gravity="center"
-            android:orientation="horizontal"
-            app:layout_constraintTop_toBottomOf="@id/tvQuickServices">
+            android:layout_marginEnd="16dp"
+            android:gravity="end"
+            android:orientation="vertical"
+            app:layout_constraintBottom_toBottomOf="@+id/headerBackground"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/headerBackground">
 
-            <!-- Cleaning -->
-            <LinearLayout
-                android:layout_width="0dp"
+            <TextView
+                android:id="@+id/tvLocationLabel"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:orientation="vertical">
+                android:fontFamily="@font/poppins_medium"
+                android:text="Location"
+                android:textColor="@color/white"
+                android:textSize="12sp" />
 
-                <com.google.android.material.card.MaterialCardView
-                    android:layout_width="56dp"
-                    android:layout_height="56dp"
-                    app:cardBackgroundColor="?attr/colorSurface"
-                    app:cardCornerRadius="28dp"
-                    app:cardElevation="3dp"
-                    app:strokeColor="?attr/colorOutline"
-                    app:strokeWidth="1dp">
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/locationCard"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                app:cardBackgroundColor="#2D6A4F"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp"
+                app:strokeWidth="0dp">
 
-                    <ImageView
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:contentDescription="@string/service_cleaning"
-                        android:padding="14dp"
-                        android:src="@drawable/ic_home"
-                        app:tint="@color/service_icon_tint" />
-                </com.google.android.material.card.MaterialCardView>
-
-                <TextView
+                <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:text="@string/service_cleaning"
-                    android:textColor="?attr/colorOnSurface"
-                    android:textSize="13sp" />
-            </LinearLayout>
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="10dp"
+                    android:paddingVertical="4dp">
 
-            <!-- Repair -->
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:orientation="vertical">
-
-                <com.google.android.material.card.MaterialCardView
-                    android:layout_width="56dp"
-                    android:layout_height="56dp"
-                    app:cardBackgroundColor="?attr/colorSurface"
-                    app:cardCornerRadius="28dp"
-                    app:cardElevation="3dp"
-                    app:strokeColor="?attr/colorOutline"
-                    app:strokeWidth="1dp">
+                    <TextView
+                        android:id="@+id/tvAssignedBranch"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/poppins_semibold"
+                        android:text="Taal, Batangas, CALABARZON"
+                        android:textColor="@color/white"
+                        android:textSize="10sp" />
 
                     <ImageView
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:contentDescription="@string/service_repair"
-                        android:padding="14dp"
-                        android:src="@drawable/wrench"
-                        app:tint="@color/service_icon_tint" />
-                </com.google.android.material.card.MaterialCardView>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:text="@string/service_repair"
-                    android:textColor="?attr/colorOnSurface"
-                    android:textSize="13sp" />
-            </LinearLayout>
-
-            <!-- Installation -->
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:orientation="vertical">
-
-                <com.google.android.material.card.MaterialCardView
-                    android:layout_width="56dp"
-                    android:layout_height="56dp"
-                    app:cardBackgroundColor="?attr/colorSurface"
-                    app:cardCornerRadius="28dp"
-                    app:cardElevation="3dp"
-                    app:strokeColor="?attr/colorOutline"
-                    app:strokeWidth="1dp">
-
-                    <ImageView
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:contentDescription="@string/service_installation"
-                        android:padding="14dp"
-                        android:src="@drawable/wind"
-                        app:tint="@color/service_icon_tint" />
-                </com.google.android.material.card.MaterialCardView>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:text="@string/service_installation"
-                    android:textColor="?attr/colorOnSurface"
-                    android:textSize="13sp" />
-            </LinearLayout>
-
-            <!-- Maintenance -->
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:orientation="vertical">
-
-                <com.google.android.material.card.MaterialCardView
-                    android:layout_width="56dp"
-                    android:layout_height="56dp"
-                    app:cardBackgroundColor="?attr/colorSurface"
-                    app:cardCornerRadius="28dp"
-                    app:cardElevation="3dp"
-                    app:strokeColor="?attr/colorOutline"
-                    app:strokeWidth="1dp">
-
-                    <ImageView
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:contentDescription="@string/service_maintenance"
-                        android:padding="14dp"
-                        android:src="@drawable/nut"
-                        app:tint="@color/service_icon_tint" />
-                </com.google.android.material.card.MaterialCardView>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:text="@string/service_maintenance"
-                    android:textColor="?attr/colorOnSurface"
-                    android:textSize="13sp" />
-            </LinearLayout>
+                        android:layout_width="12dp"
+                        android:layout_height="12dp"
+                        android:layout_marginStart="4dp"
+                        android:src="@drawable/ic_pin"
+                        app:tint="@color/white" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
         </LinearLayout>
+
+        <!-- #SpecialForYou Section -->
+        <TextView
+            android:id="@+id/tvSpecialHeader"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="24dp"
+            android:layout_marginTop="24dp"
+            android:fontFamily="@font/poppins_bold"
+            android:text="#SpecialForYou"
+            android:textColor="@color/apps_green"
+            android:textSize="20sp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/headerBackground" />
 
         <!-- Promotion Banner -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/bannerCard"
             android:layout_width="match_parent"
-            android:layout_height="160dp"
+            android:layout_height="180dp"
             android:layout_marginStart="20dp"
-            android:layout_marginTop="28dp"
+            android:layout_marginTop="16dp"
             android:layout_marginEnd="20dp"
             app:cardCornerRadius="16dp"
             app:cardElevation="6dp"
-            app:layout_constraintTop_toBottomOf="@id/servicesLayout"
+            app:layout_constraintTop_toBottomOf="@id/tvSpecialHeader"
             app:strokeWidth="0dp">
 
             <androidx.viewpager2.widget.ViewPager2
@@ -307,7 +126,7 @@
             android:id="@+id/dotsLayout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="16dp"
             android:gravity="center"
             android:orientation="horizontal"
             app:layout_constraintEnd_toEndOf="parent"
@@ -315,24 +134,259 @@
             app:layout_constraintTop_toBottomOf="@id/bannerCard">
 
             <View
-                android:layout_width="24dp"
+                android:layout_width="32dp"
                 android:layout_height="8dp"
-                android:layout_marginEnd="4dp"
+                android:layout_marginEnd="6dp"
                 android:background="@drawable/dot_selected" />
 
             <View
                 android:layout_width="8dp"
                 android:layout_height="8dp"
-                android:layout_marginStart="4dp"
-                android:layout_marginEnd="4dp"
+                android:layout_marginStart="6dp"
+                android:layout_marginEnd="6dp"
                 android:background="@drawable/dot_unselected" />
 
             <View
                 android:layout_width="8dp"
                 android:layout_height="8dp"
-                android:layout_marginStart="4dp"
+                android:layout_marginStart="6dp"
                 android:background="@drawable/dot_unselected" />
         </LinearLayout>
+
+        <!-- Popular Services Section -->
+        <TextView
+            android:id="@+id/tvQuickServices"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="24dp"
+            android:layout_marginTop="24dp"
+            android:fontFamily="@font/poppins_bold"
+            android:text="Popular Services"
+            android:textColor="@color/apps_green"
+            android:textSize="20sp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/dotsLayout" />
+
+        <HorizontalScrollView
+            android:id="@+id/servicesHorizontalScroll"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:clipToPadding="false"
+            android:paddingHorizontal="16dp"
+            android:scrollbars="none"
+            app:layout_constraintTop_toBottomOf="@id/tvQuickServices">
+
+            <LinearLayout
+                android:id="@+id/servicesLayout"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <!-- AIR DUCT CLEANING -->
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="160dp"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="8dp"
+                    app:cardBackgroundColor="?attr/colorSurface"
+                    app:cardCornerRadius="12dp"
+                    app:cardElevation="4dp">
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+                        <ImageView
+                            android:layout_width="match_parent"
+                            android:layout_height="100dp"
+                            android:scaleType="centerCrop"
+                            android:src="@drawable/cleaning" />
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:padding="8dp">
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:fontFamily="@font/poppins_bold"
+                                android:text="AIR DUCT CLEANING"
+                                android:textColor="@color/apps_green"
+                                android:textSize="11sp" />
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="⭐ (200 + reviews)"
+                                android:textColor="?attr/colorOnSurfaceVariant"
+                                android:textSize="9sp" />
+                            <com.google.android.material.button.MaterialButton
+                                android:layout_width="match_parent"
+                                android:layout_height="32dp"
+                                android:layout_marginTop="6dp"
+                                android:insetTop="0dp"
+                                android:insetBottom="0dp"
+                                android:text="Book Now"
+                                android:textAllCaps="false"
+                                android:textSize="10sp"
+                                app:cornerRadius="6dp"
+                                app:backgroundTint="@color/status_green" />
+                        </LinearLayout>
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- VRF SYSTEM MAINTENANCE -->
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="160dp"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="8dp"
+                    app:cardBackgroundColor="?attr/colorSurface"
+                    app:cardCornerRadius="12dp"
+                    app:cardElevation="4dp">
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+                        <ImageView
+                            android:layout_width="match_parent"
+                            android:layout_height="100dp"
+                            android:scaleType="centerCrop"
+                            android:src="@drawable/maintenance" />
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:padding="8dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:fontFamily="@font/poppins_bold"
+                                android:text="VRF SYSTEM MAINTENANCE"
+                                android:textColor="@color/apps_green"
+                                android:textSize="11sp" />
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="⭐ (180 + reviews)"
+                                android:textColor="?attr/colorOnSurfaceVariant"
+                                android:textSize="9sp" />
+                            <com.google.android.material.button.MaterialButton
+                                android:layout_width="match_parent"
+                                android:layout_height="32dp"
+                                android:layout_marginTop="6dp"
+                                android:insetTop="0dp"
+                                android:insetBottom="0dp"
+                                android:text="Book Now"
+                                android:textAllCaps="false"
+                                android:textSize="10sp"
+                                app:cornerRadius="6dp"
+                                app:backgroundTint="@color/status_green"
+                                tools:ignore="TouchTargetSizeCheck"/>
+                        </LinearLayout>
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- AC INSTALLATION -->
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="160dp"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="8dp"
+                    app:cardBackgroundColor="?attr/colorSurface"
+                    app:cardCornerRadius="12dp"
+                    app:cardElevation="4dp">
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+                        <ImageView
+                            android:layout_width="match_parent"
+                            android:layout_height="100dp"
+                            android:scaleType="centerCrop"
+                            android:src="@drawable/installation" />
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:padding="8dp">
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:fontFamily="@font/poppins_bold"
+                                android:text="AC INSTALLATION"
+                                android:textColor="@color/apps_green"
+                                android:textSize="11sp" />
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="⭐ (300 + reviews)"
+                                android:textColor="?attr/colorOnSurfaceVariant"
+                                android:textSize="9sp" />
+                            <com.google.android.material.button.MaterialButton
+                                android:layout_width="match_parent"
+                                android:layout_height="32dp"
+                                android:layout_marginTop="6dp"
+                                android:insetTop="0dp"
+                                android:insetBottom="0dp"
+                                android:text="Book Now"
+                                android:textAllCaps="false"
+                                android:textSize="10sp"
+                                app:cornerRadius="6dp"
+                                app:backgroundTint="@color/status_green" />
+                        </LinearLayout>
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- VENTILATION REPAIR -->
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="160dp"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="8dp"
+                    app:cardBackgroundColor="?attr/colorSurface"
+                    app:cardCornerRadius="12dp"
+                    app:cardElevation="4dp">
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+                        <ImageView
+                            android:layout_width="match_parent"
+                            android:layout_height="100dp"
+                            android:scaleType="centerCrop"
+                            android:src="@drawable/repair" />
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:padding="8dp">
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:fontFamily="@font/poppins_bold"
+                                android:text="VENTILATION REPAIR"
+                                android:textColor="@color/apps_green"
+                                android:textSize="11sp" />
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="⭐ (230 + reviews)"
+                                android:textColor="?attr/colorOnSurfaceVariant"
+                                android:textSize="9sp" />
+                            <com.google.android.material.button.MaterialButton
+                                android:layout_width="match_parent"
+                                android:layout_height="32dp"
+                                android:layout_marginTop="6dp"
+                                android:insetTop="0dp"
+                                android:insetBottom="0dp"
+                                android:text="Book Now"
+                                android:textAllCaps="false"
+                                android:textSize="10sp"
+                                app:cornerRadius="6dp"
+                                app:backgroundTint="@color/status_green" />
+                        </LinearLayout>
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+            </LinearLayout>
+        </HorizontalScrollView>
 
         <!-- My Tickets Section -->
         <TextView
@@ -341,78 +395,163 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="24dp"
             android:layout_marginTop="24dp"
-            android:text="@string/my_tickets"
-            android:textColor="@color/quick_services_title_color"
+            android:fontFamily="@font/poppins_bold"
+            android:text="My Tickets"
+            android:textColor="@color/apps_green"
             android:textSize="20sp"
-            android:textStyle="bold"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/dotsLayout" />
+            app:layout_constraintTop_toBottomOf="@+id/servicesHorizontalScroll" />
 
         <TextView
             android:id="@+id/tvTicketsSubtitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/overview_history_tickets"
+            android:fontFamily="@font/poppins_medium"
+            android:text="Overview of history tickets"
             android:textColor="?attr/colorOnSurfaceVariant"
-            android:textSize="13sp"
+            android:textSize="12sp"
             android:textStyle="italic"
             app:layout_constraintStart_toStartOf="@id/tvMyTickets"
             app:layout_constraintTop_toBottomOf="@id/tvMyTickets" />
 
-        <com.google.android.material.card.MaterialCardView
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="20dp"
-            android:layout_marginTop="12dp"
-            android:layout_marginEnd="20dp"
-            app:cardBackgroundColor="?attr/colorSurface"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="3dp"
-            app:strokeColor="?attr/colorOutline"
-            app:strokeWidth="1dp"
+            android:layout_marginTop="16dp"
+            android:paddingHorizontal="16dp"
+            android:orientation="horizontal"
             app:layout_constraintTop_toBottomOf="@id/tvTicketsSubtitle">
 
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:padding="20dp">
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="0dp"
+                android:layout_height="140dp"
+                android:layout_margin="6dp"
+                android:layout_weight="1"
+                app:cardBackgroundColor="#A5D6A7"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="4dp"
+                app:strokeWidth="0dp">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/poppins_bold"
+                        android:text="03"
+                        android:textColor="@color/black"
+                        android:textSize="40sp" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/poppins_bold"
+                        android:text="New"
+                        android:textColor="@color/black"
+                        android:textSize="18sp" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
 
-                <TextView
-                    android:id="@+id/tvRecentHeader"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/recent_tickets"
-                    android:textColor="?attr/colorOnSurface"
-                    android:textSize="18sp"
-                    android:textStyle="bold"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="0dp"
+                android:layout_height="140dp"
+                android:layout_margin="6dp"
+                android:layout_weight="1"
+                app:cardBackgroundColor="#FFE0B2"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="4dp"
+                app:strokeWidth="0dp">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/poppins_bold"
+                        android:text="05"
+                        android:textColor="@color/black"
+                        android:textSize="40sp" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/poppins_bold"
+                        android:text="Pending"
+                        android:textColor="@color/black"
+                        android:textSize="18sp" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
 
-                <TextView
-                    android:id="@+id/ticketList"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:lineSpacingExtra="6dp"
-                    android:text="• TCKTid_001\n• TCKTid_013\n• TCKTid_015"
-                    android:textColor="?attr/colorOnSurface"
-                    android:textSize="16sp"
-                    android:textStyle="italic"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/tvRecentHeader" />
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="0dp"
+                android:layout_height="140dp"
+                android:layout_margin="6dp"
+                android:layout_weight="1"
+                app:cardBackgroundColor="#9FA8DA"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="4dp"
+                app:strokeWidth="0dp">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/poppins_bold"
+                        android:text="15"
+                        android:textColor="@color/black"
+                        android:textSize="40sp" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/poppins_bold"
+                        android:text="Completed"
+                        android:textColor="@color/black"
+                        android:textSize="14sp" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+        </LinearLayout>
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/see_more"
-                    android:textColor="?attr/colorOnSurfaceVariant"
-                    android:textSize="13sp"
-                    android:textStyle="italic"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent" />
+        <!-- Hidden search bar elements to maintain ID compatibility -->
+        <View
+            android:id="@+id/searchCard"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:visibility="gone"
+            app:layout_constraintTop_toBottomOf="@id/headerBackground"
+            app:layout_constraintStart_toStartOf="parent"/>
+        
+        <EditText
+            android:id="@+id/searchEditText"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:visibility="gone"
+            tools:ignore="MissingConstraints" />
 
-            </androidx.constraintlayout.widget.ConstraintLayout>
-        </com.google.android.material.card.MaterialCardView>
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnNotification"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:visibility="gone"
+            tools:ignore="MissingConstraints" />
+
+        <!-- Legacy elements hidden to maintain compatibility -->
+        <TextView
+            android:id="@+id/tvRecentHeader"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:visibility="gone"
+            tools:ignore="MissingConstraints" />
+        <TextView
+            android:id="@+id/ticketList"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:visibility="gone"
+            tools:ignore="MissingConstraints" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.core.widget.NestedScrollView>

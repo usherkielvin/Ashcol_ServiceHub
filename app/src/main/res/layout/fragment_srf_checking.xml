@@ -1,0 +1,328 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/app_background">
+
+    <!-- Header -->
+    <View
+        android:id="@+id/headerBg"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:background="@color/header_bg_color"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/tvHeaderTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/poppins_bold"
+        android:text="SERVICE REQUEST FORM"
+        android:textColor="@color/white"
+        android:textSize="18sp"
+        app:layout_constraintBottom_toBottomOf="@+id/headerBg"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/headerBg" />
+
+    <!-- Scrollable Content -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginBottom="16dp"
+        android:overScrollMode="never"
+        app:layout_constraintBottom_toTopOf="@+id/footerButtons"
+        app:layout_constraintTop_toBottomOf="@+id/headerBg">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <!-- Customer Information -->
+            <TextView
+                style="@style/SRFSectionHeader"
+                android:text="Customer Information" />
+
+            <TextView
+                style="@style/SRFLabel"
+                android:text="Fullname" />
+            <TextView
+                android:id="@+id/tvFullname"
+                style="@style/SRFValueBox"
+                android:text="Yooxie Batumbakal" />
+
+            <TextView
+                style="@style/SRFLabel"
+                android:text="Phone number" />
+            <TextView
+                android:id="@+id/tvPhoneNumber"
+                style="@style/SRFValueBox"
+                android:text="0312345678" />
+
+            <View style="@style/SRFDivider" />
+
+            <!-- Location Details -->
+            <TextView
+                style="@style/SRFSectionHeader"
+                android:text="Location Details" />
+
+            <TextView
+                style="@style/SRFLabel"
+                android:text="Address" />
+            <TextView
+                android:id="@+id/tvAddress"
+                style="@style/SRFValueBox"
+                android:text="112 Coral Street, Pasay, NCR" />
+
+            <TextView
+                android:id="@+id/tvLandmark"
+                style="@style/SRFValueBox"
+                android:layout_height="wrap_content"
+                android:minHeight="60dp"
+                android:layout_marginTop="8dp"
+                android:gravity="top|start"
+                android:paddingTop="8dp"
+                android:text="Please provide nearest landmarks or building color." />
+
+            <View style="@style/SRFDivider" />
+
+            <!-- Service Details -->
+            <TextView
+                style="@style/SRFSectionHeader"
+                android:text="Service Details" />
+
+            <TextView
+                style="@style/SRFLabel"
+                android:text="Service Type" />
+            <TextView
+                android:id="@+id/tvServiceType"
+                style="@style/SRFValueBox"
+                android:text="Cleaning" />
+
+            <TextView
+                style="@style/SRFLabel"
+                android:text="Specific Service" />
+            <TextView
+                android:id="@+id/tvSpecificService"
+                style="@style/SRFValueBox"
+                android:text="General Cleaning" />
+
+            <TextView
+                style="@style/SRFLabel"
+                android:text="Unit Type" />
+            <TextView
+                android:id="@+id/tvUnitType"
+                style="@style/SRFValueBox"
+                android:text="Split" />
+
+            <TextView
+                style="@style/SRFLabel"
+                android:text="Other details" />
+            <TextView
+                android:id="@+id/tvOtherDetails"
+                style="@style/SRFValueBox"
+                android:layout_height="wrap_content"
+                android:minHeight="60dp"
+                android:gravity="top|start"
+                android:paddingTop="8dp"
+                android:text="Add optional details of request" />
+
+            <TextView
+                style="@style/SRFLabel"
+                android:text="Attachment" />
+            <RelativeLayout
+                android:id="@+id/layoutAttachment"
+                android:layout_width="match_parent"
+                android:layout_height="150dp"
+                android:background="@drawable/bg_dashed_box">
+
+                <ImageView
+                    android:id="@+id/ivAttachment"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="centerCrop"
+                    android:visibility="gone"
+                    tools:visibility="visible" />
+
+                <TextView
+                    android:id="@+id/tvAttachmentPlaceholder"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerInParent="true"
+                    android:fontFamily="@font/poppins_medium"
+                    android:text="Attach photos or upload file"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:alpha="0.5"
+                    android:textSize="12sp" />
+            </RelativeLayout>
+
+            <View style="@style/SRFDivider" />
+
+            <!-- Schedule -->
+            <TextView
+                style="@style/SRFSectionHeader"
+                android:text="Schedule" />
+
+            <TextView
+                style="@style/SRFLabel"
+                android:text="Preferred Date" />
+            <TextView
+                android:id="@+id/tvPrefDate"
+                style="@style/SRFValueBox"
+                android:text="Feb 7, 2026" />
+
+            <TextView
+                style="@style/SRFLabel"
+                android:text="Preferred Time" />
+            <TextView
+                android:id="@+id/tvPrefTime"
+                style="@style/SRFValueBox"
+                android:text="9 : 00 AM" />
+
+            <View style="@style/SRFDivider" />
+
+            <!-- Summary -->
+            <TextView
+                style="@style/SRFSectionHeader"
+                android:text="Summary" />
+
+            <LinearLayout
+                android:id="@+id/summaryItemsContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <!-- Service Item Card -->
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="12dp"
+                    app:cardCornerRadius="8dp"
+                    app:cardElevation="0dp"
+                    app:cardBackgroundColor="?attr/colorSurface"
+                    app:strokeColor="@color/colorPrimaryContainer"
+                    app:strokeWidth="1dp">
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="12dp">
+                        <TextView
+                            android:id="@+id/tvSummaryItemName"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/poppins_bold"
+                            android:text="Split AC General Cleaning"
+                            android:textColor="?attr/colorOnSurface"
+                            android:textSize="14sp" />
+                        <TextView
+                            android:id="@+id/tvSummaryItemPrice"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/poppins_medium"
+                            android:text="Php 8, 000.00"
+                            android:textColor="?attr/colorOnSurfaceVariant"
+                            android:textSize="12sp" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+            </LinearLayout>
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                app:cardCornerRadius="8dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="?attr/colorSurface"
+                app:strokeColor="@color/colorPrimaryContainer"
+                app:strokeWidth="1dp">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/poppins_semibold"
+                        android:padding="8dp"
+                        android:text="Payment Summary"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textSize="14sp" />
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="@color/colorPrimaryContainer"
+                        android:alpha="0.2" />
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:padding="8dp">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/poppins_medium"
+                            android:text="Total (inc. VAT)"
+                            android:textColor="?attr/colorOnSurfaceVariant"
+                            android:textSize="12sp" />
+                        <TextView
+                            android:id="@+id/tvSummaryTotal"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentEnd="true"
+                            android:fontFamily="@font/poppins_medium"
+                            android:text="Php 8, 000.00"
+                            android:textColor="?attr/colorOnSurface"
+                            android:textSize="12sp" />
+                    </RelativeLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- Footer Buttons -->
+    <LinearLayout
+        android:id="@+id/footerButtons"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="16dp"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnBack"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:layout_weight="1"
+            android:backgroundTint="?attr/colorSurfaceVariant"
+            android:fontFamily="@font/poppins_bold"
+            android:text="Back"
+            android:textAllCaps="false"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            app:cornerRadius="24dp"
+            app:strokeColor="?attr/colorOutline"
+            app:strokeWidth="1dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnConfirmed"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_weight="1"
+            android:backgroundTint="@color/colorPrimaryContainer"
+            android:fontFamily="@font/poppins_bold"
+            android:text="Confirmed"
+            android:textAllCaps="false"
+            android:textColor="@color/colorOnPrimaryContainer"
+            app:cornerRadius="24dp"
+            app:strokeColor="@color/colorOnPrimaryContainer"
+            app:strokeWidth="1dp" />
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
