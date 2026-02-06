@@ -1,6 +1,16 @@
 package app.hub.api;
 
+import android.util.Log;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 import java.util.concurrent.TimeUnit;
+
+import okhttp3.OkHttpClient;
+import okhttp3.logging.HttpLoggingInterceptor;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 public class ApiClient {
     private static final String TAG = "ApiClient";
@@ -12,11 +22,7 @@ public class ApiClient {
     // Note: Trailing slash is required when endpoints don't start with /
     // LOCAL DEVELOPMENT - Using local Laravel server
     // Make sure to run: php artisan serve --host=0.0.0.0 --port=8000
-<<<<<<< HEAD
-    private static final String BASE_URL = " http://10.0.2.2:8000/";
-=======
-    private static final String BASE_URL = "http://172.26.193.100:8000/";
->>>>>>> d0142b7d9db6d958208e4e9201fc1544b4f08622
+    private static final String BASE_URL = "http://10.0.2.2:8000/";
 
     private static Retrofit retrofit = null;
 
