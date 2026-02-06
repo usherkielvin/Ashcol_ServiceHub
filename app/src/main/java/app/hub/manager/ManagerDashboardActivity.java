@@ -44,6 +44,9 @@ public class ManagerDashboardActivity extends AppCompatActivity {
 
         // Load all manager data at startup so tabs are instantly ready
         loadAllManagerData();
+
+        // Start Firebase real-time listeners
+        ManagerDataManager.startFirebaseListeners(this);
     }
 
     private void disableNavigationTooltips(BottomNavigationView navigationView) {
