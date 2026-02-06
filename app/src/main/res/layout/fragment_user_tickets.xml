@@ -119,16 +119,17 @@
             app:layout_constraintTop_toBottomOf="@id/headerSection"
             tools:listitem="@layout/item_ticket" />
 
-        <!-- Hidden elements to maintain ID compatibility -->
+        <!-- Hidden elements to maintain ID compatibility (Types fixed to prevent ClassCastException) -->
         <View android:id="@+id/headerBackground" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" tools:ignore="MissingConstraints" />
         <TextView android:id="@+id/tvSubtitle" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" tools:ignore="MissingConstraints" />
         <View android:id="@+id/searchCard" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" tools:ignore="MissingConstraints" />
-        <View android:id="@+id/etSearch" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" tools:ignore="MissingConstraints" />
+        <EditText android:id="@+id/etSearch" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" tools:ignore="MissingConstraints" />
         <View android:id="@+id/cvFilterWrapper" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" tools:ignore="MissingConstraints" />
         <View android:id="@+id/scrollTabs" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" tools:ignore="MissingConstraints" />
-        <View android:id="@+id/tabPending" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" tools:ignore="MissingConstraints" />
-        <View android:id="@+id/tabInProgress" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" tools:ignore="MissingConstraints" />
+        <TextView android:id="@+id/tabPending" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" tools:ignore="MissingConstraints" />
+        <TextView android:id="@+id/tabInProgress" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" tools:ignore="MissingConstraints" />
         <View android:id="@+id/listCard" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" tools:ignore="MissingConstraints" />
+        <View android:id="@+id/headerDivider" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" tools:ignore="MissingConstraints" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
