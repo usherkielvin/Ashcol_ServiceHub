@@ -244,25 +244,13 @@ public class MainActivity extends AppCompatActivity {
             }
         } catch (ApiException e) {
             Log.e(TAG, "Google Sign-In failed: " + e.getStatusCode(), e);
-            String errorMessage = "Google Sign-In failed";
-
-            switch (e.getStatusCode()) {
-                case 10: // DEVELOPER_ERROR
-                    errorMessage = "Google Sign-In not configured. Please contact support.";
-                    break;
-                case 12501: // SIGN_IN_CANCELLED
-                    errorMessage = "Sign-in was cancelled";
-                    break;
-                case 7: // NETWORK_ERROR
-                    errorMessage = "Network error. Please check your connection.";
-                    break;
-                case 8: // INTERNAL_ERROR
-                    errorMessage = "Google Sign-In error. Please try again.";
-                    break;
-                default:
-                    errorMessage = "Google Sign-In failed. Error code: " + e.getStatusCode();
-                    break;
-            }
+            String errorMessage = switch (e.getStatusCode()) {
+                case 10 -> "Google Sign-In not configured. Please contact support."; // DEVELOPER_ERROR
+                case 12501 -> "Sign-in was cancelled"; // SIGN_IN_CANCELLED
+                case 7 -> "Network error. Please check your connection."; // NETWORK_ERROR
+                case 8 -> "Google Sign-In error. Please try again."; // INTERNAL_ERROR
+                default -> "Google Sign-In failed. Error code: " + e.getStatusCode();
+            };
             Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show();
         }
     }
@@ -308,14 +296,12 @@ public class MainActivity extends AppCompatActivity {
                         signOutFromGoogle();
                     }
                 } else {
-                    // API returned error code (e.g. 401, 404, 500)
                     String errorMsg = "Login failed. Please try again.";
-                    try {
-                        if (response.errorBody() != null) {
-                            String errorBody = response.errorBody().string();
+                    try (ResponseBody body = response.errorBody()) {
+                        if (body != null) {
+                            String errorBody = body.string();
                             Log.e(TAG, "Google login error: " + errorBody);
 
-                            // Check for account existence keywords in error body
                             String lowerError = errorBody.toLowerCase();
                             if (lowerError.contains("not found") || lowerError.contains("does not exist")
                                     || lowerError.contains("account")) {
@@ -419,9 +405,9 @@ public class MainActivity extends AppCompatActivity {
         LoginRequest request = new LoginRequest(email, password);
 
         Call<LoginResponse> call = apiService.login(request);
-        call.enqueue(new Callback<LoginResponse>() {
+        call.enqueue(new Callback<>() {
             @Override
-            public void onResponse(Call<LoginResponse> call, Response<LoginResponse> response) {
+            public void onResponse(@NonNull Call<LoginResponse> call, @NonNull Response<LoginResponse> response) {
                 runOnUiThread(() -> {
                     if (loginButton != null) {
                         loginButton.setEnabled(true);
@@ -471,7 +457,7 @@ public class MainActivity extends AppCompatActivity {
                             userName = userName.trim();
                         }
 
-                        if (userName != null && !userName.isEmpty()) {
+                        if (!userName.isEmpty()) {
                             tokenManager.saveName(userName);
                         }
 
@@ -479,12 +465,9 @@ public class MainActivity extends AppCompatActivity {
                         FCMTokenHelper.registerTokenWithBackend(MainActivity.this);
 
                         // Navigate to dashboard
-                        runOnUiThread(() -> {
-                            // Update location and then navigate
-                            updateLocationAndNavigate(user.getRole(), user.getEmail());
-                        });
+                        updateLocationAndNavigate(user.getRole(), user.getEmail());
                     } else {
-                        final String message = loginResponse != null && loginResponse.getMessage() != null
+                        final String message = loginResponse.getMessage() != null
                                 ? loginResponse.getMessage()
                                 : "Login failed";
                         runOnUiThread(() -> showError("Login Failed", message));
@@ -509,7 +492,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onFailure(Call<LoginResponse> call, Throwable t) {
+            public void onFailure(@NonNull Call<LoginResponse> call, @NonNull Throwable t) {
                 runOnUiThread(() -> {
                     if (loginButton != null) {
                         loginButton.setEnabled(true);
@@ -517,14 +500,15 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
 
-                // Check if it's a JSON parsing error
                 String errorMsg;
                 if (t.getMessage() != null && t.getMessage().contains("Expected BEGIN_OBJECT but was STRING")) {
-                    errorMsg = "Server returned an unexpected response format.\n\n" +
-                            "Please check:\n" +
-                            "1. Laravel server is running correctly\n" +
-                            "2. Server is returning JSON responses\n" +
-                            "3. Check server logs for errors";
+                    errorMsg = """
+                            Server returned an unexpected response format.
+
+                            Please check:
+                            1. Laravel server is running correctly
+                            2. Server is returning JSON responses
+                            3. Check server logs for errors""";
                 } else {
                     errorMsg = getConnectionErrorMessage(t);
                 }
@@ -556,14 +540,13 @@ public class MainActivity extends AppCompatActivity {
      * Handles cases where server returns JSON error or plain text
      */
     private String parseErrorResponse(Response<LoginResponse> response) {
-        ResponseBody errorBody = response.errorBody();
-        if (errorBody == null) {
-            return null;
-        }
+        try (ResponseBody errorBody = response.errorBody()) {
+            if (errorBody == null) {
+                return null;
+            }
 
-        try {
             String errorString = errorBody.string();
-            if (errorString == null || errorString.isEmpty()) {
+            if (errorString.isEmpty()) {
                 return null;
             }
 
@@ -643,34 +626,41 @@ public class MainActivity extends AppCompatActivity {
 
         String message = t.getMessage();
         String baseUrl = ApiClient.getBaseUrl();
-        StringBuilder errorMsg = new StringBuilder();
 
         if (message.contains("Failed to connect") || message.contains("Unable to resolve host")) {
-            errorMsg.append("❌ Cannot connect to server\n\n");
-            errorMsg.append("Trying to reach: ").append(baseUrl).append("/api/v1/login\n\n");
-            errorMsg.append("Please check:\n");
-            errorMsg.append("1. Laravel server is running: php artisan serve\n");
-            errorMsg.append("2. Server is on port 8000 (default)\n");
-            errorMsg.append("3. For emulator, use: http://10.0.2.2:8000\n");
-            errorMsg.append("4. For physical device, use your computer's IP\n");
-            errorMsg.append("5. Check ApiClient.java BASE_URL setting\n");
-            errorMsg.append("6. Verify network_security_config.xml allows cleartext\n\n");
-            errorMsg.append("Test in browser: ").append(baseUrl).append("/api/v1/login");
-        } else if (message.contains("timeout")) {
-            errorMsg.append("⏱ Connection timeout\n\n");
-            errorMsg.append("Server may be slow or unreachable.\n");
-            errorMsg.append("Check if Laravel server is running and accessible.");
-        } else if (message.contains("Connection refused")) {
-            errorMsg.append("🔌 Connection refused\n\n");
-            errorMsg.append("Server is not running or not accessible.\n ");
-            errorMsg.append("Please start Laravel server: php artisan serve\n");
-            errorMsg.append("Expected URL: ").append(baseUrl);
-        } else {
-            errorMsg.append("❌ Connection error\n\n");
-            errorMsg.append("Details: ").append(message);
-        }
+            return String.format("""
+                    ❌ Cannot connect to server
 
-        return errorMsg.toString();
+                    Trying to reach: %s/api/v1/login
+
+                    Please check:
+                    1. Laravel server is running: php artisan serve
+                    2. Server is on port 8000 (default)
+                    3. For emulator, use: http://10.0.2.2:8000
+                    4. For physical device, use your computer's IP
+                    5. Check ApiClient.java BASE_URL setting
+                    6. Verify network_security_config.xml allows cleartext
+
+                    Test in browser: %s/api/v1/login""", baseUrl, baseUrl);
+        } else if (message.contains("timeout")) {
+            return """
+                    ⏱ Connection timeout
+
+                    Server may be slow or unreachable.
+                    Check if Laravel server is running and accessible.""";
+        } else if (message.contains("Connection refused")) {
+            return String.format("""
+                    🔌 Connection refused
+
+                    Server is not running or not accessible.
+                    Please start Laravel server: php artisan serve
+                    Expected URL: %s""", baseUrl);
+        } else {
+            return String.format("""
+                    ❌ Connection error
+
+                    Details: %s""", message);
+        }
     }
 
     // Request location permission when app starts
