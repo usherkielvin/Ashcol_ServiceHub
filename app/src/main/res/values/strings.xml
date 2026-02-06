@@ -248,4 +248,13 @@
     <string name="book_your_maintenance_today">Book Your Maintenance Today!</string>
     <string name="book_now">Book Now</string>
     <string name="default_branch_name">ASHCOL SERVICE HUB</string>
+
+    <string name="filter_title">Filter Results</string>
+    <string name="filter_date_label">Date Posted</string>
+    <string name="filter_date_value">Any Date</string>
+    <string name="filter_requests_label">Requests From</string>
+    <string name="filter_requests_value">Anyone</string>
+    <string name="filter_location_label">Tagged Location</string>
+    <string name="filter_location_value">Anywhere</string>
+    <string name="btn_show_results">Show results</string>
 </resources>
