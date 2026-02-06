@@ -110,6 +110,10 @@ public class ManagerDashboardActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+
+        // Start Firebase listeners for real-time updates
+        ManagerDataManager.startFirebaseListeners(this);
+
         // Only refresh if cache is stale (ManagerDataManager handles this internally)
         // This prevents unnecessary API calls when returning to the app quickly
         android.util.Log.d("ManagerDashboard", "App resumed - checking cache freshness");
@@ -137,6 +141,22 @@ public class ManagerDashboardActivity extends AppCompatActivity {
                 android.util.Log.e("ManagerDashboard", "Error refreshing data: " + error);
             }
         });
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        // Option to stop listeners here if we want to save battery/data when
+        // backgrounded
+        // For now we'll keep them until onDestroy for a "real-time" feel even when
+        // switching apps briefly
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // Stop Firebase listeners to prevent memory leaks
+        ManagerDataManager.stopFirebaseListeners();
     }
 
     /**

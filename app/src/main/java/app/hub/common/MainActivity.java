@@ -808,18 +808,19 @@ public class MainActivity extends AppCompatActivity {
      * Ensures location update completes before navigation
      */
     private void updateLocationAndNavigate(Object user) {
+        // Navigate immediately for instant feedback
+        navigateToDashboard(user);
+
+        // Update location in the background
         userLocationManager.updateUserLocation(new UserLocationManager.LocationUpdateCallback() {
             @Override
             public void onLocationUpdated(String location) {
-                Log.d(TAG, "Location updated successfully: " + location);
-                navigateToDashboard(user);
+                Log.d(TAG, "Background location update successful: " + location);
             }
 
             @Override
             public void onLocationUpdateFailed(String error) {
-                Log.e(TAG, "Location update failed: " + error);
-                // Still navigate even if location update fails
-                navigateToDashboard(user);
+                Log.e(TAG, "Background location update failed: " + error);
             }
         });
     }
@@ -829,18 +830,19 @@ public class MainActivity extends AppCompatActivity {
      * Overloaded method for role and email parameters
      */
     private void updateLocationAndNavigate(String role, String email) {
+        // Navigate immediately for instant feedback
+        navigateToRoleDashboard(role, email);
+
+        // Update location in the background
         userLocationManager.updateUserLocation(new UserLocationManager.LocationUpdateCallback() {
             @Override
             public void onLocationUpdated(String location) {
-                Log.d(TAG, "Location updated successfully: " + location);
-                navigateToRoleDashboard(role, email);
+                Log.d(TAG, "Background location update successful: " + location);
             }
 
             @Override
             public void onLocationUpdateFailed(String error) {
-                Log.e(TAG, "Location update failed: " + error);
-                // Still navigate even if location update fails
-                navigateToRoleDashboard(role, email);
+                Log.e(TAG, "Background location update failed: " + error);
             }
         });
     }

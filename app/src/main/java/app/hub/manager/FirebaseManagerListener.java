@@ -120,9 +120,9 @@ public class FirebaseManagerListener {
                         }
                     }
 
-                    // Refresh ticket cache from API to get complete data
+                    // Refresh all manager data from API to get complete data and update stats
                     // Firebase gives us the signal, API gives us the full data
-                    refreshTicketsFromApi();
+                    refreshDataFromApi();
 
                     if (connectionStateListener != null) {
                         connectionStateListener.onConnected();
@@ -131,15 +131,15 @@ public class FirebaseManagerListener {
     }
 
     /**
-     * Refresh tickets from API when Firestore signals a change
+     * Refresh tickets and dashboard stats from API when Firestore signals a change
      */
-    private void refreshTicketsFromApi() {
-        Log.d(TAG, "Refreshing tickets from API due to Firestore change");
+    private void refreshDataFromApi() {
+        Log.d(TAG, "Refreshing all manager data from API due to Firestore change");
 
-        ManagerDataManager.refreshTickets(context, new ManagerDataManager.DataLoadCallback() {
+        ManagerDataManager.loadAllData(context, new ManagerDataManager.DataLoadCallback() {
             @Override
             public void onEmployeesLoaded(String branchName, List<EmployeeResponse.Employee> employees) {
-                // Not used in this callback
+                // Already updated in cache by ManagerDataManager
             }
 
             @Override
@@ -148,18 +148,19 @@ public class FirebaseManagerListener {
             }
 
             @Override
-            public void onDashboardStatsLoaded(DashboardStatsResponse.Stats stats, List<DashboardStatsResponse.RecentTicket> recentTickets) {
-                // Not used in this callback
+            public void onDashboardStatsLoaded(DashboardStatsResponse.Stats stats,
+                    List<DashboardStatsResponse.RecentTicket> recentTickets) {
+                Log.i(TAG, "Dashboard stats refreshed from API");
             }
 
             @Override
             public void onLoadComplete() {
-                Log.d(TAG, "Ticket refresh complete");
+                Log.d(TAG, "Full data refresh complete");
             }
 
             @Override
             public void onLoadError(String error) {
-                Log.e(TAG, "Failed to refresh tickets from API: " + error);
+                Log.e(TAG, "Failed to refresh data from API: " + error);
             }
         });
     }
