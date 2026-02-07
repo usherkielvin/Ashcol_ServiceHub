@@ -32,7 +32,7 @@
         android:id="@+id/employeeCount"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="20 Employees"
+        android:text="20 Technicians"
         android:textColor="#E0E0E0"
         android:textSize="14sp"
         android:textStyle="italic"
@@ -88,7 +88,7 @@
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 
-    <!-- Add Employee Button -->
+    <!-- Add Technician Button -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnAddEmployee"
         android:layout_width="wrap_content"
@@ -98,14 +98,14 @@
         android:backgroundTint="#1B4332"
         android:paddingStart="16dp"
         android:paddingEnd="16dp"
-        android:text="+ Add Employee"
+        android:text="+ Add Technician"
         android:textAllCaps="false"
         android:textColor="#FFFFFF"
         app:cornerRadius="8dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/searchCard" />
 
-    <!-- Employee List with Pull-to-Refresh -->
+    <!-- Technician List with Pull-to-Refresh -->
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/swipeRefreshEmployees"
         android:layout_width="match_parent"

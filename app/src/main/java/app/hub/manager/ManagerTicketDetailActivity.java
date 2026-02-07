@@ -308,10 +308,10 @@ public class ManagerTicketDetailActivity extends AppCompatActivity
         switch (status.toLowerCase()) {
             case "pending":
             case "open": // Also handle "open" status
-                // Show both Assign Staff and Reject buttons for pending tickets
+                // Show both Assign Technician and Reject buttons for pending tickets
                 btnReject.setVisibility(View.VISIBLE);
                 btnAssignStaff.setVisibility(View.VISIBLE);
-                btnAssignStaff.setText("Assign Staff");
+                btnAssignStaff.setText("Assign Technician");
                 break;
             case "in progress":
             case "completed":
@@ -323,7 +323,7 @@ public class ManagerTicketDetailActivity extends AppCompatActivity
                 // For unknown statuses, show assign and reject buttons
                 btnReject.setVisibility(View.VISIBLE);
                 btnAssignStaff.setVisibility(View.VISIBLE);
-                btnAssignStaff.setText("Assign Staff");
+                btnAssignStaff.setText("Assign Technician");
                 break;
         }
     }

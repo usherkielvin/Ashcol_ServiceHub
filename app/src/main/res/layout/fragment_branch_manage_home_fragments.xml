@@ -272,7 +272,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="20dp"
             android:layout_marginTop="26dp"
-            android:text="Employee Overview"
+            android:text="Technician Overview"
             android:textColor="#215531"
             android:textSize="20sp"
             android:textStyle="bold"

@@ -166,12 +166,12 @@
     <string name="workload_subtitle">Overview of service activity</string>
     <string name="recent_activity">Recent Activity</string>
     <string name="see_more">See more</string>
-    <string name="employee_overview">Employee Overview</string>
-    <string name="employee_overview_subtitle">Team performance and statistics</string>
+    <string name="employee_overview">Technician Overview</string>
+    <string name="employee_overview_subtitle">Technician performance and statistics</string>
     <string name="key_metrics">Key Metrics</string>
     <string name="chart_month">December 2025</string>
     <string name="chart_percentage">75%</string>
-    <string name="legend_total_emp">Total Employees</string>
+    <string name="legend_total_emp">Total Technicians</string>
     <string name="legend_on_duty">On Duty</string>
     <string name="legend_new">New This Month</string>
     <string name="legend_on_leave">On Leave</string>

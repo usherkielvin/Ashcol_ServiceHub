@@ -148,7 +148,7 @@ public class ManagerAddEmployee extends AppCompatActivity {
                         managerBranch = userResponse.getData().getBranch();
 
                         if (managerBranch != null && !managerBranch.isEmpty()) {
-                            branchInfoText.setText("Employee will be assigned to: " + managerBranch);
+                            branchInfoText.setText("Technician will be assigned to: " + managerBranch);
                         } else {
                             branchInfoText.setText("Warning: You don't have a branch assigned. Please contact admin.");
                             managerBranch = null;
@@ -173,7 +173,7 @@ public class ManagerAddEmployee extends AppCompatActivity {
 
     private void createEmployee() {
         try {
-            android.util.Log.d("ManagerAddEmployee", "Starting employee creation process");
+            android.util.Log.d("ManagerAddEmployee", "Starting technician creation process");
 
             String firstName = firstNameInput.getText().toString().trim();
             String lastName = lastNameInput.getText().toString().trim();
@@ -230,20 +230,20 @@ public class ManagerAddEmployee extends AppCompatActivity {
 
             // Check if manager has a branch
             if (managerBranch == null || managerBranch.isEmpty()) {
-                Toast.makeText(this, "Cannot create employee: You don't have a branch assigned. Please contact admin.",
+                Toast.makeText(this, "Cannot create technician: You don't have a branch assigned. Please contact admin.",
                         Toast.LENGTH_LONG).show();
                 return;
             }
 
             android.util.Log.d("ManagerAddEmployee", "Validation passed - Manager branch: " + managerBranch);
 
-            // Create employee with manager's branch
+                // Create technician with manager's branch
             RegisterRequest registerRequest = new RegisterRequest(
                     username, firstName, lastName, email, "", "",
-                    password, confirmPassword, "employee", managerBranch);
+                    password, confirmPassword, "technician", managerBranch);
 
             android.util.Log.d("ManagerAddEmployee",
-                    "RegisterRequest created - Role: employee, Branch: " + managerBranch);
+                    "RegisterRequest created - Role: technician, Branch: " + managerBranch);
 
             ApiService apiService = ApiClient.getApiService();
             if (apiService == null) {
@@ -259,7 +259,7 @@ public class ManagerAddEmployee extends AppCompatActivity {
                 return;
             }
 
-            android.util.Log.d("ManagerAddEmployee", "Making API call to register employee");
+            android.util.Log.d("ManagerAddEmployee", "Making API call to register technician");
 
             call.enqueue(new Callback<RegisterResponse>() {
                 @Override
@@ -274,7 +274,7 @@ public class ManagerAddEmployee extends AppCompatActivity {
                                     "Register response success: " + registerResponse.isSuccess());
 
                             if (registerResponse.isSuccess()) {
-                                android.util.Log.d("ManagerAddEmployee", "Employee created successfully");
+                                android.util.Log.d("ManagerAddEmployee", "Technician created successfully");
 
                                 // Clear employee cache to refresh the list
                                 try {
@@ -288,7 +288,7 @@ public class ManagerAddEmployee extends AppCompatActivity {
 
                                     // Immediately trigger a refresh to load the new employee
                                     // This will notify all listeners (including ManagerEmployeeFragment)
-                                    android.util.Log.d("ManagerAddEmployee", "Triggering immediate employee refresh");
+                                    android.util.Log.d("ManagerAddEmployee", "Triggering immediate technician refresh");
                                     ManagerDataManager.refreshEmployees(ManagerAddEmployee.this,
                                             new ManagerDataManager.DataLoadCallback() {
                                                 @Override
@@ -326,7 +326,7 @@ public class ManagerAddEmployee extends AppCompatActivity {
                                 }
 
                                 Toast.makeText(ManagerAddEmployee.this,
-                                        "Employee created successfully and assigned to " + managerBranch,
+                                        "Technician created successfully and assigned to " + managerBranch,
                                         Toast.LENGTH_LONG).show();
 
                                 // Use a delayed finish to ensure toast is shown and data is refreshed
@@ -347,7 +347,7 @@ public class ManagerAddEmployee extends AppCompatActivity {
 
                             } else {
                                 android.util.Log.e("ManagerAddEmployee", "Registration failed - success=false");
-                                String errorMessage = "Failed to create employee";
+                                String errorMessage = "Failed to create technician";
                                 if (registerResponse.getErrors() != null) {
                                     StringBuilder sb = new StringBuilder();
                                     if (registerResponse.getErrors().getEmail() != null) {
@@ -376,7 +376,7 @@ public class ManagerAddEmployee extends AppCompatActivity {
                                     android.util.Log.e("ManagerAddEmployee", "Could not read error body", e);
                                 }
                             }
-                            Toast.makeText(ManagerAddEmployee.this, "Failed to create employee", Toast.LENGTH_SHORT)
+                                Toast.makeText(ManagerAddEmployee.this, "Failed to create technician", Toast.LENGTH_SHORT)
                                     .show();
                         }
                     } catch (Exception e) {
@@ -400,7 +400,7 @@ public class ManagerAddEmployee extends AppCompatActivity {
 
         } catch (Exception e) {
             android.util.Log.e("ManagerAddEmployee", "Exception in createEmployee method", e);
-            Toast.makeText(this, "Error creating employee: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Error creating technician: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
     }
 }

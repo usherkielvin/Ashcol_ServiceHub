@@ -89,10 +89,10 @@ public interface ApiService {
     Call<ProfilePhotoResponse> deleteProfilePhoto(
             @Header("Authorization") String token);
 
-    @GET("api/v1/employees")
+        @GET("api/v1/technicians")
     Call<EmployeeResponse> getEmployees(@Header("Authorization") String token);
 
-    @GET("api/v1/employees/by-branch")
+        @GET("api/v1/technicians/by-branch")
     Call<EmployeeResponse> getEmployeesByBranch(@Header("Authorization") String token,
             @retrofit2.http.Query("branch") String branchName);
 
@@ -130,10 +130,10 @@ public interface ApiService {
     Call<UpdateTicketStatusResponse> updateTicketStatus(@Header("Authorization") String token,
             @retrofit2.http.Path("ticketId") String ticketId, @Body UpdateTicketStatusRequest request);
 
-    @GET("api/v1/employee/tickets")
+        @GET("api/v1/technician/tickets")
     Call<TicketListResponse> getEmployeeTickets(@Header("Authorization") String token);
 
-    @GET("api/v1/employee/tickets")
+        @GET("api/v1/technician/tickets")
     Call<TicketListResponse> getEmployeeTicketsByStatus(@Header("Authorization") String token,
             @retrofit2.http.Query("status") String status);
 
@@ -149,7 +149,7 @@ public interface ApiService {
     Call<SetScheduleResponse> setTicketSchedule(@Header("Authorization") String token,
             @retrofit2.http.Path("ticketId") String ticketId, @Body SetScheduleRequest request);
 
-    @GET("api/v1/employee/schedule")
+        @GET("api/v1/technician/schedule")
     Call<EmployeeScheduleResponse> getEmployeeSchedule(@Header("Authorization") String token);
 
     @POST("api/v1/tickets/{ticketId}/complete-work")

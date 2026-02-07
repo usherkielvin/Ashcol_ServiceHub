@@ -8,7 +8,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Select an employee to assign this ticket:"
+        android:text="Select a technician to assign this ticket:"
         android:textSize="16sp"
         android:textColor="@color/dark_gray"
         android:layout_marginBottom="16dp" />

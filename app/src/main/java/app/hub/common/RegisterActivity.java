@@ -772,7 +772,7 @@ public class RegisterActivity extends AppCompatActivity {
 			case "manager":
 				intent = new Intent(this, app.hub.manager.ManagerDashboardActivity.class);
 				break;
-			case "employee":
+			case "technician":
 				intent = new Intent(this, app.hub.employee.EmployeeDashboardActivity.class);
 				break;
 			case "customer":

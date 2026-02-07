@@ -429,10 +429,10 @@ public class ManagerProfileFragment extends Fragment {
             return;
 
         String faqContent = "❓ FREQUENTLY ASKED QUESTIONS\n\n" +
-                "Q: How do I assign tickets to employees?\n" +
-                "A: Go to Work tab → Select ticket → Assign Employee\n\n" +
-                "Q: How do I view employee performance?\n" +
-                "A: Go to Employee tab → Select employee → View Details\n\n" +
+            "Q: How do I assign tickets to technicians?\n" +
+            "A: Go to Work tab → Select ticket → Assign Technician\n\n" +
+            "Q: How do I view technician performance?\n" +
+            "A: Go to Technician tab → Select technician → View Details\n\n" +
                 "Q: How do I generate reports?\n" +
                 "A: Go to Records tab → Select date range → Generate\n\n" +
                 "Q: How do I change my password?\n" +

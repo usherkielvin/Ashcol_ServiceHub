@@ -155,7 +155,7 @@ public class ManagerEmployeeFragment extends Fragment implements ManagerDataMana
         if (branchName != null && employees != null) {
             // Display cached data immediately
             locationTitle.setText(branchName);
-            employeeCount.setText(employees.size() + " Employee" + (employees.size() != 1 ? "s" : ""));
+            employeeCount.setText(employees.size() + " Technician" + (employees.size() != 1 ? "s" : ""));
 
             employeeList.clear();
             employeeList.addAll(employees);
@@ -194,7 +194,7 @@ public class ManagerEmployeeFragment extends Fragment implements ManagerDataMana
             return;
 
         locationTitle.setText(branchName);
-        employeeCount.setText(employees.size() + " Employee" + (employees.size() != 1 ? "s" : ""));
+        employeeCount.setText(employees.size() + " Technician" + (employees.size() != 1 ? "s" : ""));
 
         employeeList.clear();
         employeeList.addAll(employees);

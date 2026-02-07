@@ -177,7 +177,7 @@ public class EmployeeMapActivity extends AppCompatActivity implements OnMapReady
             employeeMarker = mMap.addMarker(new MarkerOptions()
                     .position(employeeLocation)
                     .title("Your Location")
-                    .snippet("Employee")
+                    .snippet("Technician")
                     .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));
         }
 

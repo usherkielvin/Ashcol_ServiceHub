@@ -47,7 +47,7 @@ public class EmployeePreviewAdapter extends RecyclerView.Adapter<EmployeePreview
         holder.tvEmployeeName.setText(fullName);
 
         // Set role
-        holder.tvEmployeeRole.setText(employee.getRole() != null ? employee.getRole() : "Employee");
+        holder.tvEmployeeRole.setText(employee.getRole() != null ? employee.getRole() : "Technician");
 
         // Set ticket count
         int ticketCount = employee.getTicketCount();

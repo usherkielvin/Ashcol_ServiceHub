@@ -163,7 +163,7 @@
                     android:id="@+id/employeesTitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Employees"
+                    android:text="Technicians"
                     android:textColor="#1B4332"
                     android:textSize="18sp"
                     android:textStyle="bold"

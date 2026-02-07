@@ -142,7 +142,8 @@ public class TicketDetailActivity extends AppCompatActivity implements OnMapRead
         tvStatus.setText("Status: " + ticket.getStatus());
         tvBranch.setText("Branch: " + (ticket.getBranch() != null ? ticket.getBranch() : "Not assigned"));
         tvAssignedStaff.setText(
-                "Assigned to: " + (ticket.getAssignedStaff() != null ? ticket.getAssignedStaff() : "Not assigned"));
+            "Assigned technician: "
+                + (ticket.getAssignedStaff() != null ? ticket.getAssignedStaff() : "Not assigned"));
         tvCreatedAt.setText("Created: " + ticket.getCreatedAt());
 
         // Set status color
@@ -155,7 +156,7 @@ public class TicketDetailActivity extends AppCompatActivity implements OnMapRead
         // Update map if ready and coordinates are valid
         updateMapLocation();
 
-        // Hide assigned staff if not assigned
+        // Hide assigned technician if not assigned
         if (ticket.getAssignedStaff() == null || ticket.getAssignedStaff().isEmpty()) {
             tvAssignedStaff.setVisibility(View.GONE);
         }

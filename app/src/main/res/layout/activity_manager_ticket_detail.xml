@@ -394,7 +394,7 @@
                 android:layout_marginEnd="8dp"
                 android:layout_weight="1"
                 android:backgroundTint="@color/service_icon_tint"
-                android:text="Assign Staff"
+                android:text="Assign Technician"
                 android:textAllCaps="false"
                 android:textColor="#FFFFFF"
                 android:textStyle="bold"

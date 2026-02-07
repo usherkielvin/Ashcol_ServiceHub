@@ -42,12 +42,12 @@ public class EmployeeAdapter extends RecyclerView.Adapter<EmployeeAdapter.Employ
         String displayName = (firstName + " " + lastName).trim();
         
         if (displayName.isEmpty()) {
-            displayName = employee.getEmail() != null ? employee.getEmail() : "Unknown Employee";
+            displayName = employee.getEmail() != null ? employee.getEmail() : "Unknown Technician";
         }
         holder.employeeName.setText(displayName);
         
         // Set role
-        holder.employeeDept.setText(employee.getRole() != null ? employee.getRole() : "Employee");
+        holder.employeeDept.setText(employee.getRole() != null ? employee.getRole() : "Technician");
         
         // Set branch
         holder.employeeStatus.setText(employee.getBranch() != null ? employee.getBranch() : "No Branch");

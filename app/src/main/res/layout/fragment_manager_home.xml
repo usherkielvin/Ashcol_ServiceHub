@@ -235,7 +235,7 @@
                     android:id="@+id/tvEmployeeCount"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="0 employees"
+                    android:text="0 technicians"
                     android:textColor="?attr/colorOnSurfaceVariant"
                     android:textSize="12sp"
                     app:layout_constraintEnd_toEndOf="parent"

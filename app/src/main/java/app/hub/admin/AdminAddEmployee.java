@@ -25,7 +25,7 @@ public class AdminAddEmployee extends AppCompatActivity {
     private String selectedBranch = "";
 
     // Available roles
-    private final String[] roles = {"employee", "manager"};
+    private final String[] roles = {"technician", "manager"};
     
     // Available branches
     private final String[] branches = {
@@ -134,13 +134,13 @@ public class AdminAddEmployee extends AppCompatActivity {
                 if (response.isSuccessful() && response.body() != null) {
                     RegisterResponse registerResponse = response.body();
                     if (registerResponse.isSuccess()) {
-                        Toast.makeText(AdminAddEmployee.this, "Employee created successfully", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(AdminAddEmployee.this, "Technician created successfully", Toast.LENGTH_SHORT).show();
                         finish();
                     } else {
-                        Toast.makeText(AdminAddEmployee.this, "Failed to create employee: " + registerResponse.getMessage(), Toast.LENGTH_LONG).show();
+                        Toast.makeText(AdminAddEmployee.this, "Failed to create technician: " + registerResponse.getMessage(), Toast.LENGTH_LONG).show();
                     }
                 } else {
-                    Toast.makeText(AdminAddEmployee.this, "Failed to create employee: Server error", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(AdminAddEmployee.this, "Failed to create technician: Server error", Toast.LENGTH_SHORT).show();
                 }
             }
 

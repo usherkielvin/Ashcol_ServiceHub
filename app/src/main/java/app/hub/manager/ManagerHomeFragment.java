@@ -203,7 +203,7 @@ public class ManagerHomeFragment extends Fragment implements ManagerDataManager.
 
     private void updateEmployeeCount(int count) {
         if (tvEmployeeCount != null) {
-            String countText = count + (count == 1 ? " employee" : " employees");
+            String countText = count + (count == 1 ? " technician" : " technicians");
             tvEmployeeCount.setText(countText);
         }
     }
