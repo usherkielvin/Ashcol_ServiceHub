@@ -135,7 +135,8 @@ public class MainActivity extends AppCompatActivity {
         switch (role) {
             case "admin" -> intent = new Intent(MainActivity.this, AdminDashboardActivity.class);
             case "manager" -> intent = new Intent(MainActivity.this, ManagerDashboardActivity.class);
-            case "technician" -> intent = new Intent(MainActivity.this, EmployeeDashboardActivity.class);
+            case "technician", "employee", "staff" ->
+                intent = new Intent(MainActivity.this, EmployeeDashboardActivity.class);
             default -> intent = new Intent(MainActivity.this, DashboardActivity.class);
         }
 
