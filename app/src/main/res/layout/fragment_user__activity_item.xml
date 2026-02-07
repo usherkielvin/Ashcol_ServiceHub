@@ -1,0 +1,529 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- Map Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardBackgroundColor="@android:color/white"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="4dp"
+            app:strokeWidth="0dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <fragment
+                    android:id="@+id/map"
+                    android:name="com.google.android.gms.maps.SupportMapFragment"
+                    android:layout_width="match_parent"
+                    android:layout_height="200dp" />
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="16dp">
+
+                    <ImageView
+                        android:id="@+id/ivTechnicianIcon"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/outline_background_dot_large_24"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:tint="#2196F3" />
+
+                    <View
+                        android:id="@+id/vMapDottedLine"
+                        android:layout_width="1dp"
+                        android:layout_height="30dp"
+                        android:background="@android:color/darker_gray"
+                        app:layout_constraintBottom_toTopOf="@+id/ivEtaIcon"
+                        app:layout_constraintEnd_toEndOf="@+id/ivTechnicianIcon"
+                        app:layout_constraintStart_toStartOf="@+id/ivTechnicianIcon"
+                        app:layout_constraintTop_toBottomOf="@+id/ivTechnicianIcon" />
+
+                    <TextView
+                        android:id="@+id/tvTechnicianLabel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="12dp"
+                        android:fontFamily="@font/poppins_medium"
+                        android:text="Technician"
+                        android:textColor="#757575"
+                        android:textSize="12sp"
+                        app:layout_constraintStart_toEndOf="@+id/ivTechnicianIcon"
+                        app:layout_constraintTop_toTopOf="@+id/ivTechnicianIcon" />
+
+                    <TextView
+                        android:id="@+id/tvTechnicianLocation"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/poppins_medium"
+                        android:text="112 Straberry St., Silang Cavite"
+                        android:textColor="@android:color/black"
+                        android:textSize="13sp"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="@+id/tvTechnicianLabel"
+                        app:layout_constraintTop_toBottomOf="@+id/tvTechnicianLabel" />
+
+                    <ImageView
+                        android:id="@+id/ivEtaIcon"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:layout_marginTop="32dp"
+                        android:src="@drawable/outline_background_dot_large_24"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/tvTechnicianLocation"
+                        app:tint="#F44336" />
+
+                    <TextView
+                        android:id="@+id/tvEtaLabel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="12dp"
+                        android:fontFamily="@font/poppins_medium"
+                        android:text="ETA"
+                        android:textColor="#757575"
+                        android:textSize="12sp"
+                        app:layout_constraintStart_toEndOf="@+id/ivEtaIcon"
+                        app:layout_constraintTop_toTopOf="@+id/ivEtaIcon" />
+
+                    <TextView
+                        android:id="@+id/tvEtaLocation"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/poppins_medium"
+                        android:text="Lot 7 Blk 6 M. Tinio St, Silang, Cavite"
+                        android:textColor="@android:color/black"
+                        android:textSize="13sp"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="@+id/tvEtaLabel"
+                        app:layout_constraintTop_toBottomOf="@+id/tvEtaLabel" />
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Technician Details Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardBackgroundColor="@android:color/white"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="4dp"
+            app:strokeWidth="0dp">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toStartOf="@+id/ivTechnicianPhoto"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/poppins_medium"
+                        android:text="Technician Details"
+                        android:textColor="#757575"
+                        android:textSize="14sp" />
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginVertical="8dp"
+                        android:background="#EEEEEE" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/poppins_semibold"
+                            android:text="Technician Name: "
+                            android:textColor="@android:color/black"
+                            android:textSize="13sp" />
+
+                        <TextView
+                            android:id="@+id/tvTechnicianName"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/poppins_medium"
+                            android:text="Johny Orlando"
+                            android:textColor="@android:color/black"
+                            android:textSize="13sp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/poppins_semibold"
+                            android:text="Contact number: "
+                            android:textColor="@android:color/black"
+                            android:textSize="13sp" />
+
+                        <TextView
+                            android:id="@+id/tvTechnicianContact"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/poppins_medium"
+                            android:text="09123456788"
+                            android:textColor="@android:color/black"
+                            android:textSize="13sp" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <ImageView
+                    android:id="@+id/ivTechnicianPhoto"
+                    android:layout_width="100dp"
+                    android:layout_height="0dp"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/ic_person"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Job Details Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardBackgroundColor="@android:color/white"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="4dp"
+            app:strokeWidth="0dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/poppins_medium"
+                    android:text="Job Details"
+                    android:textColor="#757575"
+                    android:textSize="14sp" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginVertical="8dp"
+                    android:background="#EEEEEE" />
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <TextView
+                        android:id="@+id/tvServiceTypeLabel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/poppins_semibold"
+                        android:text="Service Type: "
+                        android:textColor="@android:color/black"
+                        android:textSize="13sp" />
+
+                    <TextView
+                        android:id="@+id/tvServiceType"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_toEndOf="@id/tvServiceTypeLabel"
+                        android:fontFamily="@font/poppins_medium"
+                        android:text="Cleaning"
+                        android:textColor="@android:color/black"
+                        android:textSize="13sp" />
+
+                    <TextView
+                        android:id="@+id/tvTicketId"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentEnd="true"
+                        android:fontFamily="@font/poppins_medium"
+                        android:text="Ticket ID: TCTKid_1002"
+                        android:textColor="@android:color/black"
+                        android:textSize="13sp" />
+                </RelativeLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/poppins_semibold"
+                        android:text="Specific Service: "
+                        android:textColor="@android:color/black"
+                        android:textSize="13sp" />
+
+                    <TextView
+                        android:id="@+id/tvSpecificService"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/poppins_medium"
+                        android:text="AC Cleaning"
+                        android:textColor="@android:color/black"
+                        android:textSize="13sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/poppins_semibold"
+                        android:text="Schedule: "
+                        android:textColor="@android:color/black"
+                        android:textSize="13sp" />
+
+                    <TextView
+                        android:id="@+id/tvSchedule"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/poppins_medium"
+                        android:text="Feb 04, 2026 - 10 : 00 AM"
+                        android:textColor="@android:color/black"
+                        android:textSize="13sp" />
+                </LinearLayout>
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Tracking Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardBackgroundColor="@android:color/white"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="4dp"
+            app:strokeWidth="0dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/poppins_medium"
+                    android:text="Tracking"
+                    android:textColor="#757575"
+                    android:textSize="14sp" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginVertical="8dp"
+                    android:background="#EEEEEE" />
+
+                <TextView
+                    android:id="@+id/tvEtaMessage"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp"
+                    android:fontFamily="@font/poppins_bold"
+                    android:gravity="center"
+                    android:text="ETA: Arriving in 15 minutes"
+                    android:textColor="@android:color/black"
+                    android:textSize="14sp" />
+
+                <!-- Progress Steps with Dots -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:orientation="horizontal">
+
+                    <!-- Step 1: Assigned -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:orientation="vertical">
+                        <View
+                            android:layout_width="16dp"
+                            android:layout_height="16dp"
+                            android:background="@drawable/shape_circle_gray"
+                            android:backgroundTint="@color/status_green" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:fontFamily="@font/poppins_medium"
+                            android:text="Assigned"
+                            android:textColor="@color/status_green"
+                            android:textSize="10sp" />
+                    </LinearLayout>
+
+                    <!-- Connector -->
+                    <View
+                        android:layout_width="20dp"
+                        android:layout_height="1dp"
+                        android:layout_marginBottom="12dp"
+                        android:background="@color/status_green" />
+
+                    <!-- Step 2: OTW -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:orientation="vertical">
+                        <View
+                            android:layout_width="16dp"
+                            android:layout_height="16dp"
+                            android:background="@drawable/shape_circle_gray"
+                            android:backgroundTint="@color/status_green" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:fontFamily="@font/poppins_medium"
+                            android:text="OTW"
+                            android:textColor="@color/status_green"
+                            android:textSize="10sp" />
+                    </LinearLayout>
+
+                    <!-- Connector (Gray) -->
+                    <View
+                        android:layout_width="20dp"
+                        android:layout_height="1dp"
+                        android:layout_marginBottom="12dp"
+                        android:background="#BDBDBD" />
+
+                    <!-- Step 3: Arrived -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:orientation="vertical">
+                        <View
+                            android:layout_width="16dp"
+                            android:layout_height="16dp"
+                            android:background="@drawable/shape_circle_gray"
+                            android:backgroundTint="#BDBDBD" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:fontFamily="@font/poppins_medium"
+                            android:text="Arrived"
+                            android:textColor="#BDBDBD"
+                            android:textSize="10sp" />
+                    </LinearLayout>
+
+                    <!-- Connector -->
+                    <View
+                        android:layout_width="20dp"
+                        android:layout_height="1dp"
+                        android:layout_marginBottom="12dp"
+                        android:background="#BDBDBD" />
+
+                    <!-- Step 4: Working -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:orientation="vertical">
+                        <View
+                            android:layout_width="16dp"
+                            android:layout_height="16dp"
+                            android:background="@drawable/shape_circle_gray"
+                            android:backgroundTint="#BDBDBD" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:fontFamily="@font/poppins_medium"
+                            android:text="Working"
+                            android:textColor="#BDBDBD"
+                            android:textSize="10sp" />
+                    </LinearLayout>
+
+                    <!-- Connector -->
+                    <View
+                        android:layout_width="20dp"
+                        android:layout_height="1dp"
+                        android:layout_marginBottom="12dp"
+                        android:background="#BDBDBD" />
+
+                    <!-- Step 5: Completed -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:orientation="vertical">
+                        <View
+                            android:layout_width="16dp"
+                            android:layout_height="16dp"
+                            android:background="@drawable/shape_circle_gray"
+                            android:backgroundTint="#BDBDBD" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:fontFamily="@font/poppins_medium"
+                            android:text="Completed"
+                            android:textColor="#BDBDBD"
+                            android:textSize="10sp" />
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

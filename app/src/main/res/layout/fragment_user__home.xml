@@ -228,7 +228,8 @@
                                 android:textAllCaps="false"
                                 android:textSize="10sp"
                                 app:cornerRadius="6dp"
-                                app:backgroundTint="@color/status_green" />
+                                app:backgroundTint="@color/status_green"
+                                tools:ignore="TouchTargetSizeCheck"/>
                         </LinearLayout>
                     </LinearLayout>
                 </com.google.android.material.card.MaterialCardView>
