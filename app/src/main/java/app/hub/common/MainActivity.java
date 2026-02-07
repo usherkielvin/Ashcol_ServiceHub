@@ -1,14 +1,10 @@
 package app.hub.common;
 
-import android.Manifest;
 import android.content.Intent;
-import android.content.pm.PackageManager;
+import android.location.Location;
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.TextWatcher;
+import android.text.TextUtils;
 import android.util.Log;
-import android.view.KeyEvent;
-import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -16,10 +12,7 @@ import android.widget.Toast;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 import androidx.core.splashscreen.SplashScreen;
 
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
@@ -30,17 +23,18 @@ import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
-import com.google.android.material.textfield.TextInputLayout;
 import com.google.gson.Gson;
-import com.google.gson.JsonObject;
+import com.google.gson.JsonSyntaxException;
 
 import java.io.IOException;
 
 import app.hub.ForgotPasswordActivity;
 import app.hub.R;
+
 import app.hub.admin.AdminDashboardActivity;
 import app.hub.api.ApiClient;
 import app.hub.api.ApiService;
+import app.hub.api.ErrorResponse;
 import app.hub.api.GoogleSignInRequest;
 import app.hub.api.GoogleSignInResponse;
 import app.hub.api.LoginRequest;
@@ -48,168 +42,156 @@ import app.hub.api.LoginResponse;
 import app.hub.employee.EmployeeDashboardActivity;
 import app.hub.manager.ManagerDashboardActivity;
 import app.hub.user.DashboardActivity;
-import app.hub.util.EmailValidator;
 import app.hub.util.FCMTokenHelper;
+import app.hub.util.LocationHelper;
 import app.hub.util.TokenManager;
-import app.hub.util.UserLocationManager;
-import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+@SuppressWarnings("deprecation")
 public class MainActivity extends AppCompatActivity {
-
     private static final String TAG = "MainActivity";
-    private static final int LOCATION_PERMISSION_REQUEST_CODE = 1001;
+
     private TokenManager tokenManager;
+    private LocationHelper locationHelper;
+
     private GoogleSignInClient googleSignInClient;
-    private UserLocationManager userLocationManager;
     private ActivityResultLauncher<Intent> googleSignInLauncher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        // Install the splash screen
-        SplashScreen.installSplashScreen(this);
+        // Handle the splash screen transition.
+        SplashScreen splashScreen = SplashScreen.installSplashScreen(this);
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
         tokenManager = new TokenManager(this);
-        userLocationManager = new UserLocationManager(this);
+        locationHelper = new LocationHelper(this);
 
-        // Register Google Sign-In launcher
-        googleSignInLauncher = registerForActivityResult(
-                new ActivityResultContracts.StartActivityForResult(),
-                result -> {
-                    if (result.getResultCode() == RESULT_OK && result.getData() != null) {
-                        Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(result.getData());
-                        handleGoogleSignInResult(task);
-                    }
-                });
+        // Keep the splash screen visible for this Activity
+        splashScreen.setKeepOnScreenCondition(() -> {
+            checkLoginStatus();
+            return false;
+        });
 
-        // Check if already logged in
+        // setupPasswordToggle(); // Handled by TextInputLayout in XML
+        setupLoginButton();
+        setupForgotPassword();
+        setupRegisterLink();
+        setupGoogleSignIn();
+        setupSocialLoginButtons();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        // Check for existing Google Sign-In account
+        GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(this);
+        if (account != null) {
+            Log.d(TAG, getString(R.string.user_already_signed_in));
+            // Optional: Auto-login or update UI logic could go here
+        }
+    }
+
+    private void checkLoginStatus() {
         if (tokenManager.isLoggedIn()) {
-            final Intent intent;
-            if ("admin".equals(tokenManager.getRole())) {
-                intent = new Intent(this, AdminDashboardActivity.class);
-            } else if ("manager".equals(tokenManager.getRole())) {
-                intent = new Intent(this, ManagerDashboardActivity.class);
-            } else if ("employee".equals(tokenManager.getRole()) || "staff".equals(tokenManager.getRole())) {
-                intent = new Intent(this, EmployeeDashboardActivity.class);
-            } else {
-                intent = new Intent(this, DashboardActivity.class);
-                intent.putExtra(DashboardActivity.EXTRA_EMAIL, tokenManager.getEmail());
-            }
-            startActivity(intent);
-            finish();
-            return;
+            String role = tokenManager.getRole();
+            Log.d(TAG, String.format(getString(R.string.user_logged_in_roles), role));
+
+            // Fetch latest location on login
+            updateLocationAndNavigate(role, tokenManager.getEmail());
+        } else {
+            Log.d(TAG, getString(R.string.user_not_logged_in));
+            // Stay on MainActivity
+        }
+    }
+
+    private void updateLocationAndNavigate(String role, String email) {
+        if (locationHelper.isLocationPermissionGranted()) {
+            locationHelper.getCurrentLocation((Location location) -> {
+                if (location != null && email != null) {
+                    FCMTokenHelper.updateLocation(this, email, location.getLatitude(), location.getLongitude());
+                }
+                navigateToDashboard(role);
+            });
+        } else {
+            navigateToDashboard(role);
+        }
+    }
+
+    private void updateLocationAndNavigate(GoogleSignInResponse.User user) {
+        updateLocationAndNavigate(user.getRole(), user.getEmail());
+    }
+
+    private void navigateToDashboard(String role) {
+        if (role == null) {
+            // Default to user dashboard if role is missing
+            role = "user";
         }
 
-        TextInputEditText emailInput = findViewById(R.id.Email_val);
-        TextInputEditText passwordInput = findViewById(R.id.Pass_val);
-        TextInputLayout emailInputLayout = findViewById(R.id.emailInputLayout);
+        Intent intent;
+        switch (role) {
+            case "admin" -> intent = new Intent(MainActivity.this, AdminDashboardActivity.class);
+            case "manager" -> intent = new Intent(MainActivity.this, ManagerDashboardActivity.class);
+            case "technician" -> intent = new Intent(MainActivity.this, EmployeeDashboardActivity.class);
+            default -> intent = new Intent(MainActivity.this, DashboardActivity.class);
+        }
+
+        intent.addFlags(
+                Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finish();
+    }
+
+    /*
+     * private void setupPasswordToggle() {
+     * // Handled by TextInputLayout in XML
+     * }
+     */
+
+    private void setupLoginButton() {
         MaterialButton loginButton = findViewById(R.id.loginButton);
-        TextView registerButton = findViewById(R.id.registerButton);
-
-        // Real-time email validation
-        if (emailInput != null) {
-            emailInput.addTextChangedListener(new TextWatcher() {
-                @Override
-                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                }
-
-                @Override
-                public void onTextChanged(CharSequence s, int start, int before, int count) {
-                }
-
-                @Override
-                public void afterTextChanged(Editable s) {
-                    String email = s.toString().trim();
-                    if (email.isEmpty()) {
-                        if (emailInputLayout != null) {
-                            emailInputLayout.setError(null);
-                        }
-                        return;
-                    }
-
-                    // Allow static admin and manager usernames without validation
-                    if ("Admin1204".equals(email) || "Manager".equals(email)) {
-                        if (emailInputLayout != null) {
-                            emailInputLayout.setError(null);
-                        }
-                        return;
-                    }
-
-                    EmailValidator.ValidationResult result = EmailValidator.validate(email);
-                    if (!result.isValid() && email.length() > 5) {
-                        // Only show error if user has typed enough characters
-                        if (emailInputLayout != null) {
-                            emailInputLayout.setError(result.getMessage());
-                        }
-                    } else {
-                        if (emailInputLayout != null) {
-                            emailInputLayout.setError(null);
-                        }
-                    }
-                }
-            });
-        }
-
-        if (registerButton != null) {
-            registerButton.setOnClickListener(v -> {
-                Intent intent = new Intent(this, RegisterActivity.class);
-                startActivity(intent);
-            });
-        }
-
-        // Handle Enter key press on password field to trigger login
-        if (passwordInput != null) {
-            passwordInput.setOnEditorActionListener((v, actionId, event) -> {
-                if (actionId == EditorInfo.IME_ACTION_DONE || actionId == EditorInfo.IME_ACTION_GO) {
-                    performLogin();
-                    return true;
-                }
-                // Also handle physical Enter key press
-                if (event != null && event.getKeyCode() == KeyEvent.KEYCODE_ENTER
-                        && event.getAction() == KeyEvent.ACTION_DOWN) {
-                    performLogin();
-                    return true;
-                }
-                return false;
-            });
-        }
-
         if (loginButton != null) {
             loginButton.setOnClickListener(v -> performLogin());
         }
-
-        // Setup Forgot Password button
-        setupForgotPasswordButton();
-
-        // Setup Google Sign-In
-        setupGoogleSignIn();
-
-        // Setup social login buttons
-        setupSocialLoginButtons();
-
-        // Request location permission after splash screen
-        getWindow().getDecorView().post(() -> requestLocationPermission());
     }
 
-    private void signOutFromGoogle() {
-        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestEmail()
-                .requestProfile()
-                .build();
-        GoogleSignInClient googleSignInClient = GoogleSignIn.getClient(this, gso);
-        googleSignInClient.signOut();
+    private void setupForgotPassword() {
+        TextView forgotPassword = findViewById(R.id.forgotpassbtn); // Updated ID
+        if (forgotPassword != null) {
+            forgotPassword.setOnClickListener(v -> {
+                Intent intent = new Intent(MainActivity.this, ForgotPasswordActivity.class);
+                startActivity(intent);
+            });
+        }
+    }
+
+    private void setupRegisterLink() {
+        TextView registerLink = findViewById(R.id.registerButton); // Updated ID
+        if (registerLink != null) {
+            registerLink.setOnClickListener(v -> {
+                Intent intent = new Intent(MainActivity.this, app.hub.common.RegisterActivity.class);
+                startActivity(intent);
+            });
+        }
     }
 
     private void setupGoogleSignIn() {
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken(getString(R.string.server_client_id)) // Get this from Google Cloud Console
                 .requestEmail()
-                .requestProfile()
                 .build();
+
+        googleSignInLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == RESULT_OK) {
+                        Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(result.getData());
+                        handleGoogleSignInResult(task);
+                    }
+                });
 
         googleSignInClient = GoogleSignIn.getClient(this, gso);
     }
@@ -222,10 +204,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void signInWithGoogle() {
-        googleSignInClient.signOut().addOnCompleteListener(task -> {
-            Intent signInIntent = googleSignInClient.getSignInIntent();
-            googleSignInLauncher.launch(signInIntent);
-        });
+        if (googleSignInClient != null) {
+            googleSignInClient.signOut().addOnCompleteListener(task -> {
+                Intent signInIntent = googleSignInClient.getSignInIntent();
+                googleSignInLauncher.launch(signInIntent);
+            });
+        }
     }
 
     private void handleGoogleSignInResult(Task<GoogleSignInAccount> completedTask) {
@@ -243,14 +227,20 @@ public class MainActivity extends AppCompatActivity {
                 loginWithGoogle(email, givenName, familyName, idToken);
             }
         } catch (ApiException e) {
-            Log.e(TAG, "Google Sign-In failed: " + e.getStatusCode(), e);
-            String errorMessage = switch (e.getStatusCode()) {
-                case 10 -> "Google Sign-In not configured. Please contact support."; // DEVELOPER_ERROR
-                case 12501 -> "Sign-in was cancelled"; // SIGN_IN_CANCELLED
-                case 7 -> "Network error. Please check your connection."; // NETWORK_ERROR
-                case 8 -> "Google Sign-In error. Please try again."; // INTERNAL_ERROR
-                default -> "Google Sign-In failed. Error code: " + e.getStatusCode();
-            };
+            Log.e(TAG, String.format(getString(R.string.google_sign_in_failed_code), e.getStatusCode()), e);
+            String errorMessage;
+            switch (e.getStatusCode()) {
+                case 10 -> // DEVELOPER_ERROR
+                    errorMessage = getString(R.string.google_sign_in_config_error);
+                case 12501 -> // SIGN_IN_CANCELLED
+                    errorMessage = getString(R.string.google_sign_in_cancelled);
+                case 7 -> // NETWORK_ERROR
+                    errorMessage = getString(R.string.network_error);
+                case 8 -> // INTERNAL_ERROR
+                    errorMessage = getString(R.string.google_sign_in_internal_error);
+                default ->
+                    errorMessage = String.format(getString(R.string.google_sign_in_failed_code), e.getStatusCode());
+            }
             Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show();
         }
     }
@@ -259,7 +249,7 @@ public class MainActivity extends AppCompatActivity {
         MaterialButton loginButton = findViewById(R.id.loginButton);
         if (loginButton != null) {
             loginButton.setEnabled(false);
-            loginButton.setText("Logging in...");
+            loginButton.setText(R.string.logging_in);
         }
 
         ApiService apiService = ApiClient.getApiService();
@@ -279,7 +269,7 @@ public class MainActivity extends AppCompatActivity {
                 runOnUiThread(() -> {
                     if (loginButton != null) {
                         loginButton.setEnabled(true);
-                        loginButton.setText("Login");
+                        loginButton.setText(R.string.login);
                     }
                 });
 
@@ -291,28 +281,17 @@ public class MainActivity extends AppCompatActivity {
                     } else {
                         // API returned success: false
                         String errorMsg = signInResponse.getMessage() != null ? signInResponse.getMessage()
-                                : "Account not found. Please register first.";
-                        runOnUiThread(() -> showError("Login Failed", errorMsg));
+                                : getString(R.string.account_not_found_register);
+                        runOnUiThread(() -> showError(getString(R.string.login_failed_title), errorMsg));
                         signOutFromGoogle();
                     }
                 } else {
-                    String errorMsg = "Login failed. Please try again.";
-                    try (ResponseBody body = response.errorBody()) {
-                        if (body != null) {
-                            String errorBody = body.string();
-                            Log.e(TAG, "Google login error: " + errorBody);
-
-                            String lowerError = errorBody.toLowerCase();
-                            if (lowerError.contains("not found") || lowerError.contains("does not exist")
-                                    || lowerError.contains("account")) {
-                                errorMsg = "Account not found. Please register first.";
-                            }
-                        }
-                    } catch (Exception e) {
-                        Log.e(TAG, "Error reading error response", e);
+                    String errorMsg = parseGoogleLoginError(response);
+                    if (errorMsg == null || errorMsg.isEmpty()) {
+                        errorMsg = getString(R.string.login_failed_try_again);
                     }
                     final String finalErrorMsg = errorMsg;
-                    runOnUiThread(() -> showError("Login Failed", finalErrorMsg));
+                    runOnUiThread(() -> showError(getString(R.string.login_failed_title), finalErrorMsg));
                     signOutFromGoogle();
                 }
             }
@@ -322,12 +301,12 @@ public class MainActivity extends AppCompatActivity {
                 runOnUiThread(() -> {
                     if (loginButton != null) {
                         loginButton.setEnabled(true);
-                        loginButton.setText("Login");
+                        loginButton.setText(R.string.login);
                     }
                 });
-                Log.e(TAG, "Error logging in with Google: " + t.getMessage(), t);
-                runOnUiThread(() -> showError("Connection Error",
-                        "Failed to login. Please check your connection and try again."));
+                Log.e(TAG, String.format(getString(R.string.error_logging_in_google), t.getMessage()), t);
+                runOnUiThread(() -> showError(getString(R.string.connection_error_title),
+                        getString(R.string.connection_error_msg)));
                 signOutFromGoogle();
             }
         });
@@ -335,7 +314,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void handleGoogleLoginSuccess(GoogleSignInResponse response) {
         if (response.getData() == null || response.getData().getUser() == null) {
-            showError("Login Failed", "Invalid response from server.");
+            showError(getString(R.string.login_failed_title), getString(R.string.invalid_server_response));
             return;
         }
 
@@ -349,20 +328,8 @@ public class MainActivity extends AppCompatActivity {
         }
 
         // Build and save name
-        String firstName = user.getFirstName();
-        String lastName = user.getLastName();
-        StringBuilder nameBuilder = new StringBuilder();
-        if (firstName != null && !firstName.trim().isEmpty()) {
-            nameBuilder.append(firstName.trim());
-        }
-        if (lastName != null && !lastName.trim().isEmpty()) {
-            if (nameBuilder.length() > 0) {
-                nameBuilder.append(" ");
-            }
-            nameBuilder.append(lastName.trim());
-        }
-        String fullName = nameBuilder.toString();
-        if (!fullName.isEmpty()) {
+        String fullName = buildFullName(user.getFirstName(), user.getLastName());
+        if (!TextUtils.isEmpty(fullName)) {
             tokenManager.saveName(fullName);
         }
 
@@ -383,11 +350,12 @@ public class MainActivity extends AppCompatActivity {
         TextInputEditText emailInput = findViewById(R.id.Email_val);
         TextInputEditText passwordInput = findViewById(R.id.Pass_val);
 
-        String email = emailInput != null ? emailInput.getText().toString().trim() : "";
-        String password = passwordInput != null ? passwordInput.getText().toString() : "";
+        String email = emailInput != null && emailInput.getText() != null ? emailInput.getText().toString().trim() : "";
+        String password = passwordInput != null && passwordInput.getText() != null ? passwordInput.getText().toString()
+                : "";
 
         if (email.isEmpty() || password.isEmpty()) {
-            Toast.makeText(this, "Please enter email and password", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.enter_email_password), Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -398,7 +366,7 @@ public class MainActivity extends AppCompatActivity {
         final MaterialButton loginButton = findViewById(R.id.loginButton);
         if (loginButton != null) {
             loginButton.setEnabled(false);
-            loginButton.setText("Logging in...");
+            loginButton.setText(R.string.logging_in);
         }
 
         ApiService apiService = ApiClient.getApiService();
@@ -411,7 +379,7 @@ public class MainActivity extends AppCompatActivity {
                 runOnUiThread(() -> {
                     if (loginButton != null) {
                         loginButton.setEnabled(true);
-                        loginButton.setText("Login");
+                        loginButton.setText(R.string.login);
                     }
                 });
 
@@ -436,28 +404,13 @@ public class MainActivity extends AppCompatActivity {
 
                         // Get name - prefer name field, fallback to firstName + lastName
                         String userName = user.getName();
-                        if (userName == null || userName.trim().isEmpty()) {
-                            String firstName = user.getFirstName();
-                            String lastName = user.getLastName();
-
-                            // Build name from firstName and lastName
-                            StringBuilder nameBuilder = new StringBuilder();
-                            if (firstName != null && !firstName.trim().isEmpty()) {
-                                nameBuilder.append(firstName.trim());
-                            }
-                            if (lastName != null && !lastName.trim().isEmpty()) {
-                                if (nameBuilder.length() > 0) {
-                                    nameBuilder.append(" ");
-                                }
-                                nameBuilder.append(lastName.trim());
-                            }
-
-                            userName = nameBuilder.toString();
+                        if (TextUtils.isEmpty(userName)) {
+                            userName = buildFullName(user.getFirstName(), user.getLastName());
                         } else {
                             userName = userName.trim();
                         }
 
-                        if (!userName.isEmpty()) {
+                        if (!TextUtils.isEmpty(userName)) {
                             tokenManager.saveName(userName);
                         }
 
@@ -469,25 +422,25 @@ public class MainActivity extends AppCompatActivity {
                     } else {
                         final String message = loginResponse.getMessage() != null
                                 ? loginResponse.getMessage()
-                                : "Login failed";
-                        runOnUiThread(() -> showError("Login Failed", message));
+                                : getString(R.string.login_failed_try_again);
+                        runOnUiThread(() -> showError(getString(R.string.login_failed_title), message));
                     }
                 } else {
                     // Handle error response - try to parse error body
                     String errorMsg = parseErrorResponse(response);
                     if (errorMsg == null || errorMsg.isEmpty()) {
                         if (response.code() == 401) {
-                            errorMsg = "Invalid email or password";
+                            errorMsg = getString(R.string.invalid_email_password);
                         } else if (response.code() == 422) {
-                            errorMsg = "Invalid input. Please check your email and password.";
+                            errorMsg = getString(R.string.invalid_input_check);
                         } else if (response.code() == 500) {
-                            errorMsg = "Server error. Please try again later.";
+                            errorMsg = getString(R.string.server_error);
                         } else {
-                            errorMsg = "Login failed. Please try again.";
+                            errorMsg = getString(R.string.login_failed_try_again);
                         }
                     }
                     final String finalErrorMsg = errorMsg;
-                    runOnUiThread(() -> showError("Login Failed", finalErrorMsg));
+                    runOnUiThread(() -> showError(getString(R.string.login_failed_title), finalErrorMsg));
                 }
             }
 
@@ -496,355 +449,81 @@ public class MainActivity extends AppCompatActivity {
                 runOnUiThread(() -> {
                     if (loginButton != null) {
                         loginButton.setEnabled(true);
-                        loginButton.setText("Login");
+                        loginButton.setText(R.string.login);
                     }
                 });
 
-                String errorMsg;
-                if (t.getMessage() != null && t.getMessage().contains("Expected BEGIN_OBJECT but was STRING")) {
-                    errorMsg = """
-                            Server returned an unexpected response format.
-
-                            Please check:
-                            1. Laravel server is running correctly
-                            2. Server is returning JSON responses
-                            3. Check server logs for errors""";
-                } else {
-                    errorMsg = getConnectionErrorMessage(t);
-                }
-                runOnUiThread(() -> showError("Connection Error", errorMsg));
+                Log.e(TAG, "Error logging in: " + t.getMessage(), t);
+                runOnUiThread(() -> showError(getString(R.string.connection_error_title),
+                        getString(R.string.connection_error_msg)));
             }
         });
+    }
+
+    private String parseGoogleLoginError(Response<GoogleSignInResponse> response) {
+        okhttp3.ResponseBody errorBody = response.errorBody();
+        if (errorBody == null) {
+            return null;
+        }
+        try (okhttp3.ResponseBody ignored = errorBody) {
+            String errorString = errorBody.string();
+            Gson gson = new Gson();
+            GoogleSignInResponse errorResponse = gson.fromJson(errorString, GoogleSignInResponse.class);
+
+            if (errorResponse != null && errorResponse.getMessage() != null
+                    && !errorResponse.getMessage().isEmpty()) {
+                return errorResponse.getMessage();
+            }
+        } catch (IOException | JsonSyntaxException e) {
+            Log.e(TAG, "Error parsing Google Sign-In error response", e);
+        }
+
+        return null;
+    }
+
+    private String parseErrorResponse(Response<LoginResponse> response) {
+        okhttp3.ResponseBody errorBody = response.errorBody();
+        if (errorBody == null) {
+            return null;
+        }
+        try (okhttp3.ResponseBody ignored = errorBody) {
+            String errorString = errorBody.string();
+            Gson gson = new Gson();
+            ErrorResponse errorResponse = gson.fromJson(errorString, ErrorResponse.class);
+            if (errorResponse != null && errorResponse.getMessage() != null
+                    && !errorResponse.getMessage().isEmpty()) {
+                return errorResponse.getMessage();
+            }
+        } catch (IOException | JsonSyntaxException e) {
+            Log.e(TAG, "Error parsing error response", e);
+        }
+        return null;
+    }
+
+    private String buildFullName(String firstName, String lastName) {
+        StringBuilder nameBuilder = new StringBuilder();
+        if (!TextUtils.isEmpty(firstName)) {
+            nameBuilder.append(firstName.trim());
+        }
+        if (!TextUtils.isEmpty(lastName)) {
+            if (!TextUtils.isEmpty(nameBuilder)) {
+                nameBuilder.append(" ");
+            }
+            nameBuilder.append(lastName.trim());
+        }
+        return nameBuilder.toString();
     }
 
     private void showError(String title, String message) {
-        new AlertDialog.Builder(this)
-                .setTitle(title)
-                .setMessage(message)
-                .setPositiveButton("OK", null)
-                .show();
+        // Using a simple Toast for now, can be replaced with a dialog
+        // Toast has no title support by default, so we just show the message prefixed
+        Toast.makeText(this, title + ": " + message, Toast.LENGTH_LONG).show();
     }
 
-    private void setupForgotPasswordButton() {
-        TextView forgotPasswordBtn = findViewById(R.id.forgotpassbtn);
-        if (forgotPasswordBtn != null) {
-            forgotPasswordBtn.setOnClickListener(v -> {
-                Intent intent = new Intent(this, ForgotPasswordActivity.class);
-                startActivity(intent);
-            });
-        }
-    }
-
-    /**
-     * Parse error response from server
-     * Handles cases where server returns JSON error or plain text
-     */
-    private String parseErrorResponse(Response<LoginResponse> response) {
-        try (ResponseBody errorBody = response.errorBody()) {
-            if (errorBody == null) {
-                return null;
-            }
-
-            String errorString = errorBody.string();
-            if (errorString.isEmpty()) {
-                return null;
-            }
-
-            // Try to parse as JSON first
-            try {
-                // Use Gson to parse the JSON string (compatible with all Gson versions)
-                Gson gson = new Gson();
-                JsonObject jsonObject = gson.fromJson(errorString, JsonObject.class);
-
-                if (jsonObject != null) {
-                    // Try to get message field
-                    if (jsonObject.has("message") && jsonObject.get("message").isJsonPrimitive()) {
-                        String message = jsonObject.get("message").getAsString();
-                        if (message != null && !message.isEmpty()) {
-                            return message;
-                        }
-                    }
-
-                    // Try to get error field
-                    if (jsonObject.has("error") && jsonObject.get("error").isJsonPrimitive()) {
-                        String error = jsonObject.get("error").getAsString();
-                        if (error != null && !error.isEmpty()) {
-                            return error;
-                        }
-                    }
-
-                    // Try to get errors object (validation errors)
-                    if (jsonObject.has("errors") && jsonObject.get("errors").isJsonObject()) {
-                        StringBuilder errorMessages = new StringBuilder();
-                        JsonObject errorsObj = jsonObject.getAsJsonObject("errors");
-                        errorsObj.entrySet().forEach(entry -> {
-                            if (errorMessages.length() > 0) {
-                                errorMessages.append("\n");
-                            }
-                            try {
-                                if (entry.getValue().isJsonArray() && entry.getValue().getAsJsonArray().size() > 0) {
-                                    errorMessages.append(entry.getValue().getAsJsonArray().get(0).getAsString());
-                                } else if (entry.getValue().isJsonPrimitive()) {
-                                    errorMessages.append(entry.getValue().getAsString());
-                                }
-                            } catch (Exception e) {
-                                // Skip invalid error entries
-                            }
-                        });
-                        if (errorMessages.length() > 0) {
-                            return errorMessages.toString();
-                        }
-                    }
-                }
-            } catch (Exception e) {
-                // Not JSON, treat as plain text
-                Log.d("MainActivity", "Error response is not JSON: " + e.getMessage());
-            }
-
-            // If it's not JSON or doesn't have expected fields, check if it's HTML
-            if (errorString.trim().startsWith("<!DOCTYPE") || errorString.trim().startsWith("<html>")) {
-                return "Server returned an HTML error page. Please check server logs.";
-            }
-
-            // Return plain text (truncate if too long)
-            if (errorString.length() > 200) {
-                return errorString.substring(0, 200) + "...";
-            }
-            return errorString;
-
-        } catch (IOException e) {
-            Log.e("MainActivity", "Error reading error response: " + e.getMessage());
-            return null;
-        }
-    }
-
-    // Get user-friendly connection error message with diagnostics
-    private String getConnectionErrorMessage(Throwable t) {
-        if (t.getMessage() == null) {
-            return "Connection error. Please try again.";
-        }
-
-        String message = t.getMessage();
-        String baseUrl = ApiClient.getBaseUrl();
-
-        if (message.contains("Failed to connect") || message.contains("Unable to resolve host")) {
-            return String.format("""
-                    ❌ Cannot connect to server
-
-                    Trying to reach: %s/api/v1/login
-
-                    Please check:
-                    1. Laravel server is running: php artisan serve
-                    2. Server is on port 8000 (default)
-                    3. For emulator, use: http://10.0.2.2:8000
-                    4. For physical device, use your computer's IP
-                    5. Check ApiClient.java BASE_URL setting
-                    6. Verify network_security_config.xml allows cleartext
-
-                    Test in browser: %s/api/v1/login""", baseUrl, baseUrl);
-        } else if (message.contains("timeout")) {
-            return """
-                    ⏱ Connection timeout
-
-                    Server may be slow or unreachable.
-                    Check if Laravel server is running and accessible.""";
-        } else if (message.contains("Connection refused")) {
-            return String.format("""
-                    🔌 Connection refused
-
-                    Server is not running or not accessible.
-                    Please start Laravel server: php artisan serve
-                    Expected URL: %s""", baseUrl);
-        } else {
-            return String.format("""
-                    ❌ Connection error
-
-                    Details: %s""", message);
-        }
-    }
-
-    // Request location permission when app starts
-    private void requestLocationPermission() {
-        if (ContextCompat.checkSelfPermission(this,
-                Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-
-            // Show rationale dialog if user previously denied permission
-            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
-                    Manifest.permission.ACCESS_FINE_LOCATION)) {
-                new AlertDialog.Builder(this)
-                        .setTitle("Location Access Needed")
-                        .setMessage("This app needs location access to detect your current location for registration.")
-                        .setPositiveButton("OK", (dialog, which) -> ActivityCompat.requestPermissions(MainActivity.this,
-                                new String[] { Manifest.permission.ACCESS_FINE_LOCATION },
-                                LOCATION_PERMISSION_REQUEST_CODE))
-                        .setNegativeButton("Cancel", null)
-                        .show();
-            } else {
-                // No explanation needed - request the permission
-                ActivityCompat.requestPermissions(this,
-                        new String[] { Manifest.permission.ACCESS_FINE_LOCATION },
-                        LOCATION_PERMISSION_REQUEST_CODE);
-            }
-        } else {
-            // Permission already granted
-            detectLocation();
-        }
-    }
-
-    // Handle permission request result
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
-            @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
-        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Log.d(TAG, "Location permission granted");
-                detectLocation();
-            } else {
-                Log.d(TAG, "Location permission denied");
-                // Optional: Show toast if user permanently denied
-                if (!ActivityCompat.shouldShowRequestPermissionRationale(this,
-                        Manifest.permission.ACCESS_FINE_LOCATION)) {
-                    Toast.makeText(this, "Location permission was denied permanently",
-                            Toast.LENGTH_LONG).show();
-                }
-            }
-        }
-    }
-
-    // Detect and display current location
-    private void detectLocation() {
-        if (ContextCompat.checkSelfPermission(this,
-                Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            Log.d(TAG, "Location permission not granted");
-            return;
-        }
-
-        // Use the new UserLocationManager for location detection
-        userLocationManager.updateUserLocation(new UserLocationManager.LocationUpdateCallback() {
-            @Override
-            public void onLocationUpdated(String location) {
-                Log.d(TAG, "Location detected and updated: " + location);
-            }
-
-            @Override
-            public void onLocationUpdateFailed(String error) {
-                Log.e(TAG, "Location detection failed: " + error);
-            }
-        });
-    }
-
-    /**
-     * Update user's location and then navigate to dashboard
-     * Ensures location update completes before navigation
-     */
-    private void updateLocationAndNavigate(Object user) {
-        // Navigate immediately for instant feedback
-        navigateToDashboard(user);
-
-        // Update location in the background
-        userLocationManager.updateUserLocation(new UserLocationManager.LocationUpdateCallback() {
-            @Override
-            public void onLocationUpdated(String location) {
-                Log.d(TAG, "Background location update successful: " + location);
-            }
-
-            @Override
-            public void onLocationUpdateFailed(String error) {
-                Log.e(TAG, "Background location update failed: " + error);
-            }
-        });
-    }
-
-    /**
-     * Update user's location and then navigate to dashboard (for regular login)
-     * Overloaded method for role and email parameters
-     */
-    private void updateLocationAndNavigate(String role, String email) {
-        // Navigate immediately for instant feedback
-        navigateToRoleDashboard(role, email);
-
-        // Update location in the background
-        userLocationManager.updateUserLocation(new UserLocationManager.LocationUpdateCallback() {
-            @Override
-            public void onLocationUpdated(String location) {
-                Log.d(TAG, "Background location update successful: " + location);
-            }
-
-            @Override
-            public void onLocationUpdateFailed(String error) {
-                Log.e(TAG, "Background location update failed: " + error);
-            }
-        });
-    }
-
-    /**
-     * Navigate to dashboard based on role and email
-     */
-    private void navigateToRoleDashboard(String role, String email) {
-        runOnUiThread(() -> {
-            final Intent intent;
-            if ("admin".equals(role)) {
-                intent = new Intent(MainActivity.this, AdminDashboardActivity.class);
-            } else if ("manager".equals(role)) {
-                intent = new Intent(MainActivity.this, ManagerDashboardActivity.class);
-            } else if ("employee".equals(role) || "staff".equals(role)) {
-                intent = new Intent(MainActivity.this, EmployeeDashboardActivity.class);
-            } else {
-                intent = new Intent(MainActivity.this, DashboardActivity.class);
-                if (email != null) {
-                    intent.putExtra(DashboardActivity.EXTRA_EMAIL, email);
-                }
-            }
-
-            Log.d(TAG, "Navigating to dashboard for role: " + role);
-            startActivity(intent);
-            finish();
-        });
-    }
-
-    /**
-     * Navigate to appropriate dashboard based on user role
-     */
-    private void navigateToDashboard(Object user) {
-        runOnUiThread(() -> {
-            final Intent intent;
-
-            // Handle GoogleSignInResponse.User
-            String role = null;
-            String email = null;
-
-            if (user instanceof GoogleSignInResponse.User) {
-                GoogleSignInResponse.User googleUser = (GoogleSignInResponse.User) user;
-                role = googleUser.getRole();
-                email = googleUser.getEmail();
-            }
-
-            if ("admin".equals(role)) {
-                intent = new Intent(MainActivity.this, AdminDashboardActivity.class);
-            } else if ("manager".equals(role)) {
-                intent = new Intent(MainActivity.this, ManagerDashboardActivity.class);
-            } else if ("employee".equals(role) || "staff".equals(role)) {
-                intent = new Intent(MainActivity.this, EmployeeDashboardActivity.class);
-            } else {
-                intent = new Intent(MainActivity.this, DashboardActivity.class);
-                if (email != null) {
-                    intent.putExtra(DashboardActivity.EXTRA_EMAIL, email);
-                }
-            }
-
-            Log.d(TAG, "Navigating to dashboard for role: " + role);
-            startActivity(intent);
-            finish();
-        });
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if (userLocationManager != null) {
-            userLocationManager.cleanup();
+    private void signOutFromGoogle() {
+        if (googleSignInClient != null) {
+            googleSignInClient.signOut().addOnCompleteListener(this,
+                    task -> Log.d(TAG, getString(R.string.google_sign_out_complete)));
         }
     }
 }

@@ -95,4 +95,44 @@ public class FCMTokenHelper {
             }
         });
     }
+
+    /**
+     * Update user location on backend
+     */
+    public static void updateLocation(Context context, String email, double latitude, double longitude) {
+        TokenManager tokenManager = new TokenManager(context);
+        String authToken = tokenManager.getToken();
+
+        if (authToken == null) {
+            Log.w(TAG, "No auth token available");
+            return;
+        }
+
+        // Note: email is not used in the request body as per ApiService definition,
+        // but might be useful for logging or if the API changes.
+        // The endpoint uses Authorization header to identify the user.
+
+        app.hub.api.UpdateLocationRequest request = new app.hub.api.UpdateLocationRequest(latitude, longitude);
+
+        Call<app.hub.api.UpdateLocationResponse> call = ApiClient.getApiService().updateLocation(
+                "Bearer " + authToken,
+                request);
+
+        call.enqueue(new Callback<app.hub.api.UpdateLocationResponse>() {
+            @Override
+            public void onResponse(Call<app.hub.api.UpdateLocationResponse> call,
+                    Response<app.hub.api.UpdateLocationResponse> response) {
+                if (response.isSuccessful()) {
+                    Log.d(TAG, "Location updated successfully");
+                } else {
+                    Log.e(TAG, "Failed to update location: " + response.code());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<app.hub.api.UpdateLocationResponse> call, Throwable t) {
+                Log.e(TAG, "Error updating location", t);
+            }
+        });
+    }
 }

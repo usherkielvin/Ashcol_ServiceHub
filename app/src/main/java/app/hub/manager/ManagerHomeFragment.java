@@ -25,7 +25,9 @@ import app.hub.api.DashboardStatsResponse;
 import app.hub.api.EmployeeResponse;
 import app.hub.api.TicketListResponse;
 
-public class ManagerHomeFragment extends Fragment implements ManagerDataManager.EmployeeDataChangeListener {
+public class ManagerHomeFragment extends Fragment implements ManagerDataManager.EmployeeDataChangeListener,
+    ManagerDataManager.DashboardDataChangeListener,
+    ManagerDataManager.TicketDataChangeListener {
 
     private RecyclerView recentActivityRecyclerView;
     private RecentActivityAdapter recentActivityAdapter;
@@ -101,6 +103,8 @@ public class ManagerHomeFragment extends Fragment implements ManagerDataManager.
         rvEmployeePreview.setNestedScrollingEnabled(false);
 
         ManagerDataManager.registerEmployeeListener(this);
+        ManagerDataManager.registerDashboardListener(this);
+        ManagerDataManager.registerTicketListener(this);
         loadEmployeeData();
     }
 
@@ -115,7 +119,9 @@ public class ManagerHomeFragment extends Fragment implements ManagerDataManager.
         if (!recentTickets.isEmpty()) {
             recentActivityAdapter.setRecentTickets(recentTickets);
         } else {
-            recentActivityAdapter.setRecentTickets(new ArrayList<>());
+            List<DashboardStatsResponse.RecentTicket> fallback = buildRecentTicketsFromTickets(
+                    ManagerDataManager.getCachedTickets(), 6);
+            recentActivityAdapter.setRecentTickets(fallback);
         }
     }
 
@@ -168,6 +174,10 @@ public class ManagerHomeFragment extends Fragment implements ManagerDataManager.
                         updateDashboardStats(stats);
                         if (recentTickets != null && !recentTickets.isEmpty()) {
                             recentActivityAdapter.setRecentTickets(recentTickets);
+                        } else {
+                            List<DashboardStatsResponse.RecentTicket> fallback = buildRecentTicketsFromTickets(
+                                    ManagerDataManager.getCachedTickets(), 6);
+                            recentActivityAdapter.setRecentTickets(fallback);
                         }
                     });
                 }
@@ -212,5 +222,71 @@ public class ManagerHomeFragment extends Fragment implements ManagerDataManager.
     public void onDestroyView() {
         super.onDestroyView();
         ManagerDataManager.unregisterEmployeeListener(this);
+        ManagerDataManager.unregisterDashboardListener(this);
+        ManagerDataManager.unregisterTicketListener(this);
+    }
+
+    @Override
+    public void onDashboardDataChanged(DashboardStatsResponse.Stats stats,
+            List<DashboardStatsResponse.RecentTicket> recentTickets) {
+        if (getActivity() != null) {
+            getActivity().runOnUiThread(() -> {
+                if (stats != null) {
+                    updateDashboardStats(stats);
+                }
+                if (recentTickets != null && !recentTickets.isEmpty()) {
+                    recentActivityAdapter.setRecentTickets(recentTickets);
+                } else {
+                    List<DashboardStatsResponse.RecentTicket> fallback = buildRecentTicketsFromTickets(
+                            ManagerDataManager.getCachedTickets(), 6);
+                    recentActivityAdapter.setRecentTickets(fallback);
+                }
+            });
+        }
+    }
+
+    @Override
+    public void onTicketDataChanged(List<TicketListResponse.TicketItem> tickets) {
+        if (getActivity() != null) {
+            getActivity().runOnUiThread(() -> {
+                List<DashboardStatsResponse.RecentTicket> fallback = buildRecentTicketsFromTickets(tickets, 6);
+                if (!fallback.isEmpty()) {
+                    recentActivityAdapter.setRecentTickets(fallback);
+                }
+            });
+        }
+    }
+
+    private List<DashboardStatsResponse.RecentTicket> buildRecentTicketsFromTickets(
+            List<TicketListResponse.TicketItem> tickets, int limit) {
+        List<DashboardStatsResponse.RecentTicket> recent = new ArrayList<>();
+        if (tickets == null || tickets.isEmpty()) {
+            return recent;
+        }
+
+        int count = 0;
+        for (TicketListResponse.TicketItem item : tickets) {
+            if (item == null) {
+                continue;
+            }
+
+            DashboardStatsResponse.RecentTicket recentTicket = new DashboardStatsResponse.RecentTicket();
+            recentTicket.setTicketId(item.getTicketId());
+            recentTicket.setStatus(item.getStatus());
+            recentTicket.setStatusColor(item.getStatusColor());
+            recentTicket.setCustomerName(item.getCustomerName());
+            recentTicket.setServiceType(item.getServiceType());
+            recentTicket.setDescription(item.getDescription());
+            recentTicket.setAddress(item.getAddress());
+            recentTicket.setCreatedAt(item.getCreatedAt());
+
+            recent.add(recentTicket);
+            count++;
+            if (limit > 0 && count >= limit) {
+                break;
+            }
+        }
+
+        return recent;
     }
 }

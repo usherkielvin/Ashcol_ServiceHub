@@ -27,6 +27,7 @@ public class LocationHelper {
 
     public interface LocationCallback {
         void onLocationReceived(String cityName);
+
         void onLocationError(String error);
     }
 
@@ -36,11 +37,59 @@ public class LocationHelper {
         this.mainHandler = new Handler(Looper.getMainLooper());
     }
 
+    public boolean isLocationPermissionGranted() {
+        return ActivityCompat.checkSelfPermission(context,
+                Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+                ActivityCompat.checkSelfPermission(context,
+                        Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED;
+    }
+
+    public interface LocationResultCallback {
+        void onLocationReceived(Location location);
+    }
+
+    public void getCurrentLocation(LocationResultCallback callback) {
+        if (!isLocationPermissionGranted()) {
+            mainHandler.post(() -> callback.onLocationReceived(null));
+            return;
+        }
+
+        executor.execute(() -> {
+            try {
+                LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+                if (locationManager == null) {
+                    mainHandler.post(() -> callback.onLocationReceived(null));
+                    return;
+                }
+
+                Location location = null;
+                if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                    location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                }
+                if (location == null && locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
+                    location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+                }
+
+                final Location finalLocation = location;
+                mainHandler.post(() -> callback.onLocationReceived(finalLocation));
+
+            } catch (SecurityException e) {
+                Log.e(TAG, "Security exception: " + e.getMessage());
+                mainHandler.post(() -> callback.onLocationReceived(null));
+            } catch (Exception e) {
+                Log.e(TAG, "Error getting location: " + e.getMessage());
+                mainHandler.post(() -> callback.onLocationReceived(null));
+            }
+        });
+    }
+
     public void getCurrentLocation(LocationCallback callback) {
         // Check if location permissions are granted
-        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-            ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            
+        if (ActivityCompat.checkSelfPermission(context,
+                Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(context,
+                        Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+
             mainHandler.post(() -> callback.onLocationError("Location permission not granted"));
             return;
         }
@@ -48,7 +97,7 @@ public class LocationHelper {
         executor.execute(() -> {
             try {
                 LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
-                
+
                 if (locationManager == null) {
                     mainHandler.post(() -> callback.onLocationError("Location service not available"));
                     return;
@@ -56,11 +105,11 @@ public class LocationHelper {
 
                 // Try to get last known location from GPS first, then Network
                 Location location = null;
-                
+
                 if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
                     location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
                 }
-                
+
                 if (location == null && locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
                     location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
                 }
@@ -72,7 +121,7 @@ public class LocationHelper {
 
                 // Get city name from coordinates
                 getCityFromLocation(location.getLatitude(), location.getLongitude(), callback);
-                
+
             } catch (SecurityException e) {
                 Log.e(TAG, "Security exception: " + e.getMessage());
                 mainHandler.post(() -> callback.onLocationError("Location permission denied"));
@@ -86,20 +135,20 @@ public class LocationHelper {
     private void getCityFromLocation(double latitude, double longitude, LocationCallback callback) {
         try {
             Geocoder geocoder = new Geocoder(context, Locale.getDefault());
-            
+
             if (!Geocoder.isPresent()) {
                 mainHandler.post(() -> callback.onLocationError("Geocoder not available"));
                 return;
             }
 
             List<Address> addresses = geocoder.getFromLocation(latitude, longitude, 1);
-            
+
             if (addresses != null && !addresses.isEmpty()) {
                 Address address = addresses.get(0);
-                
+
                 // Try to get city name in order of preference
                 String cityName = null;
-                
+
                 // First try locality (city)
                 if (address.getLocality() != null && !address.getLocality().isEmpty()) {
                     cityName = address.getLocality();
@@ -121,7 +170,7 @@ public class LocationHelper {
                     // Clean up the city name (remove numbers, special chars)
                     cityName = cleanCityName(cityName);
                     Log.d(TAG, "Location found: " + cityName);
-                    
+
                     final String finalCityName = cityName;
                     mainHandler.post(() -> callback.onLocationReceived(finalCityName));
                 } else {
@@ -130,7 +179,7 @@ public class LocationHelper {
             } else {
                 mainHandler.post(() -> callback.onLocationError("No address found for location"));
             }
-            
+
         } catch (IOException e) {
             Log.e(TAG, "Geocoder IOException: " + e.getMessage());
             mainHandler.post(() -> callback.onLocationError("Network error getting location"));
@@ -141,29 +190,31 @@ public class LocationHelper {
     }
 
     private String cleanCityName(String cityName) {
-        if (cityName == null) return null;
-        
+        if (cityName == null)
+            return null;
+
         // Remove common prefixes/suffixes and clean up
         cityName = cityName.trim();
-        
+
         // Remove numbers and special characters, keep only letters and spaces
         cityName = cityName.replaceAll("[^a-zA-Z\\s]", "");
-        
+
         // Remove extra spaces
         cityName = cityName.replaceAll("\\s+", " ").trim();
-        
+
         // Capitalize first letter of each word
         String[] words = cityName.split(" ");
         StringBuilder result = new StringBuilder();
-        
+
         for (String word : words) {
             if (word.length() > 0) {
-                if (result.length() > 0) result.append(" ");
+                if (result.length() > 0)
+                    result.append(" ");
                 result.append(word.substring(0, 1).toUpperCase())
-                      .append(word.substring(1).toLowerCase());
+                        .append(word.substring(1).toLowerCase());
             }
         }
-        
+
         return result.toString();
     }
 

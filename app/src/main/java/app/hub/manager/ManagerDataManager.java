@@ -43,10 +43,21 @@ public class ManagerDataManager {
 
     // Observer pattern for data changes
     private static final List<EmployeeDataChangeListener> employeeListeners = new ArrayList<>();
+    private static final List<TicketDataChangeListener> ticketListeners = new ArrayList<>();
+    private static final List<DashboardDataChangeListener> dashboardListeners = new ArrayList<>();
 
     // Listener interface for employee data changes
     public interface EmployeeDataChangeListener {
         void onEmployeeDataChanged(String branchName, List<EmployeeResponse.Employee> employees);
+    }
+
+    public interface TicketDataChangeListener {
+        void onTicketDataChanged(List<TicketListResponse.TicketItem> tickets);
+    }
+
+    public interface DashboardDataChangeListener {
+        void onDashboardDataChanged(DashboardStatsResponse.Stats stats,
+                List<DashboardStatsResponse.RecentTicket> recentTickets);
     }
 
     // Callbacks for UI updates
@@ -83,6 +94,34 @@ public class ManagerDataManager {
         }
     }
 
+    public static void registerTicketListener(TicketDataChangeListener listener) {
+        if (listener != null && !ticketListeners.contains(listener)) {
+            ticketListeners.add(listener);
+            Log.d(TAG, "Ticket listener registered. Total listeners: " + ticketListeners.size());
+        }
+    }
+
+    public static void unregisterTicketListener(TicketDataChangeListener listener) {
+        if (listener != null) {
+            ticketListeners.remove(listener);
+            Log.d(TAG, "Ticket listener unregistered. Total listeners: " + ticketListeners.size());
+        }
+    }
+
+    public static void registerDashboardListener(DashboardDataChangeListener listener) {
+        if (listener != null && !dashboardListeners.contains(listener)) {
+            dashboardListeners.add(listener);
+            Log.d(TAG, "Dashboard listener registered. Total listeners: " + dashboardListeners.size());
+        }
+    }
+
+    public static void unregisterDashboardListener(DashboardDataChangeListener listener) {
+        if (listener != null) {
+            dashboardListeners.remove(listener);
+            Log.d(TAG, "Dashboard listener unregistered. Total listeners: " + dashboardListeners.size());
+        }
+    }
+
     /**
      * Notify all listeners of employee data changes
      */
@@ -92,6 +131,26 @@ public class ManagerDataManager {
             for (EmployeeDataChangeListener listener : employeeListeners) {
                 listener.onEmployeeDataChanged(cachedBranchName, new ArrayList<>(cachedEmployees));
             }
+        }
+    }
+
+    private static void notifyTicketListeners() {
+        if (cachedTickets != null) {
+            Log.d(TAG, "Notifying " + ticketListeners.size() + " listeners of ticket data change");
+            List<TicketListResponse.TicketItem> snapshot = new ArrayList<>(cachedTickets);
+            for (TicketDataChangeListener listener : ticketListeners) {
+                listener.onTicketDataChanged(snapshot);
+            }
+        }
+    }
+
+    private static void notifyDashboardListeners() {
+        Log.d(TAG, "Notifying " + dashboardListeners.size() + " listeners of dashboard data change");
+        List<DashboardStatsResponse.RecentTicket> recentSnapshot = cachedRecentTickets != null
+                ? new ArrayList<>(cachedRecentTickets)
+                : new ArrayList<>();
+        for (DashboardDataChangeListener listener : dashboardListeners) {
+            listener.onDashboardDataChanged(cachedDashboardStats, recentSnapshot);
         }
     }
 
@@ -219,6 +278,8 @@ public class ManagerDataManager {
 
                         Log.d(TAG, "Tickets loaded: " + cachedTickets.size());
 
+                        notifyTicketListeners();
+
                         for (DataLoadCallback cb : new ArrayList<>(activeCallbacks)) {
                             cb.onTicketsLoaded(cachedTickets);
                         }
@@ -261,6 +322,8 @@ public class ManagerDataManager {
 
                         Log.d(TAG, "Dashboard stats loaded: Total tickets = " +
                                 (cachedDashboardStats != null ? cachedDashboardStats.getTotalTickets() : 0));
+
+                        notifyDashboardListeners();
 
                         for (DataLoadCallback cb : new ArrayList<>(activeCallbacks)) {
                             cb.onDashboardStatsLoaded(cachedDashboardStats, cachedRecentTickets);

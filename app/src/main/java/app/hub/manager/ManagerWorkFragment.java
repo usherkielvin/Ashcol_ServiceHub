@@ -13,7 +13,6 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
@@ -25,16 +24,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import app.hub.R;
-import app.hub.api.ApiClient;
-import app.hub.api.ApiService;
 import app.hub.api.EmployeeResponse;
 import app.hub.api.TicketListResponse;
 import app.hub.util.TokenManager;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
+import app.hub.manager.ManagerDataManager.TicketDataChangeListener;
 
-public class ManagerWorkFragment extends Fragment {
+public class ManagerWorkFragment extends Fragment implements TicketDataChangeListener {
 
     private RecyclerView rvWorkLoadList;
     private SearchView searchViewWork;
@@ -74,6 +69,35 @@ public class ManagerWorkFragment extends Fragment {
 
         // Display tickets immediately if available
         displayTicketData();
+
+        // Ensure we get updates when data loads asynchronously
+        ManagerDataManager.registerTicketListener(this);
+        ManagerDataManager.loadAllData(getContext(), new ManagerDataManager.DataLoadCallback() {
+            @Override
+            public void onEmployeesLoaded(String branchName, List<EmployeeResponse.Employee> employees) {
+            }
+
+            @Override
+            public void onTicketsLoaded(List<TicketListResponse.TicketItem> tickets) {
+                displayTicketData();
+            }
+
+            @Override
+            public void onDashboardStatsLoaded(app.hub.api.DashboardStatsResponse.Stats stats,
+                    List<app.hub.api.DashboardStatsResponse.RecentTicket> recentTickets) {
+            }
+
+            @Override
+            public void onLoadComplete() {
+            }
+
+            @Override
+            public void onLoadError(String error) {
+                if (getContext() != null) {
+                    Toast.makeText(getContext(), "Error: " + error, Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
     }
 
     private void initViews(View view) {
@@ -306,6 +330,15 @@ public class ManagerWorkFragment extends Fragment {
         android.util.Log.d("ManagerWork", "Fragment resumed - displaying cached data");
     }
 
+    @Override
+    public void onTicketDataChanged(List<TicketListResponse.TicketItem> tickets) {
+        if (getActivity() != null) {
+            getActivity().runOnUiThread(this::displayTicketData);
+        } else {
+            displayTicketData();
+        }
+    }
+
     /**
      * Public method to manually refresh tickets (can be called from parent activity
      * if needed)
@@ -348,5 +381,11 @@ public class ManagerWorkFragment extends Fragment {
     public static void clearTicketCache() {
         ManagerDataManager.clearTicketCache();
         android.util.Log.d("ManagerWork", "Ticket cache cleared");
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        ManagerDataManager.unregisterTicketListener(this);
     }
 }
