@@ -61,8 +61,4 @@ public class ApiClient {
         return getClient().create(ApiService.class);
     }
 
-    // Get the base URL for debugging
-    public static String getBaseUrl() {
-        return BASE_URL;
-    }
 }
