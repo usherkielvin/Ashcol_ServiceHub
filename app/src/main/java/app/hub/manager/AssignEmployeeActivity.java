@@ -85,7 +85,7 @@ public class AssignEmployeeActivity extends AppCompatActivity {
             // Test if we can manually trigger employee loading
             actvEmployee.setOnFocusChangeListener((v, hasFocus) -> {
                 if (hasFocus && employees.isEmpty()) {
-                    android.util.Log.d("AssignEmployee", "Manual employee reload triggered");
+                    android.util.Log.d("AssignEmployee", "Manual technician reload triggered");
                     loadEmployees();
                 }
             });
@@ -190,16 +190,16 @@ public class AssignEmployeeActivity extends AppCompatActivity {
             }
         });
 
-        // Employee selection
+        // Technician selection
         actvEmployee.setOnItemClickListener((parent, view, position, id) -> {
-            android.util.Log.d("AssignEmployee", "Employee selected at position: " + position);
+            android.util.Log.d("AssignEmployee", "Technician selected at position: " + position);
             if (position >= 0 && position < employees.size()) {
                 selectedEmployeeId = employees.get(position).getId();
-                android.util.Log.d("AssignEmployee", "Selected employee ID: " + selectedEmployeeId);
+                android.util.Log.d("AssignEmployee", "Selected technician ID: " + selectedEmployeeId);
                 updateSchedulePreview();
             } else {
                 android.util.Log.e("AssignEmployee",
-                        "Invalid position: " + position + ", employees size: " + employees.size());
+                        "Invalid position: " + position + ", technicians size: " + employees.size());
             }
         });
 
@@ -280,12 +280,12 @@ public class AssignEmployeeActivity extends AppCompatActivity {
                             String name = (employee.getFirstName() != null ? employee.getFirstName() : "") +
                                     " " + (employee.getLastName() != null ? employee.getLastName() : "");
                             if (name.trim().isEmpty()) {
-                                name = employee.getEmail() != null ? employee.getEmail() : "Unknown Employee";
+                                name = employee.getEmail() != null ? employee.getEmail() : "Unknown Technician";
                             }
                             employeeNames.add(name.trim());
                         }
 
-                        android.util.Log.d("AssignEmployee", "Loaded " + employees.size() + " employees");
+                        android.util.Log.d("AssignEmployee", "Loaded " + employees.size() + " technicians");
 
                         employeeAdapter = new ArrayAdapter<>(AssignEmployeeActivity.this,
                                 android.R.layout.simple_dropdown_item_1line, employeeNames);
@@ -299,28 +299,28 @@ public class AssignEmployeeActivity extends AppCompatActivity {
                         // Also set threshold to 0 to show all items immediately
                         actvEmployee.setThreshold(0);
 
-                        // Show a message if no employees found
+                        // Show a message if no technicians found
                         if (employees.isEmpty()) {
-                            Toast.makeText(AssignEmployeeActivity.this, "No employees available for assignment",
+                            Toast.makeText(AssignEmployeeActivity.this, "No technicians available for assignment",
                                     Toast.LENGTH_SHORT).show();
                         }
                     } else {
                         android.util.Log.e("AssignEmployee",
                                 "API returned success=false: " + employeeResponse.getMessage());
                         Toast.makeText(AssignEmployeeActivity.this,
-                                "Failed to load employees: " + employeeResponse.getMessage(), Toast.LENGTH_SHORT)
+                            "Failed to load technicians: " + employeeResponse.getMessage(), Toast.LENGTH_SHORT)
                                 .show();
                     }
                 } else {
                     android.util.Log.e("AssignEmployee", "API response not successful. Code: " + response.code());
-                    Toast.makeText(AssignEmployeeActivity.this, "Failed to load employees. Please try again.",
+                    Toast.makeText(AssignEmployeeActivity.this, "Failed to load technicians. Please try again.",
                             Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onFailure(Call<EmployeeResponse> call, Throwable t) {
-                Toast.makeText(AssignEmployeeActivity.this, "Failed to load employees", Toast.LENGTH_SHORT).show();
+                Toast.makeText(AssignEmployeeActivity.this, "Failed to load technicians", Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -357,9 +357,9 @@ public class AssignEmployeeActivity extends AppCompatActivity {
                     String name = (emp.getFirstName() != null ? emp.getFirstName() : "") +
                             " " + (emp.getLastName() != null ? emp.getLastName() : "");
                     if (name.trim().isEmpty()) {
-                        name = emp.getEmail() != null ? emp.getEmail() : "Unknown Employee";
+                        name = emp.getEmail() != null ? emp.getEmail() : "Unknown Technician";
                     }
-                    preview.append("Employee: ").append(name.trim()).append("\n");
+                    preview.append("Technician: ").append(name.trim()).append("\n");
                     break;
                 }
             }
@@ -385,7 +385,7 @@ public class AssignEmployeeActivity extends AppCompatActivity {
         }
 
         if (selectedEmployeeId == -1) {
-            Toast.makeText(this, "Please select an employee", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Please select a technician", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -410,7 +410,7 @@ public class AssignEmployeeActivity extends AppCompatActivity {
         android.util.Log.d("AssignEmployee", "Ticket ID: " + ticketId);
         android.util.Log.d("AssignEmployee", "Scheduled Date: " + selectedDate);
         android.util.Log.d("AssignEmployee", "Scheduled Time: " + selectedTime);
-        android.util.Log.d("AssignEmployee", "Assigned Staff ID: " + selectedEmployeeId);
+        android.util.Log.d("AssignEmployee", "Assigned Technician ID: " + selectedEmployeeId);
         android.util.Log.d("AssignEmployee", "Schedule Notes: " + etNotes.getText().toString().trim());
 
         ApiService apiService = ApiClient.getApiService();

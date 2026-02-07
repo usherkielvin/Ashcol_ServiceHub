@@ -231,7 +231,7 @@ public class ManagerDataManager {
                                 ? new ArrayList<>(employeeResponse.getEmployees())
                                 : new ArrayList<>();
 
-                        Log.d(TAG, "Employees loaded: " + cachedEmployees.size() + " in branch: " + cachedBranchName);
+                        Log.d(TAG, "Technicians loaded: " + cachedEmployees.size() + " in branch: " + cachedBranchName);
 
                         // Notify all registered listeners
                         notifyEmployeeListeners();
@@ -246,19 +246,19 @@ public class ManagerDataManager {
 
                         checkLoadComplete();
                     } else {
-                        Log.e(TAG, "Employee API returned success=false");
-                        notifyLoadError("Failed to load employees");
+                        Log.e(TAG, "Technician API returned success=false");
+                        notifyLoadError("Failed to load technicians");
                     }
                 } else {
-                    Log.e(TAG, "Employee API response not successful");
-                    notifyLoadError("Failed to load employees");
+                    Log.e(TAG, "Technician API response not successful");
+                    notifyLoadError("Failed to load technicians");
                 }
             }
 
             @Override
             public void onFailure(Call<EmployeeResponse> call, Throwable t) {
-                Log.e(TAG, "Employee API network error: " + t.getMessage(), t);
-                notifyLoadError("Network error loading employees: " + t.getMessage());
+                Log.e(TAG, "Technician API network error: " + t.getMessage(), t);
+                notifyLoadError("Network error loading technicians: " + t.getMessage());
             }
         });
     }
