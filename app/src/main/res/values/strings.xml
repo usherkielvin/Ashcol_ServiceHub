@@ -146,7 +146,7 @@
     <string name="hint_date">01-04-2026</string>
     <string name="hint_name">Usher dizon</string>
     <string name="hint_auto_gen">Auto Generated</string>
-    <string name="hint_phone">0912-345-6789</string>
+
     <string name="hint_address">112 Strawberry St., City of Bacoor</string>
     <string name="hint_pref_date">January 15, 2026 - 10 AM</string>
     <string name="hint_comp_date">January 15, 2026 - 3PM</string>
@@ -205,7 +205,7 @@
     <string name="title_about_us">About us</string>
     <string name="label_company_name">Company name</string>
     <string name="text_company_name">ASCHOL AIRCONDITIONING SERVICES CORPORATION</string>
-    <string name="label_address">Address</string>
+
     <string name="text_address">Units 4D, 4E and 4F Genesis Building 182-A 19th Avenue Brgy East Rembo Makati City 1216.</string>
 
     <string name="label_customer_hotline">Customer Hotline</string>
@@ -264,8 +264,10 @@
     <string name="label_fullname">Fullname</string>
     <string name="hint_fullname">Enter fullname</string>
     <string name="label_phone">Phone number</string>
+    <string name="hint_phone">Enter phone number</string>
 
     <string name="section_location">Location Details</string>
+    <string name="label_address">Address</string>
     <string name="hint_map">Tap for Maps</string>
     <string name="hint_landmark">Please provide nearest landmarks or building color.</string>
 
@@ -294,4 +296,7 @@
     <string name="title_payment_summary">Payment Summary</string>
     <string name="label_total_vat">Total (inc. VAT)</string>
     <string name="val_total_vat">Php 8,000.00</string>
+    
+    <string name="prompt_service_type">Select Service Type</string>
+    <string name="prompt_unit_type">Select AC Unit Type</string>
 </resources>

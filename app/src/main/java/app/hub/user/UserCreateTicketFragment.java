@@ -1,12 +1,21 @@
 package app.hub.user;
 
+import android.app.AlertDialog;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
+import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -16,6 +25,7 @@ import androidx.fragment.app.Fragment;
 import com.google.android.material.datepicker.CalendarConstraints;
 import com.google.android.material.datepicker.MaterialDatePicker;
 
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Locale;
@@ -34,17 +44,41 @@ import retrofit2.Response;
 
 public class UserCreateTicketFragment extends Fragment {
 
+    private static final String TAG = "UserCreateTicketFragment";
     private static final SimpleDateFormat DATE_FORMAT_API = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
     private static final SimpleDateFormat DATE_FORMAT_DISPLAY = new SimpleDateFormat("MMM dd, yyyy",
             Locale.getDefault());
+    private static final int PICK_IMAGE_REQUEST = 1002;
+    private static final int MAX_IMAGE_SIZE_MB = 5;
 
-    private EditText titleInput, descriptionInput, addressInput, contactInput, dateInput;
-    private Button createTicketButton;
-    private Button mapButton;
+    private EditText fullNameInput, contactInput, landmarkInput, descriptionInput, dateInput;
+    private Button submitButton;
+    private RelativeLayout mapLocationButton;
+    private LinearLayout uploadButton;
+    private Spinner serviceTypeSpinner, unitTypeSpinner;
+    private TextView serviceTypeDisplay, locationHintText;
     private TokenManager tokenManager;
+    private String selectedServiceType = "General Service";
+    private String selectedUnitType;
     private Long selectedDateMillis = null;
     private double selectedLatitude = 0.0;
     private double selectedLongitude = 0.0;
+    private String selectedAddress = "";
+    private Uri selectedImageUri = null;
+
+    private final String[] serviceTypes = {"Cleaning", "Maintenance", "Repair", "Installation"};
+    private final String[] unitTypes = {
+            "Select Unit Type",
+            "Window AC Unit",
+            "Portable AC Unit",
+            "Split-System (Mini-Split) AC Unit",
+            "Central AC System",
+            "Multi-Split System",
+            "Packaged AC Unit",
+            "Ductless Mini-Split",
+            "Geothermal Heat Pump",
+            "Chiller System"
+    };
 
     public UserCreateTicketFragment() {
         // Required empty public constructor
@@ -54,44 +88,113 @@ public class UserCreateTicketFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
             Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_user_create_ticket, container, false);
+        return inflater.inflate(R.layout.fragment_service_request_form, container, false);
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        // Initialize views - based on fragment_user_create_ticket.xml
-        titleInput = view.findViewById(R.id.etTitle);
-        descriptionInput = view.findViewById(R.id.etDescription);
-        addressInput = view.findViewById(R.id.etLocation);
+        // Initialize views
+        fullNameInput = view.findViewById(R.id.etTitle);
         contactInput = view.findViewById(R.id.etContact);
+        landmarkInput = view.findViewById(R.id.etLandmark);
+        descriptionInput = view.findViewById(R.id.etDescription);
         dateInput = view.findViewById(R.id.etDate);
-        createTicketButton = view.findViewById(R.id.btnSubmit);
-        mapButton = view.findViewById(R.id.btnMap);
+        serviceTypeDisplay = view.findViewById(R.id.tvServiceType);
+        submitButton = view.findViewById(R.id.btnSubmit);
+        
+        mapLocationButton = view.findViewById(R.id.btnMapLocation);
+        uploadButton = view.findViewById(R.id.btnUpload);
+        serviceTypeSpinner = view.findViewById(R.id.spinnerServiceType);
+        unitTypeSpinner = view.findViewById(R.id.spinnerUnitType);
+        
+        locationHintText = view.findViewById(R.id.tvLocationHint);
 
         tokenManager = new TokenManager(getContext());
 
-        // Date picker - open when date field is clicked
+        // Set default service type
+        if (serviceTypeDisplay != null) {
+            serviceTypeDisplay.setText("Service Type:\n" + selectedServiceType);
+        }
+
+        // Set up service type spinner
+        setupServiceTypeSpinner();
+        
+        // Set up unit type spinner
+        setupUnitTypeSpinner();
+
+        // Set up map location button
+        if (mapLocationButton != null) {
+            mapLocationButton.setOnClickListener(v -> {
+                Intent intent = new Intent(getActivity(), MapSelectionActivity.class);
+                startActivityForResult(intent, 1001);
+            });
+        }
+
+        // Set up date picker
         if (dateInput != null) {
             dateInput.setOnClickListener(v -> showDatePicker());
             dateInput.setOnFocusChangeListener((v, hasFocus) -> {
-                if (hasFocus)
-                    showDatePicker();
+                if (hasFocus) showDatePicker();
             });
         }
 
-        // Set up map button click listener
-        if (mapButton != null) {
-            mapButton.setOnClickListener(v -> {
-                Intent intent = new Intent(getActivity(), MapSelectionActivity.class);
-                startActivityForResult(intent, 1001); // Use a request code for result
-            });
+        // Set up image upload
+        if (uploadButton != null) {
+            uploadButton.setOnClickListener(v -> openImagePicker());
         }
 
-        if (createTicketButton != null) {
-            createTicketButton.setOnClickListener(v -> createTicket());
+        // Set up submit button
+        if (submitButton != null) {
+            submitButton.setOnClickListener(v -> createTicket());
         }
+    }
+
+    private void setupServiceTypeSpinner() {
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, serviceTypes);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        serviceTypeSpinner.setAdapter(adapter);
+        
+        // Set default selection (Cleaning = index 0)
+        serviceTypeSpinner.setSelection(0);
+        
+        serviceTypeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                selectedServiceType = serviceTypes[position];
+                if (serviceTypeDisplay != null) {
+                    serviceTypeDisplay.setText("Service Type:\n" + selectedServiceType);
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                // Do nothing
+            }
+        });
+    }
+
+    private void setupUnitTypeSpinner() {
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, unitTypes);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        unitTypeSpinner.setAdapter(adapter);
+        
+        unitTypeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                if (position == 0) {
+                    selectedUnitType = null; // "Select Unit Type" option
+                } else {
+                    selectedUnitType = unitTypes[position];
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                selectedUnitType = null;
+            }
+        });
     }
 
     private void showDatePicker() {
@@ -118,33 +221,72 @@ public class UserCreateTicketFragment extends Fragment {
         picker.show(getChildFragmentManager(), "DATE_PICKER");
     }
 
+    private void openImagePicker() {
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.setType("image/*");
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        startActivityForResult(Intent.createChooser(intent, "Select Image"), PICK_IMAGE_REQUEST);
+    }
+
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        
         if (requestCode == 1001 && resultCode == getActivity().RESULT_OK && data != null) {
             selectedLatitude = data.getDoubleExtra("latitude", 0.0);
             selectedLongitude = data.getDoubleExtra("longitude", 0.0);
             String address = data.getStringExtra("address");
+            selectedAddress = address != null ? address : "";
 
-            // Set the selected address to the location field
-            if (addressInput != null && address != null) {
-                addressInput.setText(address);
+            if (locationHintText != null && address != null) {
+                locationHintText.setText(address);
+                locationHintText.setTextColor(getResources().getColor(android.R.color.black));
             }
 
             Toast.makeText(getContext(), "Location selected: " + address, Toast.LENGTH_SHORT).show();
         }
+        
+        if (requestCode == PICK_IMAGE_REQUEST && resultCode == getActivity().RESULT_OK && data != null && data.getData() != null) {
+            selectedImageUri = data.getData();
+            
+            try {
+                InputStream inputStream = getContext().getContentResolver().openInputStream(selectedImageUri);
+                if (inputStream != null) {
+                    int fileSize = inputStream.available();
+                    inputStream.close();
+                    
+                    int fileSizeMB = fileSize / (1024 * 1024);
+                    if (fileSizeMB > MAX_IMAGE_SIZE_MB) {
+                        Toast.makeText(getContext(), "Image size must be less than " + MAX_IMAGE_SIZE_MB + "MB", Toast.LENGTH_LONG).show();
+                        selectedImageUri = null;
+                        return;
+                    }
+                    
+                    Toast.makeText(getContext(), "Image selected (" + fileSizeMB + "MB)", Toast.LENGTH_SHORT).show();
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Error checking file size", e);
+                Toast.makeText(getContext(), "Error selecting image", Toast.LENGTH_SHORT).show();
+                selectedImageUri = null;
+            }
+        }
     }
 
     private void createTicket() {
-        String title = titleInput != null ? titleInput.getText().toString().trim() : "";
-        String description = descriptionInput != null ? descriptionInput.getText().toString().trim() : "";
-        String serviceType = "General Service"; // Default service type since spinner is not available
-        String address = addressInput != null ? addressInput.getText().toString().trim() : "";
+        String fullName = fullNameInput != null ? fullNameInput.getText().toString().trim() : "";
         String contact = contactInput != null ? contactInput.getText().toString().trim() : "";
+        String landmark = landmarkInput != null ? landmarkInput.getText().toString().trim() : "";
+        String description = descriptionInput != null ? descriptionInput.getText().toString().trim() : "";
 
-        if (title.isEmpty() || description.isEmpty() || address.isEmpty() || contact.isEmpty()) {
-            Toast.makeText(getContext(), "Please fill out all fields", Toast.LENGTH_SHORT).show();
+        if (fullName.isEmpty() || contact.isEmpty() || selectedAddress.isEmpty()) {
+            Toast.makeText(getContext(), "Please fill out all required fields", Toast.LENGTH_SHORT).show();
             return;
+        }
+
+        // Combine address with landmark
+        String fullAddress = selectedAddress;
+        if (!landmark.isEmpty()) {
+            fullAddress += " - " + landmark;
         }
 
         String preferredDate = null;
@@ -154,7 +296,13 @@ public class UserCreateTicketFragment extends Fragment {
             preferredDate = DATE_FORMAT_API.format(cal.getTime());
         }
 
-        CreateTicketRequest request = new CreateTicketRequest(title, description, serviceType, address, contact,
+        // Add unit type to description if selected
+        String fullDescription = description;
+        if (selectedUnitType != null && !selectedUnitType.isEmpty()) {
+            fullDescription = "Unit Type: " + selectedUnitType + "\n" + description;
+        }
+
+        CreateTicketRequest request = new CreateTicketRequest(fullName, fullDescription, selectedServiceType, fullAddress, contact,
                 preferredDate, selectedLatitude != 0.0 ? selectedLatitude : null, selectedLongitude != 0.0 ? selectedLongitude : null);
         ApiService apiService = ApiClient.getApiService();
         String token = tokenManager.getToken();
@@ -164,26 +312,18 @@ public class UserCreateTicketFragment extends Fragment {
             return;
         }
 
-        // Show loading state
-        createTicketButton.setEnabled(false);
-        createTicketButton.setText("Creating...");
+        submitButton.setEnabled(false);
+        submitButton.setText("Creating...");
 
         Call<CreateTicketResponse> call = apiService.createTicket("Bearer " + token, request);
         call.enqueue(new Callback<CreateTicketResponse>() {
             @Override
             public void onResponse(Call<CreateTicketResponse> call, Response<CreateTicketResponse> response) {
-                // Reset button state
-                createTicketButton.setEnabled(true);
-                createTicketButton.setText("Submit");
+                submitButton.setEnabled(true);
+                submitButton.setText("Submit");
 
                 if (response.isSuccessful() && response.body() != null) {
                     CreateTicketResponse ticketResponse = response.body();
-
-                    // Clear form fields
-                    titleInput.setText("");
-                    descriptionInput.setText("");
-                    addressInput.setText("");
-                    contactInput.setText("");
 
                     // Navigate to confirmation screen
                     Intent intent = new Intent(getActivity(), TicketConfirmationActivity.class);
@@ -191,12 +331,10 @@ public class UserCreateTicketFragment extends Fragment {
                     intent.putExtra("status", ticketResponse.getStatus());
                     startActivity(intent);
 
-                    // Close this fragment/activity
                     if (getActivity() != null) {
                         getActivity().finish();
                     }
 
-                    // Clear form
                     clearForm();
 
                     Toast.makeText(getContext(), "Ticket created successfully!", Toast.LENGTH_SHORT).show();
@@ -208,9 +346,8 @@ public class UserCreateTicketFragment extends Fragment {
 
             @Override
             public void onFailure(Call<CreateTicketResponse> call, Throwable t) {
-                // Reset button state
-                createTicketButton.setEnabled(true);
-                createTicketButton.setText("Submit");
+                submitButton.setEnabled(true);
+                submitButton.setText("Submit");
 
                 Toast.makeText(getContext(), "Network error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
@@ -218,16 +355,17 @@ public class UserCreateTicketFragment extends Fragment {
     }
 
     private void clearForm() {
-        if (titleInput != null)
-            titleInput.setText("");
-        if (descriptionInput != null)
-            descriptionInput.setText("");
-        if (addressInput != null)
-            addressInput.setText("");
-        if (contactInput != null)
-            contactInput.setText("");
-        if (dateInput != null)
-            dateInput.setText("");
+        if (fullNameInput != null) fullNameInput.setText("");
+        if (contactInput != null) contactInput.setText("");
+        if (landmarkInput != null) landmarkInput.setText("");
+        if (descriptionInput != null) descriptionInput.setText("");
+        if (dateInput != null) dateInput.setText("");
+        if (locationHintText != null) locationHintText.setText(R.string.hint_map);
+        if (serviceTypeSpinner != null) serviceTypeSpinner.setSelection(0);
+        if (unitTypeSpinner != null) unitTypeSpinner.setSelection(0);
         selectedDateMillis = null;
+        selectedAddress = "";
+        selectedUnitType = null;
+        selectedImageUri = null;
     }
 }

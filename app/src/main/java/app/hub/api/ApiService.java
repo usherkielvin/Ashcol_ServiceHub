@@ -66,12 +66,17 @@ public interface ApiService {
 
     @Multipart
     @POST("api/v1/tickets")
-    Call<CreateTicketResponse> createTicket(
+    Call<CreateTicketResponse> createTicketWithImage(
             @Header("Authorization") String token,
+            @Part("title") RequestBody title,
             @Part("description") RequestBody description,
             @Part("address") RequestBody address,
             @Part("contact") RequestBody contact,
             @Part("service_type") RequestBody serviceType,
+            @Part("unit_type") RequestBody unitType,
+            @Part("preferred_date") RequestBody preferredDate,
+            @Part("latitude") RequestBody latitude,
+            @Part("longitude") RequestBody longitude,
             @Part MultipartBody.Part image);
 
     @Multipart

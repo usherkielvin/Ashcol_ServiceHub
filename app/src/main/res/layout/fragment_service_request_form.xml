@@ -119,7 +119,7 @@
         </LinearLayout>
 
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnContinue"
+            android:id="@+id/btnSubmit"
             android:layout_width="160dp"
             android:layout_height="48dp"
             android:backgroundTint="#D1E7D1"
@@ -171,7 +171,7 @@
                 android:textStyle="bold" />
 
             <EditText
-                android:id="@+id/etFullName"
+                android:id="@+id/etTitle"
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
                 android:layout_marginTop="6dp"
@@ -195,7 +195,7 @@
                 android:textStyle="bold" />
 
             <EditText
-                android:id="@+id/etPhone"
+                android:id="@+id/etContact"
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
                 android:layout_marginTop="6dp"
@@ -238,7 +238,7 @@
                 android:textStyle="bold" />
 
             <RelativeLayout
-                android:id="@+id/btnMap"
+                android:id="@+id/btnMapLocation"
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
                 android:layout_marginTop="6dp"
@@ -258,7 +258,7 @@
                     app:tint="#1B5E20" />
 
                 <TextView
-                    android:id="@+id/tvMapHint"
+                    android:id="@+id/tvLocationHint"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_centerVertical="true"
@@ -302,119 +302,55 @@
                 android:background="?attr/colorOnSurface" />
 
             <!-- Service Details Section -->
-            <androidx.constraintlayout.widget.ConstraintLayout
+            <TextView
                 android:id="@+id/sectionService"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:fontFamily="@font/poppins_semibold"
-                    android:text="@string/section_service"
-                    android:textColor="#1B5E20"
-                    android:textSize="18sp"
-                    android:textStyle="bold"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
-
-                <TextView
-                    android:id="@+id/tvServiceTypeTag"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_status_badge"
-                    android:backgroundTint="?attr/colorSurface"
-                    android:elevation="6dp"
-                    android:fontFamily="@font/poppins_semibold"
-                    android:paddingHorizontal="16dp"
-                    android:paddingVertical="8dp"
-                    android:text="Service Type:\nCleaning"
-                    android:textAlignment="center"
-                    android:textColor="?attr/colorOnSurface"
-                    android:textSize="12sp"
-                    android:textStyle="bold"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
-            </androidx.constraintlayout.widget.ConstraintLayout>
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/poppins_semibold"
+                android:text="@string/section_service"
+                android:textColor="#1B5E20"
+                android:textSize="18sp"
+                android:textStyle="bold" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:fontFamily="@font/poppins_medium"
-                android:text="@string/label_specific_service"
+                android:text="Service Type"
                 android:textColor="?attr/colorOnSurface"
                 android:textStyle="bold" />
 
-            <RelativeLayout
-                android:id="@+id/btnSelectService"
+            <Spinner
+                android:id="@+id/spinnerServiceType"
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
                 android:layout_marginTop="6dp"
                 android:layout_marginHorizontal="2dp"
                 android:background="@drawable/bg_input_box"
                 android:elevation="4dp"
-                android:clickable="true"
-                android:focusable="true"
-                android:paddingHorizontal="16dp">
-
-                <TextView
-                    android:id="@+id/tvSpecificServiceHint"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_centerVertical="true"
-                    android:fontFamily="@font/poppins_medium"
-                    android:text="@string/hint_specific_service"
-                    android:textColor="?attr/colorOnSurfaceVariant" />
-
-                <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:layout_alignParentEnd="true"
-                    android:layout_centerVertical="true"
-                    android:src="@drawable/down_arrow"
-                    app:tint="?attr/colorOnSurfaceVariant" />
-            </RelativeLayout>
+                android:paddingHorizontal="16dp"
+                android:spinnerMode="dropdown" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
                 android:fontFamily="@font/poppins_medium"
-                android:text="@string/label_unit_type"
+                android:text="AC Unit Type"
                 android:textColor="?attr/colorOnSurface"
                 android:textStyle="bold" />
 
-            <RelativeLayout
-                android:id="@+id/btnSelectUnit"
+            <Spinner
+                android:id="@+id/spinnerUnitType"
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
                 android:layout_marginTop="6dp"
                 android:layout_marginHorizontal="2dp"
                 android:background="@drawable/bg_input_box"
                 android:elevation="4dp"
-                android:clickable="true"
-                android:focusable="true"
-                android:paddingHorizontal="16dp">
-
-                <TextView
-                    android:id="@+id/tvUnitTypeHint"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_centerVertical="true"
-                    android:fontFamily="@font/poppins_medium"
-                    android:text="@string/hint_unit_type"
-                    android:textColor="?attr/colorOnSurfaceVariant" />
-
-                <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:layout_alignParentEnd="true"
-                    android:layout_centerVertical="true"
-                    android:src="@drawable/down_arrow"
-                    app:tint="?attr/colorOnSurfaceVariant" />
-            </RelativeLayout>
+                android:paddingHorizontal="16dp"
+                android:spinnerMode="dropdown" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -426,7 +362,7 @@
                 android:textStyle="bold" />
 
             <EditText
-                android:id="@+id/etOtherDetails"
+                android:id="@+id/etDescription"
                 android:layout_width="match_parent"
                 android:layout_height="80dp"
                 android:layout_marginTop="6dp"
@@ -451,11 +387,88 @@
                 android:textColor="?attr/colorOnSurface"
                 android:textStyle="bold" />
 
+            <!-- Image Preview Container - Horizontal Scroll -->
+            <HorizontalScrollView
+                android:id="@+id/imageScrollView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:scrollbars="none"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:id="@+id/imagePreviewContainer"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <!-- Image 1 Preview -->
+                    <RelativeLayout
+                        android:id="@+id/imagePreview1Container"
+                        android:layout_width="120dp"
+                        android:layout_height="120dp"
+                        android:layout_marginEnd="8dp"
+                        android:visibility="gone">
+
+                        <ImageView
+                            android:id="@+id/imagePreview1"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:scaleType="centerCrop"
+                            android:background="@drawable/bg_input_box"
+                            android:elevation="4dp" />
+
+                        <ImageButton
+                            android:id="@+id/btnRemoveImage1"
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:layout_alignParentEnd="true"
+                            android:layout_alignParentTop="true"
+                            android:layout_margin="4dp"
+                            android:background="@drawable/bg_circle_green"
+                            android:src="@android:drawable/ic_menu_close_clear_cancel"
+                            android:contentDescription="Remove image"
+                            app:tint="@color/white"
+                            android:elevation="8dp" />
+                    </RelativeLayout>
+
+                    <!-- Image 2 Preview -->
+                    <RelativeLayout
+                        android:id="@+id/imagePreview2Container"
+                        android:layout_width="120dp"
+                        android:layout_height="120dp"
+                        android:visibility="gone">
+
+                        <ImageView
+                            android:id="@+id/imagePreview2"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:scaleType="centerCrop"
+                            android:background="@drawable/bg_input_box"
+                            android:elevation="4dp" />
+
+                        <ImageButton
+                            android:id="@+id/btnRemoveImage2"
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:layout_alignParentEnd="true"
+                            android:layout_alignParentTop="true"
+                            android:layout_margin="4dp"
+                            android:background="@drawable/bg_circle_green"
+                            android:src="@android:drawable/ic_menu_close_clear_cancel"
+                            android:contentDescription="Remove image"
+                            app:tint="@color/white"
+                            android:elevation="8dp" />
+                    </RelativeLayout>
+                </LinearLayout>
+            </HorizontalScrollView>
+
+            <!-- Add Image Button -->
             <LinearLayout
                 android:id="@+id/btnUpload"
                 android:layout_width="match_parent"
                 android:layout_height="100dp"
-                android:layout_marginTop="6dp"
+                android:layout_marginTop="8dp"
                 android:layout_marginHorizontal="2dp"
                 android:background="@drawable/bg_upload_box"
                 android:elevation="2dp"
@@ -508,8 +521,8 @@
                 android:textColor="?attr/colorOnSurface"
                 android:textStyle="bold" />
 
-            <RelativeLayout
-                android:id="@+id/btnSelectDate"
+            <EditText
+                android:id="@+id/etDate"
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
                 android:layout_marginTop="6dp"
@@ -517,65 +530,16 @@
                 android:background="@drawable/bg_input_box"
                 android:elevation="4dp"
                 android:clickable="true"
-                android:focusable="true"
-                android:paddingHorizontal="16dp">
-
-                <TextView
-                    android:id="@+id/tvDateValue"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_centerVertical="true"
-                    android:fontFamily="@font/poppins_medium"
-                    android:text="@string/label_pref_date"
-                    android:textColor="?attr/colorOnSurfaceVariant" />
-
-                <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:layout_alignParentEnd="true"
-                    android:layout_centerVertical="true"
-                    android:src="@drawable/calendar"
-                    app:tint="#1B5E20" />
-            </RelativeLayout>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
+                android:focusable="false"
                 android:fontFamily="@font/poppins_medium"
-                android:text="@string/label_pref_time"
+                android:hint="@string/label_pref_date"
+                android:inputType="none"
+                android:paddingHorizontal="16dp"
+                android:drawableEnd="@drawable/calendar"
+                android:drawableTint="#1B5E20"
                 android:textColor="?attr/colorOnSurface"
-                android:textStyle="bold" />
-
-            <RelativeLayout
-                android:id="@+id/btnSelectTime"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginTop="6dp"
-                android:layout_marginHorizontal="2dp"
-                android:background="@drawable/bg_input_box"
-                android:elevation="4dp"
-                android:clickable="true"
-                android:focusable="true"
-                android:paddingHorizontal="16dp">
-
-                <TextView
-                    android:id="@+id/tvTimeValue"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_centerVertical="true"
-                    android:fontFamily="@font/poppins_medium"
-                    android:text="@string/label_pref_time"
-                    android:textColor="?attr/colorOnSurfaceVariant" />
-
-                <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:layout_alignParentEnd="true"
-                    android:layout_centerVertical="true"
-                    android:src="@android:drawable/ic_menu_recent_history"
-                    app:tint="#1B5E20" />
-            </RelativeLayout>
+                android:textColorHint="?attr/colorOnSurfaceVariant"
+                android:textSize="14sp" />
 
         </LinearLayout>
     </ScrollView>
