@@ -170,15 +170,18 @@ public class TicketsAdapter extends RecyclerView.Adapter<TicketsAdapter.TicketVi
                 case "pending":
                     textView.setBackgroundColor(Color.parseColor("#FF9800")); // Orange
                     break;
-                case "accepted":
                 case "in progress":
+                case "accepted":
+                case "active":
+                case "assigned":
+                case "ongoing":
                     textView.setBackgroundColor(Color.parseColor("#2196F3")); // Blue
                     break;
                 case "completed":
                     textView.setBackgroundColor(Color.parseColor("#4CAF50")); // Green
                     break;
-                case "cancelled":
                 case "rejected":
+                case "cancelled":
                     textView.setBackgroundColor(Color.parseColor("#F44336")); // Red
                     break;
                 default:
@@ -198,13 +201,16 @@ public class TicketsAdapter extends RecyclerView.Adapter<TicketsAdapter.TicketVi
             switch (status.toLowerCase()) {
                 case "pending":
                     return Color.parseColor("#FF9800"); // Orange
-                case "accepted":
                 case "in progress":
+                case "accepted":
+                case "active":
+                case "assigned":
+                case "ongoing":
                     return Color.parseColor("#2196F3"); // Blue
                 case "completed":
                     return Color.parseColor("#4CAF50"); // Green
-                case "cancelled":
                 case "rejected":
+                case "cancelled":
                     return Color.parseColor("#F44336"); // Red
                 default:
                     return Color.parseColor("#FF9800"); // Default Orange (pending)

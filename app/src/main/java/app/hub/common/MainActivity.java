@@ -19,6 +19,8 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.button.MaterialButton;
@@ -220,18 +222,39 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void signInWithGoogle() {
+<<<<<<< HEAD
         MaterialButton loginButton = findViewById(R.id.loginButton);
         if (loginButton != null) {
             loginButton.setEnabled(false);
             loginButton.setText(R.string.logging_in);
         }
         
+=======
+        if (!isGooglePlayServicesAvailable()) {
+            return;
+        }
+
+>>>>>>> d54e9e0a7c50260b606de669f19a9b667cb5423b
         if (googleSignInClient != null) {
             googleSignInClient.signOut().addOnCompleteListener(this, task -> {
                 Intent signInIntent = googleSignInClient.getSignInIntent();
                 startActivityForResult(signInIntent, 9001); // RC_SIGN_IN equivalent
             });
         }
+    }
+
+    private boolean isGooglePlayServicesAvailable() {
+        int status = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(this);
+        if (status == ConnectionResult.SUCCESS) {
+            return true;
+        }
+
+        if (GoogleApiAvailability.getInstance().isUserResolvableError(status)) {
+            GoogleApiAvailability.getInstance().getErrorDialog(this, status, 9000).show();
+        } else {
+            Toast.makeText(this, "Google Play services is unavailable on this device.", Toast.LENGTH_LONG).show();
+        }
+        return false;
     }
 
     private void handleGoogleSignInResult(Task<GoogleSignInAccount> completedTask) {

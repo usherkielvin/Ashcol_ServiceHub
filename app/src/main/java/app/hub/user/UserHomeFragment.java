@@ -20,7 +20,6 @@ import app.hub.R;
 import app.hub.api.ApiClient;
 import app.hub.api.ApiService;
 import app.hub.api.UserResponse;
-import app.hub.common.FirestoreManager;
 import app.hub.util.TokenManager;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -42,17 +41,6 @@ public class UserHomeFragment extends Fragment {
     private List<Integer> images = Arrays.asList(R.drawable.banner_cleaning, R.drawable.banner_installation, R.drawable.banner_maintainance, R.drawable.banner_repair);
     private TextView tvAssignedBranch;
     private TokenManager tokenManager;
-    private FirestoreManager firestoreManager;
-
-    private com.google.android.material.card.MaterialCardView cardPendingPayment;
-    private TextView tvPendingService;
-    private TextView tvPendingAmount;
-    private TextView tvPendingTechnician;
-    private TextView tvPendingPaymentsEmpty;
-    private android.widget.ProgressBar pendingPaymentsLoading;
-    private com.google.android.material.button.MaterialButton btnPendingPay;
-
-    private String pendingTicketId;
 
     public UserHomeFragment() {
         // Required empty public constructor
@@ -80,18 +68,10 @@ public class UserHomeFragment extends Fragment {
         bannerViewPager = view.findViewById(R.id.bannerViewPager);
         dotsLayout = view.findViewById(R.id.dotsLayout);
         tvAssignedBranch = view.findViewById(R.id.tvAssignedBranch);
-        cardPendingPayment = view.findViewById(R.id.cardPendingPayment);
-        tvPendingService = view.findViewById(R.id.tvPendingService);
-        tvPendingAmount = view.findViewById(R.id.tvPendingAmount);
-        tvPendingTechnician = view.findViewById(R.id.tvPendingTechnician);
-        tvPendingPaymentsEmpty = view.findViewById(R.id.tvPendingPaymentsEmpty);
-        pendingPaymentsLoading = view.findViewById(R.id.pendingPaymentsLoading);
-        btnPendingPay = view.findViewById(R.id.btnPendingPay);
 
         setupViewPager();
         updateDots(0); // Initialize dots
         loadBranchInfo();
-        setupPendingPayments();
 
         return view;
     }
@@ -173,13 +153,6 @@ public class UserHomeFragment extends Fragment {
         }
     }
 
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        if (firestoreManager != null) {
-            firestoreManager.stopPaymentListening();
-        }
-    }
 
     private void loadBranchInfo() {
         // First try to load from cache
@@ -239,93 +212,4 @@ public class UserHomeFragment extends Fragment {
         }
     }
 
-    private void setupPendingPayments() {
-        firestoreManager = new FirestoreManager(requireContext());
-        if (pendingPaymentsLoading != null) {
-            pendingPaymentsLoading.setVisibility(View.VISIBLE);
-        }
-
-        firestoreManager.listenToPendingPayments(new FirestoreManager.PendingPaymentsListener() {
-            @Override
-            public void onPaymentsUpdated(java.util.List<FirestoreManager.PendingPayment> payments) {
-                if (getActivity() == null) {
-                    return;
-                }
-
-                getActivity().runOnUiThread(() -> {
-                    if (pendingPaymentsLoading != null) {
-                        pendingPaymentsLoading.setVisibility(View.GONE);
-                    }
-
-                    if (payments == null || payments.isEmpty()) {
-                        if (cardPendingPayment != null) {
-                            cardPendingPayment.setVisibility(View.GONE);
-                        }
-                        if (tvPendingPaymentsEmpty != null) {
-                            tvPendingPaymentsEmpty.setVisibility(View.GONE);
-                        }
-                        pendingTicketId = null;
-                        return;
-                    }
-
-                    FirestoreManager.PendingPayment payment = payments.get(0);
-                    pendingTicketId = payment.ticketId;
-
-                    if (tvPendingService != null) {
-                        tvPendingService.setText(payment.serviceName != null
-                                ? payment.serviceName
-                                : "Service Request");
-                    }
-                    if (tvPendingTechnician != null) {
-                        String tech = payment.technicianName != null
-                                ? payment.technicianName
-                                : "Technician";
-                        tvPendingTechnician.setText("Technician: " + tech);
-                    }
-                    if (tvPendingAmount != null) {
-                        tvPendingAmount.setText("Php " + String.format(java.util.Locale.getDefault(), "%,.2f", payment.amount));
-                    }
-
-                    if (cardPendingPayment != null) {
-                        cardPendingPayment.setVisibility(View.VISIBLE);
-                    }
-                    if (tvPendingPaymentsEmpty != null) {
-                        tvPendingPaymentsEmpty.setVisibility(View.GONE);
-                    }
-
-                    if (btnPendingPay != null) {
-                        btnPendingPay.setOnClickListener(v -> openPaymentFromHome());
-                    }
-                });
-            }
-
-            @Override
-            public void onError(Exception e) {
-                if (pendingPaymentsLoading != null) {
-                    pendingPaymentsLoading.setVisibility(View.GONE);
-                }
-                if (cardPendingPayment != null) {
-                    cardPendingPayment.setVisibility(View.GONE);
-                }
-                if (tvPendingPaymentsEmpty != null) {
-                    tvPendingPaymentsEmpty.setVisibility(View.GONE);
-                }
-                android.util.Log.e(TAG, "Failed to load pending payments", e);
-            }
-        });
-    }
-
-    private void openPaymentFromHome() {
-        if (pendingTicketId == null || getActivity() == null) {
-            return;
-        }
-
-        startActivity(UserPaymentActivity.createIntent(
-                getActivity(),
-                pendingTicketId,
-                0,
-                0.0,
-                null,
-                null));
-    }
 }
