@@ -84,6 +84,11 @@
             android:exported="false" />
 
         <activity
+            android:name=".user.UserPaymentActivity"
+            android:exported="false"
+            android:theme="@style/Theme.ServiceHubApp" />
+
+        <activity
             android:name=".common.RegisterActivity"
             android:exported="false" />
         <activity

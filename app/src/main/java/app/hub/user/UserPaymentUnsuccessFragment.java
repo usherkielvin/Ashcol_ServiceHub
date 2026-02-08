@@ -34,11 +34,23 @@ public class UserPaymentUnsuccessFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         com.google.android.material.button.MaterialButton btnTryAgain = view.findViewById(R.id.btnTryAgain);
         btnTryAgain.setOnClickListener(v -> {
+            android.content.Intent intent = requireActivity().getIntent();
+            String ticketId = intent.getStringExtra(UserPaymentActivity.EXTRA_TICKET_ID);
+            int paymentId = intent.getIntExtra(UserPaymentActivity.EXTRA_PAYMENT_ID, 0);
+            double amount = intent.getDoubleExtra(UserPaymentActivity.EXTRA_AMOUNT, 0.0);
+            String serviceName = intent.getStringExtra(UserPaymentActivity.EXTRA_SERVICE_NAME);
+            String technicianName = intent.getStringExtra(UserPaymentActivity.EXTRA_TECHNICIAN_NAME);
+
             requireActivity().getSupportFragmentManager()
-                    .beginTransaction()
-                    .replace(R.id.fragmentContainerView, UserPaymentFragment.newInstance())
-                    .addToBackStack(null)
-                    .commit();
+                .beginTransaction()
+                .replace(R.id.fragmentContainerView, UserPaymentFragment.newInstance(
+                    ticketId,
+                    paymentId,
+                    amount,
+                    serviceName,
+                    technicianName))
+                .addToBackStack(null)
+                .commit();
         });
     }
 }

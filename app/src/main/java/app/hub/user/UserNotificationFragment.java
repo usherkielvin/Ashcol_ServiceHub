@@ -74,18 +74,13 @@ public class UserNotificationFragment extends Fragment {
                 return;
             }
 
-            UserPaymentFragment fragment = UserPaymentFragment.newInstance(
-                    ticket.getTicketId(),
-                    0,
-                    0.0,
-                    ticket.getServiceType(),
-                    ticket.getAssignedStaff());
-
-            getActivity().getSupportFragmentManager()
-                    .beginTransaction()
-                    .replace(R.id.fragmentContainerView, fragment)
-                    .addToBackStack(null)
-                    .commit();
+            startActivity(UserPaymentActivity.createIntent(
+                getActivity(),
+                ticket.getTicketId(),
+                0,
+                0.0,
+                ticket.getServiceType(),
+                ticket.getAssignedStaff()));
         });
 
         swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout);

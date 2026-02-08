@@ -222,16 +222,7 @@ public class DashboardActivity extends AppCompatActivity {
     }
 
     private void openPaymentFlow(String ticketId) {
-        UserPaymentFragment fragment = UserPaymentFragment.newInstance(ticketId, 0, 0.0, null, null);
-        getSupportFragmentManager().beginTransaction()
-                .replace(R.id.fragmentContainerView, fragment)
-                .addToBackStack(null)
-                .commit();
-
-        if (bottomNavigationView != null) {
-            bottomNavigationView.setSelectedItemId(R.id.activitybtn);
-            moveIndicatorToItem(R.id.activitybtn, true);
-        }
+        startActivity(UserPaymentActivity.createIntent(this, ticketId, 0, 0.0, null, null));
     }
 
     private void handleShowMyTickets(Intent intent) {

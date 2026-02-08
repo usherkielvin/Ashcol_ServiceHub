@@ -320,11 +320,12 @@ public class UserHomeFragment extends Fragment {
             return;
         }
 
-        UserPaymentFragment fragment = UserPaymentFragment.newInstance(pendingTicketId, 0, 0.0, null, null);
-        getActivity().getSupportFragmentManager()
-                .beginTransaction()
-                .replace(R.id.fragmentContainerView, fragment)
-                .addToBackStack(null)
-                .commit();
+        startActivity(UserPaymentActivity.createIntent(
+                getActivity(),
+                pendingTicketId,
+                0,
+                0.0,
+                null,
+                null));
     }
 }

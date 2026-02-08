@@ -65,16 +65,22 @@ public class UserPaymentSuccessFragment extends Fragment {
         }
 
         btnBackToDashboard.setOnClickListener(v -> {
-            requireActivity().getSupportFragmentManager()
-                    .beginTransaction()
-                    .replace(R.id.fragmentContainerView, new UserHomeFragment())
-                    .commit();
-
             com.google.android.material.bottomnavigation.BottomNavigationView navView =
                     requireActivity().findViewById(R.id.bottomNavigationView);
+
             if (navView != null) {
+                requireActivity().getSupportFragmentManager()
+                        .beginTransaction()
+                        .replace(R.id.fragmentContainerView, new UserHomeFragment())
+                        .commit();
                 navView.setSelectedItemId(R.id.homebtn);
+                return;
             }
+
+            android.content.Intent intent = new android.content.Intent(requireContext(), DashboardActivity.class);
+            intent.addFlags(android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP | android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(intent);
+            requireActivity().finish();
         });
     }
 }

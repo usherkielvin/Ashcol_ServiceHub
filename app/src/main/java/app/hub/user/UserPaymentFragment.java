@@ -5,7 +5,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.RadioButton;
-import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -72,10 +71,12 @@ public class UserPaymentFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        RadioGroup rgPaymentMethods = view.findViewById(R.id.rgPaymentMethods);
         RadioButton rbCash = view.findViewById(R.id.rbCash);
         RadioButton rbGcash = view.findViewById(R.id.rbGcash);
         RadioButton rbCreditCard = view.findViewById(R.id.rbCreditCard);
+        com.google.android.material.card.MaterialCardView cardCash = view.findViewById(R.id.cardCash);
+        com.google.android.material.card.MaterialCardView cardGcash = view.findViewById(R.id.cardGcash);
+        com.google.android.material.card.MaterialCardView cardCreditCard = view.findViewById(R.id.cardCreditCard);
         com.google.android.material.button.MaterialButton btnContinuePayment = view.findViewById(R.id.btnContinuePayment);
 
         TextView tvTicketId = view.findViewById(R.id.tvTicketId);
@@ -114,9 +115,14 @@ public class UserPaymentFragment extends Fragment {
         listenForPendingPayment(tvServiceName, tvTechnicianName, tvAmountDue, btnContinuePayment);
         fetchPaymentDetails(tvServiceName, tvTechnicianName, tvAmountDue, btnContinuePayment);
 
+        setupPaymentSelection(cardCash, cardGcash, cardCreditCard, rbCash, rbGcash, rbCreditCard);
+
         btnContinuePayment.setOnClickListener(v -> {
-            int checkedId = rgPaymentMethods.getCheckedRadioButtonId();
-            if (checkedId == -1) {
+            boolean cashChecked = rbCash != null && rbCash.isChecked();
+            boolean gcashChecked = rbGcash != null && rbGcash.isChecked();
+            boolean cardChecked = rbCreditCard != null && rbCreditCard.isChecked();
+
+            if (!cashChecked && !gcashChecked && !cardChecked) {
                 Toast.makeText(getContext(), "Please select a payment method.", Toast.LENGTH_SHORT).show();
                 return;
             }
@@ -127,15 +133,15 @@ public class UserPaymentFragment extends Fragment {
             }
 
             String method;
-            if (checkedId == R.id.rbCash) {
+            if (cashChecked) {
                 method = "Cash";
-            } else if (checkedId == R.id.rbGcash) {
+            } else if (gcashChecked) {
                 method = "GCash";
             } else {
                 method = "Credit Card";
             }
 
-            if (rbCreditCard != null && rbCreditCard.isChecked()) {
+            if (cardChecked) {
                 requireActivity().getSupportFragmentManager()
                         .beginTransaction()
                         .replace(R.id.fragmentContainerView, UserPaymentUnsuccessFragment.newInstance())
@@ -306,5 +312,45 @@ public class UserPaymentFragment extends Fragment {
 
     private String formatAmount(double value) {
         return "Php " + String.format(java.util.Locale.getDefault(), "%,.2f", value);
+    }
+
+    private void setupPaymentSelection(
+            com.google.android.material.card.MaterialCardView cardCash,
+            com.google.android.material.card.MaterialCardView cardGcash,
+            com.google.android.material.card.MaterialCardView cardCreditCard,
+            RadioButton rbCash,
+            RadioButton rbGcash,
+            RadioButton rbCreditCard) {
+        View.OnClickListener cashClick = v -> selectPayment(rbCash, rbGcash, rbCreditCard);
+        View.OnClickListener gcashClick = v -> selectPayment(rbGcash, rbCash, rbCreditCard);
+        View.OnClickListener cardClick = v -> selectPayment(rbCreditCard, rbCash, rbGcash);
+
+        if (cardCash != null) cardCash.setOnClickListener(cashClick);
+        if (cardGcash != null) cardGcash.setOnClickListener(gcashClick);
+        if (cardCreditCard != null) cardCreditCard.setOnClickListener(cardClick);
+
+        if (rbCash != null) rbCash.setOnClickListener(cashClick);
+        if (rbGcash != null) rbGcash.setOnClickListener(gcashClick);
+        if (rbCreditCard != null) rbCreditCard.setOnClickListener(cardClick);
+
+        if (rbCash != null && rbGcash != null && rbCreditCard != null) {
+            if (!rbCash.isChecked() && !rbGcash.isChecked() && !rbCreditCard.isChecked()) {
+                rbCash.setChecked(true);
+                rbGcash.setChecked(false);
+                rbCreditCard.setChecked(false);
+            }
+        }
+    }
+
+    private void selectPayment(RadioButton selected, RadioButton other1, RadioButton other2) {
+        if (selected != null) {
+            selected.setChecked(true);
+        }
+        if (other1 != null) {
+            other1.setChecked(false);
+        }
+        if (other2 != null) {
+            other2.setChecked(false);
+        }
     }
 }
