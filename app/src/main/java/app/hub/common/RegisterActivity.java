@@ -14,10 +14,13 @@ import app.hub.api.UpdateProfileRequest;
 import app.hub.api.UserResponse;
 import app.hub.api.VerifyEmailResponse;
 import app.hub.user_emailOtp;
+import app.hub.util.FCMTokenHelper;
 import app.hub.util.TokenManager;
 import app.hub.util.UserLocationManager;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -695,9 +698,13 @@ public class RegisterActivity extends AppCompatActivity {
 						// Account doesn't exist - proceed with registration
 						proceedWithGoogleRegistration(email, firstName, lastName, phone, idToken);
 					}
+				} else if (response.code() == 404) {
+					// 404 means account doesn't exist - proceed with registration
+					Log.d(TAG, "Google account doesn't exist (404), proceeding with registration");
+					proceedWithGoogleRegistration(email, firstName, lastName, phone, idToken);
 				} else {
-					// Handle error response - assume account doesn't exist and proceed
-					Log.w(TAG, "Google account check failed, proceeding with registration");
+					// Handle other error responses
+					Log.w(TAG, "Google account check failed with code " + response.code() + ", proceeding with registration");
 					proceedWithGoogleRegistration(email, firstName, lastName, phone, idToken);
 				}
 			}
@@ -705,7 +712,11 @@ public class RegisterActivity extends AppCompatActivity {
 			@Override
 			public void onFailure(@NonNull Call<GoogleSignInResponse> call, @NonNull Throwable t) {
 				Log.e(TAG, "Error checking Google account existence: " + t.getMessage(), t);
-				Log.e(TAG, "Failed to check Google account: " + t.getMessage(), t);
+				runOnUiThread(() -> {
+					Toast.makeText(RegisterActivity.this, 
+						"Network error. Please check your connection and try again.", 
+						Toast.LENGTH_LONG).show();
+				});
 			}
 		});
 	}
@@ -721,15 +732,25 @@ public class RegisterActivity extends AppCompatActivity {
 
 	// Handle successful Google login (account already exists)
 	private void handleGoogleLoginSuccess(GoogleSignInResponse response) {
+		Log.d(TAG, "handleGoogleLoginSuccess called in RegisterActivity");
+		
 		if (response.getData() == null || response.getData().getUser() == null) {
 			Log.e(TAG, "Google login failed: missing user data");
+			runOnUiThread(() -> {
+				Toast.makeText(RegisterActivity.this, 
+					"Login failed. Please try again.", 
+					Toast.LENGTH_SHORT).show();
+			});
 			return;
 		}
 
 		// Save user data and token
 		GoogleSignInResponse.User user = response.getData().getUser();
+		Log.d(TAG, "Saving user data - Email: " + user.getEmail() + ", Role: " + user.getRole());
+		
 		tokenManager.saveToken("Bearer " + response.getData().getToken());
 		tokenManager.saveEmail(user.getEmail());
+		tokenManager.saveRole(user.getRole()); // Added role saving
 
 		// Build and save name
 		String firstName = user.getFirstName();
@@ -753,6 +774,10 @@ public class RegisterActivity extends AppCompatActivity {
 		// Force immediate token persistence
 		tokenManager.forceCommit();
 
+		// Register FCM token for push notifications
+		FCMTokenHelper.registerTokenWithBackend(RegisterActivity.this);
+
+		Log.d(TAG, "Navigating to dashboard for role: " + user.getRole());
 		// Navigate to appropriate dashboard based on user role
 		navigateToUserDashboard(user.getRole());
 	}
@@ -762,6 +787,7 @@ public class RegisterActivity extends AppCompatActivity {
 		Intent intent;
 
 		if (role == null) {
+			Log.w(TAG, "User role is null, defaulting to customer");
 			role = "customer"; // Default role
 		}
 
@@ -772,7 +798,7 @@ public class RegisterActivity extends AppCompatActivity {
 			case "manager":
 				intent = new Intent(this, app.hub.manager.ManagerDashboardActivity.class);
 				break;
-			case "technician":
+			case "technician", "employee":
 				intent = new Intent(this, app.hub.employee.EmployeeDashboardActivity.class);
 				break;
 			case "customer":
@@ -1252,10 +1278,10 @@ public class RegisterActivity extends AppCompatActivity {
 	// Handle Google Sign-In success
 	public void handleGoogleSignInSuccess(String email, String givenName, String familyName,
 			String displayName, String idToken) {
-		Log.d(TAG, "Handling Google Sign-In success");
+		Log.d(TAG, "handleGoogleSignInSuccess called - Email: " + email);
 
 		// Show loading message
-		Toast.makeText(this, "Signing in...", Toast.LENGTH_SHORT).show();
+		Toast.makeText(this, "Checking account...", Toast.LENGTH_SHORT).show();
 
 		// Mark as Google Sign-In user (skip OTP)
 		isGoogleSignIn = true;

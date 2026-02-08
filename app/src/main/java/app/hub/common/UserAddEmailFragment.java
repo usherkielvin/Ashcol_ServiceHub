@@ -138,21 +138,63 @@ public class UserAddEmailFragment extends Fragment {
             continueButton.setText("Please wait...");
         }
 
-        // Directly proceed with registration flow.
-        // Backend will perform the real uniqueness check and return a clear error if needed.
-        proceedWithEmailRegistration(email);
+        // Show loading state
+        if (continueButton != null) {
+            continueButton.setEnabled(false);
+            continueButton.setText("Checking...");
+        }
+
+        // Check if email already exists in database
+        checkEmailExists(email);
     }
     
     private void showEmailExistsError(String message) {
         Log.d(TAG, "Email already exists: " + message);
         Toast.makeText(getContext(), message, Toast.LENGTH_LONG).show();
         
-        // Navigate back to login screen
-        if (getActivity() != null) {
-            android.content.Intent intent = new android.content.Intent(getActivity(), MainActivity.class);
-            startActivity(intent);
-            getActivity().finish();
-        }
+        // Don't navigate away automatically, let user choose what to do
+        // The user can either type a different email or close the registration and go to login
+    }
+    
+    private void checkEmailExists(String email) {
+        ApiService apiService = ApiClient.getApiService();
+        
+        // Use a dummy login request to check if email exists
+        // We'll use an invalid password to trigger the check
+        app.hub.api.LoginRequest request = new app.hub.api.LoginRequest(email, "dummy_check_password_" + System.currentTimeMillis());
+        
+        Call<app.hub.api.LoginResponse> call = apiService.login(request);
+        call.enqueue(new Callback<app.hub.api.LoginResponse>() {
+            @Override
+            public void onResponse(@NonNull Call<app.hub.api.LoginResponse> call, @NonNull Response<app.hub.api.LoginResponse> response) {
+                if (getActivity() == null) return;
+                
+                getActivity().runOnUiThread(() -> {
+                    // If we get 401 (invalid credentials), it means the email exists
+                    if (response.code() == 401) {
+                        showEmailExistsError("Email already registered. Please use a different email or sign in instead.");
+                        resetContinueButton();
+                    } else if (response.code() == 404) {
+                        // Email doesn't exist - proceed with registration
+                        proceedWithEmailRegistration(email);
+                    } else {
+                        // Other error codes - proceed with registration (backend will catch duplicates)
+                        proceedWithEmailRegistration(email);
+                    }
+                });
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<app.hub.api.LoginResponse> call, @NonNull Throwable t) {
+                if (getActivity() == null) return;
+                
+                getActivity().runOnUiThread(() -> {
+                    Log.e(TAG, "Error checking email: " + t.getMessage());
+                    // On network error, proceed anyway (backend will catch duplicates)
+                    proceedWithEmailRegistration(email);
+                });
+            }
+        });
     }
     
     private void proceedWithEmailRegistration(String email) {

@@ -57,7 +57,6 @@ public class MainActivity extends AppCompatActivity {
     private LocationHelper locationHelper;
 
     private GoogleSignInClient googleSignInClient;
-    private ActivityResultLauncher<Intent> googleSignInLauncher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -109,14 +108,33 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateLocationAndNavigate(String role, String email) {
+        Log.d(TAG, "Starting location update and navigation for role: " + role + ", email: " + email);
+        
         if (locationHelper.isLocationPermissionGranted()) {
+            // Add timeout mechanism to ensure navigation happens even if location request hangs
+            android.os.Handler handler = new android.os.Handler(android.os.Looper.getMainLooper());
+            Runnable timeoutRunnable = () -> {
+                Log.w(TAG, "Location update timed out, proceeding with navigation anyway");
+                runOnUiThread(() -> navigateToDashboard(role));
+            };
+            
+            // Schedule timeout after 10 seconds
+            handler.postDelayed(timeoutRunnable, 10000);
+            
             locationHelper.getCurrentLocation((Location location) -> {
+                // Remove the timeout runnable since location request completed
+                handler.removeCallbacks(timeoutRunnable);
+                
                 if (location != null && email != null) {
+                    Log.d(TAG, "Updating location with lat: " + location.getLatitude() + ", lng: " + location.getLongitude());
                     FCMTokenHelper.updateLocation(this, email, location.getLatitude(), location.getLongitude());
+                } else {
+                    Log.w(TAG, "Location is null or email is null, skipping location update");
                 }
                 navigateToDashboard(role);
             });
         } else {
+            Log.d(TAG, "Location permission not granted, navigating directly to dashboard");
             navigateToDashboard(role);
         }
     }
@@ -128,14 +146,15 @@ public class MainActivity extends AppCompatActivity {
     private void navigateToDashboard(String role) {
         if (role == null) {
             // Default to user dashboard if role is missing
-            role = "user";
+            Log.w(TAG, "User role is null, defaulting to customer");
+            role = "customer"; // Changed from "user" to "customer" to match actual role names
         }
 
         Intent intent;
-        switch (role) {
+        switch (role.toLowerCase()) { // Added toLowerCase() to handle case sensitivity
             case "admin" -> intent = new Intent(MainActivity.this, AdminDashboardActivity.class);
             case "manager" -> intent = new Intent(MainActivity.this, ManagerDashboardActivity.class);
-            case "technician" ->
+            case "technician", "employee" -> // Added "employee" as alternate for technician
                 intent = new Intent(MainActivity.this, EmployeeDashboardActivity.class);
             default -> intent = new Intent(MainActivity.this, DashboardActivity.class);
         }
@@ -184,19 +203,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupGoogleSignIn() {
+        // Configure Google Sign-In - matching CreateNewAccountFragment setup that works
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestIdToken(getString(R.string.server_client_id)) // Get this from Google Cloud Console
                 .requestEmail()
+                .requestProfile()
                 .build();
-
-        googleSignInLauncher = registerForActivityResult(
-                new ActivityResultContracts.StartActivityForResult(),
-                result -> {
-                    if (result.getResultCode() == RESULT_OK) {
-                        Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(result.getData());
-                        handleGoogleSignInResult(task);
-                    }
-                });
 
         googleSignInClient = GoogleSignIn.getClient(this, gso);
     }
@@ -209,15 +220,22 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void signInWithGoogle() {
+        MaterialButton loginButton = findViewById(R.id.loginButton);
+        if (loginButton != null) {
+            loginButton.setEnabled(false);
+            loginButton.setText(R.string.logging_in);
+        }
+        
         if (googleSignInClient != null) {
-            googleSignInClient.signOut().addOnCompleteListener(task -> {
+            googleSignInClient.signOut().addOnCompleteListener(this, task -> {
                 Intent signInIntent = googleSignInClient.getSignInIntent();
-                googleSignInLauncher.launch(signInIntent);
+                startActivityForResult(signInIntent, 9001); // RC_SIGN_IN equivalent
             });
         }
     }
 
     private void handleGoogleSignInResult(Task<GoogleSignInAccount> completedTask) {
+        Log.d(TAG, "handleGoogleSignInResult called");
         try {
             GoogleSignInAccount account = completedTask.getResult(ApiException.class);
             if (account != null) {
@@ -226,10 +244,22 @@ public class MainActivity extends AppCompatActivity {
                 String familyName = account.getFamilyName();
                 String idToken = account.getIdToken();
 
-                Log.d(TAG, "Google Sign-In successful - Email: " + email);
+                Log.d(TAG, "Google Sign-In successful - Email: " + email + ", GivenName: " + givenName + ", FamilyName: " + familyName);
 
                 // Call backend API to login with Google
                 loginWithGoogle(email, givenName, familyName, idToken);
+            } else {
+                Log.e(TAG, "Google Sign-In account is null");
+                Toast.makeText(this, "Google sign-in failed. Account data is null.", Toast.LENGTH_SHORT).show();
+                
+                // Re-enable login button
+                MaterialButton loginButton = findViewById(R.id.loginButton);
+                if (loginButton != null) {
+                    runOnUiThread(() -> {
+                        loginButton.setEnabled(true);
+                        loginButton.setText(R.string.login);
+                    });
+                }
             }
         } catch (ApiException e) {
             Log.e(TAG, String.format(getString(R.string.google_sign_in_failed_code), e.getStatusCode()), e);
@@ -247,10 +277,21 @@ public class MainActivity extends AppCompatActivity {
                     errorMessage = String.format(getString(R.string.google_sign_in_failed_code), e.getStatusCode());
             }
             Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show();
+            
+            // Re-enable login button
+            MaterialButton loginButton = findViewById(R.id.loginButton);
+            if (loginButton != null) {
+                runOnUiThread(() -> {
+                    loginButton.setEnabled(true);
+                    loginButton.setText(R.string.login);
+                });
+            }
         }
     }
 
     private void loginWithGoogle(String email, String firstName, String lastName, String idToken) {
+        Log.d(TAG, "loginWithGoogle called - Email: " + email + ", First: " + firstName + ", Last: " + lastName);
+        
         MaterialButton loginButton = findViewById(R.id.loginButton);
         if (loginButton != null) {
             loginButton.setEnabled(false);
@@ -266,11 +307,14 @@ public class MainActivity extends AppCompatActivity {
                 "" // No phone on login
         );
 
+        Log.d(TAG, "Making API call to googleSignIn endpoint");
         Call<GoogleSignInResponse> call = apiService.googleSignIn(request);
         call.enqueue(new Callback<>() {
             @Override
             public void onResponse(@NonNull Call<GoogleSignInResponse> call,
                     @NonNull Response<GoogleSignInResponse> response) {
+                Log.d(TAG, "Google Sign-In response received - Code: " + response.code() + ", Successful: " + response.isSuccessful());
+                
                 runOnUiThread(() -> {
                     if (loginButton != null) {
                         loginButton.setEnabled(true);
@@ -280,21 +324,36 @@ public class MainActivity extends AppCompatActivity {
 
                 if (response.isSuccessful() && response.body() != null) {
                     GoogleSignInResponse signInResponse = response.body();
+                    Log.d(TAG, "Google Sign-In response body - Success: " + signInResponse.isSuccess() + ", Message: " + signInResponse.getMessage());
 
                     if (signInResponse.isSuccess()) {
+                        Log.d(TAG, "Google Sign-In successful, handling login");
                         handleGoogleLoginSuccess(signInResponse);
                     } else {
                         // API returned success: false
+                        Log.w(TAG, "Google Sign-In failed - API returned success=false");
                         String errorMsg = signInResponse.getMessage() != null ? signInResponse.getMessage()
                                 : getString(R.string.account_not_found_register);
                         runOnUiThread(() -> showError(getString(R.string.login_failed_title), errorMsg));
                         signOutFromGoogle();
                     }
                 } else {
+                    // Handle 404 - Account not found
+                    Log.w(TAG, "Google Sign-In failed - HTTP " + response.code());
+                    if (response.code() == 404) {
+                        Log.d(TAG, "Account not found (404), showing registration prompt");
+                        runOnUiThread(() -> {
+                            showError("Sign In Failed", "No account found with this Google account. Please register first.");
+                        });
+                        signOutFromGoogle();
+                        return;
+                    }
+                    
                     String errorMsg = parseGoogleLoginError(response);
                     if (errorMsg == null || errorMsg.isEmpty()) {
                         errorMsg = getString(R.string.login_failed_try_again);
                     }
+                    Log.e(TAG, "Google Sign-In error: " + errorMsg);
                     final String finalErrorMsg = errorMsg;
                     runOnUiThread(() -> showError(getString(R.string.login_failed_title), finalErrorMsg));
                     signOutFromGoogle();
@@ -303,6 +362,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(@NonNull Call<GoogleSignInResponse> call, @NonNull Throwable t) {
+                Log.e(TAG, "Google Sign-In request failed", t);
                 runOnUiThread(() -> {
                     if (loginButton != null) {
                         loginButton.setEnabled(true);
@@ -318,13 +378,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void handleGoogleLoginSuccess(GoogleSignInResponse response) {
+        Log.d(TAG, "handleGoogleLoginSuccess called");
+        
         if (response.getData() == null || response.getData().getUser() == null) {
-            showError(getString(R.string.login_failed_title), getString(R.string.invalid_server_response));
+            Log.e(TAG, "Google login success but missing user data");
+            runOnUiThread(() -> showError(getString(R.string.login_failed_title), getString(R.string.invalid_server_response)));
             return;
         }
 
         // Save token and user data
         GoogleSignInResponse.User user = response.getData().getUser();
+        Log.d(TAG, "Saving user data - Email: " + user.getEmail() + ", Role: " + user.getRole());
+        
         tokenManager.saveToken("Bearer " + response.getData().getToken());
         tokenManager.saveEmail(user.getEmail());
         tokenManager.saveRole(user.getRole());
@@ -336,6 +401,7 @@ public class MainActivity extends AppCompatActivity {
         String fullName = buildFullName(user.getFirstName(), user.getLastName());
         if (!TextUtils.isEmpty(fullName)) {
             tokenManager.saveName(fullName);
+            Log.d(TAG, "Saved user name: " + fullName);
         }
 
         // Force immediate token persistence
@@ -344,6 +410,7 @@ public class MainActivity extends AppCompatActivity {
         // Register FCM token for push notifications
         FCMTokenHelper.registerTokenWithBackend(MainActivity.this);
 
+        Log.d(TAG, "Navigating to dashboard for role: " + user.getRole());
         // Update location for signed-in user and navigate after completion
         updateLocationAndNavigate(user);
     }
@@ -529,6 +596,17 @@ public class MainActivity extends AppCompatActivity {
         if (googleSignInClient != null) {
             googleSignInClient.signOut().addOnCompleteListener(this,
                     task -> Log.d(TAG, getString(R.string.google_sign_out_complete)));
+        }
+    }
+    
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        
+        // Handle Google Sign-In result
+        if (requestCode == 9001) { // RC_SIGN_IN equivalent
+            Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
+            handleGoogleSignInResult(task);
         }
     }
 }
