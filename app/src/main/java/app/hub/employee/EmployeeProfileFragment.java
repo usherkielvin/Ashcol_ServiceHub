@@ -61,66 +61,77 @@ public class EmployeeProfileFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        // Null check for context
+        if (getContext() == null) {
+            Log.e("EmployeeProfileFragment", "Context is null in onViewCreated");
+            return;
+        }
+
         tokenManager = new TokenManager(getContext());
 
         // Appearance button
-        View appearanceButton = view.findViewById(R.id.btn_appearance);
+        Button appearanceButton = view.findViewById(R.id.btn_appearance);
         if (appearanceButton != null) {
             appearanceButton.setOnClickListener(v -> showThemeToggler());
         }
 
-        // Bind UI Elements
-        android.widget.TextView tvName = view.findViewById(R.id.tv_name);
-        android.widget.TextView tvUsername = view.findViewById(R.id.tv_username);
-        android.widget.TextView tvBranch = view.findViewById(R.id.tv_branch);
+            // Bind UI Elements with null checks
+            android.widget.TextView tvName = view.findViewById(R.id.tv_name);
+            android.widget.TextView tvUsername = view.findViewById(R.id.tv_username);
+            android.widget.TextView tvBranch = view.findViewById(R.id.tv_branch);
 
-        // Populate Data
-        String name = tokenManager.getName();
-        if (name != null)
-            tvName.setText(name);
-
-        String email = tokenManager.getEmail();
-        if (email != null)
-            tvUsername.setText(email);
-
-        String branch = tokenManager.getUserBranch();
-        if (branch != null && !branch.isEmpty()) {
-            tvBranch.setText("Branch: " + branch);
-            tvBranch.setVisibility(View.VISIBLE);
-        } else {
-            // Fallback to cached branch if relevant
-            String cachedBranch = tokenManager.getCachedBranch();
-            if (cachedBranch != null) {
-                tvBranch.setText("Branch: " + cachedBranch);
-                tvBranch.setVisibility(View.VISIBLE);
-            } else {
-                tvBranch.setText("Branch: --");
+            // Populate Data with null safety
+            if (tvName != null) {
+                String name = tokenManager.getName();
+                tvName.setText(name != null ? name : "Unknown User");
             }
-        }
+
+            if (tvUsername != null) {
+                String email = tokenManager.getEmail();
+                tvUsername.setText(email != null ? email : "No email");
+            }
+
+            if (tvBranch != null) {
+                String branch = tokenManager.getUserBranch();
+                if (branch != null && !branch.isEmpty()) {
+                    tvBranch.setText("Branch: " + branch);
+                    tvBranch.setVisibility(View.VISIBLE);
+                } else {
+                    // Fallback to cached branch if relevant
+                    String cachedBranch = tokenManager.getCachedBranch();
+                    if (cachedBranch != null) {
+                        tvBranch.setText("Branch: " + cachedBranch);
+                        tvBranch.setVisibility(View.VISIBLE);
+                    } else {
+                        tvBranch.setText("Branch: --");
+                        tvBranch.setVisibility(View.VISIBLE);
+                    }
+                }
+            }
 
         // Button Listeners
-        View notificationButton = view.findViewById(R.id.btn_notifications);
+        Button notificationButton = view.findViewById(R.id.btn_notifications);
         if (notificationButton != null) {
             notificationButton.setOnClickListener(v -> showNotificationSettings());
         }
 
         // Language button
-        View languageButton = view.findViewById(R.id.btn_language);
+        Button languageButton = view.findViewById(R.id.btn_language);
         if (languageButton != null) {
             languageButton.setOnClickListener(v -> showLanguageToggler());
         }
 
-        View passwordPrivacyButton = view.findViewById(R.id.btn_password_privacy);
+        Button passwordPrivacyButton = view.findViewById(R.id.btn_password_privacy);
         if (passwordPrivacyButton != null) {
             passwordPrivacyButton.setOnClickListener(v -> showChangePasswordDialog());
         }
 
-        // Placeholder buttons
-        setupPlaceholderButton(view, R.id.btn_personal_info, "Personal Info");
-        setupPlaceholderButton(view, R.id.btn_help, "Help & Feedback");
-        setupPlaceholderButton(view, R.id.btn_edit_photo, "Edit Photo");
+            // Placeholder buttons
+            setupPlaceholderButton(view, R.id.btn_personal_info, "Personal Info");
+            setupPlaceholderButton(view, R.id.btn_help, "Help & Feedback");
+            setupPlaceholderButton(view, R.id.btn_edit_photo, "Edit Photo");
 
-        View logoutButton = view.findViewById(R.id.logoutButton);
+        Button logoutButton = view.findViewById(R.id.logoutButton);
         if (logoutButton != null) {
             logoutButton.setOnClickListener(v -> showLogoutConfirmation());
         }
@@ -214,6 +225,12 @@ public class EmployeeProfileFragment extends Fragment {
     }
 
     private void changePassword(String currentPassword, String newPassword) {
+        // Null safety checks
+        if (!isAdded() || getContext() == null) {
+            Log.w("EmployeeProfileFragment", "Fragment not attached or context is null");
+            return;
+        }
+        
         String token = tokenManager.getToken();
         if (token == null) {
             Toast.makeText(getContext(), "Authentication error. Please login again.", Toast.LENGTH_SHORT).show();
@@ -228,6 +245,11 @@ public class EmployeeProfileFragment extends Fragment {
             @Override
             public void onResponse(@NonNull Call<ChangePasswordResponse> call,
                     @NonNull Response<ChangePasswordResponse> response) {
+                // Additional safety check
+                if (!isAdded() || getContext() == null) {
+                    return;
+                }
+                    
                 if (response.isSuccessful() && response.body() != null) {
                     ChangePasswordResponse changePasswordResponse = response.body();
                     if (changePasswordResponse.isSuccess()) {
@@ -249,6 +271,11 @@ public class EmployeeProfileFragment extends Fragment {
 
             @Override
             public void onFailure(@NonNull Call<ChangePasswordResponse> call, @NonNull Throwable t) {
+                // Safety check
+                if (!isAdded() || getContext() == null) {
+                    return;
+                }
+                    
                 Log.e("EmployeeSettingsFragment", "Change password failed: " + t.getMessage());
                 Toast.makeText(getContext(), "Network error. Please check your connection.", Toast.LENGTH_SHORT).show();
             }
@@ -327,18 +354,24 @@ public class EmployeeProfileFragment extends Fragment {
 
     private void logout() {
         Log.d("EmployeeProfileFragment", "logout() method called");
-
-        // Show progress indicator
-        if (getActivity() == null) {
-            Log.w("EmployeeProfileFragment", "Activity is null, cannot logout");
+        
+        // Check if fragment is still attached
+        if (!isAdded() || getActivity() == null) {
+            Log.w("EmployeeProfileFragment", "Fragment not attached or activity is null, cannot logout");
             return;
         }
 
-        Log.d("EmployeeProfileFragment", "Creating progress dialog");
-        android.app.ProgressDialog progressDialog = new android.app.ProgressDialog(getContext());
-        progressDialog.setMessage("Logging out...");
-        progressDialog.setCancelable(false);
-        progressDialog.show();
+        // Show progress indicator
+        final android.app.ProgressDialog[] progressDialogWrapper = {null};
+        try {
+            Log.d("EmployeeProfileFragment", "Creating progress dialog");
+            progressDialogWrapper[0] = new android.app.ProgressDialog(getContext());
+            progressDialogWrapper[0].setMessage("Logging out...");
+            progressDialogWrapper[0].setCancelable(false);
+            progressDialogWrapper[0].show();
+        } catch (Exception e) {
+            Log.w("EmployeeProfileFragment", "Could not create progress dialog: " + e.getMessage());
+        }
 
         Log.d("EmployeeProfileFragment", "Clearing user data immediately");
         // Clear user data immediately (this is the most important part)
@@ -349,48 +382,58 @@ public class EmployeeProfileFragment extends Fragment {
 
         if (token != null) {
             Log.d("EmployeeProfileFragment", "Making API logout call");
-            ApiService apiService = ApiClient.getApiService();
-            Call<LogoutResponse> call = apiService.logout(token);
-            call.enqueue(new Callback<LogoutResponse>() {
-                @Override
-                public void onResponse(@NonNull Call<LogoutResponse> call, @NonNull Response<LogoutResponse> response) {
-                    Log.d("EmployeeProfileFragment", "API logout response received - Success: "
-                            + response.isSuccessful() + ", Code: " + response.code());
+            try {
+                ApiService apiService = ApiClient.getApiService();
+                Call<LogoutResponse> call = apiService.logout(token);
+                call.enqueue(new Callback<LogoutResponse>() {
+                    @Override
+                    public void onResponse(@NonNull Call<LogoutResponse> call, @NonNull Response<LogoutResponse> response) {
+                        Log.d("EmployeeProfileFragment", "API logout response received - Success: "
+                                + response.isSuccessful() + ", Code: " + response.code());
+                        
+                        // Dismiss progress dialog safely
+                        dismissProgressDialog(progressDialogWrapper[0]);
 
-                    // Dismiss progress dialog
-                    if (progressDialog.isShowing()) {
-                        progressDialog.dismiss();
+                        Log.d("EmployeeProfileFragment", "Performing final cleanup");
+                        // Perform remaining cleanup and navigate
+                        performFinalCleanup();
                     }
 
-                    Log.d("EmployeeProfileFragment", "Performing final cleanup");
-                    // Perform remaining cleanup and navigate
-                    performFinalCleanup();
-                }
+                    @Override
+                    public void onFailure(@NonNull Call<LogoutResponse> call, @NonNull Throwable t) {
+                        Log.w("EmployeeProfileFragment", "API logout failed: " + t.getMessage());
+                        
+                        // Dismiss progress dialog safely
+                        dismissProgressDialog(progressDialogWrapper[0]);
 
-                @Override
-                public void onFailure(@NonNull Call<LogoutResponse> call, @NonNull Throwable t) {
-                    Log.w("EmployeeProfileFragment", "API logout failed: " + t.getMessage());
-
-                    // Dismiss progress dialog
-                    if (progressDialog.isShowing()) {
-                        progressDialog.dismiss();
+                        Log.d("EmployeeProfileFragment", "Performing final cleanup after API failure");
+                        // Still perform cleanup even if API call fails
+                        performFinalCleanup();
                     }
-
-                    Log.d("EmployeeProfileFragment", "Performing final cleanup after API failure");
-                    // Still perform cleanup even if API call fails
-                    performFinalCleanup();
-                }
-            });
+                });
+            } catch (Exception e) {
+                Log.e("EmployeeProfileFragment", "Error making logout API call: " + e.getMessage(), e);
+                dismissProgressDialog(progressDialogWrapper[0]);
+                performFinalCleanup();
+            }
         } else {
             Log.d("EmployeeProfileFragment", "No token, dismissing progress dialog");
             // Dismiss progress dialog
-            if (progressDialog.isShowing()) {
-                progressDialog.dismiss();
-            }
+            dismissProgressDialog(progressDialogWrapper[0]);
 
             Log.d("EmployeeProfileFragment", "Performing final cleanup (no token)");
             // No token, just perform final cleanup
             performFinalCleanup();
+        }
+    }
+    
+    private void dismissProgressDialog(android.app.ProgressDialog progressDialog) {
+        try {
+            if (progressDialog != null && progressDialog.isShowing()) {
+                progressDialog.dismiss();
+            }
+        } catch (Exception e) {
+            Log.w("EmployeeProfileFragment", "Error dismissing progress dialog: " + e.getMessage());
         }
     }
 
@@ -477,8 +520,9 @@ public class EmployeeProfileFragment extends Fragment {
     private void navigateToLogin() {
         Log.d("EmployeeProfileFragment", "navigateToLogin called");
 
-        if (getActivity() == null) {
-            Log.w("EmployeeProfileFragment", "Activity is null, cannot navigate to login");
+        // Check if fragment is still attached and has activity
+        if (!isAdded() || getActivity() == null) {
+            Log.w("EmployeeProfileFragment", "Fragment not attached or activity is null, cannot navigate to login");
             return;
         }
 
@@ -495,7 +539,9 @@ public class EmployeeProfileFragment extends Fragment {
             Log.e("EmployeeProfileFragment", "Error navigating to login: " + e.getMessage(), e);
             // If navigation fails, at least clear the activity stack
             try {
-                getActivity().finish();
+                if (getActivity() != null) {
+                    getActivity().finish();
+                }
             } catch (Exception finishException) {
                 Log.e("EmployeeProfileFragment", "Error finishing activity: " + finishException.getMessage(),
                         finishException);

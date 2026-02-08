@@ -92,6 +92,12 @@ public class TicketListResponse {
         @SerializedName("schedule_notes")
         private String scheduleNotes;
 
+        @SerializedName("latitude")
+        private double latitude;
+
+        @SerializedName("longitude")
+        private double longitude;
+
         // Getters and setters
         public int getId() {
             return id;
@@ -235,6 +241,22 @@ public class TicketListResponse {
 
         public void setScheduleNotes(String scheduleNotes) {
             this.scheduleNotes = scheduleNotes;
+        }
+
+        public double getLatitude() {
+            return latitude;
+        }
+
+        public void setLatitude(double latitude) {
+            this.latitude = latitude;
+        }
+
+        public double getLongitude() {
+            return longitude;
+        }
+
+        public void setLongitude(double longitude) {
+            this.longitude = longitude;
         }
     }
 
