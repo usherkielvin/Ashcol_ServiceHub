@@ -22,17 +22,6 @@
             app:layout_constraintTop_toTopOf="parent" />
 
         <ImageView
-            android:id="@+id/btnMenu"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:layout_marginStart="16dp"
-            android:src="@drawable/menu_burger"
-            app:layout_constraintBottom_toBottomOf="@+id/headerBackground"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/headerBackground"
-            app:tint="@color/white" />
-
-        <ImageView
             android:id="@+id/appLogo"
             android:layout_width="120dp"
             android:layout_height="48dp"
@@ -40,7 +29,7 @@
             android:contentDescription="@string/ashcol_corporation_logo"
             android:src="@drawable/ash"
             app:layout_constraintBottom_toBottomOf="@+id/headerBackground"
-            app:layout_constraintStart_toEndOf="@+id/btnMenu"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="@+id/headerBackground" />
 
         <LinearLayout
@@ -52,14 +41,6 @@
             app:layout_constraintBottom_toBottomOf="@+id/headerBackground"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="@+id/headerBackground">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:fontFamily="@font/poppins_medium"
-                android:text="Location"
-                android:textColor="@color/white"
-                android:textSize="12sp" />
 
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/locationCard"

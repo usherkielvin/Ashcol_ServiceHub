@@ -3,10 +3,11 @@ package app.hub.employee;
 import android.content.Context;
 import android.util.Log;
 
-import com.google.firebase.firestore.DocumentChange;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.ListenerRegistration;
-import com.google.firebase.firestore.QuerySnapshot;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import app.hub.util.TokenManager;
 
@@ -20,7 +21,7 @@ public class FirebaseEmployeeListener {
     private FirebaseFirestore firestore;
     private TokenManager tokenManager;
     private Context context;
-    private ListenerRegistration ticketListener;
+    private final List<ListenerRegistration> ticketListeners = new ArrayList<>();
     private boolean isListening = false;
 
     public interface OnScheduleChangeListener {
@@ -46,41 +47,58 @@ public class FirebaseEmployeeListener {
             return;
 
         String employeeName = tokenManager.getName();
-        if (employeeName == null || employeeName.isEmpty()) {
-            Log.w(TAG, "No employee name found, cannot start listener");
+        String employeeEmail = tokenManager.getEmail();
+
+        if ((employeeName == null || employeeName.isEmpty())
+                && (employeeEmail == null || employeeEmail.isEmpty())) {
+            Log.w(TAG, "No employee identifier found, cannot start listener");
             return;
         }
 
-        Log.i(TAG, "Starting Firebase listener for employee: " + employeeName);
+        Log.i(TAG, "Starting Firebase listener for employee: " + employeeName + " / " + employeeEmail);
         isListening = true;
 
-        // Listen to tickets where assigned_staff matches the employee name
-        ticketListener = firestore.collection("tickets")
-                .whereEqualTo("assigned_staff", employeeName)
-                .addSnapshotListener((snapshots, error) -> {
-                    if (error != null) {
-                        Log.e(TAG, "Firestore listener error", error);
-                        if (listener != null)
-                            listener.onError(error.getMessage());
-                        return;
-                    }
+        if (employeeName != null && !employeeName.isEmpty()) {
+            ticketListeners.add(firestore.collection("tickets")
+                    .whereEqualTo("assigned_staff", employeeName)
+                    .addSnapshotListener((snapshots, error) -> handleSnapshot(snapshots, error)));
+        }
 
-                    if (snapshots != null && !snapshots.isEmpty()) {
-                        Log.d(TAG, "Received schedule update from Firestore");
-                        if (listener != null)
-                            listener.onScheduleChanged();
-                    }
-                });
+        if (employeeEmail != null && !employeeEmail.isEmpty()
+                && (employeeName == null || !employeeEmail.equalsIgnoreCase(employeeName))) {
+            ticketListeners.add(firestore.collection("tickets")
+                    .whereEqualTo("assigned_staff", employeeEmail)
+                    .addSnapshotListener((snapshots, error) -> handleSnapshot(snapshots, error)));
+        }
+    }
+
+    private void handleSnapshot(com.google.firebase.firestore.QuerySnapshot snapshots, Exception error) {
+        if (error != null) {
+            Log.e(TAG, "Firestore listener error", error);
+            if (listener != null) {
+                listener.onError(error.getMessage());
+            }
+            return;
+        }
+
+        if (snapshots != null) {
+            Log.d(TAG, "Received schedule update from Firestore (size=" + snapshots.size() + ")");
+            if (listener != null) {
+                listener.onScheduleChanged();
+            }
+        }
     }
 
     public void stopListening() {
         if (!isListening)
             return;
 
-        if (ticketListener != null) {
-            ticketListener.remove();
-            ticketListener = null;
+        for (ListenerRegistration registration : ticketListeners) {
+            if (registration != null) {
+                registration.remove();
+            }
         }
+        ticketListeners.clear();
         isListening = false;
         Log.i(TAG, "Stopped Firebase listener");
     }
