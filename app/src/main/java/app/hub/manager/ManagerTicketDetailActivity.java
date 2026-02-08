@@ -305,25 +305,73 @@ public class ManagerTicketDetailActivity extends AppCompatActivity
             return;
         }
 
-        switch (status.toLowerCase()) {
+        // Check if ticket is already assigned to a technician
+        boolean isAssigned = currentTicket != null && 
+                            currentTicket.getAssignedStaff() != null && 
+                            !currentTicket.getAssignedStaff().isEmpty() &&
+                            !currentTicket.getAssignedStaff().equals("Not assigned");
+
+        String normalizedStatus = status.toLowerCase().trim();
+        
+        switch (normalizedStatus) {
             case "pending":
-            case "open": // Also handle "open" status
-                // Show both Assign Technician and Reject buttons for pending tickets
+            case "open":
+                if (isAssigned) {
+                    // Ticket already assigned - show locked state
+                    btnAssignStaff.setVisibility(View.VISIBLE);
+                    btnAssignStaff.setText("✓ Assigned to " + currentTicket.getAssignedStaff());
+                    btnAssignStaff.setEnabled(false);
+                    btnAssignStaff.setAlpha(0.6f);
+                    btnAssignStaff.setBackgroundColor(getResources().getColor(android.R.color.darker_gray));
+                } else {
+                    // Not assigned yet - allow assignment
+                    btnAssignStaff.setVisibility(View.VISIBLE);
+                    btnAssignStaff.setText("Assign Technician");
+                    btnAssignStaff.setEnabled(true);
+                    btnAssignStaff.setAlpha(1.0f);
+                }
                 btnReject.setVisibility(View.VISIBLE);
-                btnAssignStaff.setVisibility(View.VISIBLE);
-                btnAssignStaff.setText("Assign Technician");
                 break;
+                
             case "in progress":
+            case "on going":
+            case "ongoing":
+                // Already in progress - show assigned technician, cannot reassign
+                if (isAssigned) {
+                    btnAssignStaff.setVisibility(View.VISIBLE);
+                    btnAssignStaff.setText("✓ Assigned to " + currentTicket.getAssignedStaff());
+                    btnAssignStaff.setEnabled(false);
+                    btnAssignStaff.setAlpha(0.6f);
+                    btnAssignStaff.setBackgroundColor(getResources().getColor(android.R.color.darker_gray));
+                } else {
+                    btnAssignStaff.setVisibility(View.GONE);
+                }
+                btnReject.setVisibility(View.GONE);
+                break;
+                
             case "completed":
             case "cancelled":
+            case "resolved":
+            case "closed":
+                // Ticket is done - hide all action buttons
                 btnReject.setVisibility(View.GONE);
                 btnAssignStaff.setVisibility(View.GONE);
                 break;
+                
             default:
-                // For unknown statuses, show assign and reject buttons
+                // For unknown statuses, check assignment
+                if (isAssigned) {
+                    btnAssignStaff.setVisibility(View.VISIBLE);
+                    btnAssignStaff.setText("✓ Assigned to " + currentTicket.getAssignedStaff());
+                    btnAssignStaff.setEnabled(false);
+                    btnAssignStaff.setAlpha(0.6f);
+                } else {
+                    btnAssignStaff.setVisibility(View.VISIBLE);
+                    btnAssignStaff.setText("Assign Technician");
+                    btnAssignStaff.setEnabled(true);
+                    btnAssignStaff.setAlpha(1.0f);
+                }
                 btnReject.setVisibility(View.VISIBLE);
-                btnAssignStaff.setVisibility(View.VISIBLE);
-                btnAssignStaff.setText("Assign Technician");
                 break;
         }
     }
