@@ -1,278 +1,429 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FFFFFF"
+    android:background="@android:color/white"
     android:fillViewport="true"
-    android:overScrollMode="never">
+    tools:context=".EmployeeDashboardFragment">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="24dp">
+        android:orientation="vertical">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginBottom="32dp"
-            android:fontFamily="sans-serif-black"
-            android:text="@string/profile_title"
-            android:textColor="#1A4330"
-            android:textSize="24sp"
-            android:textStyle="bold" />
-
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginBottom="16dp">
-
-            <com.google.android.material.imageview.ShapeableImageView
-                android:id="@+id/img_profile"
-                android:layout_width="120dp"
-                android:layout_height="120dp"
-                android:contentDescription="@string/desc_profile_picture"
-                android:padding="4dp"
-                android:scaleType="centerCrop"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:shapeAppearanceOverlay="@style/CircleImage"
-                app:srcCompat="@android:mipmap/sym_def_app_icon"
-                tools:background="#DDDDDD" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_edit_photo"
-                style="@style/Widget.Material3.Button.IconButton"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:contentDescription="@string/desc_edit_photo"
-                app:backgroundTint="#00B050"
-                app:icon="@android:drawable/ic_menu_edit"
-                app:iconSize="20dp"
-                app:iconTint="#FFFFFF"
-                app:layout_constraintBottom_toBottomOf="@id/img_profile"
-                app:layout_constraintEnd_toEndOf="@id/img_profile"
-                app:shapeAppearanceOverlay="@style/CircleImage" />
-
-        </androidx.constraintlayout.widget.ConstraintLayout>
-
-        <TextView
-            android:id="@+id/tv_name"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:fontFamily="sans-serif-medium"
-            android:text="@string/profile_default_name"
-            android:textColor="#1A4330"
-            android:textSize="20sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:id="@+id/tv_username"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginBottom="4dp"
-            android:text="@string/profile_default_username"
-            android:textColor="#666666"
-            android:textSize="14sp" />
-
-        <TextView
-            android:id="@+id/tv_branch"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginBottom="32dp"
-            android:text="Branch: --"
-            android:textColor="#4CAF50"
-            android:textSize="14sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
-            android:text="@string/profile_preferences"
-            android:textColor="#386A4E"
-            android:textSize="14sp"
-            android:textStyle="bold" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_appearance"
-            style="@style/Widget.Material3.Button.TextButton"
+        <!-- Header Section -->
+        <LinearLayout
+            android:id="@+id/headerLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:insetTop="0dp"
-            android:insetBottom="0dp"
-            android:minHeight="48dp"
-            android:paddingStart="8dp"
-            android:paddingEnd="8dp"
-            android:text="@string/profile_appearance"
-            android:textAlignment="viewStart"
-            android:textAllCaps="false"
-            android:textColor="#000000"
-            android:textSize="16sp"
-            app:icon="@drawable/ic_palette"
-            app:iconGravity="start"
-            app:iconPadding="16dp"
-            app:iconSize="24dp"
-            app:iconTint="#1A4330" />
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:paddingTop="48dp"
+            android:paddingBottom="16dp">
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_notifications"
-            style="@style/Widget.Material3.Button.TextButton"
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+
+                <com.google.android.material.imageview.ShapeableImageView
+                    android:id="@+id/img_profile"
+                    android:layout_width="120dp"
+                    android:layout_height="120dp"
+                    android:padding="2dp"
+                    android:scaleType="centerCrop"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:shapeAppearanceOverlay="@style/CircleImage"
+                    app:srcCompat="@mipmap/ic_launchericons_round"
+                    app:strokeColor="#EEEEEE"
+                    app:strokeWidth="1dp"
+                    tools:src="@drawable/user" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_edit_photo"
+                    style="@style/Widget.Material3.Button.IconButton"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:visibility="gone"
+                    app:backgroundTint="#00B050"
+                    app:icon="@android:drawable/ic_menu_edit"
+                    app:iconSize="16dp"
+                    app:iconTint="#FFFFFF"
+                    app:layout_constraintBottom_toBottomOf="@id/img_profile"
+                    app:layout_constraintEnd_toEndOf="@id/img_profile"
+                    app:shapeAppearanceOverlay="@style/CircleImage" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <TextView
+                android:id="@+id/tv_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:fontFamily="@font/poppins_bold"
+                android:text="Yooxie Batumbakal"
+                android:textColor="#1B4332"
+                android:textSize="22sp" />
+
+            <TextView
+                android:id="@+id/tv_username"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/poppins_medium"
+                android:text="email@gmail.com"
+                android:textColor="#9E9E9E"
+                android:textSize="14sp" />
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/branchCard"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                app:cardBackgroundColor="#D1E7D1"
+                app:cardCornerRadius="20dp"
+                app:cardElevation="0dp"
+                app:strokeColor="#1B5E20"
+                app:strokeWidth="1dp">
+
+                <TextView
+                    android:id="@+id/tv_branch"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/poppins_semibold"
+                    android:paddingHorizontal="20dp"
+                    android:paddingVertical="6dp"
+                    android:text="Technician | ASHCOL DASMA"
+                    android:textColor="#1B5E20"
+                    android:textSize="13sp" />
+            </com.google.android.material.card.MaterialCardView>
+
+        </LinearLayout>
+
+        <!-- Content Card with 60dp Rounded Edges and Spacing -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/contentCard"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:insetTop="0dp"
-            android:insetBottom="0dp"
-            android:minHeight="48dp"
-            android:paddingStart="8dp"
-            android:paddingEnd="8dp"
-            android:text="@string/profile_notifications"
-            android:textAlignment="viewStart"
-            android:textAllCaps="false"
-            android:textColor="#000000"
-            android:textSize="16sp"
-            app:icon="@drawable/ic_notifications"
-            app:iconGravity="start"
-            app:iconPadding="16dp"
-            app:iconSize="24dp"
-            app:iconTint="#1A4330" />
+            android:layout_marginTop="32dp"
+            app:cardBackgroundColor="@android:color/white"
+            app:cardElevation="12dp"
+            app:strokeWidth="1dp"
+            app:strokeColor="#F5F5F5"
+            app:shapeAppearanceOverlay="@style/ProfileContentCardShape">
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_language"
-            style="@style/Widget.Material3.Button.TextButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:insetTop="0dp"
-            android:insetBottom="0dp"
-            android:minHeight="48dp"
-            android:paddingStart="8dp"
-            android:paddingEnd="8dp"
-            android:text="@string/profile_language"
-            android:textAlignment="viewStart"
-            android:textAllCaps="false"
-            android:textColor="#000000"
-            android:textSize="16sp"
-            app:icon="@drawable/ic_language"
-            app:iconGravity="start"
-            app:iconPadding="16dp"
-            app:iconSize="24dp"
-            app:iconTint="#1A4330" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="32dp">
 
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="16dp"
-            android:background="#E0E0E0" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/poppins_bold"
+                    android:text="Preferences"
+                    android:textColor="#1B4332"
+                    android:textSize="14sp"
+                    android:layout_marginStart="4dp" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
-            android:text="@string/profile_general"
-            android:textColor="#386A4E"
-            android:textSize="14sp"
-            android:textStyle="bold" />
+                <!-- Display Row -->
+                <LinearLayout
+                    android:id="@+id/btn_appearance"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:layout_marginTop="8dp"
+                    android:background="?attr/selectableItemBackground"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_personal_info"
-            style="@style/Widget.Material3.Button.TextButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:insetTop="0dp"
-            android:insetBottom="0dp"
-            android:minHeight="48dp"
-            android:paddingStart="8dp"
-            android:paddingEnd="8dp"
-            android:text="@string/profile_personal_info"
-            android:textAlignment="viewStart"
-            android:textAllCaps="false"
-            android:textColor="#000000"
-            android:textSize="16sp"
-            app:icon="@drawable/ic_person"
-            app:iconGravity="start"
-            app:iconPadding="16dp"
-            app:iconSize="24dp"
-            app:iconTint="#1A4330" />
+                    <FrameLayout
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:background="@drawable/bg_icon_circle_green"
+                        android:backgroundTint="#000000">
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/outline_dark_mode_24"
+                            app:tint="@color/white" />
+                    </FrameLayout>
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_password_privacy"
-            style="@style/Widget.Material3.Button.TextButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:insetTop="0dp"
-            android:insetBottom="0dp"
-            android:minHeight="48dp"
-            android:paddingStart="8dp"
-            android:paddingEnd="8dp"
-            android:text="@string/profile_password_privacy"
-            android:textAlignment="viewStart"
-            android:textAllCaps="false"
-            android:textColor="#000000"
-            android:textSize="16sp"
-            app:icon="@drawable/ic_lock"
-            app:iconGravity="start"
-            app:iconPadding="16dp"
-            app:iconSize="24dp"
-            app:iconTint="#1A4330" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:fontFamily="@font/poppins_medium"
+                        android:text="Display"
+                        android:textColor="#000000"
+                        android:textSize="18sp" />
+                </LinearLayout>
 
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="16dp"
-            android:background="#E0E0E0" />
+                <!-- Notifications Row -->
+                <LinearLayout
+                    android:id="@+id/btn_notifications"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:background="?attr/selectableItemBackground"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_help"
-            style="@style/Widget.Material3.Button.TextButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:insetTop="0dp"
-            android:insetBottom="0dp"
-            android:minHeight="48dp"
-            android:paddingStart="8dp"
-            android:paddingEnd="8dp"
-            android:text="@string/profile_help_feedback"
-            android:textAlignment="viewStart"
-            android:textAllCaps="false"
-            android:textColor="#000000"
-            android:textSize="16sp"
-            app:icon="@drawable/ic_help"
-            app:iconGravity="start"
-            app:iconPadding="16dp"
-            app:iconSize="24dp"
-            app:iconTint="#1A4330" />
+                    <FrameLayout
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:background="@drawable/bg_icon_circle_green"
+                        android:backgroundTint="#A5D6A7">
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_notifications"
+                            app:tint="@color/white" />
+                    </FrameLayout>
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/logoutButton"
-            style="@style/Widget.Material3.Button.TextButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:insetTop="0dp"
-            android:insetBottom="0dp"
-            android:minHeight="48dp"
-            android:paddingStart="8dp"
-            android:paddingEnd="8dp"
-            android:text="@string/profile_sign_out"
-            android:textAlignment="viewStart"
-            android:textAllCaps="false"
-            android:textColor="#000000"
-            android:textSize="16sp"
-            app:icon="@drawable/ic_exit"
-            app:iconGravity="start"
-            app:iconPadding="16dp"
-            app:iconSize="24dp"
-            app:iconTint="#1A4330" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:fontFamily="@font/poppins_medium"
+                        android:text="Notifications"
+                        android:textColor="#000000"
+                        android:textSize="18sp" />
+                </LinearLayout>
+
+                <!-- Language Row -->
+                <LinearLayout
+                    android:id="@+id/btn_language"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:background="?attr/selectableItemBackground"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <FrameLayout
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:background="@drawable/bg_icon_circle_green"
+                        android:backgroundTint="#A5D6A7">
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_language"
+                            app:tint="@color/white" />
+                    </FrameLayout>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:fontFamily="@font/poppins_medium"
+                        android:text="Language"
+                        android:textColor="#000000"
+                        android:textSize="18sp" />
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginVertical="16dp"
+                    android:background="#EEEEEE" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/poppins_bold"
+                    android:text="General"
+                    android:textColor="#1B4332"
+                    android:textSize="14sp"
+                    android:layout_marginStart="4dp" />
+
+                <!-- Personal Information Row -->
+                <LinearLayout
+                    android:id="@+id/btn_personal_info"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:layout_marginTop="8dp"
+                    android:background="?attr/selectableItemBackground"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <FrameLayout
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:background="@drawable/bg_icon_circle_green"
+                        android:backgroundTint="#A5D6A7">
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_person"
+                            app:tint="@color/white" />
+                    </FrameLayout>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:fontFamily="@font/poppins_medium"
+                        android:text="Personal Information"
+                        android:textColor="#000000"
+                        android:textSize="18sp" />
+                </LinearLayout>
+
+                <!-- Password Row -->
+                <LinearLayout
+                    android:id="@+id/btn_password_privacy"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:background="?attr/selectableItemBackground"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <FrameLayout
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:background="@drawable/bg_icon_circle_green"
+                        android:backgroundTint="#A5D6A7">
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_lock"
+                            app:tint="@color/white" />
+                    </FrameLayout>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:fontFamily="@font/poppins_medium"
+                        android:text="Password"
+                        android:textColor="#000000"
+                        android:textSize="18sp" />
+                </LinearLayout>
+
+                <!-- Job History Row -->
+                <LinearLayout
+                    android:id="@+id/btn_help"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:background="?attr/selectableItemBackground"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <FrameLayout
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:background="@drawable/bg_icon_circle_green"
+                        android:backgroundTint="#A5D6A7">
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_gravity="center"
+                            android:src="@android:drawable/ic_menu_recent_history"
+                            app:tint="@color/white" />
+                    </FrameLayout>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:fontFamily="@font/poppins_medium"
+                        android:text="Job History"
+                        android:textColor="#000000"
+                        android:textSize="18sp" />
+                </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginVertical="16dp"
+                    android:background="#EEEEEE" />
+
+                <!-- About Us Row -->
+                <LinearLayout
+                    android:id="@+id/btn_about_us"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:background="?attr/selectableItemBackground"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <FrameLayout
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:background="@drawable/bg_icon_circle_green"
+                        android:backgroundTint="#1B4332">
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_help"
+                            app:tint="@color/white" />
+                    </FrameLayout>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:fontFamily="@font/poppins_medium"
+                        android:text="About us"
+                        android:textColor="#000000"
+                        android:textSize="18sp" />
+                </LinearLayout>
+
+                <!-- Sign Out Row -->
+                <LinearLayout
+                    android:id="@+id/logoutButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:layout_marginBottom="32dp"
+                    android:background="?attr/selectableItemBackground"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:layout_marginStart="4dp"
+                        android:src="@drawable/ic_exit"
+                        app:tint="#1B4332" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="20dp"
+                        android:fontFamily="@font/poppins_medium"
+                        android:text="Sign Out"
+                        android:textColor="#000000"
+                        android:textSize="18sp" />
+                </LinearLayout>
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
     </LinearLayout>
-
-</ScrollView>
+</androidx.core.widget.NestedScrollView>
