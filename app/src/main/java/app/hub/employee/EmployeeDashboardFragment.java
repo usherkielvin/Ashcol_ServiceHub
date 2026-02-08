@@ -198,22 +198,28 @@ public class EmployeeDashboardFragment extends Fragment {
         scheduleContainer.removeAllViews();
 
         List<TicketListResponse.TicketItem> activeTickets = new ArrayList<>();
+        String todayDate = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH).format(new Date());
         for (TicketListResponse.TicketItem ticket : tickets) {
             String status = ticket.getStatus();
             if (status == null) continue;
 
             String normalized = status.trim().toLowerCase(Locale.ENGLISH);
-            if ("pending".equals(normalized)
-                    || "in_progress".equals(normalized)
+            boolean isInProgress = "in_progress".equals(normalized)
                     || "in progress".equals(normalized)
-                    || "scheduled".equals(normalized)
-                    || "assigned".equals(normalized)) {
-                activeTickets.add(ticket);
+                    || "ongoing".equals(normalized);
+            boolean isScheduled = "scheduled".equals(normalized);
+
+            if (isInProgress || isScheduled) {
+                String scheduledDate = ticket.getScheduledDate();
+                boolean isToday = scheduledDate != null && scheduledDate.equals(todayDate);
+                if (!isToday) {
+                    activeTickets.add(ticket);
+                }
             }
         }
 
         if (activeTickets.isEmpty()) {
-            tvNoEventsToday.setText("No assigned tickets yet.");
+            tvNoEventsToday.setText("No upcoming scheduled work.");
             tvNoEventsToday.setVisibility(View.VISIBLE);
             return;
         }
@@ -263,21 +269,31 @@ public class EmployeeDashboardFragment extends Fragment {
 
         todayWorkContainer.removeAllViews();
 
-        List<TicketListResponse.TicketItem> inProgress = new ArrayList<>();
+        List<TicketListResponse.TicketItem> todayWork = new ArrayList<>();
+        String todayDate = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH).format(new Date());
 
         for (TicketListResponse.TicketItem ticket : tickets) {
             String status = ticket.getStatus();
-            boolean statusMatch = status != null && ("in_progress".equalsIgnoreCase(status)
-                    || "in progress".equalsIgnoreCase(status));
+            if (status == null) continue;
 
-            if (statusMatch) {
-                inProgress.add(ticket);
+            String normalized = status.trim().toLowerCase(Locale.ENGLISH);
+            boolean isInProgress = "in_progress".equals(normalized) || "in progress".equals(normalized)
+                    || "ongoing".equals(normalized);
+            boolean isScheduled = "scheduled".equals(normalized);
+
+            String scheduledDate = ticket.getScheduledDate();
+            boolean dateMatch = scheduledDate == null
+                    || scheduledDate.isEmpty()
+                    || scheduledDate.equals(todayDate);
+
+            if ((isInProgress && dateMatch) || (isScheduled && dateMatch)) {
+                todayWork.add(ticket);
             }
         }
 
-        if (inProgress.isEmpty()) {
+        if (todayWork.isEmpty()) {
             TextView emptyView = new TextView(getContext());
-            emptyView.setText("No in-progress work yet.");
+            emptyView.setText("No work scheduled for today.");
             emptyView.setTextColor(getResources().getColor(R.color.dark_gray));
             emptyView.setTextSize(14f);
             int padding = (int) (16 * getResources().getDisplayMetrics().density);
@@ -286,7 +302,7 @@ public class EmployeeDashboardFragment extends Fragment {
             return;
         }
 
-        for (TicketListResponse.TicketItem ticket : inProgress) {
+        for (TicketListResponse.TicketItem ticket : todayWork) {
             View itemView = LayoutInflater.from(getContext()).inflate(R.layout.item_employee_home_daywork,
                     todayWorkContainer, false);
 
