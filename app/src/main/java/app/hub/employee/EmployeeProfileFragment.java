@@ -123,13 +123,25 @@ public class EmployeeProfileFragment extends Fragment {
 
         View passwordPrivacyButton = view.findViewById(R.id.btn_password_privacy);
         if (passwordPrivacyButton != null) {
-            passwordPrivacyButton.setOnClickListener(v -> showChangePasswordDialog());
+            passwordPrivacyButton.setOnClickListener(v -> navigateToFragment(new app.hub.user.ChangePasswordFragment()));
         }
 
-            // Placeholder buttons
-            setupPlaceholderButton(view, R.id.btn_personal_info, "Personal Info");
-            setupPlaceholderButton(view, R.id.btn_help, "Help & Feedback");
-            setupPlaceholderButton(view, R.id.btn_edit_photo, "Edit Photo");
+        View personalInfoButton = view.findViewById(R.id.btn_personal_info);
+        if (personalInfoButton != null) {
+            personalInfoButton.setOnClickListener(v -> navigateToFragment(new EmployeePersonalInfoFragment()));
+        }
+
+        View jobHistoryButton = view.findViewById(R.id.btn_help);
+        if (jobHistoryButton != null) {
+            jobHistoryButton.setOnClickListener(v -> navigateToFragment(new EmployeeJobHistoryFragment()));
+        }
+
+        View aboutUsButton = view.findViewById(R.id.btn_about_us);
+        if (aboutUsButton != null) {
+            aboutUsButton.setOnClickListener(v -> navigateToFragment(new EmployeeAboutUsFragment()));
+        }
+
+        setupPlaceholderButton(view, R.id.btn_edit_photo, "Edit Photo");
 
         View logoutButton = view.findViewById(R.id.logoutButton);
         if (logoutButton != null) {
@@ -143,6 +155,16 @@ public class EmployeeProfileFragment extends Fragment {
             btn.setOnClickListener(v -> Toast
                     .makeText(getContext(), featureName + " feature coming soon!", Toast.LENGTH_SHORT).show());
         }
+    }
+
+    private void navigateToFragment(Fragment fragment) {
+        if (!isAdded() || getActivity() == null) return;
+
+        getActivity().getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragment_container, fragment)
+                .addToBackStack(null)
+                .commit();
     }
 
     private void showChangePasswordDialog() {
