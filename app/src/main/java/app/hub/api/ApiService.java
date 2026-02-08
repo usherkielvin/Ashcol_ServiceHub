@@ -16,6 +16,9 @@ import retrofit2.http.PUT;
 import retrofit2.http.Part;
 
 public interface ApiService {
+        @GET("api/v1/about")
+        Call<AboutResponse> getAbout();
+
     @POST("api/v1/login")
     Call<LoginResponse> login(@Body LoginRequest request);
 

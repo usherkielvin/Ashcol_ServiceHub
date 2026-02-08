@@ -1,5 +1,6 @@
 package app.hub.employee;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,14 +11,22 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import com.facebook.shimmer.ShimmerFrameLayout;
+
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -34,66 +43,93 @@ import retrofit2.Response;
 
 public class EmployeeScheduleFragment extends Fragment {
 
-    private TextView tvMonthYear;
-    private ImageButton btnPreviousMonth, btnNextMonth;
+    private SwipeRefreshLayout swipeRefreshLayout;
     private RecyclerView rvCalendarGrid;
+    private RecyclerView rvDailyJobs;
+    private TextView tvMonthYear;
+    private TextView tvSelectedDate;
+    private TextView tvSelectedCount;
+    private TextView tvDailyEmpty;
+    private ImageButton btnPreviousMonth;
+    private ImageButton btnNextMonth;
     private ProgressBar progressBar;
     private LinearLayout emptyState;
-    private SwipeRefreshLayout swipeRefreshLayout;
+    private LinearLayout dailyListContainer;
+    private ShimmerFrameLayout shimmerSchedule;
 
-    private TextView tabAll, tabPending, tabInProgress, tabCompleted;
-    private String currentStatusFilter = "all"; // all, pending, in_progress, completed
-
-    private TokenManager tokenManager;
     private Calendar currentCalendar;
     private CalendarAdapter calendarAdapter;
-    private List<CalendarAdapter.CalendarDay> calendarDays;
-    private Map<String, List<EmployeeScheduleResponse.ScheduledTicket>> allBufferedTickets = new HashMap<>(); // Store
-                                                                                                              // all
-                                                                                                              // fetched
-                                                                                                              // tickets
-    private Map<String, List<EmployeeScheduleResponse.ScheduledTicket>> scheduledTicketsMap; // Displayed tickets
-    private FirebaseEmployeeListener firebaseListener;
+    private DailyScheduleAdapter dailyScheduleAdapter;
+    private final List<CalendarAdapter.CalendarDay> calendarDays = new ArrayList<>();
+    private final Map<String, List<EmployeeScheduleResponse.ScheduledTicket>> allBufferedTickets = new HashMap<>();
+    private final Map<String, List<EmployeeScheduleResponse.ScheduledTicket>> scheduledTicketsMap = new HashMap<>();
 
-    public EmployeeScheduleFragment() {
-        // Required empty public constructor
-    }
+    private TokenManager tokenManager;
+    private FirebaseEmployeeListener firebaseListener;
+    private String selectedDateKey;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
             Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_employee_schedule, container, false);
+        View rootView = inflater.inflate(R.layout.fragment_employee_schedule, container, false);
 
-        initViews(view);
+        tokenManager = new TokenManager(requireContext());
+        currentCalendar = Calendar.getInstance();
+
+        swipeRefreshLayout = rootView.findViewById(R.id.swipeRefreshLayout);
+        rvCalendarGrid = rootView.findViewById(R.id.rvCalendarGrid);
+        rvDailyJobs = rootView.findViewById(R.id.rvDailyJobs);
+        tvMonthYear = rootView.findViewById(R.id.tvMonthYear);
+        tvSelectedDate = rootView.findViewById(R.id.tvSelectedDate);
+        tvSelectedCount = rootView.findViewById(R.id.tvSelectedCount);
+        tvDailyEmpty = rootView.findViewById(R.id.tvDailyEmpty);
+        btnPreviousMonth = rootView.findViewById(R.id.btnPreviousMonth);
+        btnNextMonth = rootView.findViewById(R.id.btnNextMonth);
+        progressBar = rootView.findViewById(R.id.progressBar);
+        emptyState = rootView.findViewById(R.id.emptyState);
+        dailyListContainer = rootView.findViewById(R.id.dailyListContainer);
+        shimmerSchedule = rootView.findViewById(R.id.shimmerSchedule);
+
+        setupRecyclerViews();
         setupClickListeners();
+        setupSwipeRefresh();
+        setupFirebaseListener();
         initializeCalendar();
+
         loadScheduleData();
 
-        return view;
+        return rootView;
     }
 
-    private void initViews(View view) {
-        tvMonthYear = view.findViewById(R.id.tvMonthYear);
-        btnPreviousMonth = view.findViewById(R.id.btnPreviousMonth);
-        btnNextMonth = view.findViewById(R.id.btnNextMonth);
-        rvCalendarGrid = view.findViewById(R.id.rvCalendarGrid);
-        progressBar = view.findViewById(R.id.progressBar);
-        emptyState = view.findViewById(R.id.emptyState);
-        swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout);
+    private void setupRecyclerViews() {
+        rvCalendarGrid.setLayoutManager(new GridLayoutManager(getContext(), 7));
+        calendarAdapter = new CalendarAdapter(calendarDays,
+                currentCalendar.get(Calendar.MONTH),
+                currentCalendar.get(Calendar.YEAR));
+        rvCalendarGrid.setAdapter(calendarAdapter);
 
-        tabAll = view.findViewById(R.id.tabAll);
-        tabPending = view.findViewById(R.id.tabPending);
-        tabInProgress = view.findViewById(R.id.tabInProgress);
-        tabCompleted = view.findViewById(R.id.tabCompleted);
+        calendarAdapter.setOnDayClickListener(day -> {
+            selectedDateKey = day.getDateKey();
+            updateDailyListForDateKey(selectedDateKey);
+        });
 
-        tokenManager = new TokenManager(getContext());
-        currentCalendar = Calendar.getInstance();
-        calendarDays = new ArrayList<>();
-        scheduledTicketsMap = new HashMap<>();
+        rvDailyJobs.setLayoutManager(new LinearLayoutManager(getContext()));
+        dailyScheduleAdapter = new DailyScheduleAdapter();
+        dailyScheduleAdapter.setOnTicketClickListener(ticket -> openTicketDetail(ticket.getTicketId()));
+        rvDailyJobs.setAdapter(dailyScheduleAdapter);
+    }
 
-        setupTabClickListeners();
+    private void setupSwipeRefresh() {
+        if (swipeRefreshLayout != null) {
+            swipeRefreshLayout.setOnRefreshListener(() -> {
+                android.util.Log.d("EmployeeSchedule", "Pull-to-refresh triggered");
+                loadScheduleData();
+            });
+        }
+    }
 
-        firebaseListener = new FirebaseEmployeeListener(getContext());
+    private void setupFirebaseListener() {
+        firebaseListener = new FirebaseEmployeeListener(requireContext());
         firebaseListener.setOnScheduleChangeListener(new FirebaseEmployeeListener.OnScheduleChangeListener() {
             @Override
             public void onScheduleChanged() {
@@ -106,27 +142,6 @@ public class EmployeeScheduleFragment extends Fragment {
                 android.util.Log.e("EmployeeSchedule", "Firebase listener error: " + error);
             }
         });
-
-        // Setup RecyclerView
-        rvCalendarGrid.setLayoutManager(new GridLayoutManager(getContext(), 7));
-        calendarAdapter = new CalendarAdapter(calendarDays,
-                currentCalendar.get(Calendar.MONTH),
-                currentCalendar.get(Calendar.YEAR));
-        rvCalendarGrid.setAdapter(calendarAdapter);
-
-        calendarAdapter.setOnDayClickListener(day -> {
-            if (day.getScheduledTickets() != null && !day.getScheduledTickets().isEmpty()) {
-                showDayScheduleDialog(day);
-            }
-        });
-
-        // Setup pull-to-refresh
-        if (swipeRefreshLayout != null) {
-            swipeRefreshLayout.setOnRefreshListener(() -> {
-                android.util.Log.d("EmployeeSchedule", "Pull-to-refresh triggered");
-                loadScheduleData();
-            });
-        }
     }
 
     private void setupClickListeners() {
@@ -150,19 +165,14 @@ public class EmployeeScheduleFragment extends Fragment {
     private void updateCalendar() {
         calendarDays.clear();
 
-        // Set calendar to first day of month
         Calendar calendar = (Calendar) currentCalendar.clone();
         calendar.set(Calendar.DAY_OF_MONTH, 1);
 
-        // Get day of week for first day (0 = Sunday, 1 = Monday, etc.)
-        int firstDayOfWeek = calendar.get(Calendar.DAY_OF_WEEK) - 1; // Convert to 0-based
-
-        // Add empty cells for days before the first day of month
+        int firstDayOfWeek = calendar.get(Calendar.DAY_OF_WEEK) - 1;
         for (int i = 0; i < firstDayOfWeek; i++) {
             calendarDays.add(new CalendarAdapter.CalendarDay(0, 0, 0, false));
         }
 
-        // Add days of current month
         int daysInMonth = calendar.getActualMaximum(Calendar.DAY_OF_MONTH);
         int currentMonth = calendar.get(Calendar.MONTH);
         int currentYear = calendar.get(Calendar.YEAR);
@@ -171,7 +181,6 @@ public class EmployeeScheduleFragment extends Fragment {
             CalendarAdapter.CalendarDay calendarDay = new CalendarAdapter.CalendarDay(
                     day, currentMonth, currentYear, true);
 
-            // Check for scheduled tickets
             String dateKey = calendarDay.getDateKey();
             if (scheduledTicketsMap.containsKey(dateKey)) {
                 calendarDay.setScheduledTickets(scheduledTicketsMap.get(dateKey));
@@ -180,16 +189,152 @@ public class EmployeeScheduleFragment extends Fragment {
             calendarDays.add(calendarDay);
         }
 
-        // Add empty cells to complete the grid (6 rows * 7 days = 42 cells)
         while (calendarDays.size() < 42) {
             calendarDays.add(new CalendarAdapter.CalendarDay(0, 0, 0, false));
         }
 
-        // Update month/year display
         SimpleDateFormat monthYearFormat = new SimpleDateFormat("MMMM yyyy", Locale.getDefault());
         tvMonthYear.setText(monthYearFormat.format(calendar.getTime()));
 
+        ensureSelectedDateKey();
+        applySelectionToCalendar();
         calendarAdapter.notifyDataSetChanged();
+        updateDailyListForDateKey(selectedDateKey);
+    }
+
+    private void ensureSelectedDateKey() {
+        if (selectedDateKey == null || !isDateKeyInCurrentMonth(selectedDateKey)) {
+            String todayKey = getTodayDateKey();
+            if (isDateKeyInCurrentMonth(todayKey)) {
+                selectedDateKey = todayKey;
+            } else {
+                selectedDateKey = getFirstDayKey(currentCalendar);
+            }
+        }
+    }
+
+    private boolean isDateKeyInCurrentMonth(String dateKey) {
+        int[] parts = parseDateKey(dateKey);
+        if (parts == null) {
+            return false;
+        }
+        int year = parts[0];
+        int month = parts[1];
+        return year == currentCalendar.get(Calendar.YEAR)
+                && month == currentCalendar.get(Calendar.MONTH) + 1;
+    }
+
+    private int[] parseDateKey(String dateKey) {
+        if (dateKey == null) {
+            return null;
+        }
+        String[] parts = dateKey.split("-");
+        if (parts.length != 3) {
+            return null;
+        }
+        try {
+            int year = Integer.parseInt(parts[0]);
+            int month = Integer.parseInt(parts[1]);
+            int day = Integer.parseInt(parts[2]);
+            return new int[] { year, month, day };
+        } catch (NumberFormatException ex) {
+            return null;
+        }
+    }
+
+    private String getFirstDayKey(Calendar calendar) {
+        int year = calendar.get(Calendar.YEAR);
+        int month = calendar.get(Calendar.MONTH) + 1;
+        return String.format(Locale.getDefault(), "%04d-%02d-01", year, month);
+    }
+
+    private String getTodayDateKey() {
+        Calendar today = Calendar.getInstance();
+        return String.format(Locale.getDefault(), "%04d-%02d-%02d",
+                today.get(Calendar.YEAR),
+                today.get(Calendar.MONTH) + 1,
+                today.get(Calendar.DAY_OF_MONTH));
+    }
+
+    private void applySelectionToCalendar() {
+        for (CalendarAdapter.CalendarDay day : calendarDays) {
+            if (day.isCurrentMonth()) {
+                day.setSelected(day.getDateKey().equals(selectedDateKey));
+            } else {
+                day.setSelected(false);
+            }
+        }
+    }
+
+    private void updateDailyListForDateKey(@Nullable String dateKey) {
+        if (dateKey == null) {
+            tvSelectedDate.setText("Select a date");
+            tvSelectedCount.setText("");
+            tvDailyEmpty.setVisibility(View.VISIBLE);
+            rvDailyJobs.setVisibility(View.GONE);
+            dailyScheduleAdapter.setTickets(new ArrayList<>());
+            return;
+        }
+
+        List<EmployeeScheduleResponse.ScheduledTicket> tickets = scheduledTicketsMap.get(dateKey);
+        if (tickets == null) {
+            tickets = new ArrayList<>();
+        }
+
+        tvSelectedDate.setText(formatDateKey(dateKey));
+        tvSelectedCount.setText(tickets.size() + (tickets.size() == 1 ? " job" : " jobs"));
+
+        if (tickets.isEmpty()) {
+            tvDailyEmpty.setVisibility(View.VISIBLE);
+            rvDailyJobs.setVisibility(View.GONE);
+        } else {
+            tvDailyEmpty.setVisibility(View.GONE);
+            rvDailyJobs.setVisibility(View.VISIBLE);
+        }
+
+        dailyScheduleAdapter.setTickets(tickets);
+    }
+
+    private String formatDateKey(String dateKey) {
+        SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        SimpleDateFormat outputFormat = new SimpleDateFormat("EEEE, MMM d, yyyy", Locale.getDefault());
+        try {
+            String normalized = normalizeDateKey(dateKey);
+            return outputFormat.format(inputFormat.parse(normalized));
+        } catch (ParseException e) {
+            return dateKey;
+        }
+    }
+
+    private String normalizeDateKey(String rawDate) {
+        if (rawDate == null) {
+            return null;
+        }
+
+        String trimmed = rawDate.trim();
+        String[] patterns = {
+                "yyyy-MM-dd",
+                "yyyy-MM-dd HH:mm:ss",
+                "yyyy-MM-dd'T'HH:mm:ss",
+                "yyyy/MM/dd"
+        };
+        SimpleDateFormat outputFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+
+        for (String pattern : patterns) {
+            SimpleDateFormat inputFormat = new SimpleDateFormat(pattern, Locale.getDefault());
+            inputFormat.setLenient(false);
+            try {
+                return outputFormat.format(inputFormat.parse(trimmed));
+            } catch (ParseException ignored) {
+                // Try next pattern.
+            }
+        }
+
+        if (trimmed.length() >= 10) {
+            return trimmed.substring(0, 10);
+        }
+
+        return trimmed;
     }
 
     private void loadScheduleData() {
@@ -202,10 +347,10 @@ public class EmployeeScheduleFragment extends Fragment {
             return;
         }
 
-        // Show progress bar if not refreshing
         if (swipeRefreshLayout == null || !swipeRefreshLayout.isRefreshing()) {
             progressBar.setVisibility(View.VISIBLE);
         }
+        setLoadingState(true);
 
         ApiService apiService = ApiClient.getApiService();
         Call<EmployeeScheduleResponse> call = apiService.getEmployeeSchedule("Bearer " + token);
@@ -223,7 +368,8 @@ public class EmployeeScheduleFragment extends Fragment {
                     android.util.Log.d("EmployeeSchedule", "API Success, Success: " + scheduleResponse.isSuccess());
 
                     if (scheduleResponse.getTickets() != null) {
-                        android.util.Log.d("EmployeeSchedule", "Ticket count: " + scheduleResponse.getTickets().size());
+                        android.util.Log.d("EmployeeSchedule",
+                                "Ticket count: " + scheduleResponse.getTickets().size());
                     } else {
                         android.util.Log.d("EmployeeSchedule", "Tickets list is null");
                     }
@@ -231,14 +377,14 @@ public class EmployeeScheduleFragment extends Fragment {
                     if (scheduleResponse.isSuccess()) {
                         processScheduleData(scheduleResponse.getTickets());
                     } else {
-                        // Even if strictly not success, if we have no data, show empty calendar
                         processScheduleData(new ArrayList<>());
                     }
                 } else {
                     android.util.Log.e("EmployeeSchedule", "API Error: " + response.code());
-                    // Show empty calendar on error
                     processScheduleData(new ArrayList<>());
                 }
+
+                setLoadingState(false);
             }
 
             @Override
@@ -249,18 +395,18 @@ public class EmployeeScheduleFragment extends Fragment {
                 progressBar.setVisibility(View.GONE);
                 Toast.makeText(getContext(), "Failed to load schedule: " + t.getMessage(), Toast.LENGTH_SHORT).show();
                 showEmptyState();
+                updateCalendar();
+                setLoadingState(false);
             }
         });
     }
 
     private void processScheduleData(List<EmployeeScheduleResponse.ScheduledTicket> tickets) {
-        // Store all tickets
         allBufferedTickets.clear();
         if (tickets != null) {
-            // Group tickets by date for allBufferedTickets
             for (EmployeeScheduleResponse.ScheduledTicket ticket : tickets) {
                 if (ticket.getScheduledDate() != null) {
-                    String dateKey = ticket.getScheduledDate();
+                    String dateKey = normalizeDateKey(ticket.getScheduledDate());
                     if (!allBufferedTickets.containsKey(dateKey)) {
                         allBufferedTickets.put(dateKey, new ArrayList<>());
                     }
@@ -269,149 +415,44 @@ public class EmployeeScheduleFragment extends Fragment {
             }
         }
 
-        applyFilter();
+        rebuildScheduleMap();
     }
 
-    private void applyFilter() {
+    private void rebuildScheduleMap() {
         scheduledTicketsMap.clear();
-        hideEmptyState(); // Always show calendar
 
         if (allBufferedTickets.isEmpty()) {
-            android.util.Log.d("EmployeeSchedule", "No tickets to display");
+            showEmptyState();
             updateCalendar();
             return;
         }
 
-        // Apply filter
-        int count = 0;
+        hideEmptyState();
         for (Map.Entry<String, List<EmployeeScheduleResponse.ScheduledTicket>> entry : allBufferedTickets.entrySet()) {
             String dateKey = entry.getKey();
             List<EmployeeScheduleResponse.ScheduledTicket> dayTickets = entry.getValue();
-            List<EmployeeScheduleResponse.ScheduledTicket> filteredDayTickets = new ArrayList<>();
-
-            for (EmployeeScheduleResponse.ScheduledTicket ticket : dayTickets) {
-                boolean matches = false;
-                String status = ticket.getStatus() != null ? ticket.getStatus().toLowerCase().trim() : "";
-
-                if (currentStatusFilter.equals("all")) {
-                    matches = true;
-                } else if (currentStatusFilter.equals("pending")) {
-                    matches = status.contains("pending") || status.contains("open");
-                } else if (currentStatusFilter.equals("in_progress")) {
-                    matches = status.contains("progress") || status.contains("accepted") || status.contains("ongoing");
-                } else if (currentStatusFilter.equals("completed")) {
-                    matches = status.contains("completed") || status.contains("resolved") || status.contains("closed");
-                }
-
-                android.util.Log.d("ScheduleFilter", "Ticket: " + ticket.getTicketId() + " Status: '" + status
-                        + "' Filter: " + currentStatusFilter + " Match: " + matches);
-
-                if (matches) {
-                    filteredDayTickets.add(ticket);
-                    count++;
-                }
-            }
-
-            if (!filteredDayTickets.isEmpty()) {
-                scheduledTicketsMap.put(dateKey, filteredDayTickets);
+            if (dayTickets != null && !dayTickets.isEmpty()) {
+                Collections.sort(dayTickets, Comparator.comparingInt(this::parseTimeToMinutes));
+                scheduledTicketsMap.put(dateKey, dayTickets);
             }
         }
 
-        android.util.Log.d("EmployeeSchedule", "Filtered tickets: " + count + " (Filter: " + currentStatusFilter + ")");
+        android.util.Log.d("EmployeeSchedule", "Schedule entries: " + scheduledTicketsMap.size());
         updateCalendar();
     }
 
-    private void setupTabClickListeners() {
-        // Initially select 'All'
-        updateTabStyles(tabAll);
-
-        tabAll.setOnClickListener(v -> {
-            updateTabStyles(tabAll);
-            currentStatusFilter = "all";
-            applyFilter();
-        });
-
-        tabPending.setOnClickListener(v -> {
-            updateTabStyles(tabPending);
-            currentStatusFilter = "pending";
-            applyFilter();
-        });
-
-        tabInProgress.setOnClickListener(v -> {
-            updateTabStyles(tabInProgress);
-            currentStatusFilter = "in_progress";
-            applyFilter();
-        });
-
-        tabCompleted.setOnClickListener(v -> {
-            updateTabStyles(tabCompleted);
-            currentStatusFilter = "completed";
-            applyFilter();
-        });
-    }
-
-    private void updateTabStyles(TextView selectedTab) {
-        // Reset all tabs
-        TextView[] tabs = { tabAll, tabPending, tabInProgress, tabCompleted };
-        for (TextView tab : tabs) {
-            tab.setBackground(getResources().getDrawable(R.drawable.bg_input_field));
-            tab.setTextColor(getResources().getColor(R.color.dark_gray));
+    private void openTicketDetail(String ticketId) {
+        if (ticketId == null) {
+            return;
         }
 
-        // Highlight selected
-        selectedTab.setBackground(getResources().getDrawable(R.drawable.bg_status_badge));
-        selectedTab.setTextColor(getResources().getColor(android.R.color.white));
-    }
-
-    private void showDayScheduleDialog(CalendarAdapter.CalendarDay day) {
-        List<EmployeeScheduleResponse.ScheduledTicket> tickets = day.getScheduledTickets();
-        if (tickets == null || tickets.isEmpty())
-            return;
-
-        // Create bottom sheet dialog
-        com.google.android.material.bottomsheet.BottomSheetDialog dialog = new com.google.android.material.bottomsheet.BottomSheetDialog(
-                getContext());
-
-        View dialogView = LayoutInflater.from(getContext())
-                .inflate(R.layout.dialog_daily_schedule, null);
-
-        // Setup dialog views
-        TextView tvDialogTitle = dialogView.findViewById(R.id.tvDialogTitle);
-        TextView tvJobCount = dialogView.findViewById(R.id.tvJobCount);
-        RecyclerView rvDailyJobs = dialogView.findViewById(R.id.rvDailyJobs);
-
-        // Set title with date
-        tvDialogTitle.setText("Jobs for " + day.getDateKey());
-        tvJobCount.setText(tickets.size() + (tickets.size() == 1 ? " job" : " jobs"));
-
-        // Setup RecyclerView
-        rvDailyJobs.setLayoutManager(new androidx.recyclerview.widget.LinearLayoutManager(getContext()));
-        DailyScheduleAdapter adapter = new DailyScheduleAdapter();
-        adapter.setTickets(tickets);
-        adapter.setOnTicketClickListener(ticket -> {
-            // Open ticket detail activity
-            dialog.dismiss();
-            openTicketDetail(ticket.getTicketId());
-        });
-        rvDailyJobs.setAdapter(adapter);
-
-        dialog.setContentView(dialogView);
-        dialog.show();
-    }
-
-    private void openTicketDetail(String ticketId) {
-        if (ticketId == null)
-            return;
-
-        android.content.Intent intent = new android.content.Intent(getContext(),
-                app.hub.employee.EmployeeTicketDetailActivity.class);
+        Intent intent = new Intent(getContext(), EmployeeTicketDetailActivity.class);
         intent.putExtra("ticket_id", ticketId);
         startActivity(intent);
     }
 
     private void showEmptyState() {
         emptyState.setVisibility(View.VISIBLE);
-        // Do NOT hide the calendar grid
         rvCalendarGrid.setVisibility(View.VISIBLE);
     }
 
@@ -420,21 +461,64 @@ public class EmployeeScheduleFragment extends Fragment {
         rvCalendarGrid.setVisibility(View.VISIBLE);
     }
 
+    private void setLoadingState(boolean isLoading) {
+        if (shimmerSchedule == null || dailyListContainer == null) {
+            return;
+        }
+
+        boolean showShimmer = isLoading && (swipeRefreshLayout == null || !swipeRefreshLayout.isRefreshing());
+        if (showShimmer) {
+            shimmerSchedule.setVisibility(View.VISIBLE);
+            shimmerSchedule.startShimmer();
+            dailyListContainer.setVisibility(View.GONE);
+        } else {
+            shimmerSchedule.stopShimmer();
+            shimmerSchedule.setVisibility(View.GONE);
+            dailyListContainer.setVisibility(View.VISIBLE);
+        }
+    }
+
+    private int parseTimeToMinutes(EmployeeScheduleResponse.ScheduledTicket ticket) {
+        if (ticket == null || ticket.getScheduledTime() == null) {
+            return Integer.MAX_VALUE;
+        }
+
+        String rawTime = ticket.getScheduledTime().trim();
+        String[] patterns = {
+                "HH:mm",
+                "HH:mm:ss",
+                "hh:mm a",
+                "h:mm a"
+        };
+
+        for (String pattern : patterns) {
+            SimpleDateFormat inputFormat = new SimpleDateFormat(pattern, Locale.getDefault());
+            inputFormat.setLenient(false);
+            try {
+                Date parsed = inputFormat.parse(rawTime);
+                Calendar calendar = Calendar.getInstance();
+                calendar.setTime(parsed);
+                return calendar.get(Calendar.HOUR_OF_DAY) * 60 + calendar.get(Calendar.MINUTE);
+            } catch (ParseException ignored) {
+                // Try next pattern.
+            }
+        }
+
+        return Integer.MAX_VALUE;
+    }
+
     @Override
     public void onResume() {
         super.onResume();
-        // Start Firebase listener
         if (firebaseListener != null) {
             firebaseListener.startListening();
         }
-        // Refresh schedule data when fragment becomes visible
         loadScheduleData();
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        // Stop Firebase listener
         if (firebaseListener != null) {
             firebaseListener.stopListening();
         }

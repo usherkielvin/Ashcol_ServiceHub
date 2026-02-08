@@ -96,6 +96,7 @@ dependencies {
     implementation("com.google.openlocationcode:openlocationcode:1.0.4")
     // Picasso for image loading
     implementation("com.squareup.picasso:picasso:2.8")
+    implementation("com.facebook.shimmer:shimmer:0.5.0")
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)

@@ -2,6 +2,7 @@ package app.hub.employee;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.app.DatePickerDialog;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,8 +14,18 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.chip.Chip;
+import com.google.android.material.chip.ChipGroup;
+import com.facebook.shimmer.ShimmerFrameLayout;
+
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 
 import app.hub.R;
 import app.hub.api.ApiClient;
@@ -30,8 +41,20 @@ public class EmployeeJobHistoryFragment extends Fragment {
     private RecyclerView recyclerView;
     private TextView tvEmpty;
     private EmployeeTicketsAdapter adapter;
-    private final List<TicketListResponse.TicketItem> tickets = new ArrayList<>();
+    private final List<TicketListResponse.TicketItem> allTickets = new ArrayList<>();
+    private final List<TicketListResponse.TicketItem> filteredTickets = new ArrayList<>();
     private TokenManager tokenManager;
+    private ChipGroup chipGroupStatus;
+    private Chip chipAll;
+    private Chip chipCompleted;
+    private Chip chipCancelled;
+    private MaterialButton btnStartDate;
+    private MaterialButton btnEndDate;
+    private MaterialButton btnClearDates;
+    private Calendar startDate;
+    private Calendar endDate;
+    private String statusFilter = "all";
+    private ShimmerFrameLayout jobHistoryShimmer;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
@@ -46,13 +69,21 @@ public class EmployeeJobHistoryFragment extends Fragment {
 
         recyclerView = view.findViewById(R.id.recyclerJobHistory);
         tvEmpty = view.findViewById(R.id.tvJobHistoryEmpty);
+        chipGroupStatus = view.findViewById(R.id.chipGroupStatus);
+        chipAll = view.findViewById(R.id.chipAll);
+        chipCompleted = view.findViewById(R.id.chipCompleted);
+        chipCancelled = view.findViewById(R.id.chipCancelled);
+        btnStartDate = view.findViewById(R.id.btnStartDate);
+        btnEndDate = view.findViewById(R.id.btnEndDate);
+        btnClearDates = view.findViewById(R.id.btnClearDates);
+        jobHistoryShimmer = view.findViewById(R.id.jobHistoryShimmer);
 
         View btnBack = view.findViewById(R.id.btnBack);
         if (btnBack != null) {
             btnBack.setOnClickListener(v -> navigateBack());
         }
 
-        adapter = new EmployeeTicketsAdapter(tickets);
+        adapter = new EmployeeTicketsAdapter(filteredTickets);
         adapter.setOnTicketClickListener(ticket -> {
             Intent intent = new Intent(getContext(), EmployeeTicketDetailActivity.class);
             intent.putExtra("ticket_id", ticket.getTicketId());
@@ -62,39 +93,181 @@ public class EmployeeJobHistoryFragment extends Fragment {
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         recyclerView.setAdapter(adapter);
 
-        loadCompletedTickets();
+        setupFilters();
+        loadHistoryTickets();
     }
 
-    private void loadCompletedTickets() {
+    private void setupFilters() {
+        if (chipAll != null) {
+            chipAll.setChecked(true);
+        }
+
+        if (chipGroupStatus != null) {
+            chipGroupStatus.setOnCheckedStateChangeListener((group, checkedIds) -> {
+                if (checkedIds == null || checkedIds.isEmpty()) return;
+                int id = checkedIds.get(0);
+                if (id == R.id.chipCompleted) {
+                    statusFilter = "completed";
+                } else if (id == R.id.chipCancelled) {
+                    statusFilter = "cancelled";
+                } else {
+                    statusFilter = "all";
+                }
+                loadHistoryTickets();
+            });
+        }
+
+        if (btnStartDate != null) {
+            btnStartDate.setOnClickListener(v -> pickDate(true));
+        }
+        if (btnEndDate != null) {
+            btnEndDate.setOnClickListener(v -> pickDate(false));
+        }
+        if (btnClearDates != null) {
+            btnClearDates.setOnClickListener(v -> {
+                startDate = null;
+                endDate = null;
+                updateDateButtons();
+                applyFilters();
+            });
+        }
+    }
+
+    private void pickDate(boolean isStart) {
+        Calendar calendar = isStart ? (startDate != null ? startDate : Calendar.getInstance())
+                : (endDate != null ? endDate : Calendar.getInstance());
+
+        DatePickerDialog dialog = new DatePickerDialog(requireContext(), (view, year, month, dayOfMonth) -> {
+            Calendar selected = Calendar.getInstance();
+            selected.set(year, month, dayOfMonth, 0, 0, 0);
+            if (isStart) {
+                startDate = selected;
+            } else {
+                endDate = selected;
+            }
+            updateDateButtons();
+            applyFilters();
+        }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH));
+
+        dialog.show();
+    }
+
+    private void updateDateButtons() {
+        SimpleDateFormat format = new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault());
+        if (btnStartDate != null) {
+            btnStartDate.setText(startDate != null ? format.format(startDate.getTime()) : "Start date");
+        }
+        if (btnEndDate != null) {
+            btnEndDate.setText(endDate != null ? format.format(endDate.getTime()) : "End date");
+        }
+    }
+
+    private void loadHistoryTickets() {
+        setLoading(true);
         String token = tokenManager.getToken();
         if (token == null) {
+            setLoading(false);
             showEmptyState(true);
             return;
         }
 
         ApiService apiService = ApiClient.getApiService();
-        Call<TicketListResponse> call = apiService.getEmployeeTicketsByStatus("Bearer " + token, "completed");
+        Call<TicketListResponse> call;
+        if ("completed".equals(statusFilter) || "cancelled".equals(statusFilter)) {
+            call = apiService.getEmployeeTicketsByStatus("Bearer " + token, statusFilter);
+        } else {
+            call = apiService.getEmployeeTickets("Bearer " + token);
+        }
         call.enqueue(new Callback<TicketListResponse>() {
             @Override
             public void onResponse(@NonNull Call<TicketListResponse> call,
                     @NonNull Response<TicketListResponse> response) {
                 if (!isAdded()) return;
-                tickets.clear();
+                allTickets.clear();
                 if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
                     if (response.body().getTickets() != null) {
-                        tickets.addAll(response.body().getTickets());
+                        allTickets.addAll(response.body().getTickets());
                     }
                 }
-                adapter.notifyDataSetChanged();
-                showEmptyState(tickets.isEmpty());
+                applyFilters();
+                setLoading(false);
             }
 
             @Override
             public void onFailure(@NonNull Call<TicketListResponse> call, @NonNull Throwable t) {
                 if (!isAdded()) return;
+                setLoading(false);
                 showEmptyState(true);
             }
         });
+    }
+
+    private void applyFilters() {
+        filteredTickets.clear();
+
+        for (TicketListResponse.TicketItem ticket : allTickets) {
+            if (!matchesStatus(ticket)) continue;
+            if (!matchesDate(ticket)) continue;
+            filteredTickets.add(ticket);
+        }
+
+        adapter.notifyDataSetChanged();
+        showEmptyState(filteredTickets.isEmpty());
+    }
+
+    private boolean matchesStatus(TicketListResponse.TicketItem ticket) {
+        String status = ticket.getStatus();
+        if (status == null) return false;
+        String normalized = status.trim().toLowerCase(Locale.ENGLISH);
+
+        if ("completed".equals(statusFilter)) {
+            return normalized.contains("completed") || normalized.contains("resolved") || normalized.contains("closed");
+        }
+        if ("cancelled".equals(statusFilter)) {
+            return normalized.contains("cancelled") || normalized.contains("rejected");
+        }
+
+        return normalized.contains("completed")
+                || normalized.contains("resolved")
+                || normalized.contains("closed")
+                || normalized.contains("cancelled")
+                || normalized.contains("rejected");
+    }
+
+    private boolean matchesDate(TicketListResponse.TicketItem ticket) {
+        if (startDate == null && endDate == null) return true;
+
+        Date ticketDate = parseTicketDate(ticket);
+        if (ticketDate == null) return false;
+
+        if (startDate != null && ticketDate.before(startDate.getTime())) return false;
+        if (endDate != null && ticketDate.after(endDate.getTime())) return false;
+        return true;
+    }
+
+    private Date parseTicketDate(TicketListResponse.TicketItem ticket) {
+        String dateValue = ticket.getScheduledDate();
+        if (dateValue == null || dateValue.isEmpty()) {
+            dateValue = ticket.getUpdatedAt();
+        }
+        if (dateValue == null || dateValue.isEmpty()) {
+            dateValue = ticket.getCreatedAt();
+        }
+        if (dateValue == null || dateValue.isEmpty()) return null;
+
+        Date parsed = tryParse(dateValue, "yyyy-MM-dd");
+        if (parsed != null) return parsed;
+        parsed = tryParse(dateValue, "yyyy-MM-dd HH:mm:ss");
+        if (parsed != null) return parsed;
+        return tryParse(dateValue, "yyyy-MM-dd'T'HH:mm:ss");
+    }
+
+    private Date tryParse(String value, String pattern) {
+        try {
+            return new SimpleDateFormat(pattern, Locale.getDefault()).parse(value);
+        } catch (ParseException e) {
+            return null;
+        }
     }
 
     private void showEmptyState(boolean show) {
@@ -103,6 +276,24 @@ public class EmployeeJobHistoryFragment extends Fragment {
         }
         if (recyclerView != null) {
             recyclerView.setVisibility(show ? View.GONE : View.VISIBLE);
+        }
+    }
+
+    private void setLoading(boolean isLoading) {
+        if (jobHistoryShimmer != null) {
+            if (isLoading) {
+                jobHistoryShimmer.setVisibility(View.VISIBLE);
+                jobHistoryShimmer.startShimmer();
+            } else {
+                jobHistoryShimmer.stopShimmer();
+                jobHistoryShimmer.setVisibility(View.GONE);
+            }
+        }
+        if (recyclerView != null) {
+            recyclerView.setVisibility(isLoading ? View.GONE : View.VISIBLE);
+        }
+        if (tvEmpty != null) {
+            tvEmpty.setVisibility(isLoading ? View.GONE : tvEmpty.getVisibility());
         }
     }
 

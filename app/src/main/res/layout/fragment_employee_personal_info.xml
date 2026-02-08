@@ -76,6 +76,37 @@
                     android:textSize="14sp"
                     android:textStyle="bold" />
 
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:layout_marginBottom="12dp">
+
+                    <com.google.android.material.imageview.ShapeableImageView
+                        android:id="@+id/imgProfile"
+                        android:layout_width="84dp"
+                        android:layout_height="84dp"
+                        android:scaleType="centerCrop"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:shapeAppearanceOverlay="@style/CircleImage"
+                        app:srcCompat="@mipmap/ic_launchericons_round" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnEditPhoto"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Edit Photo"
+                        app:cornerRadius="16dp"
+                        app:layout_constraintStart_toEndOf="@id/imgProfile"
+                        app:layout_constraintTop_toTopOf="@id/imgProfile"
+                        app:layout_constraintBottom_toBottomOf="@id/imgProfile"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        android:layout_marginStart="16dp" />
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
                 <TextView
                     android:id="@+id/tvProfileEmail"
                     android:layout_width="wrap_content"
