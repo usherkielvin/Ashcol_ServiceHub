@@ -64,7 +64,7 @@ public class EmployeeProfileFragment extends Fragment {
         tokenManager = new TokenManager(getContext());
 
         // Appearance button
-        Button appearanceButton = view.findViewById(R.id.btn_appearance);
+        View appearanceButton = view.findViewById(R.id.btn_appearance);
         if (appearanceButton != null) {
             appearanceButton.setOnClickListener(v -> showThemeToggler());
         }
@@ -99,18 +99,18 @@ public class EmployeeProfileFragment extends Fragment {
         }
 
         // Button Listeners
-        Button notificationButton = view.findViewById(R.id.btn_notifications);
+        View notificationButton = view.findViewById(R.id.btn_notifications);
         if (notificationButton != null) {
             notificationButton.setOnClickListener(v -> showNotificationSettings());
         }
 
         // Language button
-        Button languageButton = view.findViewById(R.id.btn_language);
+        View languageButton = view.findViewById(R.id.btn_language);
         if (languageButton != null) {
             languageButton.setOnClickListener(v -> showLanguageToggler());
         }
 
-        Button passwordPrivacyButton = view.findViewById(R.id.btn_password_privacy);
+        View passwordPrivacyButton = view.findViewById(R.id.btn_password_privacy);
         if (passwordPrivacyButton != null) {
             passwordPrivacyButton.setOnClickListener(v -> showChangePasswordDialog());
         }
@@ -120,7 +120,7 @@ public class EmployeeProfileFragment extends Fragment {
         setupPlaceholderButton(view, R.id.btn_help, "Help & Feedback");
         setupPlaceholderButton(view, R.id.btn_edit_photo, "Edit Photo");
 
-        Button logoutButton = view.findViewById(R.id.logoutButton);
+        View logoutButton = view.findViewById(R.id.logoutButton);
         if (logoutButton != null) {
             logoutButton.setOnClickListener(v -> showLogoutConfirmation());
         }
