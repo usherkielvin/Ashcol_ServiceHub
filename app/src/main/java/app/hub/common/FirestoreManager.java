@@ -205,8 +205,8 @@ public class FirestoreManager {
     private ListenerRegistration ticketListener;
 
     public void listenToMyTickets(TicketListListener listener) {
-        String userId = tokenManager.getUserId(); // This is email currently as per previous steps
-        if (userId == null) {
+        String email = tokenManager.getEmail();
+        if (email == null) {
             listener.onError(new Exception("No user found"));
             return;
         }
@@ -233,8 +233,8 @@ public class FirestoreManager {
         // Firestore for easier querying from Android.
 
         ticketListener = db.collection("tickets")
-                .whereEqualTo("customerEmail", userId) // Query by email
-                .addSnapshotListener((snapshots, error) -> {
+                .whereEqualTo("customerEmail", email)
+                .addSnapshotListener(MetadataChanges.INCLUDE, (snapshots, error) -> {
                     if (error != null) {
                         listener.onError(error);
                         return;
@@ -245,7 +245,12 @@ public class FirestoreManager {
                         for (DocumentSnapshot doc : snapshots) {
                             app.hub.api.TicketListResponse.TicketItem ticket = doc
                                     .toObject(app.hub.api.TicketListResponse.TicketItem.class);
-                            tickets.add(ticket);
+                            if (ticket != null) {
+                                if (ticket.getTicketId() == null || ticket.getTicketId().isEmpty()) {
+                                    ticket.setTicketId(doc.getId());
+                                }
+                                tickets.add(ticket);
+                            }
                         }
                         listener.onTicketsUpdated(tickets);
                     }

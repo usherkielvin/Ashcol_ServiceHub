@@ -548,11 +548,16 @@ public class UserTicketsFragment extends Fragment {
             allTickets.addAll(incomingTickets);
         } else {
             for (TicketListResponse.TicketItem incoming : incomingTickets) {
-                if (incoming == null || incoming.getTicketId() == null) {
+                if (incoming == null) {
                     continue;
                 }
 
-                TicketListResponse.TicketItem existing = findTicketById(incoming.getTicketId());
+                String incomingKey = getTicketKey(incoming);
+                if (incomingKey == null) {
+                    continue;
+                }
+
+                TicketListResponse.TicketItem existing = findTicketByKey(incomingKey);
                 if (existing == null) {
                     allTickets.add(incoming);
                 } else {
@@ -567,17 +572,35 @@ public class UserTicketsFragment extends Fragment {
         }
     }
 
-    private TicketListResponse.TicketItem findTicketById(String ticketId) {
-        if (ticketId == null || allTickets == null) {
+    private TicketListResponse.TicketItem findTicketByKey(String ticketKey) {
+        if (ticketKey == null || allTickets == null) {
             return null;
         }
 
         for (TicketListResponse.TicketItem ticket : allTickets) {
-            if (ticket != null && ticketId.equals(ticket.getTicketId())) {
+            if (ticket == null) {
+                continue;
+            }
+            String key = getTicketKey(ticket);
+            if (ticketKey.equals(key)) {
                 return ticket;
             }
         }
 
+        return null;
+    }
+
+    private String getTicketKey(TicketListResponse.TicketItem ticket) {
+        if (ticket == null) {
+            return null;
+        }
+        String ticketId = ticket.getTicketId();
+        if (ticketId != null && !ticketId.isEmpty()) {
+            return "ticket_id:" + ticketId;
+        }
+        if (ticket.getId() > 0) {
+            return "id:" + ticket.getId();
+        }
         return null;
     }
 
