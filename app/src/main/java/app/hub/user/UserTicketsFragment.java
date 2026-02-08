@@ -121,7 +121,7 @@ public class UserTicketsFragment extends Fragment {
 
                 if (getActivity() != null) {
                     getActivity().runOnUiThread(() -> {
-                        refreshWithTickets(updatedTickets);
+                        mergeTickets(updatedTickets);
                     });
                 }
             }
@@ -523,6 +523,92 @@ public class UserTicketsFragment extends Fragment {
         filterTickets();
         if (adapter != null)
             adapter.notifyDataSetChanged();
+    }
+
+    private void mergeTickets(List<TicketListResponse.TicketItem> incomingTickets) {
+        if (incomingTickets == null || incomingTickets.isEmpty()) {
+            return;
+        }
+
+        if (allTickets == null) {
+            allTickets = new ArrayList<>();
+        }
+
+        if (allTickets.isEmpty()) {
+            allTickets.addAll(incomingTickets);
+        } else {
+            for (TicketListResponse.TicketItem incoming : incomingTickets) {
+                if (incoming == null || incoming.getTicketId() == null) {
+                    continue;
+                }
+
+                TicketListResponse.TicketItem existing = findTicketById(incoming.getTicketId());
+                if (existing == null) {
+                    allTickets.add(incoming);
+                } else {
+                    mergeTicketFields(existing, incoming);
+                }
+            }
+        }
+
+        filterTickets();
+        if (adapter != null) {
+            adapter.notifyDataSetChanged();
+        }
+    }
+
+    private TicketListResponse.TicketItem findTicketById(String ticketId) {
+        if (ticketId == null || allTickets == null) {
+            return null;
+        }
+
+        for (TicketListResponse.TicketItem ticket : allTickets) {
+            if (ticket != null && ticketId.equals(ticket.getTicketId())) {
+                return ticket;
+            }
+        }
+
+        return null;
+    }
+
+    private void mergeTicketFields(TicketListResponse.TicketItem target, TicketListResponse.TicketItem source) {
+        if (target == null || source == null) {
+            return;
+        }
+
+        if (source.getStatus() != null) {
+            target.setStatus(source.getStatus());
+        }
+        if (source.getAssignedStaff() != null) {
+            target.setAssignedStaff(source.getAssignedStaff());
+        }
+        if (source.getServiceType() != null) {
+            target.setServiceType(source.getServiceType());
+        }
+        if (source.getTitle() != null) {
+            target.setTitle(source.getTitle());
+        }
+        if (source.getDescription() != null) {
+            target.setDescription(source.getDescription());
+        }
+        if (source.getAddress() != null) {
+            target.setAddress(source.getAddress());
+        }
+        if (source.getContact() != null) {
+            target.setContact(source.getContact());
+        }
+        if (source.getUpdatedAt() != null) {
+            target.setUpdatedAt(source.getUpdatedAt());
+        }
+        if (source.getScheduledDate() != null) {
+            target.setScheduledDate(source.getScheduledDate());
+        }
+        if (source.getScheduledTime() != null) {
+            target.setScheduledTime(source.getScheduledTime());
+        }
+        if (source.getScheduleNotes() != null) {
+            target.setScheduleNotes(source.getScheduleNotes());
+        }
     }
 
     @Override
