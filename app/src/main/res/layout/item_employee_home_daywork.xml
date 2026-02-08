@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="16dp"
+    android:layout_marginVertical="8dp"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="6dp"
+    app:cardBackgroundColor="@android:color/white"
+    app:strokeWidth="0dp">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingBottom="16dp">
+
+        <!-- Top Section -->
+        <TextView
+            android:id="@+id/tvWorkTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="20dp"
+            android:fontFamily="@font/poppins_bold"
+            android:text="Split AC General Cleaning"
+            android:textColor="@android:color/black"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toStartOf="@+id/btnWorkStatus"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/tvWorkDetail"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="20dp"
+            android:fontFamily="@font/poppins_medium"
+            android:text="• 1 Unit"
+            android:textColor="#616161"
+            android:textSize="14sp"
+            app:layout_constraintEnd_toStartOf="@+id/btnWorkStatus"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tvWorkTitle" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnWorkStatus"
+            style="@style/Widget.MaterialComponents.Button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="20dp"
+            android:fontFamily="@font/poppins_bold"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="8dp"
+            android:text="Status: Assigned"
+            android:textAllCaps="false"
+            android:textColor="#1B5E20"
+            android:textSize="12sp"
+            app:backgroundTint="#D1E7D1"
+            app:cornerRadius="20dp"
+            app:elevation="2dp"
+            app:layout_constraintBottom_toBottomOf="@+id/tvWorkDetail"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/tvWorkTitle"
+            app:strokeColor="#1B5E20"
+            app:strokeWidth="1dp" />
+
+        <!-- Middle Section -->
+        <TextView
+            android:id="@+id/tvRequestedByLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="20dp"
+            android:fontFamily="@font/poppins_medium"
+            android:text="Requested by:"
+            android:textColor="@android:color/black"
+            android:textSize="14sp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tvWorkDetail" />
+
+        <TextView
+            android:id="@+id/tvRequestedById"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="20dp"
+            android:fontFamily="@font/poppins_semibold"
+            android:text="CLN1004"
+            android:textColor="@android:color/black"
+            android:textSize="14sp"
+            app:layout_constraintBaseline_toBaselineOf="@+id/tvRequestedByLabel"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <TextView
+            android:id="@+id/tvScheduleLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="8dp"
+            android:fontFamily="@font/poppins_medium"
+            android:text="Schedule:"
+            android:textColor="@android:color/black"
+            android:textSize="14sp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tvRequestedByLabel" />
+
+        <TextView
+            android:id="@+id/tvScheduleValue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="20dp"
+            android:fontFamily="@font/poppins_semibold"
+            android:text="Feb 04, 2026 - 10 : 00 AM"
+            android:textColor="@android:color/black"
+            android:textSize="14sp"
+            app:layout_constraintBaseline_toBaselineOf="@+id/tvScheduleLabel"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <!-- Divider -->
+        <View
+            android:id="@+id/dividerWork"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="16dp"
+            android:background="#EEEEEE"
+            android:visibility="visible"
+            app:layout_constraintTop_toBottomOf="@+id/tvScheduleLabel" />
+
+        <!-- Bottom Section (Customer Info) -->
+        <TextView
+            android:id="@+id/tvCustomerLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="16dp"
+            android:fontFamily="@font/poppins_medium"
+            android:text="Customer Name:"
+            android:textColor="@android:color/black"
+            android:textSize="14sp"
+            android:visibility="visible"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/dividerWork" />
+
+        <TextView
+            android:id="@+id/tvCustomerName"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="20dp"
+            android:fontFamily="@font/poppins_semibold"
+            android:gravity="end"
+            android:text="Yooxie Batumbakal"
+            android:textColor="@android:color/black"
+            android:textSize="14sp"
+            android:visibility="visible"
+            app:layout_constraintBaseline_toBaselineOf="@+id/tvCustomerLabel"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/tvCustomerLabel" />
+
+        <TextView
+            android:id="@+id/tvContactLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="8dp"
+            android:fontFamily="@font/poppins_medium"
+            android:text="Contact number:"
+            android:textColor="@android:color/black"
+            android:textSize="14sp"
+            android:visibility="visible"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tvCustomerLabel" />
+
+        <TextView
+            android:id="@+id/tvContactNumber"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="20dp"
+            android:fontFamily="@font/poppins_semibold"
+            android:gravity="end"
+            android:text="09123456788"
+            android:textColor="@android:color/black"
+            android:textSize="14sp"
+            android:visibility="visible"
+            app:layout_constraintBaseline_toBaselineOf="@+id/tvContactLabel"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/tvContactLabel" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</com.google.android.material.card.MaterialCardView>
