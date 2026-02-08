@@ -188,12 +188,12 @@ public class UserTicketsFragment extends Fragment {
             }
 
             startActivity(UserPaymentActivity.createIntent(
-                getActivity(),
-                ticket.getTicketId(),
-                0,
-                0.0,
-                ticket.getServiceType(),
-                ticket.getAssignedStaff()));
+                    getActivity(),
+                    ticket.getTicketId(),
+                    0,
+                    0.0,
+                    ticket.getServiceType(),
+                    ticket.getAssignedStaff()));
         });
 
         // Setup SwipeRefreshLayout
@@ -254,22 +254,26 @@ public class UserTicketsFragment extends Fragment {
                         int ticketCount = (newTickets != null) ? newTickets.size() : 0;
                         Log.d(TAG, "Tickets received: " + ticketCount);
 
-                        // Clear existing tickets
-                        allTickets.clear();
-                        tickets.clear();
-
-                        // Add new tickets if any
-                        if (newTickets != null && !newTickets.isEmpty()) {
-                            allTickets.addAll(newTickets);
+                        // Merge new tickets with existing ones instead of clearing
+                        if (newTickets != null) {
+                            mergeTickets(newTickets);
+                        } else {
+                            // Only clear if explicitly empty/null response which implies no tickets
+                            if (allTickets != null)
+                                allTickets.clear();
+                            if (tickets != null)
+                                tickets.clear();
+                            if (adapter != null)
+                                adapter.notifyDataSetChanged();
                         }
 
-                        // Apply current filter
-                        filterTickets();
+                        // Filter is already called inside mergeTickets
+                        // filterTickets();
 
-                        // Update adapter
-                        if (adapter != null) {
-                            adapter.notifyDataSetChanged();
-                        }
+                        // Adapter update is already called inside mergeTickets
+                        // if (adapter != null) {
+                        // adapter.notifyDataSetChanged();
+                        // }
 
                         // No popups/toasts here – UI updates silently
                     } else {
@@ -449,6 +453,12 @@ public class UserTicketsFragment extends Fragment {
                     } else {
                         // Exact match for other statuses (pending, completed, etc.)
                         matchesFilter = normalizedStatus.equals(normalizedFilter);
+
+                        // Handle "cancelled" filter if we add a tab for it, or ensures it doesn't show
+                        // in other tabs
+                        if (normalizedFilter.equals("cancelled") || normalizedFilter.equals("rejected")) {
+                            matchesFilter = normalizedStatus.equals("cancelled") || normalizedStatus.equals("rejected");
+                        }
                     }
                 }
             }

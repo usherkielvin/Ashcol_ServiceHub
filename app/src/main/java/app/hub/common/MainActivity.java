@@ -54,6 +54,7 @@ import retrofit2.Response;
 @SuppressWarnings("deprecation")
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
+    private static final int RC_SIGN_IN = 9001;
 
     private TokenManager tokenManager;
     private LocationHelper locationHelper;
@@ -222,24 +223,24 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void signInWithGoogle() {
-<<<<<<< HEAD
+        if (!isGooglePlayServicesAvailable()) {
+            return;
+        }
+
         MaterialButton loginButton = findViewById(R.id.loginButton);
         if (loginButton != null) {
             loginButton.setEnabled(false);
             loginButton.setText(R.string.logging_in);
         }
-        
-=======
-        if (!isGooglePlayServicesAvailable()) {
-            return;
-        }
 
->>>>>>> d54e9e0a7c50260b606de669f19a9b667cb5423b
         if (googleSignInClient != null) {
             googleSignInClient.signOut().addOnCompleteListener(this, task -> {
                 Intent signInIntent = googleSignInClient.getSignInIntent();
-                startActivityForResult(signInIntent, 9001); // RC_SIGN_IN equivalent
+                startActivityForResult(signInIntent, RC_SIGN_IN);
             });
+        } else if (loginButton != null) {
+            loginButton.setEnabled(true);
+            loginButton.setText(R.string.login);
         }
     }
 
@@ -627,7 +628,37 @@ public class MainActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         
         // Handle Google Sign-In result
-        if (requestCode == 9001) { // RC_SIGN_IN equivalent
+        if (requestCode == RC_SIGN_IN) {
+            if (resultCode != RESULT_OK) {
+                if (!isGooglePlayServicesAvailable()) {
+                    return;
+                }
+                if (resultCode == RESULT_CANCELED) {
+                    Toast.makeText(this, getString(R.string.google_sign_in_cancelled), Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(this, getString(R.string.google_sign_in_failed), Toast.LENGTH_SHORT).show();
+                }
+
+                MaterialButton loginButton = findViewById(R.id.loginButton);
+                if (loginButton != null) {
+                    loginButton.setEnabled(true);
+                    loginButton.setText(R.string.login);
+                }
+                return;
+            }
+
+            if (data == null) {
+                Toast.makeText(this, getString(R.string.google_sign_in_failed), Toast.LENGTH_SHORT).show();
+                Log.w(TAG, "Google Sign-In returned null data intent");
+
+                MaterialButton loginButton = findViewById(R.id.loginButton);
+                if (loginButton != null) {
+                    loginButton.setEnabled(true);
+                    loginButton.setText(R.string.login);
+                }
+                return;
+            }
+
             Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
             handleGoogleSignInResult(task);
         }

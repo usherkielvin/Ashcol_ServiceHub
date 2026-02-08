@@ -146,16 +146,25 @@ public class TicketsAdapter extends RecyclerView.Adapter<TicketsAdapter.TicketVi
                 return null;
             String lowerStatus = status.toLowerCase().trim();
             // Map "Open" to "Pending" since they represent the same state for customers
-            if (lowerStatus.equals("open")) {
+            if (lowerStatus.equals("open") || lowerStatus.equals("submitted")) {
                 return "Pending";
             }
             if (lowerStatus.equals("active") ||
                     lowerStatus.equals("accepted") ||
                     lowerStatus.equals("assigned") ||
-                    lowerStatus.equals("ongoing")) {
+                    lowerStatus.equals("ongoing") ||
+                    lowerStatus.equals("on the way") ||
+                    lowerStatus.equals("arrived")) {
                 return "In Progress";
             }
-            return status; // Return original status for other values
+            if (lowerStatus.equals("canceled")) {
+                return "Cancelled";
+            }
+            // Capitalize first letter for others
+            if (status.length() > 0) {
+                return status.substring(0, 1).toUpperCase() + status.substring(1);
+            }
+            return status;
         }
 
         private void setStatusBackgroundColor(TextView textView, String status) {
@@ -166,29 +175,9 @@ public class TicketsAdapter extends RecyclerView.Adapter<TicketsAdapter.TicketVi
             textView.setTextColor(Color.WHITE);
 
             // Set background color based on status (status is already normalized)
-            switch (status.toLowerCase()) {
-                case "pending":
-                    textView.setBackgroundColor(Color.parseColor("#FF9800")); // Orange
-                    break;
-                case "in progress":
-                case "accepted":
-                case "active":
-                case "assigned":
-                case "ongoing":
-                    textView.setBackgroundColor(Color.parseColor("#2196F3")); // Blue
-                    break;
-                case "completed":
-                    textView.setBackgroundColor(Color.parseColor("#4CAF50")); // Green
-                    break;
-                case "rejected":
-                case "cancelled":
-                    textView.setBackgroundColor(Color.parseColor("#F44336")); // Red
-                    break;
-                default:
-                    // Default to orange for unknown statuses (treat as pending)
-                    textView.setBackgroundColor(Color.parseColor("#FF9800")); // Orange
-                    break;
-            }
+            // Delegate to getBackgroundColorForStatus for consistent color logic
+            int color = getBackgroundColorForStatus(status);
+            textView.setBackgroundColor(color);
 
             // Apply rounded corners
             textView.setBackground(createRoundedBackground(getBackgroundColorForStatus(status)));
@@ -200,17 +189,24 @@ public class TicketsAdapter extends RecyclerView.Adapter<TicketsAdapter.TicketVi
 
             switch (status.toLowerCase()) {
                 case "pending":
+                case "open":
+                case "submitted":
                     return Color.parseColor("#FF9800"); // Orange
                 case "in progress":
                 case "accepted":
                 case "active":
                 case "assigned":
                 case "ongoing":
+                case "on the way":
+                case "arrived":
                     return Color.parseColor("#2196F3"); // Blue
                 case "completed":
+                case "paid":
+                case "closed": // Treat closed as completed/history
                     return Color.parseColor("#4CAF50"); // Green
                 case "rejected":
                 case "cancelled":
+                case "canceled": // Handle spelling var
                     return Color.parseColor("#F44336"); // Red
                 default:
                     return Color.parseColor("#FF9800"); // Default Orange (pending)
