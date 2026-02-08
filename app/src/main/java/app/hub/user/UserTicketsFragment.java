@@ -44,7 +44,9 @@ public class UserTicketsFragment extends Fragment {
     private FirestoreManager firestoreManager;
     private List<TicketListResponse.TicketItem> tickets;
     private List<TicketListResponse.TicketItem> allTickets; // Store all tickets for filtering
-    private String currentFilter = "pending"; // Track current filter (default to pending)
+    private String currentFilter = "active"; // Track current filter (default to active)
+    private java.util.Set<String> pendingPaymentTicketIds = new java.util.HashSet<>();
+    private java.util.Set<String> paidTicketIds = new java.util.HashSet<>();
 
     // Filter tabs
     private TextView tabRecent, tabPending, tabInProgress, tabCompleted;
@@ -94,10 +96,12 @@ public class UserTicketsFragment extends Fragment {
             Log.d(TAG, "Showing new ticket instantly: " + pending.getTicketId());
         }
 
-        // Load tickets in background to refresh and sync with server (silent if we
-        // already showed pending)
+        // Load tickets immediately to avoid delayed tab display
         Log.d(TAG, "Fragment view created, loading tickets...");
-        view.post(() -> loadTickets(pending != null));
+        if (swipeRefreshLayout != null) {
+            swipeRefreshLayout.setRefreshing(true);
+        }
+        loadTickets(pending != null);
     }
 
     private void initViews(View view) {
@@ -129,6 +133,64 @@ public class UserTicketsFragment extends Fragment {
             @Override
             public void onError(Exception e) {
                 Log.e("UserTickets", "Firestore error: " + e.getMessage());
+            }
+        });
+
+        firestoreManager.listenToPendingPayments(new FirestoreManager.PendingPaymentsListener() {
+            @Override
+            public void onPaymentsUpdated(java.util.List<FirestoreManager.PendingPayment> payments) {
+                java.util.Set<String> ids = new java.util.HashSet<>();
+                if (payments != null) {
+                    for (FirestoreManager.PendingPayment payment : payments) {
+                        if (payment != null && payment.ticketId != null) {
+                            ids.add(payment.ticketId);
+                        }
+                    }
+                }
+                pendingPaymentTicketIds = ids;
+
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() -> {
+                        if (adapter != null) {
+                            adapter.setPendingPaymentTicketIds(pendingPaymentTicketIds);
+                            adapter.notifyDataSetChanged();
+                        }
+                    });
+                }
+            }
+
+            @Override
+            public void onError(Exception e) {
+                Log.e("UserTickets", "Pending payments listener error: " + e.getMessage());
+            }
+        });
+
+        firestoreManager.listenToCompletedPayments(new FirestoreManager.PendingPaymentsListener() {
+            @Override
+            public void onPaymentsUpdated(java.util.List<FirestoreManager.PendingPayment> payments) {
+                java.util.Set<String> ids = new java.util.HashSet<>();
+                if (payments != null) {
+                    for (FirestoreManager.PendingPayment payment : payments) {
+                        if (payment != null && payment.ticketId != null) {
+                            ids.add(payment.ticketId);
+                        }
+                    }
+                }
+                paidTicketIds = ids;
+
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() -> {
+                        if (adapter != null) {
+                            adapter.setPaidTicketIds(paidTicketIds);
+                            adapter.notifyDataSetChanged();
+                        }
+                    });
+                }
+            }
+
+            @Override
+            public void onError(Exception e) {
+                Log.e("UserTickets", "Completed payments listener error: " + e.getMessage());
             }
         });
 
@@ -165,6 +227,8 @@ public class UserTicketsFragment extends Fragment {
 
         // Initialize adapter with empty list
         adapter = new TicketsAdapter(tickets);
+        adapter.setPendingPaymentTicketIds(pendingPaymentTicketIds);
+        adapter.setPaidTicketIds(paidTicketIds);
 
         // Set layout manager
         LinearLayoutManager layoutManager = new LinearLayoutManager(getContext());
@@ -326,7 +390,7 @@ public class UserTicketsFragment extends Fragment {
     private void setupFilterTabs() {
         // Add null checks to prevent NullPointerException
         if (tabRecent != null) {
-            tabRecent.setOnClickListener(v -> selectFilter("recent", tabRecent));
+            tabRecent.setOnClickListener(v -> selectFilter("active", tabRecent));
         } else {
             Log.e(TAG, "tabRecent is null - check layout file for R.id.tabRecent");
         }
@@ -349,9 +413,9 @@ public class UserTicketsFragment extends Fragment {
             Log.e(TAG, "tabCompleted is null - check layout file for R.id.tabCompleted");
         }
 
-        // Set initial selection to pending only if tabPending exists
-        if (tabPending != null) {
-            selectFilter("pending", tabPending);
+        // Set initial selection to Active tab
+        if (tabRecent != null) {
+            selectFilter("active", tabRecent);
         }
     }
 
@@ -428,8 +492,8 @@ public class UserTicketsFragment extends Fragment {
             boolean matchesSearch = true;
 
             // Apply status filter (exact match, case-insensitive)
-            if (currentFilter.equals("recent")) {
-                matchesFilter = true; // Show all tickets for recent
+            if (currentFilter.equals("all")) {
+                matchesFilter = true;
             } else {
                 String ticketStatus = ticket.getStatus();
                 if (ticketStatus != null) {
@@ -442,7 +506,16 @@ public class UserTicketsFragment extends Fragment {
                     }
 
                     // Handle "in progress" filter matching "In Progress" status
-                    if (normalizedFilter.equals("in progress")) {
+                    if (normalizedFilter.equals("active")) {
+                        matchesFilter = normalizedStatus.equals("pending") ||
+                                normalizedStatus.equals("in progress") ||
+                                normalizedStatus.equals("in-progress") ||
+                                normalizedStatus.contains("progress") ||
+                                normalizedStatus.equals("active") ||
+                                normalizedStatus.equals("accepted") ||
+                                normalizedStatus.equals("assigned") ||
+                                normalizedStatus.equals("ongoing");
+                    } else if (normalizedFilter.equals("in progress")) {
                         matchesFilter = normalizedStatus.equals("in progress") ||
                                 normalizedStatus.equals("in-progress") ||
                                 normalizedStatus.contains("progress") ||

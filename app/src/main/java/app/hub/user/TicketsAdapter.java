@@ -1,5 +1,6 @@
 package app.hub.user;
 
+import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -11,11 +12,16 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
 import app.hub.R;
 import app.hub.api.TicketListResponse;
 
 public class TicketsAdapter extends RecyclerView.Adapter<TicketsAdapter.TicketViewHolder> {
 
+    private Set<String> pendingPaymentTicketIds = Collections.emptySet();
+    private Set<String> paidTicketIds = Collections.emptySet();
     private List<TicketListResponse.TicketItem> tickets;
     private OnTicketClickListener onTicketClickListener;
     private OnPaymentClickListener onPaymentClickListener;
@@ -38,6 +44,14 @@ public class TicketsAdapter extends RecyclerView.Adapter<TicketsAdapter.TicketVi
 
     public void setOnPaymentClickListener(OnPaymentClickListener listener) {
         this.onPaymentClickListener = listener;
+    }
+
+    public void setPendingPaymentTicketIds(Set<String> ticketIds) {
+        pendingPaymentTicketIds = ticketIds != null ? ticketIds : Collections.emptySet();
+    }
+
+    public void setPaidTicketIds(Set<String> ticketIds) {
+        paidTicketIds = ticketIds != null ? ticketIds : Collections.emptySet();
     }
 
     @NonNull
@@ -89,7 +103,7 @@ public class TicketsAdapter extends RecyclerView.Adapter<TicketsAdapter.TicketVi
         private TextView tvTitle;
         private TextView tvTicketId;
         private TextView tvServiceType;
-        private TextView tvStatus;
+        private com.google.android.material.button.MaterialButton tvStatus;
         private com.google.android.material.button.MaterialButton btnPayNow;
 
         public TicketViewHolder(@NonNull View itemView) {
@@ -120,16 +134,22 @@ public class TicketsAdapter extends RecyclerView.Adapter<TicketsAdapter.TicketVi
             tvTicketId.setText("Requested by: " + (ticketId != null ? ticketId : "Unknown ID"));
 
             // Normalize status: "Open" should display as "Pending" with orange color
+            boolean isPaid = ticketId != null && paidTicketIds.contains(ticketId);
+            if (isPaid && "completed".equalsIgnoreCase(displayStatus)) {
+                displayStatus = "Paid";
+            }
             String status = ticket.getStatus();
             String normalizedStatus = normalizeStatus(status);
             String displayStatus = normalizedStatus != null ? normalizedStatus : "Unknown";
-            tvStatus.setText(displayStatus);
-
-            // Set status background color based on normalized status
-            setStatusBackgroundColor(tvStatus, normalizedStatus);
-
+            if (tvStatus != null) {
+                tvStatus.setText(displayStatus);
             if (btnPayNow != null) {
-                boolean showPay = normalizedStatus != null
+                boolean showPay = false;
+                if (normalizedStatus != null && normalizedStatus.equalsIgnoreCase("completed")) {
+                    showPay = ticketId != null && pendingPaymentTicketIds.contains(ticketId);
+                }
+                btnPayNow.setVisibility(showPay ? View.VISIBLE : View.GONE);
+            }
                         && normalizedStatus.equalsIgnoreCase("completed");
                 btnPayNow.setVisibility(showPay ? View.VISIBLE : View.GONE);
             }
@@ -167,20 +187,14 @@ public class TicketsAdapter extends RecyclerView.Adapter<TicketsAdapter.TicketVi
             return status;
         }
 
-        private void setStatusBackgroundColor(TextView textView, String status) {
-            if (status == null || textView == null)
+        private void applyStatusStyle(com.google.android.material.button.MaterialButton button, String status) {
+            if (button == null || status == null) {
                 return;
+            }
 
-            // Set text color to white for all status badges
-            textView.setTextColor(Color.WHITE);
-
-            // Set background color based on status (status is already normalized)
-            // Delegate to getBackgroundColorForStatus for consistent color logic
             int color = getBackgroundColorForStatus(status);
-            textView.setBackgroundColor(color);
-
-            // Apply rounded corners
-            textView.setBackground(createRoundedBackground(getBackgroundColorForStatus(status)));
+            button.setTextColor(Color.WHITE);
+            button.setBackgroundTintList(ColorStateList.valueOf(color));
         }
 
         private int getBackgroundColorForStatus(String status) {
@@ -213,12 +227,5 @@ public class TicketsAdapter extends RecyclerView.Adapter<TicketsAdapter.TicketVi
             }
         }
 
-        private android.graphics.drawable.GradientDrawable createRoundedBackground(int color) {
-            android.graphics.drawable.GradientDrawable drawable = new android.graphics.drawable.GradientDrawable();
-            drawable.setShape(android.graphics.drawable.GradientDrawable.RECTANGLE);
-            drawable.setColor(color);
-            drawable.setCornerRadius(20f); // Rounded corners
-            return drawable;
-        }
     }
 }

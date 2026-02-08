@@ -23,6 +23,8 @@ public class FirestoreManager {
     private ListenerRegistration userProfileListener;
     private ListenerRegistration addressListener;
     private ListenerRegistration paymentListener;
+    private ListenerRegistration pendingPaymentsListener;
+    private ListenerRegistration completedPaymentsListener;
 
     public interface UserProfileListener {
         void onProfileUpdated(UserResponse.Data profile);
@@ -323,9 +325,39 @@ public class FirestoreManager {
             return;
         }
 
-        paymentListener = db.collection("payments")
+        pendingPaymentsListener = db.collection("payments")
                 .whereEqualTo("customerEmail", email)
                 .whereEqualTo("status", "pending")
+                .orderBy("updatedAt", com.google.firebase.firestore.Query.Direction.DESCENDING)
+                .addSnapshotListener((snapshots, error) -> {
+                    if (error != null) {
+                        listener.onError(error);
+                        return;
+                    }
+
+                    if (snapshots != null) {
+                        java.util.List<PendingPayment> payments = new java.util.ArrayList<>();
+                        for (DocumentSnapshot doc : snapshots.getDocuments()) {
+                            PendingPayment payment = doc.toObject(PendingPayment.class);
+                            if (payment != null) {
+                                payments.add(payment);
+                            }
+                        }
+                        listener.onPaymentsUpdated(payments);
+                    }
+                });
+    }
+
+    public void listenToCompletedPayments(PendingPaymentsListener listener) {
+        String email = tokenManager.getEmail();
+        if (email == null) {
+            listener.onError(new Exception("Missing user email"));
+            return;
+        }
+
+        completedPaymentsListener = db.collection("payments")
+                .whereEqualTo("customerEmail", email)
+                .whereEqualTo("status", "completed")
                 .orderBy("updatedAt", com.google.firebase.firestore.Query.Direction.DESCENDING)
                 .addSnapshotListener((snapshots, error) -> {
                     if (error != null) {
@@ -350,6 +382,14 @@ public class FirestoreManager {
         if (paymentListener != null) {
             paymentListener.remove();
             paymentListener = null;
+        }
+        if (pendingPaymentsListener != null) {
+            pendingPaymentsListener.remove();
+            pendingPaymentsListener = null;
+        }
+        if (completedPaymentsListener != null) {
+            completedPaymentsListener.remove();
+            completedPaymentsListener = null;
         }
     }
 
