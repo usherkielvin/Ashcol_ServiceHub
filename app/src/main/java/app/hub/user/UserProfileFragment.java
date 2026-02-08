@@ -462,11 +462,12 @@ public class UserProfileFragment extends Fragment {
         setClickListener(view, R.id.btn_sign_out, () -> showLogoutConfirmation());
         setClickListener(view, R.id.btn_personal_info, () -> showToast("Personal Information clicked"));
         setClickListener(view, R.id.btn_password_privacy, () -> navigateToChangePassword());
-        setClickListener(view, R.id.btn_help, () -> showToast("Help & Feedback clicked"));
+        setClickListener(view, R.id.btn_help, this::openAddressBook);
         setClickListener(view, R.id.btn_edit_photo, () -> showImagePickerDialog());
         setClickListener(view, R.id.btn_appearance, () -> showThemeToggler());
         setClickListener(view, R.id.btn_notifications, () -> showNotificationSettings());
         setClickListener(view, R.id.btn_language, () -> showLanguageToggler());
+        setClickListener(view, R.id.btn_payments, this::openPayments);
     }
 
     private void setClickListener(View view, int id, Runnable action) {
@@ -509,6 +510,32 @@ public class UserProfileFragment extends Fragment {
 
     private void showToast(String message) {
         Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
+    }
+
+    private void openAddressBook() {
+        if (getActivity() == null)
+            return;
+        getActivity().getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragmentContainerView, UserAddressFragment.newInstance())
+                .addToBackStack(null)
+                .commit();
+    }
+
+    private void openPayments() {
+        if (getActivity() == null)
+            return;
+        getActivity().getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragmentContainerView, new UserNotificationFragment())
+                .addToBackStack(null)
+                .commit();
+
+        com.google.android.material.bottomnavigation.BottomNavigationView navView =
+                getActivity().findViewById(R.id.bottomNavigationView);
+        if (navView != null) {
+            navView.setSelectedItemId(R.id.activitybtn);
+        }
     }
 
     private void logout() {

@@ -1,0 +1,36 @@
+package app.hub.employee;
+
+import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+
+import app.hub.R;
+
+public class EmployeeWorkNoJobFragment extends Fragment {
+
+    public EmployeeWorkNoJobFragment() {
+        // Required empty public constructor
+    }
+
+    public static EmployeeWorkNoJobFragment newInstance() {
+        return new EmployeeWorkNoJobFragment();
+    }
+
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
+            Bundle savedInstanceState) {
+        // Inflate the layout for this fragment
+        return inflater.inflate(R.layout.fragment_employee_work_nojob, container, false);
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        // Initialize no job view logic
+    }
+}

@@ -2,7 +2,9 @@ package app.hub.user;
 
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
+import android.content.BroadcastReceiver;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -51,6 +53,7 @@ public class DashboardActivity extends AppCompatActivity {
     private View navIndicator;
     private BottomNavigationView bottomNavigationView;
     private FloatingActionButton fabChatbot;
+    private BroadcastReceiver fcmReceiver;
 
     public static final String EXTRA_SHOW_MY_TICKETS = "show_my_tickets";
 
@@ -63,6 +66,8 @@ public class DashboardActivity extends AppCompatActivity {
         navIndicator = findViewById(R.id.navIndicator);
         bottomNavigationView = findViewById(R.id.bottomNavigationView);
         fabChatbot = findViewById(R.id.fab_chatbot);
+
+        initFcmReceiver();
 
         setupFab(fabChatbot);
         disableNavigationTooltips(bottomNavigationView);
@@ -86,6 +91,8 @@ public class DashboardActivity extends AppCompatActivity {
             }
             getIntent().removeExtra(EXTRA_SHOW_MY_TICKETS);
         }
+
+        handleNotificationIntent(getIntent());
 
         bottomNavigationView.setOnNavigationItemSelectedListener(item -> {
             Fragment selectedFragment = null;
@@ -158,6 +165,73 @@ public class DashboardActivity extends AppCompatActivity {
         super.onNewIntent(intent);
         setIntent(intent);
         handleShowMyTickets(intent);
+        handleNotificationIntent(intent);
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        if (fcmReceiver != null) {
+            IntentFilter filter = new IntentFilter("com.ashcol.FCM_MESSAGE");
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                registerReceiver(fcmReceiver, filter, android.content.Context.RECEIVER_NOT_EXPORTED);
+            } else {
+                registerReceiver(fcmReceiver, filter);
+            }
+        }
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (fcmReceiver != null) {
+            unregisterReceiver(fcmReceiver);
+        }
+    }
+
+    private void handleNotificationIntent(Intent intent) {
+        if (intent == null) {
+            return;
+        }
+
+        String type = intent.getStringExtra("type");
+        String ticketId = intent.getStringExtra("ticket_id");
+
+        if (type != null && type.equals("payment_pending") && ticketId != null) {
+            if (fabChatbot != null) {
+                fabChatbot.hide();
+            }
+            openPaymentFlow(ticketId);
+        }
+    }
+
+    private void initFcmReceiver() {
+        fcmReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(android.content.Context context, Intent intent) {
+                String type = intent.getStringExtra("type");
+                String ticketId = intent.getStringExtra("ticket_id");
+                if ("payment_pending".equals(type) && ticketId != null) {
+                    if (fabChatbot != null) {
+                        fabChatbot.hide();
+                    }
+                    openPaymentFlow(ticketId);
+                }
+            }
+        };
+    }
+
+    private void openPaymentFlow(String ticketId) {
+        UserPaymentFragment fragment = UserPaymentFragment.newInstance(ticketId, 0, 0.0, null, null);
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.fragmentContainerView, fragment)
+                .addToBackStack(null)
+                .commit();
+
+        if (bottomNavigationView != null) {
+            bottomNavigationView.setSelectedItemId(R.id.activitybtn);
+            moveIndicatorToItem(R.id.activitybtn, true);
+        }
     }
 
     private void handleShowMyTickets(Intent intent) {

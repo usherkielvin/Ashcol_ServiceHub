@@ -160,8 +160,16 @@ public interface ApiService {
     @GET("api/v1/manager/payments")
     Call<app.hub.api.PaymentHistoryResponse> getPaymentHistory(@Header("Authorization") String token);
 
+    @GET("api/v1/payments/by-ticket/{ticketId}")
+    Call<app.hub.api.PaymentDetailResponse> getPaymentByTicketId(@Header("Authorization") String token,
+            @retrofit2.http.Path("ticketId") String ticketId);
+
     @POST("api/v1/payments/{paymentId}/submit")
     Call<app.hub.api.CompleteWorkResponse> submitPaymentToManager(@Header("Authorization") String token,
+            @retrofit2.http.Path("paymentId") int paymentId);
+
+    @POST("api/v1/payments/{paymentId}/pay")
+    Call<app.hub.api.CompleteWorkResponse> payCustomerPayment(@Header("Authorization") String token,
             @retrofit2.http.Path("paymentId") int paymentId);
 
     @POST("api/v1/payments/{paymentId}/complete")

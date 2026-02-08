@@ -114,6 +114,11 @@ public class UserTicketsFragment extends Fragment {
         firestoreManager.listenToMyTickets(new FirestoreManager.TicketListListener() {
             @Override
             public void onTicketsUpdated(List<TicketListResponse.TicketItem> updatedTickets) {
+                if (updatedTickets == null || updatedTickets.isEmpty()) {
+                    Log.d(TAG, "Firestore tickets empty; keeping current list");
+                    return;
+                }
+
                 if (getActivity() != null) {
                     getActivity().runOnUiThread(() -> {
                         refreshWithTickets(updatedTickets);
@@ -175,6 +180,25 @@ public class UserTicketsFragment extends Fragment {
             Intent intent = new Intent(getContext(), TicketDetailActivity.class);
             intent.putExtra("ticket_id", ticket.getTicketId());
             startActivity(intent);
+        });
+
+        adapter.setOnPaymentClickListener(ticket -> {
+            if (getActivity() == null) {
+                return;
+            }
+
+            UserPaymentFragment fragment = UserPaymentFragment.newInstance(
+                    ticket.getTicketId(),
+                    0,
+                    0.0,
+                    ticket.getServiceType(),
+                    ticket.getAssignedStaff());
+
+            getActivity().getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.fragmentContainerView, fragment)
+                    .addToBackStack(null)
+                    .commit();
         });
 
         // Setup SwipeRefreshLayout
@@ -422,7 +446,11 @@ public class UserTicketsFragment extends Fragment {
                     if (normalizedFilter.equals("in progress")) {
                         matchesFilter = normalizedStatus.equals("in progress") ||
                                 normalizedStatus.equals("in-progress") ||
-                                normalizedStatus.contains("progress");
+                                normalizedStatus.contains("progress") ||
+                                normalizedStatus.equals("active") ||
+                                normalizedStatus.equals("accepted") ||
+                                normalizedStatus.equals("assigned") ||
+                                normalizedStatus.equals("ongoing");
                     } else {
                         // Exact match for other statuses (pending, completed, etc.)
                         matchesFilter = normalizedStatus.equals(normalizedFilter);

@@ -69,6 +69,25 @@ public class UserNotificationFragment extends Fragment {
             startActivity(intent);
         });
 
+        adapter.setOnPaymentClickListener(ticket -> {
+            if (getActivity() == null) {
+                return;
+            }
+
+            UserPaymentFragment fragment = UserPaymentFragment.newInstance(
+                    ticket.getTicketId(),
+                    0,
+                    0.0,
+                    ticket.getServiceType(),
+                    ticket.getAssignedStaff());
+
+            getActivity().getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.fragmentContainerView, fragment)
+                    .addToBackStack(null)
+                    .commit();
+        });
+
         swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout);
         if (swipeRefreshLayout != null) {
             swipeRefreshLayout.setOnRefreshListener(this::loadTickets);

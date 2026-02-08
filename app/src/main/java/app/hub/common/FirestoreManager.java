@@ -21,6 +21,8 @@ public class FirestoreManager {
     private FirebaseFirestore db;
     private TokenManager tokenManager;
     private ListenerRegistration userProfileListener;
+    private ListenerRegistration addressListener;
+    private ListenerRegistration paymentListener;
 
     public interface UserProfileListener {
         void onProfileUpdated(UserResponse.Data profile);
@@ -86,6 +88,114 @@ public class FirestoreManager {
         }
     }
 
+    public static class UserAddress {
+        public String id;
+        public String customerEmail;
+        public String name;
+        public String phone;
+        public String locationDetails;
+        public String postalCode;
+        public String streetDetails;
+        public boolean isDefault;
+        public java.util.Date updatedAt;
+
+        public UserAddress() {
+        }
+    }
+
+    public interface UserAddressListener {
+        void onAddressesUpdated(java.util.List<UserAddress> addresses);
+
+        void onError(Exception e);
+    }
+
+    public interface AddressSaveListener {
+        void onSuccess();
+
+        void onError(Exception e);
+    }
+
+    public void listenToUserAddresses(UserAddressListener listener) {
+        String email = tokenManager.getEmail();
+        if (email == null) {
+            listener.onError(new Exception("No user email found"));
+            return;
+        }
+
+        addressListener = db.collection("addresses")
+                .whereEqualTo("customerEmail", email)
+                .addSnapshotListener(MetadataChanges.INCLUDE, (snapshots, error) -> {
+                    if (error != null) {
+                        listener.onError(error);
+                        return;
+                    }
+
+                    if (snapshots != null) {
+                        java.util.List<UserAddress> addresses = new java.util.ArrayList<>();
+                        for (DocumentSnapshot doc : snapshots.getDocuments()) {
+                            UserAddress address = doc.toObject(UserAddress.class);
+                            if (address != null) {
+                                address.id = doc.getId();
+                                addresses.add(address);
+                            }
+                        }
+                        listener.onAddressesUpdated(addresses);
+                    }
+                });
+    }
+
+    public void stopAddressListening() {
+        if (addressListener != null) {
+            addressListener.remove();
+            addressListener = null;
+        }
+    }
+
+    public void saveUserAddress(UserAddress address, AddressSaveListener listener) {
+        String email = tokenManager.getEmail();
+        if (email == null) {
+            listener.onError(new Exception("No user email found"));
+            return;
+        }
+
+        address.customerEmail = email;
+        address.updatedAt = new java.util.Date();
+
+        com.google.firebase.firestore.WriteBatch batch = db.batch();
+        com.google.firebase.firestore.CollectionReference addressesRef = db.collection("addresses");
+
+        if (address.isDefault) {
+            db.collection("addresses")
+                    .whereEqualTo("customerEmail", email)
+                    .get()
+                    .addOnSuccessListener(query -> {
+                        for (DocumentSnapshot doc : query.getDocuments()) {
+                            if (address.id == null || !doc.getId().equals(address.id)) {
+                                batch.update(doc.getReference(), "isDefault", false);
+                            }
+                        }
+                        saveAddressDocument(addressesRef, batch, address, listener);
+                    })
+                    .addOnFailureListener(listener::onError);
+            return;
+        }
+
+        saveAddressDocument(addressesRef, batch, address, listener);
+    }
+
+    private void saveAddressDocument(com.google.firebase.firestore.CollectionReference addressesRef,
+            com.google.firebase.firestore.WriteBatch batch,
+            UserAddress address,
+            AddressSaveListener listener) {
+        com.google.firebase.firestore.DocumentReference docRef =
+                address.id != null ? addressesRef.document(address.id) : addressesRef.document();
+
+        batch.set(docRef, address);
+        batch.commit()
+                .addOnSuccessListener(unused -> listener.onSuccess())
+                .addOnFailureListener(listener::onError);
+    }
+
     public interface TicketListListener {
         void onTicketsUpdated(java.util.List<app.hub.api.TicketListResponse.TicketItem> tickets);
 
@@ -146,6 +256,95 @@ public class FirestoreManager {
         if (ticketListener != null) {
             ticketListener.remove();
             ticketListener = null;
+        }
+    }
+
+    public static class PendingPayment {
+        public int paymentId;
+        public String ticketId;
+        public String customerEmail;
+        public String serviceName;
+        public String technicianName;
+        public String status;
+        public double amount;
+
+        public PendingPayment() {
+        }
+    }
+
+    public interface PendingPaymentListener {
+        void onPaymentUpdated(PendingPayment payment);
+
+        void onError(Exception e);
+    }
+
+    public interface PendingPaymentsListener {
+        void onPaymentsUpdated(java.util.List<PendingPayment> payments);
+
+        void onError(Exception e);
+    }
+
+    public void listenToPendingPayment(@Nullable String ticketId, PendingPaymentListener listener) {
+        String email = tokenManager.getEmail();
+        if (email == null || ticketId == null) {
+            listener.onError(new Exception("Missing user or ticket id"));
+            return;
+        }
+
+        paymentListener = db.collection("payments")
+                .whereEqualTo("customerEmail", email)
+                .whereEqualTo("ticketId", ticketId)
+                .whereEqualTo("status", "pending")
+                .addSnapshotListener((snapshots, error) -> {
+                    if (error != null) {
+                        listener.onError(error);
+                        return;
+                    }
+
+                    if (snapshots != null && !snapshots.isEmpty()) {
+                        DocumentSnapshot doc = snapshots.getDocuments().get(0);
+                        PendingPayment payment = doc.toObject(PendingPayment.class);
+                        if (payment != null) {
+                            listener.onPaymentUpdated(payment);
+                        }
+                    }
+                });
+    }
+
+    public void listenToPendingPayments(PendingPaymentsListener listener) {
+        String email = tokenManager.getEmail();
+        if (email == null) {
+            listener.onError(new Exception("Missing user email"));
+            return;
+        }
+
+        paymentListener = db.collection("payments")
+                .whereEqualTo("customerEmail", email)
+                .whereEqualTo("status", "pending")
+                .orderBy("updatedAt", com.google.firebase.firestore.Query.Direction.DESCENDING)
+                .addSnapshotListener((snapshots, error) -> {
+                    if (error != null) {
+                        listener.onError(error);
+                        return;
+                    }
+
+                    if (snapshots != null) {
+                        java.util.List<PendingPayment> payments = new java.util.ArrayList<>();
+                        for (DocumentSnapshot doc : snapshots.getDocuments()) {
+                            PendingPayment payment = doc.toObject(PendingPayment.class);
+                            if (payment != null) {
+                                payments.add(payment);
+                            }
+                        }
+                        listener.onPaymentsUpdated(payments);
+                    }
+                });
+    }
+
+    public void stopPaymentListening() {
+        if (paymentListener != null) {
+            paymentListener.remove();
+            paymentListener = null;
         }
     }
 

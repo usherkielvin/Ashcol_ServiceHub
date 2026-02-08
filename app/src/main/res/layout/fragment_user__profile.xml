@@ -322,10 +322,10 @@
 
                 <!-- Payments Row -->
                 <LinearLayout
-                    android:id="@+id/btn_sign_out"
+                    android:id="@+id/btn_payments"
                     android:layout_width="match_parent"
                     android:layout_height="64dp"
-                    android:layout_marginBottom="32dp"
+                    android:layout_marginBottom="12dp"
                     android:background="?attr/selectableItemBackground"
                     android:clickable="true"
                     android:focusable="true"
@@ -350,6 +350,40 @@
                         android:layout_marginStart="16dp"
                         android:fontFamily="@font/poppins_medium"
                         android:text="Payments"
+                        android:textColor="#000000"
+                        android:textSize="18sp" />
+                </LinearLayout>
+
+                <!-- Sign Out Row -->
+                <LinearLayout
+                    android:id="@+id/btn_sign_out"
+                    android:layout_width="match_parent"
+                    android:layout_height="64dp"
+                    android:layout_marginBottom="32dp"
+                    android:background="?attr/selectableItemBackground"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <FrameLayout
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:background="@drawable/bg_icon_circle_green">
+                        <ImageView
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_exit"
+                            app:tint="#1B4332" />
+                    </FrameLayout>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:fontFamily="@font/poppins_medium"
+                        android:text="Sign Out"
                         android:textColor="#000000"
                         android:textSize="18sp" />
                 </LinearLayout>
