@@ -10,8 +10,6 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import java.util.List;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -99,7 +97,7 @@ public class TicketsAdapter extends RecyclerView.Adapter<TicketsAdapter.TicketVi
         return count;
     }
 
-    static class TicketViewHolder extends RecyclerView.ViewHolder {
+    class TicketViewHolder extends RecyclerView.ViewHolder {
         private TextView tvTitle;
         private TextView tvTicketId;
         private TextView tvServiceType;
@@ -134,23 +132,25 @@ public class TicketsAdapter extends RecyclerView.Adapter<TicketsAdapter.TicketVi
             tvTicketId.setText("Requested by: " + (ticketId != null ? ticketId : "Unknown ID"));
 
             // Normalize status: "Open" should display as "Pending" with orange color
+            String status = ticket.getStatus();
+            String normalizedStatus = normalizeStatus(status);
+            String displayStatus = normalizedStatus != null ? normalizedStatus : "Unknown";
+
             boolean isPaid = ticketId != null && paidTicketIds.contains(ticketId);
             if (isPaid && "completed".equalsIgnoreCase(displayStatus)) {
                 displayStatus = "Paid";
             }
-            String status = ticket.getStatus();
-            String normalizedStatus = normalizeStatus(status);
-            String displayStatus = normalizedStatus != null ? normalizedStatus : "Unknown";
+
             if (tvStatus != null) {
                 tvStatus.setText(displayStatus);
+                applyStatusStyle(tvStatus, normalizedStatus);
+            }
+
             if (btnPayNow != null) {
                 boolean showPay = false;
                 if (normalizedStatus != null && normalizedStatus.equalsIgnoreCase("completed")) {
                     showPay = ticketId != null && pendingPaymentTicketIds.contains(ticketId);
                 }
-                btnPayNow.setVisibility(showPay ? View.VISIBLE : View.GONE);
-            }
-                        && normalizedStatus.equalsIgnoreCase("completed");
                 btnPayNow.setVisibility(showPay ? View.VISIBLE : View.GONE);
             }
 
