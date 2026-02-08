@@ -459,7 +459,8 @@ public class UserProfileFragment extends Fragment {
     }
 
     private void setupClickListeners(View view) {
-        setClickListener(view, R.id.btn_sign_out, () -> showLogoutConfirmation());
+        setClickListener(view, R.id.logoutButton, this::showLogoutConfirmation);
+        setClickListener(view, R.id.btn_sign_out, this::showLogoutConfirmation);
         setClickListener(view, R.id.btn_personal_info, () -> showToast("Personal Information clicked"));
         setClickListener(view, R.id.btn_password_privacy, () -> navigateToChangePassword());
         setClickListener(view, R.id.btn_help, this::openAddressBook);
@@ -468,6 +469,7 @@ public class UserProfileFragment extends Fragment {
         setClickListener(view, R.id.btn_notifications, () -> showNotificationSettings());
         setClickListener(view, R.id.btn_language, () -> showLanguageToggler());
         setClickListener(view, R.id.btn_payments, this::openPayments);
+        setClickListener(view, R.id.btn_about_us, () -> showToast("About us clicked"));
     }
 
     private void setClickListener(View view, int id, Runnable action) {
