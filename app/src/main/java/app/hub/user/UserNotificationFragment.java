@@ -69,18 +69,23 @@ public class UserNotificationFragment extends Fragment {
             startActivity(intent);
         });
 
+        adapter.setOnPaymentClickListener(ticket -> {
+            if (getActivity() == null) {
+                return;
+            }
+
+            startActivity(UserPaymentActivity.createIntent(
+                getActivity(),
+                ticket.getTicketId(),
+                0,
+                0.0,
+                ticket.getServiceType(),
+                ticket.getAssignedStaff()));
+        });
+
         swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout);
         if (swipeRefreshLayout != null) {
             swipeRefreshLayout.setOnRefreshListener(this::loadTickets);
-        }
-
-        // Show newly created ticket instantly if pending (e.g. when switching to Activity tab right after creation)
-        TicketListResponse.TicketItem pending = UserTicketsFragment.getPendingNewTicket();
-        if (pending != null) {
-            UserTicketsFragment.clearPendingNewTicket();
-            tickets.add(0, pending);
-            showTicketList();
-            adapter.notifyItemInserted(0);
         }
 
         loadTickets();
@@ -106,8 +111,9 @@ public class UserNotificationFragment extends Fragment {
                 if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
                     List<TicketListResponse.TicketItem> newTickets = response.body().getTickets();
                     tickets.clear();
-                    if (newTickets != null && !newTickets.isEmpty()) {
-                        tickets.addAll(newTickets);
+                    TicketListResponse.TicketItem inProgress = findInProgressTicket(newTickets);
+                    if (inProgress != null) {
+                        tickets.add(inProgress);
                         showTicketList();
                     } else {
                         showEmptyState();
@@ -136,6 +142,37 @@ public class UserNotificationFragment extends Fragment {
     private void showEmptyState() {
         if (rvActivity != null) rvActivity.setVisibility(View.GONE);
         if (emptyStateContainer != null) emptyStateContainer.setVisibility(View.VISIBLE);
+    }
+
+    private TicketListResponse.TicketItem findInProgressTicket(List<TicketListResponse.TicketItem> list) {
+        if (list == null || list.isEmpty()) {
+            return null;
+        }
+
+        for (TicketListResponse.TicketItem ticket : list) {
+            if (ticket == null) {
+                continue;
+            }
+            String status = ticket.getStatus();
+            if (isInProgressStatus(status)) {
+                return ticket;
+            }
+        }
+        return null;
+    }
+
+    private boolean isInProgressStatus(String status) {
+        if (status == null) {
+            return false;
+        }
+        String normalized = status.toLowerCase().trim();
+        return normalized.equals("in progress")
+                || normalized.equals("in-progress")
+                || normalized.contains("progress")
+                || normalized.equals("active")
+                || normalized.equals("accepted")
+                || normalized.equals("assigned")
+                || normalized.equals("ongoing");
     }
 
 }

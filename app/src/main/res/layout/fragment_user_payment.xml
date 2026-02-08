@@ -318,9 +318,12 @@
 
                 <!-- Cash -->
                 <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cardCash"
                     android:layout_width="match_parent"
                     android:layout_height="64dp"
                     android:layout_marginBottom="12dp"
+                    android:clickable="true"
+                    android:focusable="true"
                     app:cardBackgroundColor="@android:color/white"
                     app:cardCornerRadius="12dp"
                     app:cardElevation="4dp"
@@ -359,9 +362,12 @@
 
                 <!-- GCash -->
                 <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cardGcash"
                     android:layout_width="match_parent"
                     android:layout_height="64dp"
                     android:layout_marginBottom="12dp"
+                    android:clickable="true"
+                    android:focusable="true"
                     app:cardBackgroundColor="@android:color/white"
                     app:cardCornerRadius="12dp"
                     app:cardElevation="4dp"
@@ -397,9 +403,12 @@
 
                 <!-- Credit Card -->
                 <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cardCreditCard"
                     android:layout_width="match_parent"
                     android:layout_height="64dp"
                     android:layout_marginBottom="12dp"
+                    android:clickable="true"
+                    android:focusable="true"
                     app:cardBackgroundColor="@android:color/white"
                     app:cardCornerRadius="12dp"
                     app:cardElevation="4dp"

@@ -79,6 +79,16 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
             // Handle different notification types
             handleDataPayload(notificationType, action, remoteMessage.getData());
+
+            if (notification == null) {
+                String title = "Notification";
+                String body = "You have a new update.";
+                if ("payment_pending".equals(notificationType)) {
+                    title = "Payment Required";
+                    body = "Your ticket is ready for payment.";
+                }
+                showNotification(title, body, remoteMessage.getData());
+            }
         }
     }
 

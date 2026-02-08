@@ -18,7 +18,11 @@ public class SplashActivity extends AppCompatActivity {
 
         // Use a Handler to delay the transition to MainActivity
         new Handler(Looper.getMainLooper()).postDelayed(() -> {
-            startActivity(new Intent(SplashActivity.this, MainActivity.class));
+            Intent intent = new Intent(SplashActivity.this, MainActivity.class);
+            if (getIntent() != null && getIntent().getExtras() != null) {
+                intent.putExtras(getIntent().getExtras());
+            }
+            startActivity(intent);
             // Apply transition: next activity slides in from top, this one slides out to bottom
             overridePendingTransition(R.anim.slide_in_top, R.anim.slide_out_bottom);
             finish();

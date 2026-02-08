@@ -153,6 +153,7 @@ public class UserHomeFragment extends Fragment {
         }
     }
 
+
     private void loadBranchInfo() {
         // First try to load from cache
         String cachedBranch = tokenManager.getCachedBranch();
@@ -210,4 +211,5 @@ public class UserHomeFragment extends Fragment {
             });
         }
     }
+
 }

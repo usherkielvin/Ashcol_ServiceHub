@@ -19,6 +19,8 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.button.MaterialButton;
@@ -142,6 +144,10 @@ public class MainActivity extends AppCompatActivity {
 
         intent.addFlags(
                 Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+
+        if (getIntent() != null && getIntent().getExtras() != null) {
+            intent.putExtras(getIntent().getExtras());
+        }
         startActivity(intent);
         finish();
     }
@@ -205,12 +211,30 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void signInWithGoogle() {
+        if (!isGooglePlayServicesAvailable()) {
+            return;
+        }
+
         if (googleSignInClient != null) {
             googleSignInClient.signOut().addOnCompleteListener(task -> {
                 Intent signInIntent = googleSignInClient.getSignInIntent();
                 googleSignInLauncher.launch(signInIntent);
             });
         }
+    }
+
+    private boolean isGooglePlayServicesAvailable() {
+        int status = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(this);
+        if (status == ConnectionResult.SUCCESS) {
+            return true;
+        }
+
+        if (GoogleApiAvailability.getInstance().isUserResolvableError(status)) {
+            GoogleApiAvailability.getInstance().getErrorDialog(this, status, 9000).show();
+        } else {
+            Toast.makeText(this, "Google Play services is unavailable on this device.", Toast.LENGTH_LONG).show();
+        }
+        return false;
     }
 
     private void handleGoogleSignInResult(Task<GoogleSignInAccount> completedTask) {

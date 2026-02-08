@@ -18,9 +18,14 @@ public class TicketsAdapter extends RecyclerView.Adapter<TicketsAdapter.TicketVi
 
     private List<TicketListResponse.TicketItem> tickets;
     private OnTicketClickListener onTicketClickListener;
+    private OnPaymentClickListener onPaymentClickListener;
 
     public interface OnTicketClickListener {
         void onTicketClick(TicketListResponse.TicketItem ticket);
+    }
+
+    public interface OnPaymentClickListener {
+        void onPaymentClick(TicketListResponse.TicketItem ticket);
     }
 
     public TicketsAdapter(List<TicketListResponse.TicketItem> tickets) {
@@ -29,6 +34,10 @@ public class TicketsAdapter extends RecyclerView.Adapter<TicketsAdapter.TicketVi
 
     public void setOnTicketClickListener(OnTicketClickListener listener) {
         this.onTicketClickListener = listener;
+    }
+
+    public void setOnPaymentClickListener(OnPaymentClickListener listener) {
+        this.onPaymentClickListener = listener;
     }
 
     @NonNull
@@ -59,6 +68,14 @@ public class TicketsAdapter extends RecyclerView.Adapter<TicketsAdapter.TicketVi
                 onTicketClickListener.onTicketClick(ticket);
             }
         });
+
+        if (holder.btnPayNow != null) {
+            holder.btnPayNow.setOnClickListener(v -> {
+                if (onPaymentClickListener != null && ticket != null) {
+                    onPaymentClickListener.onPaymentClick(ticket);
+                }
+            });
+        }
     }
 
     @Override
@@ -73,6 +90,7 @@ public class TicketsAdapter extends RecyclerView.Adapter<TicketsAdapter.TicketVi
         private TextView tvTicketId;
         private TextView tvServiceType;
         private TextView tvStatus;
+        private com.google.android.material.button.MaterialButton btnPayNow;
 
         public TicketViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -80,6 +98,7 @@ public class TicketsAdapter extends RecyclerView.Adapter<TicketsAdapter.TicketVi
             tvTicketId = itemView.findViewById(R.id.tvTicketId);
             tvServiceType = itemView.findViewById(R.id.tvServiceType);
             tvStatus = itemView.findViewById(R.id.tvStatus);
+            btnPayNow = itemView.findViewById(R.id.btnPayNow);
         }
 
         public void bind(TicketListResponse.TicketItem ticket) {
@@ -109,6 +128,12 @@ public class TicketsAdapter extends RecyclerView.Adapter<TicketsAdapter.TicketVi
             // Set status background color based on normalized status
             setStatusBackgroundColor(tvStatus, normalizedStatus);
 
+            if (btnPayNow != null) {
+                boolean showPay = normalizedStatus != null
+                        && normalizedStatus.equalsIgnoreCase("completed");
+                btnPayNow.setVisibility(showPay ? View.VISIBLE : View.GONE);
+            }
+
             android.util.Log.d("TicketsAdapter", "Bound ticket: " + ticketId + " - " + title + " (status: " + status
                     + " -> " + normalizedStatus + ")");
         }
@@ -123,6 +148,12 @@ public class TicketsAdapter extends RecyclerView.Adapter<TicketsAdapter.TicketVi
             // Map "Open" to "Pending" since they represent the same state for customers
             if (lowerStatus.equals("open")) {
                 return "Pending";
+            }
+            if (lowerStatus.equals("active") ||
+                    lowerStatus.equals("accepted") ||
+                    lowerStatus.equals("assigned") ||
+                    lowerStatus.equals("ongoing")) {
+                return "In Progress";
             }
             return status; // Return original status for other values
         }
@@ -139,15 +170,18 @@ public class TicketsAdapter extends RecyclerView.Adapter<TicketsAdapter.TicketVi
                 case "pending":
                     textView.setBackgroundColor(Color.parseColor("#FF9800")); // Orange
                     break;
-                case "accepted":
                 case "in progress":
+                case "accepted":
+                case "active":
+                case "assigned":
+                case "ongoing":
                     textView.setBackgroundColor(Color.parseColor("#2196F3")); // Blue
                     break;
                 case "completed":
                     textView.setBackgroundColor(Color.parseColor("#4CAF50")); // Green
                     break;
-                case "cancelled":
                 case "rejected":
+                case "cancelled":
                     textView.setBackgroundColor(Color.parseColor("#F44336")); // Red
                     break;
                 default:
@@ -167,13 +201,16 @@ public class TicketsAdapter extends RecyclerView.Adapter<TicketsAdapter.TicketVi
             switch (status.toLowerCase()) {
                 case "pending":
                     return Color.parseColor("#FF9800"); // Orange
-                case "accepted":
                 case "in progress":
+                case "accepted":
+                case "active":
+                case "assigned":
+                case "ongoing":
                     return Color.parseColor("#2196F3"); // Blue
                 case "completed":
                     return Color.parseColor("#4CAF50"); // Green
-                case "cancelled":
                 case "rejected":
+                case "cancelled":
                     return Color.parseColor("#F44336"); // Red
                 default:
                     return Color.parseColor("#FF9800"); // Default Orange (pending)
