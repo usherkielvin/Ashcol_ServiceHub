@@ -10,9 +10,10 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_margin="2dp"
+        app:cardBackgroundColor="?attr/colorSurface"
         app:cardCornerRadius="8dp"
         app:cardElevation="0dp"
-        app:strokeColor="#EEEEEE"
+        app:strokeColor="?attr/colorOutline"
         app:strokeWidth="1dp">
 
         <LinearLayout
@@ -26,10 +27,10 @@
                 android:id="@+id/tvDayNumber"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:fontFamily="@font/poppins_bold"
                 android:text="1"
-                android:textColor="#333333"
-                android:textSize="14sp"
-                android:textStyle="bold" />
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="14sp" />
 
             <!-- Indicator dots for scheduled items -->
             <LinearLayout
