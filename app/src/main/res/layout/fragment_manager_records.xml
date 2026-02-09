@@ -7,7 +7,7 @@
     android:background="?attr/colorSurfaceVariant"
     tools:context=".manager.ManagerRecordsFragment">
 
-    <!-- Polished Header Section -->
+    <!-- Standardized Header Section -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/header"
         android:layout_width="match_parent"
@@ -125,7 +125,6 @@
                     android:paddingTop="16dp"
                     tools:listitem="@layout/item_daily_schedule_ticket" />
 
-                <!-- Re-mapped legacy ID to maintain compatibility -->
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/recyclerPayments"
                     android:layout_width="0dp"
@@ -138,7 +137,6 @@
 
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
-    <!-- Hidden compatibility elements -->
     <View android:id="@+id/headerBackground" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
     <TextView android:id="@+id/locationTitle" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
     <View android:id="@+id/searchCard" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
