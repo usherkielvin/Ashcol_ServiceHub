@@ -53,7 +53,7 @@ public class EmployeeJobHistoryFragment extends Fragment {
     private MaterialButton btnClearDates;
     private Calendar startDate;
     private Calendar endDate;
-    private String statusFilter = "all";
+    private String statusFilter = "completed";
     private ShimmerFrameLayout jobHistoryShimmer;
 
     @Override
@@ -98,8 +98,8 @@ public class EmployeeJobHistoryFragment extends Fragment {
     }
 
     private void setupFilters() {
-        if (chipAll != null) {
-            chipAll.setChecked(true);
+        if (chipCompleted != null) {
+            chipCompleted.setChecked(true);
         }
 
         if (chipGroupStatus != null) {
@@ -108,8 +108,6 @@ public class EmployeeJobHistoryFragment extends Fragment {
                 int id = checkedIds.get(0);
                 if (id == R.id.chipCompleted) {
                     statusFilter = "completed";
-                } else if (id == R.id.chipCancelled) {
-                    statusFilter = "cancelled";
                 } else {
                     statusFilter = "all";
                 }
@@ -172,12 +170,7 @@ public class EmployeeJobHistoryFragment extends Fragment {
         }
 
         ApiService apiService = ApiClient.getApiService();
-        Call<TicketListResponse> call;
-        if ("completed".equals(statusFilter) || "cancelled".equals(statusFilter)) {
-            call = apiService.getEmployeeTicketsByStatus("Bearer " + token, statusFilter);
-        } else {
-            call = apiService.getEmployeeTickets("Bearer " + token);
-        }
+        Call<TicketListResponse> call = apiService.getEmployeeTickets("Bearer " + token);
         call.enqueue(new Callback<TicketListResponse>() {
             @Override
             public void onResponse(@NonNull Call<TicketListResponse> call,
@@ -220,18 +213,14 @@ public class EmployeeJobHistoryFragment extends Fragment {
         if (status == null) return false;
         String normalized = status.trim().toLowerCase(Locale.ENGLISH);
 
-        if ("completed".equals(statusFilter)) {
-            return normalized.contains("completed") || normalized.contains("resolved") || normalized.contains("closed");
-        }
-        if ("cancelled".equals(statusFilter)) {
-            return normalized.contains("cancelled") || normalized.contains("rejected");
+        if ("completed".equals(statusFilter) || "all".equals(statusFilter)) {
+            return normalized.contains("completed")
+                    || normalized.contains("resolved")
+                    || normalized.contains("closed")
+                    || normalized.contains("paid");
         }
 
-        return normalized.contains("completed")
-                || normalized.contains("resolved")
-                || normalized.contains("closed")
-                || normalized.contains("cancelled")
-                || normalized.contains("rejected");
+        return false;
     }
 
     private boolean matchesDate(TicketListResponse.TicketItem ticket) {
