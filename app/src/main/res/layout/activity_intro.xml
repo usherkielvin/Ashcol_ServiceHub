@@ -20,13 +20,13 @@
         <!-- Static Ashcol Logo at Top - Overlaying on ViewPager -->
         <ImageView
             android:id="@+id/ivLogo"
-            android:layout_width="100dp"
-            android:layout_height="50dp"
+            android:layout_width="169dp"
+            android:layout_height="163dp"
             android:layout_marginTop="40dp"
-            android:scaleType="fitCenter"
-            android:src="@drawable/ash"
             android:contentDescription="@string/ashcol_logo"
             android:elevation="8dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ash"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
