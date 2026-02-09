@@ -52,10 +52,18 @@ public class CreateNewAccountFragment extends Fragment {
 	
 	private void setupGoogleSignIn() {
 		// Configure Google Sign-In
-		GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+		String serverClientId = getString(R.string.server_client_id);
+		GoogleSignInOptions.Builder gsoBuilder = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
 			.requestEmail()
-			.requestProfile()
-			.build();
+			.requestProfile();
+
+		if (serverClientId != null && !serverClientId.trim().isEmpty()) {
+			gsoBuilder.requestIdToken(serverClientId.trim());
+		} else {
+			Log.w(TAG, "server_client_id is empty; ID token will be null.");
+		}
+
+		GoogleSignInOptions gso = gsoBuilder.build();
 		
 		googleSignInClient = GoogleSignIn.getClient(requireContext(), gso);
 	}

@@ -207,10 +207,18 @@ public class MainActivity extends AppCompatActivity {
 
     private void setupGoogleSignIn() {
         // Configure Google Sign-In - matching CreateNewAccountFragment setup that works
-        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+        String serverClientId = getString(R.string.server_client_id);
+        GoogleSignInOptions.Builder gsoBuilder = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestEmail()
-                .requestProfile()
-                .build();
+                .requestProfile();
+
+        if (!TextUtils.isEmpty(serverClientId)) {
+            gsoBuilder.requestIdToken(serverClientId);
+        } else {
+            Log.w(TAG, "server_client_id is empty; ID token will be null.");
+        }
+
+        GoogleSignInOptions gso = gsoBuilder.build();
 
         googleSignInClient = GoogleSignIn.getClient(this, gso);
     }
