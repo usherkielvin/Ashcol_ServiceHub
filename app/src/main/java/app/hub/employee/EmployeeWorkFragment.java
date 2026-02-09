@@ -7,6 +7,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.content.SharedPreferences;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -14,6 +15,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+import androidx.core.content.ContextCompat;
 
 import java.util.ArrayList;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -27,6 +29,9 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 import app.hub.R;
 import app.hub.api.ApiClient;
@@ -60,6 +65,7 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
     private TicketListResponse.TicketItem activeTicket;
 
     private static final String PREFS_NAME = "employee_work_steps";
+    private static final String PREFS_TIMES = "employee_work_times";
     private static final int STEP_ASSIGNED = 0;
     private static final int STEP_ON_THE_WAY = 1;
     private static final int STEP_ARRIVED = 2;
@@ -67,6 +73,7 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
     private static final int STEP_COMPLETED = 4;
 
     private static final String EXTRA_OPEN_PAYMENT = "open_payment";
+    private static final String EXTRA_FINISH_AFTER_PAYMENT = "finish_after_payment";
 
         private static final Map<String, String> BRANCH_ADDRESS_MAP = new HashMap<>();
 
@@ -142,6 +149,12 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
         if (!isAdded() || getContext() == null) {
             android.util.Log.w("EmployeeWork", "Fragment detached or context null, skipping load");
             return;
+        }
+
+        // Prevent stale map/status from flashing while loading.
+        setMapVisible(false);
+        if (workStatusContainer != null) {
+            workStatusContainer.removeAllViews();
         }
 
         String token = tokenManager.getToken();
@@ -284,8 +297,16 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
     private void updateActiveJobUi() {
         activeTicket = findActiveTicket(assignedTickets);
         if (activeTicket == null) {
+            setMapVisible(false);
+            if (workStatusContainer != null) {
+                workStatusContainer.removeAllViews();
+            }
             showOverlay(R.layout.fragment_employee_work_nojob);
             return;
+        }
+
+        if (getStepTime(activeTicket.getTicketId(), STEP_ASSIGNED).isEmpty()) {
+            saveStepTime(activeTicket.getTicketId(), STEP_ASSIGNED);
         }
 
         int step = resolveStep(activeTicket);
@@ -299,7 +320,9 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
         hideOverlay();
         View statusView = showStatusLayout(getLayoutForStep(step));
         bindTicketDetails(statusView, activeTicket);
+        bindStepTimes(statusView, activeTicket);
         bindStatusActions(statusView, step);
+        applyCompletedUi(statusView, activeTicket);
         updateMapMarker(activeTicket.getLatitude(), activeTicket.getLongitude());
     }
 
@@ -358,9 +381,13 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
         if (step == STEP_ASSIGNED) {
             View onTheWay = statusView.findViewById(R.id.tvOnWayStatus);
             setStepAction(onTheWay, () -> advanceStep(STEP_ON_THE_WAY));
+            View onTheWayCheck = statusView.findViewById(R.id.ivStep2);
+            setStepAction(onTheWayCheck, () -> advanceStep(STEP_ON_THE_WAY));
         } else if (step == STEP_ON_THE_WAY) {
             View arrived = statusView.findViewById(R.id.tvArrivedStatus);
             setStepAction(arrived, () -> advanceStep(STEP_ARRIVED));
+            View arrivedCheck = statusView.findViewById(R.id.ivStep3);
+            setStepAction(arrivedCheck, () -> advanceStep(STEP_ARRIVED));
         } else if (step == STEP_ARRIVED) {
             View startService = statusView.findViewById(R.id.btnStartService);
             if (startService != null) {
@@ -372,9 +399,13 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
                 });
             }
         } else if (step == STEP_IN_PROGRESS) {
-            View complete = statusView.findViewById(R.id.btnPayment);
-            if (complete != null) {
-                complete.setOnClickListener(v -> openPaymentFlow());
+            View markComplete = statusView.findViewById(R.id.btnMarkCompleted);
+            if (markComplete != null) {
+                markComplete.setOnClickListener(v -> markCompletedLocal());
+            }
+            View requestPayment = statusView.findViewById(R.id.btnRequestPayment);
+            if (requestPayment != null) {
+                requestPayment.setOnClickListener(v -> openPaymentFlow());
             }
         }
     }
@@ -395,6 +426,7 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
         Intent intent = new Intent(getContext(), EmployeeTicketDetailActivity.class);
         intent.putExtra("ticket_id", activeTicket.getTicketId());
         intent.putExtra(EXTRA_OPEN_PAYMENT, true);
+        intent.putExtra(EXTRA_FINISH_AFTER_PAYMENT, true);
         startActivity(intent);
     }
 
@@ -471,12 +503,6 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
 
         if (status.contains("completed")) {
             resolved = STEP_COMPLETED;
-        } else if (status.contains("ongoing") || status.contains("in progress")) {
-            resolved = STEP_IN_PROGRESS;
-        } else if (status.contains("arrived")) {
-            resolved = STEP_ARRIVED;
-        } else if (status.contains("on the way") || status.contains("otw")) {
-            resolved = STEP_ON_THE_WAY;
         }
 
         int saved = getSavedStep(ticket.getTicketId());
@@ -491,6 +517,7 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
         if (activeTicket == null || activeTicket.getTicketId() == null) {
             return;
         }
+        saveStepTime(activeTicket.getTicketId(), nextStep);
         saveStep(activeTicket.getTicketId(), nextStep);
         updateActiveJobUi();
     }
@@ -503,6 +530,111 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
     private void saveStep(String ticketId, int step) {
         SharedPreferences prefs = requireContext().getSharedPreferences(PREFS_NAME, android.content.Context.MODE_PRIVATE);
         prefs.edit().putInt(ticketId, step).apply();
+    }
+
+    private void saveStepTime(String ticketId, int step) {
+        SharedPreferences prefs = requireContext().getSharedPreferences(PREFS_TIMES, android.content.Context.MODE_PRIVATE);
+        String key = ticketId + "_step_time_" + step;
+        String now = new SimpleDateFormat("hh:mm a", Locale.getDefault()).format(new Date());
+        prefs.edit().putString(key, now).apply();
+    }
+
+    private String getStepTime(String ticketId, int step) {
+        SharedPreferences prefs = requireContext().getSharedPreferences(PREFS_TIMES, android.content.Context.MODE_PRIVATE);
+        String key = ticketId + "_step_time_" + step;
+        return prefs.getString(key, "");
+    }
+
+    private void bindStepTimes(View root, TicketListResponse.TicketItem ticket) {
+        if (root == null || ticket == null || ticket.getTicketId() == null) {
+            return;
+        }
+        String ticketId = ticket.getTicketId();
+        setStepTime(root, R.id.tvAssignedTime, getStepTime(ticketId, STEP_ASSIGNED));
+        setStepTime(root, R.id.tvOnWayTime, getStepTime(ticketId, STEP_ON_THE_WAY));
+        setStepTime(root, R.id.tvArrivedTime, getStepTime(ticketId, STEP_ARRIVED));
+        setStepTime(root, R.id.tvInProgressTime, getStepTime(ticketId, STEP_IN_PROGRESS));
+        setStepTime(root, R.id.tvCompletedTime, getStepTime(ticketId, STEP_COMPLETED));
+    }
+
+    private void markCompletedLocal() {
+        if (activeTicket == null || activeTicket.getTicketId() == null) {
+            return;
+        }
+        String ticketId = activeTicket.getTicketId();
+        if (getStepTime(ticketId, STEP_COMPLETED).isEmpty()) {
+            saveStepTime(ticketId, STEP_COMPLETED);
+        }
+        updateActiveJobUi();
+    }
+
+    private void applyCompletedUi(View root, TicketListResponse.TicketItem ticket) {
+        if (root == null || ticket == null || ticket.getTicketId() == null) {
+            return;
+        }
+
+        View markButton = root.findViewById(R.id.btnMarkCompleted);
+        View requestButton = root.findViewById(R.id.btnRequestPayment);
+        ImageView stepView = root.findViewById(R.id.ivStep5);
+        com.google.android.material.card.MaterialCardView completedCard =
+                root.findViewById(R.id.tvCompletedStatus);
+        TextView completedLabel = root.findViewById(R.id.tvCompletedLabel);
+
+        String completedTime = getStepTime(ticket.getTicketId(), STEP_COMPLETED);
+        boolean isCompleted = completedTime != null && !completedTime.trim().isEmpty();
+
+        if (markButton != null) {
+            markButton.setVisibility(isCompleted ? View.GONE : View.VISIBLE);
+            markButton.setEnabled(!isCompleted);
+        }
+        if (requestButton != null) {
+            requestButton.setVisibility(isCompleted ? View.VISIBLE : View.GONE);
+            requestButton.setEnabled(isCompleted);
+        }
+
+        if (stepView != null) {
+            if (isCompleted) {
+                stepView.setBackgroundResource(R.drawable.bg_step_solid_green);
+                stepView.setColorFilter(ContextCompat.getColor(requireContext(), R.color.white));
+            } else {
+                stepView.setBackgroundResource(R.drawable.shape_circle_gray);
+                stepView.setColorFilter(ContextCompat.getColor(requireContext(), R.color.white));
+            }
+        }
+
+        if (completedCard != null) {
+            if (isCompleted) {
+                completedCard.setCardBackgroundColor(0xFFD1E7D1);
+                completedCard.setStrokeColor(0xFF1B5E20);
+                completedCard.setStrokeWidth(dpToPx(1));
+            } else {
+                completedCard.setCardBackgroundColor(ContextCompat.getColor(requireContext(), android.R.color.white));
+                completedCard.setStrokeColor(0xFFBDBDBD);
+                completedCard.setStrokeWidth(dpToPx(1));
+            }
+        }
+
+        if (completedLabel != null) {
+            int color = isCompleted ? 0xFF1B5E20 : 0xFFBDBDBD;
+            completedLabel.setTextColor(color);
+        }
+    }
+
+    private int dpToPx(int dp) {
+        return Math.round(dp * getResources().getDisplayMetrics().density);
+    }
+
+    private void setStepTime(View root, int viewId, String time) {
+        TextView view = root.findViewById(viewId);
+        if (view == null) {
+            return;
+        }
+        if (time == null || time.trim().isEmpty()) {
+            view.setVisibility(View.GONE);
+            return;
+        }
+        view.setVisibility(View.VISIBLE);
+        view.setText(time);
     }
 
     private String buildScheduleText(String date, String time) {

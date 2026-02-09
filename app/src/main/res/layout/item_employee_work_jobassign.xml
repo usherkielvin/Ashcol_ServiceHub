@@ -40,7 +40,8 @@
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp">
+            android:layout_marginTop="28dp"
+            android:paddingTop="4dp">
 
             <!-- Connector line -->
             <View
@@ -59,6 +60,7 @@
                 android:id="@+id/ivStep1"
                 android:layout_width="32dp"
                 android:layout_height="32dp"
+                android:layout_marginTop="4dp"
                 android:background="@drawable/bg_step_outline_green"
                 android:padding="6dp"
                 android:src="@drawable/ic_completed"
@@ -70,6 +72,7 @@
                 android:id="@+id/cvDetailsBox"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
                 android:layout_marginStart="16dp"
                 app:cardBackgroundColor="#D1E7D1"
                 app:cardCornerRadius="8dp"
@@ -84,15 +87,18 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="12dp">
+                    android:padding="12dp"
+                    android:paddingTop="18dp">
 
                     <RelativeLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content">
                         <TextView
+                            android:id="@+id/tvAssignedLabel"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:fontFamily="@font/poppins_bold"
+                            android:layout_marginTop="2dp"
                             android:text="Assigned"
                             android:textColor="?attr/colorOnSurface"
                             android:textSize="15sp" />
@@ -105,6 +111,16 @@
                             android:text="Ticket ID: CLN1005"
                             android:textColor="?attr/colorOnSurfaceVariant"
                             android:textSize="13sp" />
+                        <TextView
+                            android:id="@+id/tvAssignedTime"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentEnd="true"
+                            android:layout_below="@id/tvTicketId"
+                            android:fontFamily="@font/poppins_medium"
+                            android:text=""
+                            android:textColor="?attr/colorOnSurfaceVariant"
+                            android:textSize="12sp" />
                     </RelativeLayout>
 
                     <TextView
