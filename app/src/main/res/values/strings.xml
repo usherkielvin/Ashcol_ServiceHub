@@ -328,4 +328,28 @@
     <string name="hide">Hide</string>
     <string name="show">Show</string>
 
+    <string name="title_work_completed">WORK COMPLETED</string>
+
+    <string name="step_work">Work Completed</string>
+    <string name="step_payment">Payment Confirmed</string>
+    <string name="step_successful">Successful</string>
+
+    <string name="msg_success_title">Work Completed!</string>
+    <string name="msg_success_desc">This job has been completed and\npayment has been confirmed.</string>
+
+    <string name="label_ticket_id">Ticket ID:</string>
+    <string name="val_ticket_id">CLN1004</string>
+    <string name="label_service">Service:</string>
+    <string name="val_service">Split AC General Cleaning - 1 unit</string>
+    <string name="label_tech">Technician:</string>
+    <string name="val_tech">Juan Dela Cruz</string>
+    <string name="label_date_time">Date &amp; Time:</string>
+    <string name="val_date_time">Feb 9, 2026 - 9:00 AM</string>
+
+    <string name="label_amount_paid">Amount Paid:</string>
+    <string name="val_amount_paid">Php 8,500.00</string>
+    <string name="label_payment_method">Payment Method:</string>
+    <string name="val_payment_method">Cash</string>
+
+    <string name="btn_view_history">View Job History</string>
 </resources>
