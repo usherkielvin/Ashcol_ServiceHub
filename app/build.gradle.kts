@@ -7,6 +7,8 @@ android {
     namespace = "app.hub"
     compileSdk = 36
 
+    useLibrary("org.apache.http.legacy")
+
     defaultConfig {
         applicationId = "app.hub"
         minSdk = 24

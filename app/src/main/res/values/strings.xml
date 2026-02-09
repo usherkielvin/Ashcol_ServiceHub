@@ -224,6 +224,37 @@
 
     <string name="desc_back">Go back</string>
 
+    <!-- Manager Ticket Detail -->
+    <string name="manager_ticket_layout_error">Layout error - missing views</string>
+    <string name="manager_ticket_init_error">Error initializing views: %1$s</string>
+    <string name="manager_ticket_invalid_id">Invalid ticket ID</string>
+    <string name="manager_ticket_error_loading">Error loading ticket details: %1$s</string>
+    <string name="manager_ticket_location_unavailable">Location not available</string>
+    <string name="manager_ticket_not_logged_in">You are not logged in.</string>
+    <string name="manager_ticket_invalid_data">Invalid ticket data</string>
+    <string name="manager_ticket_not_found">Ticket not found: %1$s</string>
+    <string name="manager_ticket_load_failed">Failed to load ticket details</string>
+    <string name="manager_ticket_error_body">Error: %1$s</string>
+    <string name="manager_ticket_network_error">Network error: %1$s</string>
+    <string name="manager_ticket_status_format">Status: %1$s</string>
+    <string name="manager_ticket_branch_format">Branch: %1$s</string>
+    <string name="manager_ticket_customer_format">Customer: %1$s</string>
+    <string name="manager_ticket_created_format">Created: %1$s</string>
+    <string name="manager_ticket_technician_format">Technician: %1$s</string>
+    <string name="manager_ticket_technician_not_assigned">Technician: Not assigned</string>
+    <string name="manager_ticket_assign_label">Assign Technician</string>
+    <string name="manager_ticket_assigned_label">✓ Assigned to %1$s</string>
+    <string name="manager_ticket_assign_error">Ticket details not loaded</string>
+    <string name="manager_ticket_status_update_failed">Failed to update: %1$s</string>
+    <string name="manager_ticket_status_update_error">Failed to update ticket status</string>
+    <string name="manager_ticket_reject_title">Reject Ticket</string>
+    <string name="manager_ticket_reject_message">Are you sure you want to reject this ticket? This action cannot be undone.</string>
+    <string name="manager_ticket_reject_action">Reject</string>
+    <string name="manager_ticket_cancel_action">Cancel</string>
+    <string name="manager_ticket_refreshing_status">Refreshing ticket status...</string>
+    <string name="manager_ticket_unassigned">Not assigned</string>
+    <string name="manager_ticket_unknown">Unknown</string>
+
     <string name="dialog_logout_title">Log out of your account?</string>
     <string name="action_logout">Log Out</string>
     <string name="action_cancel">Cancel</string>

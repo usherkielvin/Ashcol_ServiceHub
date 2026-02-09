@@ -431,8 +431,7 @@ public class UserTicketsFragment extends Fragment {
         resetTabStyles();
 
         // Set selected tab to active state
-        selectedTab.setBackgroundResource(R.drawable.bg_status_badge);
-        selectedTab.setTextColor(getResources().getColor(R.color.white));
+        selectedTab.setSelected(true);
         selectedTab.setTypeface(null, android.graphics.Typeface.BOLD);
 
         // Apply filter
@@ -446,9 +445,8 @@ public class UserTicketsFragment extends Fragment {
 
         for (TextView tab : tabs) {
             if (tab != null) {
-                tab.setBackgroundResource(R.drawable.bg_input_field);
-                tab.setTextColor(getResources().getColor(R.color.dark_gray));
-                tab.setTypeface(null, android.graphics.Typeface.NORMAL);
+                tab.setSelected(false);
+                tab.setTypeface(null, android.graphics.Typeface.BOLD);
             }
         }
     }

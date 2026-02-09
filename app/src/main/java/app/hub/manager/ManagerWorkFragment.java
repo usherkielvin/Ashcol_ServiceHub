@@ -143,6 +143,11 @@ public class ManagerWorkFragment extends Fragment implements TicketDataChangeLis
 
         // Set click listener for ticket items
         adapter.setOnTicketClickListener(ticket -> {
+            if (ticket == null || ticket.getTicketId() == null || ticket.getTicketId().trim().isEmpty()) {
+                Toast.makeText(getContext(), "Ticket ID missing", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
             android.util.Log.d("ManagerWork", "Ticket clicked: " + ticket.getTicketId());
 
             try {

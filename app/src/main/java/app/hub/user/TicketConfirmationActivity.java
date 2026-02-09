@@ -42,9 +42,9 @@ public class TicketConfirmationActivity extends AppCompatActivity {
         }
 
         if (status != null) {
-            tvStatus.setText("Status: " + status);
+            tvStatus.setText(status);
         } else {
-            tvStatus.setText("Status: Pending");
+            tvStatus.setText("Pending");
         }
     }
 

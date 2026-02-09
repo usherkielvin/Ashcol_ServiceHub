@@ -119,17 +119,39 @@ public class TicketsAdapter extends RecyclerView.Adapter<TicketsAdapter.TicketVi
                 return;
             }
 
-            // Set title with null check
-            String title = ticket.getTitle();
-            tvTitle.setText(title != null ? title : "Service Request");
-
-            // Set service type with null check and bullet point
-            String serviceType = ticket.getServiceType();
-            tvServiceType.setText("• " + (serviceType != null ? serviceType : "Service Type"));
-
-            // Set ticket ID with "Requested by:" prefix
+            // Title should show ticket number
             String ticketId = ticket.getTicketId();
-            tvTicketId.setText("Requested by: " + (ticketId != null ? ticketId : "Unknown ID"));
+            tvTitle.setText(ticketId != null ? ticketId : "Ticket");
+
+            // Show service type + unit type on the bullet line
+            String serviceType = ticket.getServiceType();
+            String description = ticket.getDescription();
+            String scheduleNotes = ticket.getScheduleNotes();
+            String address = ticket.getAddress();
+
+            ParsedDetails parsed = parseDetails(description);
+            ParsedDetails scheduleParsed = parseDetails(scheduleNotes);
+
+            boolean descriptionIsAddress = isAddressLike(description, address);
+            if (descriptionIsAddress || (parsed.unitType.isEmpty() && parsed.details.isEmpty())) {
+                parsed = scheduleParsed;
+            } else if (parsed.unitType.isEmpty() && !scheduleParsed.unitType.isEmpty()) {
+                parsed = new ParsedDetails(scheduleParsed.unitType, parsed.details);
+            }
+
+            String bulletText = "• " + (serviceType != null ? serviceType : "Service Type");
+            if (!parsed.unitType.isEmpty()) {
+                bulletText += " • " + parsed.unitType;
+            }
+            tvServiceType.setText(bulletText);
+
+            // Bottom line shows only the optional details
+            if (!parsed.details.isEmpty()) {
+                tvTicketId.setVisibility(View.VISIBLE);
+                tvTicketId.setText(parsed.details);
+            } else {
+                tvTicketId.setVisibility(View.GONE);
+            }
 
             // Normalize status: "Open" should display as "Pending" with orange color
             String status = ticket.getStatus();
@@ -154,8 +176,44 @@ public class TicketsAdapter extends RecyclerView.Adapter<TicketsAdapter.TicketVi
                 btnPayNow.setVisibility(showPay ? View.VISIBLE : View.GONE);
             }
 
-            android.util.Log.d("TicketsAdapter", "Bound ticket: " + ticketId + " - " + title + " (status: " + status
+                android.util.Log.d("TicketsAdapter", "Bound ticket: " + ticketId + " (status: " + status
                     + " -> " + normalizedStatus + ")");
+        }
+
+        private ParsedDetails parseDetails(String description) {
+            if (description == null) {
+                return new ParsedDetails("", "");
+            }
+
+            String trimmed = description.trim();
+            String unitType = "";
+            String details = trimmed;
+
+            String prefix = "Unit Type:";
+            if (trimmed.startsWith(prefix)) {
+                int lineBreak = trimmed.indexOf('\n');
+                if (lineBreak > 0) {
+                    unitType = trimmed.substring(prefix.length(), lineBreak).trim();
+                    details = trimmed.substring(lineBreak + 1).trim();
+                } else {
+                    unitType = trimmed.substring(prefix.length()).trim();
+                    details = "";
+                }
+            }
+
+            return new ParsedDetails(unitType, details);
+        }
+
+        private boolean isAddressLike(String description, String address) {
+            if (description == null || address == null) {
+                return false;
+            }
+            String desc = description.trim().toLowerCase();
+            String addr = address.trim().toLowerCase();
+            if (desc.isEmpty() || addr.isEmpty()) {
+                return false;
+            }
+            return desc.equals(addr) || desc.contains(addr);
         }
 
         /**
@@ -227,5 +285,15 @@ public class TicketsAdapter extends RecyclerView.Adapter<TicketsAdapter.TicketVi
             }
         }
 
+    }
+
+    private static class ParsedDetails {
+        final String unitType;
+        final String details;
+
+        ParsedDetails(String unitType, String details) {
+            this.unitType = unitType != null ? unitType : "";
+            this.details = details != null ? details : "";
+        }
     }
 }
