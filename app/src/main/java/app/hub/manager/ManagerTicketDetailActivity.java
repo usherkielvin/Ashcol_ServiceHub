@@ -52,6 +52,7 @@ public class ManagerTicketDetailActivity extends AppCompatActivity
     private com.google.android.gms.maps.MapView mapView;
     private com.google.android.gms.maps.GoogleMap googleMap;
     private ActivityResultLauncher<Intent> assignEmployeeLauncher;
+    private boolean mapEnabled = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,7 +67,8 @@ public class ManagerTicketDetailActivity extends AppCompatActivity
 
             // Initialize MapView
             mapView = findViewById(R.id.mapView);
-            if (mapView != null && canInitMap()) {
+            mapEnabled = mapView != null && canInitMap();
+            if (mapEnabled) {
                 mapView.onCreate(savedInstanceState);
                 mapView.getMapAsync(this);
             } else {
@@ -82,7 +84,30 @@ public class ManagerTicketDetailActivity extends AppCompatActivity
                             "Assignment completed successfully, refreshing ticket details");
                         Toast.makeText(this, getString(R.string.manager_ticket_refreshing_status),
                             Toast.LENGTH_SHORT).show();
-                        loadTicketDetails();
+                                ManagerDataManager.refreshTickets(getApplicationContext(), new ManagerDataManager.DataLoadCallback() {
+                                    @Override
+                                    public void onEmployeesLoaded(String branchName, List<EmployeeResponse.Employee> employees) {
+                                    }
+
+                                    @Override
+                                    public void onTicketsLoaded(List<app.hub.api.TicketListResponse.TicketItem> tickets) {
+                                        runOnUiThread(ManagerTicketDetailActivity.this::finish);
+                                    }
+
+                                    @Override
+                                    public void onDashboardStatsLoaded(app.hub.api.DashboardStatsResponse.Stats stats,
+                                            List<app.hub.api.DashboardStatsResponse.RecentTicket> recentTickets) {
+                                    }
+
+                                    @Override
+                                    public void onLoadComplete() {
+                                    }
+
+                                    @Override
+                                    public void onLoadError(String error) {
+                                        runOnUiThread(ManagerTicketDetailActivity.this::finish);
+                                    }
+                                });
                     }
                     });
 
@@ -364,6 +389,7 @@ public class ManagerTicketDetailActivity extends AppCompatActivity
         switch (normalizedStatus) {
             case "pending":
             case "open":
+            case "scheduled":
                 if (isAssigned) {
                     // Ticket already assigned - show locked state
                     btnAssignStaff.setVisibility(View.VISIBLE);
@@ -556,7 +582,11 @@ public class ManagerTicketDetailActivity extends AppCompatActivity
             case "pending":
                 textView.setTextColor(Color.parseColor("#FFA500")); // Orange
                 break;
+            case "scheduled":
+                textView.setTextColor(Color.parseColor("#6366F1")); // Indigo
+                break;
             case "in progress":
+            case "ongoing":
                 textView.setTextColor(Color.parseColor("#2196F3")); // Blue
                 break;
             case "completed":
@@ -574,7 +604,7 @@ public class ManagerTicketDetailActivity extends AppCompatActivity
 
     // MapView Lifecycle methods
     private void updateMapLocation() {
-        if (!canInitMap()) {
+        if (!mapEnabled || !canInitMap()) {
             hideMap();
             return;
         }
@@ -679,35 +709,35 @@ public class ManagerTicketDetailActivity extends AppCompatActivity
     @Override
     protected void onStart() {
         super.onStart();
-        if (mapView != null)
+        if (mapEnabled && mapView != null)
             mapView.onStart();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        if (mapView != null)
+        if (mapEnabled && mapView != null)
             mapView.onResume();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        if (mapView != null)
+        if (mapEnabled && mapView != null)
             mapView.onPause();
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        if (mapView != null)
+        if (mapEnabled && mapView != null)
             mapView.onStop();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (mapView != null)
+        if (mapEnabled && mapView != null)
             mapView.onDestroy();
         android.util.Log.d("ManagerTicketDetail", "Activity destroyed");
     }
@@ -715,7 +745,7 @@ public class ManagerTicketDetailActivity extends AppCompatActivity
     @Override
     public void onLowMemory() {
         super.onLowMemory();
-        if (mapView != null)
+        if (mapEnabled && mapView != null)
             mapView.onLowMemory();
     }
 }

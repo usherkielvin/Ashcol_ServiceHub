@@ -227,13 +227,17 @@ public class TicketsAdapter extends RecyclerView.Adapter<TicketsAdapter.TicketVi
             if (lowerStatus.equals("open") || lowerStatus.equals("submitted")) {
                 return "Pending";
             }
+            if (lowerStatus.equals("scheduled")) {
+                return "Scheduled";
+            }
             if (lowerStatus.equals("active") ||
                     lowerStatus.equals("accepted") ||
                     lowerStatus.equals("assigned") ||
+                    lowerStatus.equals("in progress") ||
                     lowerStatus.equals("ongoing") ||
                     lowerStatus.equals("on the way") ||
                     lowerStatus.equals("arrived")) {
-                return "In Progress";
+                return "Ongoing";
             }
             if (lowerStatus.equals("canceled")) {
                 return "Cancelled";
@@ -264,6 +268,8 @@ public class TicketsAdapter extends RecyclerView.Adapter<TicketsAdapter.TicketVi
                 case "open":
                 case "submitted":
                     return Color.parseColor("#FF9800"); // Orange
+                case "scheduled":
+                    return Color.parseColor("#6366F1"); // Indigo
                 case "in progress":
                 case "accepted":
                 case "active":

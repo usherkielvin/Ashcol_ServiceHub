@@ -100,6 +100,37 @@ public class ManagerWorkFragment extends Fragment implements TicketDataChangeLis
         });
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (getContext() == null) {
+            return;
+        }
+        ManagerDataManager.refreshTickets(getContext(), new ManagerDataManager.DataLoadCallback() {
+            @Override
+            public void onEmployeesLoaded(String branchName, List<EmployeeResponse.Employee> employees) {
+            }
+
+            @Override
+            public void onTicketsLoaded(List<TicketListResponse.TicketItem> tickets) {
+                displayTicketData();
+            }
+
+            @Override
+            public void onDashboardStatsLoaded(app.hub.api.DashboardStatsResponse.Stats stats,
+                    List<app.hub.api.DashboardStatsResponse.RecentTicket> recentTickets) {
+            }
+
+            @Override
+            public void onLoadComplete() {
+            }
+
+            @Override
+            public void onLoadError(String error) {
+            }
+        });
+    }
+
     private void initViews(View view) {
         rvWorkLoadList = view.findViewById(R.id.rvWorkLoadList);
         searchViewWork = view.findViewById(R.id.searchViewWork);
@@ -172,7 +203,7 @@ public class ManagerWorkFragment extends Fragment implements TicketDataChangeLis
             } else if (checkedId == R.id.chipIncoming) {
                 currentFilter = "pending";
             } else if (checkedId == R.id.chipOngoing) {
-                currentFilter = "in_progress";
+                currentFilter = "ongoing";
             } else if (checkedId == R.id.chipCompleted) {
                 currentFilter = "completed";
             } else if (checkedId == R.id.chipCancelled) {
@@ -285,10 +316,14 @@ public class ManagerWorkFragment extends Fragment implements TicketDataChangeLis
                 switch (currentFilter) {
                     case "pending":
                         // Match both "pending" and "open" statuses for incoming tickets
-                        matchesFilter = ticketStatus.contains("pending") || ticketStatus.contains("open");
+                        matchesFilter = ticketStatus.contains("pending")
+                                || ticketStatus.contains("open")
+                                || ticketStatus.contains("scheduled");
                         break;
-                    case "in_progress":
-                        matchesFilter = ticketStatus.contains("progress") || ticketStatus.contains("accepted");
+                    case "ongoing":
+                        matchesFilter = ticketStatus.contains("ongoing")
+                                || ticketStatus.contains("progress")
+                                || ticketStatus.contains("accepted");
                         break;
                     case "completed":
                         matchesFilter = ticketStatus.contains("completed") || ticketStatus.contains("resolved")
@@ -325,14 +360,6 @@ public class ManagerWorkFragment extends Fragment implements TicketDataChangeLis
         }
 
         adapter.notifyDataSetChanged();
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        // Always display latest data when fragment becomes visible
-        displayTicketData();
-        android.util.Log.d("ManagerWork", "Fragment resumed - displaying cached data");
     }
 
     @Override

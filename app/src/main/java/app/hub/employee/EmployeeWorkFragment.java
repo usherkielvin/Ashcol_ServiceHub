@@ -86,7 +86,7 @@ public class EmployeeWorkFragment extends Fragment {
 
         tabInProgress.setOnClickListener(v -> {
             setSelectedTab(tabInProgress);
-            loadAssignedTicketsByStatus("in_progress");
+            loadAssignedTicketsByStatus("ongoing");
         });
 
         tabCompleted.setOnClickListener(v -> {

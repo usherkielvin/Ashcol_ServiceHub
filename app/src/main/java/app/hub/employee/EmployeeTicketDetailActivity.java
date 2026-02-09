@@ -126,7 +126,7 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity
             }
         });
 
-        btnStartWork.setOnClickListener(v -> updateTicketStatus("in_progress"));
+        btnStartWork.setOnClickListener(v -> updateTicketStatus("ongoing"));
         btnCompleteWork.setOnClickListener(v -> showPaymentFragment());
     }
 
@@ -225,10 +225,12 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity
         switch (status.toLowerCase()) {
             case "accepted":
             case "assigned":
+            case "scheduled":
                 btnStartWork.setVisibility(View.VISIBLE);
                 btnCompleteWork.setVisibility(View.GONE);
                 break;
             case "in progress":
+            case "ongoing":
                 btnStartWork.setVisibility(View.GONE);
                 btnCompleteWork.setVisibility(View.VISIBLE);
                 break;
@@ -262,7 +264,7 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity
                 if (response.isSuccessful() && response.body() != null) {
                     UpdateTicketStatusResponse statusResponse = response.body();
                     if (statusResponse.isSuccess()) {
-                        String message = status.equals("in_progress") ? "Work started successfully"
+                        String message = status.equals("ongoing") ? "Work started successfully"
                                 : "Work completed successfully";
                         Toast.makeText(EmployeeTicketDetailActivity.this, message, Toast.LENGTH_SHORT).show();
                         loadTicketDetails(); // Refresh ticket details
@@ -344,8 +346,12 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity
             case "pending":
                 textView.setTextColor(Color.parseColor("#FFA500"));
                 break;
+            case "scheduled":
+                textView.setTextColor(Color.parseColor("#6366F1"));
+                break;
             case "accepted":
             case "in progress":
+            case "ongoing":
                 textView.setTextColor(Color.parseColor("#2196F3"));
                 break;
             case "completed":

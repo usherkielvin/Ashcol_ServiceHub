@@ -147,8 +147,12 @@ public class EmployeeTicketsAdapter extends RecyclerView.Adapter<EmployeeTickets
                 case "pending":
                     textView.setTextColor(Color.parseColor("#FFA500")); // Orange
                     break;
+                case "scheduled":
+                    textView.setTextColor(Color.parseColor("#6366F1")); // Indigo
+                    break;
                 case "accepted":
                 case "in progress":
+                case "ongoing":
                     textView.setTextColor(Color.parseColor("#2196F3")); // Blue
                     break;
                 case "completed":

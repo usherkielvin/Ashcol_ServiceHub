@@ -208,8 +208,8 @@ public class CalendarAdapter extends RecyclerView.Adapter<CalendarAdapter.Calend
                         .setBackgroundTintList(android.content.res.ColorStateList.valueOf(Color.parseColor("#F44336")));
             } else if (status.contains("scheduled")) {
                 indicator
-                        .setBackgroundTintList(android.content.res.ColorStateList.valueOf(Color.parseColor("#FF9800")));
-            } else if (status.contains("progress") || status.contains("accepted")) {
+                        .setBackgroundTintList(android.content.res.ColorStateList.valueOf(Color.parseColor("#6366F1")));
+            } else if (status.contains("ongoing") || status.contains("progress") || status.contains("accepted")) {
                 indicator
                         .setBackgroundTintList(android.content.res.ColorStateList.valueOf(Color.parseColor("#2196F3")));
             } else if (status.contains("pending")) {
