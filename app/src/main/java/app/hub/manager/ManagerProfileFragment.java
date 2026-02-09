@@ -19,6 +19,7 @@ import java.io.File;
 
 import app.hub.R;
 import app.hub.common.MainActivity;
+import app.hub.employee.EmployeePersonalInfoFragment;
 import app.hub.util.TokenManager;
 
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
@@ -322,45 +323,19 @@ public class ManagerProfileFragment extends Fragment {
     }
 
     private void showPersonalInfo() {
-        if (getContext() == null)
+        navigateToFragment(new EmployeePersonalInfoFragment());
+    }
+
+    private void navigateToFragment(Fragment fragment) {
+        if (!isAdded() || getActivity() == null) {
             return;
-
-        // Get user information from TokenManager
-        String name = tokenManager.getName();
-        String email = tokenManager.getEmail();
-        String role = tokenManager.getRole();
-
-        // Format the information nicely
-        StringBuilder infoBuilder = new StringBuilder();
-        infoBuilder.append("📋 PERSONAL INFORMATION\n\n");
-
-        infoBuilder.append("👤 Name: ");
-        infoBuilder.append(name != null && !name.isEmpty() ? name : "Not available");
-        infoBuilder.append("\n\n");
-
-        infoBuilder.append("📧 Email: ");
-        infoBuilder.append(email != null && !email.isEmpty() ? email : "Not available");
-        infoBuilder.append("\n\n");
-
-        infoBuilder.append("🏢 Role: ");
-        infoBuilder.append(role != null && !role.isEmpty() ? role.toUpperCase() : "MANAGER");
-        infoBuilder.append("\n\n");
-
-        // Try to get branch information from ManagerDataManager
-        String branchInfo = ManagerDataManager.getCachedBranchName();
-        if (branchInfo != null && !branchInfo.isEmpty() && !branchInfo.equals("No Branch Assigned")) {
-            infoBuilder.append("🏪 Branch: ");
-            infoBuilder.append(branchInfo);
-            infoBuilder.append("\n\n");
         }
 
-        infoBuilder.append("ℹ️ Full profile editing will be available in a future update.");
-
-        new androidx.appcompat.app.AlertDialog.Builder(getContext())
-                .setTitle("Personal Information")
-                .setMessage(infoBuilder.toString())
-                .setPositiveButton("OK", null)
-                .show();
+        getActivity().getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragment_container, fragment)
+                .addToBackStack(null)
+                .commit();
     }
 
     private void showPayrollInfo() {

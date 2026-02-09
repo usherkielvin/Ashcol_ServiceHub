@@ -414,6 +414,127 @@ public class ManagerDataManager {
         Log.d(TAG, "Ticket cache cleared");
     }
 
+    public static void updateTicketStatusInCache(String ticketId, String status) {
+        if (ticketId == null || ticketId.trim().isEmpty() || status == null) {
+            return;
+        }
+
+        boolean updated = false;
+        if (cachedTickets != null) {
+            for (TicketListResponse.TicketItem ticket : cachedTickets) {
+                if (ticket != null && ticketId.equals(ticket.getTicketId())) {
+                    ticket.setStatus(status);
+                    updated = true;
+                    break;
+                }
+            }
+        }
+
+        if (cachedRecentTickets != null) {
+            for (DashboardStatsResponse.RecentTicket ticket : cachedRecentTickets) {
+                if (ticket != null && ticketId.equals(ticket.getTicketId())) {
+                    ticket.setStatus(status);
+                    updated = true;
+                    break;
+                }
+            }
+        }
+
+        if (updated) {
+            notifyTicketListeners();
+            notifyDashboardListeners();
+        }
+    }
+
+    public static void updateTicketAssignmentInCache(String ticketId, String status, String assignedStaff,
+            String scheduledDate, String scheduledTime) {
+        if (ticketId == null || ticketId.trim().isEmpty() || status == null) {
+            return;
+        }
+
+        TicketListResponse.TicketItem matchedTicket = null;
+        if (cachedTickets != null) {
+            for (TicketListResponse.TicketItem ticket : cachedTickets) {
+                if (ticket != null && ticketId.equals(ticket.getTicketId())) {
+                    ticket.setStatus(status);
+                    if (assignedStaff != null) {
+                        ticket.setAssignedStaff(assignedStaff);
+                    }
+                    if (scheduledDate != null) {
+                        ticket.setScheduledDate(scheduledDate);
+                    }
+                    if (scheduledTime != null) {
+                        ticket.setScheduledTime(scheduledTime);
+                    }
+                    if (ticket.getStatusColor() == null || ticket.getStatusColor().isEmpty()) {
+                        ticket.setStatusColor("#2196F3");
+                    }
+                    matchedTicket = ticket;
+                    break;
+                }
+            }
+        }
+
+        if (cachedRecentTickets != null) {
+            DashboardStatsResponse.RecentTicket targetRecent = null;
+            for (DashboardStatsResponse.RecentTicket ticket : cachedRecentTickets) {
+                if (ticket != null && ticketId.equals(ticket.getTicketId())) {
+                    ticket.setStatus(status);
+                    if (ticket.getStatusColor() == null || ticket.getStatusColor().isEmpty()) {
+                        ticket.setStatusColor("#2196F3");
+                    }
+                    targetRecent = ticket;
+                    break;
+                }
+            }
+
+            if (targetRecent == null && matchedTicket != null) {
+                targetRecent = new DashboardStatsResponse.RecentTicket();
+                targetRecent.setTicketId(matchedTicket.getTicketId());
+                targetRecent.setStatus(matchedTicket.getStatus());
+                targetRecent.setStatusColor(matchedTicket.getStatusColor());
+                targetRecent.setCustomerName(matchedTicket.getCustomerName());
+                targetRecent.setServiceType(matchedTicket.getServiceType());
+                targetRecent.setDescription(matchedTicket.getDescription());
+                targetRecent.setAddress(matchedTicket.getAddress());
+                targetRecent.setCreatedAt(matchedTicket.getCreatedAt());
+            }
+
+            if (targetRecent != null) {
+                removeRecentByTicketId(cachedRecentTickets, ticketId);
+                cachedRecentTickets.add(0, targetRecent);
+            }
+        } else if (matchedTicket != null) {
+            cachedRecentTickets = new ArrayList<>();
+            DashboardStatsResponse.RecentTicket targetRecent = new DashboardStatsResponse.RecentTicket();
+            targetRecent.setTicketId(matchedTicket.getTicketId());
+            targetRecent.setStatus(matchedTicket.getStatus());
+            targetRecent.setStatusColor(matchedTicket.getStatusColor());
+            targetRecent.setCustomerName(matchedTicket.getCustomerName());
+            targetRecent.setServiceType(matchedTicket.getServiceType());
+            targetRecent.setDescription(matchedTicket.getDescription());
+            targetRecent.setAddress(matchedTicket.getAddress());
+            targetRecent.setCreatedAt(matchedTicket.getCreatedAt());
+            cachedRecentTickets.add(targetRecent);
+        }
+
+        notifyTicketListeners();
+        notifyDashboardListeners();
+    }
+
+    private static void removeRecentByTicketId(List<DashboardStatsResponse.RecentTicket> recentTickets,
+            String ticketId) {
+        if (recentTickets == null || ticketId == null) {
+            return;
+        }
+        for (int i = recentTickets.size() - 1; i >= 0; i--) {
+            DashboardStatsResponse.RecentTicket ticket = recentTickets.get(i);
+            if (ticket != null && ticketId.equals(ticket.getTicketId())) {
+                recentTickets.remove(i);
+            }
+        }
+    }
+
     public static void clearAllCache() {
         cachedBranchName = null;
         cachedEmployees = null;

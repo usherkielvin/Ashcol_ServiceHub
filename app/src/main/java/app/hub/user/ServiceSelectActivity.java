@@ -24,13 +24,16 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.datepicker.CalendarConstraints;
 import com.google.android.material.datepicker.MaterialDatePicker;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 import java.util.TimeZone;
 
 import app.hub.R;
@@ -113,6 +116,11 @@ public class ServiceSelectActivity extends AppCompatActivity {
         locationHintText = findViewById(R.id.tvLocationHint);
 
         tokenManager = new TokenManager(this);
+
+        String registeredName = getRegisteredName();
+        if (fullNameInput != null && registeredName != null) {
+            fullNameInput.setText(registeredName);
+        }
 
         // Get the selected service type from the intent
         selectedServiceType = getIntent().getStringExtra("serviceType");
@@ -359,7 +367,10 @@ public class ServiceSelectActivity extends AppCompatActivity {
 
     private void showCheckingScreen() {
         // Validate inputs first
-        String fullName = fullNameInput != null ? fullNameInput.getText().toString().trim() : "";
+        String fullName = getRegisteredName();
+        if (fullName == null) {
+            fullName = fullNameInput != null ? fullNameInput.getText().toString().trim() : "";
+        }
         String contact = contactInput != null ? contactInput.getText().toString().trim() : "";
         String description = descriptionInput != null ? descriptionInput.getText().toString().trim() : "";
         String date = dateInput != null ? dateInput.getText().toString().trim() : "";
@@ -417,7 +428,10 @@ public class ServiceSelectActivity extends AppCompatActivity {
     }
 
     private void createTicket() {
-        String fullName = fullNameInput != null ? fullNameInput.getText().toString().trim() : "";
+        String fullName = getRegisteredName();
+        if (fullName == null) {
+            fullName = fullNameInput != null ? fullNameInput.getText().toString().trim() : "";
+        }
         String contact = contactInput != null ? contactInput.getText().toString().trim() : "";
         String landmark = landmarkInput != null ? landmarkInput.getText().toString().trim() : "";
         String description = descriptionInput != null ? descriptionInput.getText().toString().trim() : "";
@@ -509,6 +523,9 @@ public class ServiceSelectActivity extends AppCompatActivity {
         call.enqueue(new Callback<CreateTicketResponse>() {
             @Override
             public void onResponse(Call<CreateTicketResponse> call, Response<CreateTicketResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    pushTicketToFirestore(response.body());
+                }
                 handleTicketCreationResponse(response);
             }
 
@@ -610,6 +627,9 @@ public class ServiceSelectActivity extends AppCompatActivity {
                     if (finalTempFile.exists()) {
                         finalTempFile.delete();
                     }
+                    if (response.isSuccessful() && response.body() != null) {
+                        pushTicketToFirestore(response.body());
+                    }
                     handleTicketCreationResponse(response);
                 }
 
@@ -629,6 +649,43 @@ public class ServiceSelectActivity extends AppCompatActivity {
             submitButton.setEnabled(true);
             submitButton.setText("Submit");
         }
+    }
+
+    private void pushTicketToFirestore(CreateTicketResponse ticketResponse) {
+        if (ticketResponse == null) {
+            return;
+        }
+
+        CreateTicketResponse.TicketData ticketData = ticketResponse.getTicket();
+        if (ticketData == null) {
+            return;
+        }
+
+        String ticketId = ticketData.getTicketId();
+        String status = ticketResponse.getStatus();
+        if (status == null && ticketData.getStatus() != null) {
+            status = ticketData.getStatus().getName();
+        }
+
+        String branchName = null;
+        if (ticketData.getBranch() != null) {
+            branchName = ticketData.getBranch().getName();
+        }
+
+        if (ticketId == null || ticketId.trim().isEmpty() || branchName == null || branchName.trim().isEmpty()) {
+            return;
+        }
+
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("ticketId", ticketId);
+        payload.put("status", status != null ? status : "pending");
+        payload.put("branch", branchName);
+        payload.put("updatedAt", System.currentTimeMillis());
+
+        FirebaseFirestore.getInstance()
+                .collection("tickets")
+                .document(ticketId)
+                .set(payload);
     }
 
     private void handleTicketCreationResponse(Response<CreateTicketResponse> response) {
@@ -688,5 +745,17 @@ public class ServiceSelectActivity extends AppCompatActivity {
         submitButton.setText("Submit");
         Log.e(TAG, "Ticket creation failed", t);
         Toast.makeText(ServiceSelectActivity.this, "Network error: " + t.getMessage(), Toast.LENGTH_LONG).show();
+    }
+
+    private String getRegisteredName() {
+        if (tokenManager == null) {
+            return null;
+        }
+        String name = tokenManager.getName();
+        return isValidName(name) ? name.trim() : null;
+    }
+
+    private boolean isValidName(String name) {
+        return name != null && !name.trim().isEmpty() && !"null".equalsIgnoreCase(name.trim());
     }
 }

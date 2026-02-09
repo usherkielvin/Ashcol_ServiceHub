@@ -30,6 +30,7 @@ import app.hub.api.LogoutResponse;
 import app.hub.api.ProfilePhotoResponse;
 import app.hub.api.UserResponse;
 import app.hub.common.MainActivity;
+import app.hub.employee.EmployeePersonalInfoFragment;
 import app.hub.util.TokenManager;
 
 import java.io.File;
@@ -370,8 +371,7 @@ public class AdminProfileFragment extends Fragment {
 
     private void setupClickListeners(View view) {
         setClickListener(view, R.id.btn_sign_out, () -> showLogoutConfirmation());
-        setClickListener(view, R.id.btn_personal_info, () -> 
-            showToast("Personal Information clicked"));
+        setClickListener(view, R.id.btn_personal_info, this::openPersonalInfo);
         setClickListener(view, R.id.btn_password, () -> 
             showToast("Password clicked"));
         setClickListener(view, R.id.btn_about, () -> 
@@ -389,6 +389,22 @@ public class AdminProfileFragment extends Fragment {
         if (button != null) {
             button.setOnClickListener(v -> action.run());
         }
+    }
+
+    private void openPersonalInfo() {
+        navigateToFragment(new EmployeePersonalInfoFragment());
+    }
+
+    private void navigateToFragment(Fragment fragment) {
+        if (!isAdded() || getActivity() == null) {
+            return;
+        }
+
+        getActivity().getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragment_container, fragment)
+                .addToBackStack(null)
+                .commit();
     }
 
     private void showToast(String message) {

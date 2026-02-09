@@ -479,12 +479,39 @@ public class ManagerTicketDetailActivity extends AppCompatActivity
                     android.util.Log.d("ManagerTicketDetail", "Status update success: " + statusResponse.isSuccess());
 
                     if (statusResponse.isSuccess()) {
-                        // Clear ticket cache so the list will refresh with updated status
-                        ManagerDataManager.clearTicketCache();
+                        String updatedStatus = statusResponse.getTicket() != null
+                                ? statusResponse.getTicket().getStatus()
+                                : status;
+
+                        ManagerDataManager.updateTicketStatusInCache(ticketId, updatedStatus);
 
                         Toast.makeText(ManagerTicketDetailActivity.this, "Ticket status updated successfully",
                                 Toast.LENGTH_SHORT).show();
-                        loadTicketDetails(); // Refresh ticket details
+
+                        ManagerDataManager.refreshTickets(getApplicationContext(), new ManagerDataManager.DataLoadCallback() {
+                            @Override
+                            public void onEmployeesLoaded(String branchName, List<EmployeeResponse.Employee> employees) {
+                            }
+
+                            @Override
+                            public void onTicketsLoaded(List<app.hub.api.TicketListResponse.TicketItem> tickets) {
+                                runOnUiThread(ManagerTicketDetailActivity.this::finish);
+                            }
+
+                            @Override
+                            public void onDashboardStatsLoaded(app.hub.api.DashboardStatsResponse.Stats stats,
+                                    List<app.hub.api.DashboardStatsResponse.RecentTicket> recentTickets) {
+                            }
+
+                            @Override
+                            public void onLoadComplete() {
+                            }
+
+                            @Override
+                            public void onLoadError(String error) {
+                                runOnUiThread(ManagerTicketDetailActivity.this::finish);
+                            }
+                        });
                     } else {
                         android.util.Log.e("ManagerTicketDetail",
                                 "Status update failed: " + statusResponse.getMessage());

@@ -142,12 +142,12 @@
             tools:ignore="MissingConstraints" />
 
         <!-- Maintain IDs for removed chips to avoid code crashes -->
-        <View
+        <com.google.android.material.chip.Chip
             android:id="@+id/chipCompleted"
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:visibility="gone" />
-        <View
+        <com.google.android.material.chip.Chip
             android:id="@+id/chipCancelled"
             android:layout_width="0dp"
             android:layout_height="0dp"
