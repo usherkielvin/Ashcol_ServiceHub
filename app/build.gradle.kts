@@ -1,11 +1,13 @@
 plugins {
-   id("com.android.application")
+    id("com.android.application")
     id("com.google.gms.google-services")
 }
 
 android {
     namespace = "app.hub"
-    compileSdk = 35
+    compileSdk = 36
+
+    useLibrary("org.apache.http.legacy")
 
     defaultConfig {
         applicationId = "app.hub"
@@ -56,33 +58,29 @@ android {
     }
 }
 
-
 dependencies {
     // Import the Firebase BoM
-    implementation(platform("com.google.firebase:firebase-bom:34.8.0"))
+    implementation(platform(libs.firebase.bom))
 
+    // Firebase products
+    implementation(libs.firebase.analytics)
+    implementation(libs.firebase.auth)
+    implementation(libs.firebase.messaging)
+    implementation(libs.firebase.firestore)
 
-    // TODO: Add the dependencies for Firebase products you want to use
-    // When using the BoM, don't specify versions in Firebase dependencies
-    implementation("com.google.firebase:firebase-analytics")
-    
-    // Firebase Cloud Messaging for push notifications
-    implementation("com.google.firebase:firebase-messaging")
+    // Networking
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.converter.gson)
+    implementation(libs.okhttp)
+    implementation(libs.okhttp.logging)
 
-
-    // Add the dependencies for any other desired Firebase products
-    // https://firebase.google.com/docs/android/setup#available-libraries
-    implementation("com.squareup.retrofit2:retrofit:2.9.0")
-    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
-    // OkHttp for HTTP logging (helps debug connection issues)
-    implementation("com.squareup.okhttp3:okhttp:4.12.0")
-    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+    // AndroidX & UI
+    implementation(libs.androidx.core)
+    implementation(libs.core.splashscreen)
     implementation(libs.appcompat)
     implementation(libs.material)
-    implementation("androidx.core:core:1.12.0")
-    implementation("androidx.core:core-splashscreen:1.2.0")
-    implementation("androidx.constraintlayout:constraintlayout:2.2.0")
-    implementation("androidx.coordinatorlayout:coordinatorlayout:1.2.0")
+    implementation(libs.constraintlayout)
+    implementation(libs.coordinatorlayout)
     implementation(libs.mediarouter)
     implementation(libs.fragment)
     implementation(libs.activity)
@@ -91,8 +89,6 @@ dependencies {
     implementation(libs.navigation.ui)
     implementation(libs.cardview)
     implementation(libs.recyclerview)
-    // ViewPager2 for onboarding screens
-    implementation("androidx.viewpager2:viewpager2:1.0.0")
     // SwipeRefreshLayout for pull-to-refresh
     implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
     // Google Sign-In

@@ -17,8 +17,6 @@ import androidx.core.splashscreen.SplashScreen;
 
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
-import com.google.android.gms.auth.api.signin.GoogleSignInClient;
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.api.ApiException;
@@ -45,6 +43,7 @@ import app.hub.employee.EmployeeDashboardActivity;
 import app.hub.manager.ManagerDashboardActivity;
 import app.hub.user.DashboardActivity;
 import app.hub.util.FCMTokenHelper;
+import app.hub.util.GoogleSignInHelper;
 import app.hub.util.LocationHelper;
 import app.hub.util.TokenManager;
 import retrofit2.Call;
@@ -58,8 +57,8 @@ public class MainActivity extends AppCompatActivity {
 
     private TokenManager tokenManager;
     private LocationHelper locationHelper;
-
-    private GoogleSignInClient googleSignInClient;
+    private GoogleSignInHelper googleSignInHelper;
+    private MaterialButton loginButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,6 +70,7 @@ public class MainActivity extends AppCompatActivity {
 
         tokenManager = new TokenManager(this);
         locationHelper = new LocationHelper(this);
+        googleSignInHelper = new GoogleSignInHelper(this);
 
         // Keep the splash screen visible for this Activity
         splashScreen.setKeepOnScreenCondition(() -> {
@@ -82,7 +82,6 @@ public class MainActivity extends AppCompatActivity {
         setupLoginButton();
         setupForgotPassword();
         setupRegisterLink();
-        setupGoogleSignIn();
         setupSocialLoginButtons();
     }
 
@@ -112,24 +111,26 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateLocationAndNavigate(String role, String email) {
         Log.d(TAG, "Starting location update and navigation for role: " + role + ", email: " + email);
-        
+
         if (locationHelper.isLocationPermissionGranted()) {
-            // Add timeout mechanism to ensure navigation happens even if location request hangs
+            // Add timeout mechanism to ensure navigation happens even if location request
+            // hangs
             android.os.Handler handler = new android.os.Handler(android.os.Looper.getMainLooper());
             Runnable timeoutRunnable = () -> {
                 Log.w(TAG, "Location update timed out, proceeding with navigation anyway");
                 runOnUiThread(() -> navigateToDashboard(role));
             };
-            
+
             // Schedule timeout after 10 seconds
             handler.postDelayed(timeoutRunnable, 10000);
-            
+
             locationHelper.getCurrentLocation((Location location) -> {
                 // Remove the timeout runnable since location request completed
                 handler.removeCallbacks(timeoutRunnable);
-                
+
                 if (location != null && email != null) {
-                    Log.d(TAG, "Updating location with lat: " + location.getLatitude() + ", lng: " + location.getLongitude());
+                    Log.d(TAG, "Updating location with lat: " + location.getLatitude() + ", lng: "
+                            + location.getLongitude());
                     FCMTokenHelper.updateLocation(this, email, location.getLatitude(), location.getLongitude());
                 } else {
                     Log.w(TAG, "Location is null or email is null, skipping location update");
@@ -179,7 +180,7 @@ public class MainActivity extends AppCompatActivity {
      */
 
     private void setupLoginButton() {
-        MaterialButton loginButton = findViewById(R.id.loginButton);
+        loginButton = findViewById(R.id.loginButton);
         if (loginButton != null) {
             loginButton.setOnClickListener(v -> performLogin());
         }
@@ -205,24 +206,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void setupGoogleSignIn() {
-        // Configure Google Sign-In - matching CreateNewAccountFragment setup that works
-        String serverClientId = getString(R.string.server_client_id);
-        GoogleSignInOptions.Builder gsoBuilder = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestEmail()
-                .requestProfile();
-
-        if (!TextUtils.isEmpty(serverClientId)) {
-            gsoBuilder.requestIdToken(serverClientId);
-        } else {
-            Log.w(TAG, "server_client_id is empty; ID token will be null.");
-        }
-
-        GoogleSignInOptions gso = gsoBuilder.build();
-
-        googleSignInClient = GoogleSignIn.getClient(this, gso);
-    }
-
     private void setupSocialLoginButtons() {
         Button googleButton = findViewById(R.id.btnGoogle);
         if (googleButton != null) {
@@ -235,20 +218,14 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        MaterialButton loginButton = findViewById(R.id.loginButton);
         if (loginButton != null) {
             loginButton.setEnabled(false);
             loginButton.setText(R.string.logging_in);
         }
 
-        if (googleSignInClient != null) {
-            googleSignInClient.signOut().addOnCompleteListener(this, task -> {
-                Intent signInIntent = googleSignInClient.getSignInIntent();
-                startActivityForResult(signInIntent, RC_SIGN_IN);
-            });
-        } else if (loginButton != null) {
-            loginButton.setEnabled(true);
-            loginButton.setText(R.string.login);
+        if (googleSignInHelper != null) {
+            Intent signInIntent = googleSignInHelper.getSignInIntent();
+            startActivityForResult(signInIntent, RC_SIGN_IN);
         }
     }
 
@@ -269,29 +246,18 @@ public class MainActivity extends AppCompatActivity {
     private void handleGoogleSignInResult(Task<GoogleSignInAccount> completedTask) {
         Log.d(TAG, "handleGoogleSignInResult called");
         try {
-            GoogleSignInAccount account = completedTask.getResult(ApiException.class);
+            GoogleSignInAccount account = googleSignInHelper.handleSignInResult(completedTask);
             if (account != null) {
                 String email = account.getEmail();
                 String givenName = account.getGivenName();
                 String familyName = account.getFamilyName();
                 String idToken = account.getIdToken();
 
-                Log.d(TAG, "Google Sign-In successful - Email: " + email + ", GivenName: " + givenName + ", FamilyName: " + familyName);
+                Log.d(TAG, "Google Sign-In successful - Email: " + email + ", GivenName: " + givenName
+                        + ", FamilyName: " + familyName);
 
                 // Call backend API to login with Google
                 loginWithGoogle(email, givenName, familyName, idToken);
-            } else {
-                Log.e(TAG, "Google Sign-In account is null");
-                Toast.makeText(this, "Google sign-in failed. Account data is null.", Toast.LENGTH_SHORT).show();
-                
-                // Re-enable login button
-                MaterialButton loginButton = findViewById(R.id.loginButton);
-                if (loginButton != null) {
-                    runOnUiThread(() -> {
-                        loginButton.setEnabled(true);
-                        loginButton.setText(R.string.login);
-                    });
-                }
             }
         } catch (ApiException e) {
             Log.e(TAG, String.format(getString(R.string.google_sign_in_failed_code), e.getStatusCode()), e);
@@ -299,6 +265,8 @@ public class MainActivity extends AppCompatActivity {
             switch (e.getStatusCode()) {
                 case 10 -> // DEVELOPER_ERROR
                     errorMessage = getString(R.string.google_sign_in_config_error);
+                case 12500 -> // SIGN_IN_FAILED
+                    errorMessage = getString(R.string.google_sign_in_failed);
                 case 12501 -> // SIGN_IN_CANCELLED
                     errorMessage = getString(R.string.google_sign_in_cancelled);
                 case 7 -> // NETWORK_ERROR
@@ -309,26 +277,11 @@ public class MainActivity extends AppCompatActivity {
                     errorMessage = String.format(getString(R.string.google_sign_in_failed_code), e.getStatusCode());
             }
             Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show();
-            
-            // Re-enable login button
-            MaterialButton loginButton = findViewById(R.id.loginButton);
-            if (loginButton != null) {
-                runOnUiThread(() -> {
-                    loginButton.setEnabled(true);
-                    loginButton.setText(R.string.login);
-                });
-            }
         }
     }
 
     private void loginWithGoogle(String email, String firstName, String lastName, String idToken) {
         Log.d(TAG, "loginWithGoogle called - Email: " + email + ", First: " + firstName + ", Last: " + lastName);
-        
-        MaterialButton loginButton = findViewById(R.id.loginButton);
-        if (loginButton != null) {
-            loginButton.setEnabled(false);
-            loginButton.setText(R.string.logging_in);
-        }
 
         ApiService apiService = ApiClient.getApiService();
         GoogleSignInRequest request = new GoogleSignInRequest(
@@ -345,18 +298,13 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onResponse(@NonNull Call<GoogleSignInResponse> call,
                     @NonNull Response<GoogleSignInResponse> response) {
-                Log.d(TAG, "Google Sign-In response received - Code: " + response.code() + ", Successful: " + response.isSuccessful());
-                
-                runOnUiThread(() -> {
-                    if (loginButton != null) {
-                        loginButton.setEnabled(true);
-                        loginButton.setText(R.string.login);
-                    }
-                });
+                Log.d(TAG, "Google Sign-In response received - Code: " + response.code() + ", Successful: "
+                        + response.isSuccessful());
 
                 if (response.isSuccessful() && response.body() != null) {
                     GoogleSignInResponse signInResponse = response.body();
-                    Log.d(TAG, "Google Sign-In response body - Success: " + signInResponse.isSuccess() + ", Message: " + signInResponse.getMessage());
+                    Log.d(TAG, "Google Sign-In response body - Success: " + signInResponse.isSuccess() + ", Message: "
+                            + signInResponse.getMessage());
 
                     if (signInResponse.isSuccess()) {
                         Log.d(TAG, "Google Sign-In successful, handling login");
@@ -375,12 +323,13 @@ public class MainActivity extends AppCompatActivity {
                     if (response.code() == 404) {
                         Log.d(TAG, "Account not found (404), showing registration prompt");
                         runOnUiThread(() -> {
-                            showError("Sign In Failed", "No account found with this Google account. Please register first.");
+                            showError("Sign In Failed",
+                                    "No account found with this Google account. Please register first.");
                         });
                         signOutFromGoogle();
                         return;
                     }
-                    
+
                     String errorMsg = parseGoogleLoginError(response);
                     if (errorMsg == null || errorMsg.isEmpty()) {
                         errorMsg = getString(R.string.login_failed_try_again);
@@ -395,15 +344,10 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onFailure(@NonNull Call<GoogleSignInResponse> call, @NonNull Throwable t) {
                 Log.e(TAG, "Google Sign-In request failed", t);
-                runOnUiThread(() -> {
-                    if (loginButton != null) {
-                        loginButton.setEnabled(true);
-                        loginButton.setText(R.string.login);
-                    }
-                });
+
                 Log.e(TAG, String.format(getString(R.string.error_logging_in_google), t.getMessage()), t);
                 runOnUiThread(() -> showError(getString(R.string.connection_error_title),
-                        getString(R.string.connection_error_msg)));
+                    getString(R.string.connection_error_msg)));
                 signOutFromGoogle();
             }
         });
@@ -411,17 +355,18 @@ public class MainActivity extends AppCompatActivity {
 
     private void handleGoogleLoginSuccess(GoogleSignInResponse response) {
         Log.d(TAG, "handleGoogleLoginSuccess called");
-        
+
         if (response.getData() == null || response.getData().getUser() == null) {
             Log.e(TAG, "Google login success but missing user data");
-            runOnUiThread(() -> showError(getString(R.string.login_failed_title), getString(R.string.invalid_server_response)));
+            runOnUiThread(() -> showError(getString(R.string.login_failed_title),
+                    getString(R.string.invalid_server_response)));
             return;
         }
 
         // Save token and user data
         GoogleSignInResponse.User user = response.getData().getUser();
         Log.d(TAG, "Saving user data - Email: " + user.getEmail() + ", Role: " + user.getRole());
-        
+
         tokenManager.saveToken("Bearer " + response.getData().getToken());
         tokenManager.saveEmail(user.getEmail());
         tokenManager.saveRole(user.getRole());
@@ -625,18 +570,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void signOutFromGoogle() {
-        if (googleSignInClient != null) {
-            googleSignInClient.signOut().addOnCompleteListener(this,
-                    task -> Log.d(TAG, getString(R.string.google_sign_out_complete)));
+        if (googleSignInHelper != null) {
+            googleSignInHelper.signOut(() -> Log.d(TAG, getString(R.string.google_sign_out_complete)));
         }
     }
-    
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        
+
         // Handle Google Sign-In result
         if (requestCode == RC_SIGN_IN) {
+            // Check result code first
             if (resultCode != RESULT_OK) {
                 if (!isGooglePlayServicesAvailable()) {
                     return;
@@ -647,22 +592,32 @@ public class MainActivity extends AppCompatActivity {
                     Toast.makeText(this, getString(R.string.google_sign_in_failed), Toast.LENGTH_SHORT).show();
                 }
 
-                MaterialButton loginButton = findViewById(R.id.loginButton);
-                if (loginButton != null) {
-                    loginButton.setEnabled(true);
-                    loginButton.setText(R.string.login);
+                GoogleSignInAccount lastAccount = GoogleSignIn.getLastSignedInAccount(this);
+                if (lastAccount != null && lastAccount.getEmail() != null) {
+                    Log.d(TAG, "Using last signed-in Google account after canceled result");
+                    loginWithGoogle(
+                            lastAccount.getEmail(),
+                            lastAccount.getGivenName(),
+                            lastAccount.getFamilyName(),
+                            lastAccount.getIdToken());
+                    return;
                 }
+
                 return;
             }
 
             if (data == null) {
                 Toast.makeText(this, getString(R.string.google_sign_in_failed), Toast.LENGTH_SHORT).show();
                 Log.w(TAG, "Google Sign-In returned null data intent");
-
-                MaterialButton loginButton = findViewById(R.id.loginButton);
-                if (loginButton != null) {
-                    loginButton.setEnabled(true);
-                    loginButton.setText(R.string.login);
+                GoogleSignInAccount lastAccount = GoogleSignIn.getLastSignedInAccount(this);
+                if (lastAccount != null && lastAccount.getEmail() != null) {
+                    Log.d(TAG, "Using last signed-in Google account after null data");
+                    loginWithGoogle(
+                            lastAccount.getEmail(),
+                            lastAccount.getGivenName(),
+                            lastAccount.getFamilyName(),
+                            lastAccount.getIdToken());
+                    return;
                 }
                 return;
             }

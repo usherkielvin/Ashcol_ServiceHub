@@ -12,6 +12,9 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.activity.result.ActivityResult;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.fragment.app.Fragment;
 
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
@@ -34,12 +37,17 @@ import retrofit2.Response;
 public class CreateNewAccountFragment extends Fragment {
 	
 	private static final String TAG = "CreateNewAccountFragment";
-	private static final int RC_SIGN_IN = 9001;
 	private GoogleSignInClient googleSignInClient;
+	private ActivityResultLauncher<Intent> googleSignInLauncher;
+	private boolean hasHandledGoogleResult = false;
 	
 	@Override
 	public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
 		View view = inflater.inflate(R.layout.fragment_user_new_acc, container, false);
+
+		googleSignInLauncher = registerForActivityResult(
+				new ActivityResultContracts.StartActivityForResult(),
+				this::handleGoogleActivityResult);
 		
 		// Setup Google Sign-In
 		setupGoogleSignIn();
@@ -49,23 +57,44 @@ public class CreateNewAccountFragment extends Fragment {
 		
 		return view;
 	}
-	
+
 	private void setupGoogleSignIn() {
 		// Configure Google Sign-In
-		String serverClientId = getString(R.string.server_client_id);
+		Log.d(TAG, "Initializing Google Sign-In");
+		String serverClientId = getClientIdFromResources();
 		GoogleSignInOptions.Builder gsoBuilder = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
 			.requestEmail()
 			.requestProfile();
 
 		if (serverClientId != null && !serverClientId.trim().isEmpty()) {
+			Log.d(TAG, "Using client ID for Google Sign-In");
 			gsoBuilder.requestIdToken(serverClientId.trim());
 		} else {
-			Log.w(TAG, "server_client_id is empty; ID token will be null.");
+			Log.w(TAG, "No client ID found; ID token will be null.");
 		}
 
 		GoogleSignInOptions gso = gsoBuilder.build();
 		
 		googleSignInClient = GoogleSignIn.getClient(requireContext(), gso);
+		Log.d(TAG, "Google Sign-In client initialized");
+	}
+
+	private String getClientIdFromResources() {
+		int resId = requireContext().getResources().getIdentifier(
+				"default_web_client_id",
+				"string",
+				requireContext().getPackageName());
+		if (resId != 0) {
+			return getString(resId);
+		}
+		resId = requireContext().getResources().getIdentifier(
+				"server_client_id",
+				"string",
+				requireContext().getPackageName());
+		if (resId != 0) {
+			return getString(resId);
+		}
+		return "";
 	}
 	
 	private void setupButtons(View view) {
@@ -100,29 +129,43 @@ public class CreateNewAccountFragment extends Fragment {
 	}
 	
 	private void signInWithGoogle() {
-		// Clear any cached Google account to allow user to select different account
+		if (googleSignInClient == null) {
+			Log.w(TAG, "Google Sign-In client is null, cannot launch picker");
+			showToast("Google Sign-In not ready. Please try again.");
+			return;
+		}
+		hasHandledGoogleResult = false;
+		Log.d(TAG, "Signing out to force account picker");
 		googleSignInClient.signOut().addOnCompleteListener(requireActivity(), task -> {
-			// After signing out, start the sign-in flow
+			Log.d(TAG, "Launching Google Sign-In picker");
 			Intent signInIntent = googleSignInClient.getSignInIntent();
-			startActivityForResult(signInIntent, RC_SIGN_IN);
+			googleSignInLauncher.launch(signInIntent);
 		});
 	}
-	
-	@Override
-	public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-		super.onActivityResult(requestCode, resultCode, data);
-		
-		// Handle Google Sign-In result
-		if (requestCode == RC_SIGN_IN) {
-			Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
-			handleGoogleSignInResult(task);
+
+	private void handleGoogleActivityResult(ActivityResult result) {
+		Log.d(TAG, "Google Sign-In result received. resultCode=" + result.getResultCode());
+		if (result.getResultCode() != android.app.Activity.RESULT_OK) {
+			Log.w(TAG, "Google Sign-In cancelled or failed. resultCode=" + result.getResultCode());
+			showToast("Sign-in was cancelled");
+			return;
 		}
+		Intent data = result.getData();
+		if (data == null) {
+			Log.w(TAG, "Google Sign-In returned with no data");
+			showToast("Sign-in failed. Please try again.");
+			return;
+		}
+		Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
+		handleGoogleSignInResult(task);
 	}
 	
 	private void handleGoogleSignInResult(Task<GoogleSignInAccount> completedTask) {
 		try {
 			GoogleSignInAccount account = completedTask.getResult(ApiException.class);
 			if (account != null) {
+				hasHandledGoogleResult = true;
+				Log.d(TAG, "Google Sign-In success. email=" + account.getEmail());
 				String email = account.getEmail();
 				String displayName = account.getDisplayName();
 				String givenName = account.getGivenName();
