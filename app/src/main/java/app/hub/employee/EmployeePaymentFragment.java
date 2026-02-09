@@ -1,27 +1,28 @@
 package app.hub.employee;
 
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.Toast;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.google.android.material.button.MaterialButton;
-import com.google.android.material.textfield.TextInputEditText;
-import com.google.android.material.textfield.TextInputLayout;
 
 import app.hub.R;
+import app.hub.api.ApiClient;
+import app.hub.api.ApiService;
+import app.hub.api.PaymentDetailResponse;
+import app.hub.util.TokenManager;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 /**
- * Full-width fragment version of the payment selection UI, so it behaves
- * like the rest of your app's fragments instead of a small dialog.
+ * Full-width fragment version of the payment confirmation UI.
  */
 public class EmployeePaymentFragment extends Fragment {
 
@@ -30,24 +31,30 @@ public class EmployeePaymentFragment extends Fragment {
     }
 
     private static final String ARG_TICKET_ID = "ticket_id";
+    private static final String ARG_CUSTOMER_NAME = "customer_name";
+    private static final String ARG_SERVICE_NAME = "service_name";
+    private static final String ARG_TOTAL_AMOUNT = "total_amount";
 
     private String ticketId;
-    private String selectedPaymentMethod = "cash";
-    private double amount = 0.0;
+    private String customerName;
+    private String serviceName;
+    private double totalAmount;
 
-    private MaterialButton btnCash;
-    private MaterialButton btnOnline;
-    private TextInputLayout tilAmount;
-    private TextInputLayout tilNotes;
-    private TextInputEditText etAmount;
-    private TextInputEditText etNotes;
-    private Button btnCancel;
-    private Button btnComplete;
+    private TextView tvTicketId;
+    private TextView tvCustomerName;
+    private TextView tvServiceName;
+    private TextView tvTotalAmount;
+    private MaterialButton btnPaymentConfirmed;
+    private TokenManager tokenManager;
 
-    public static EmployeePaymentFragment newInstance(String ticketId) {
+    public static EmployeePaymentFragment newInstance(String ticketId, String customerName,
+            String serviceName, double totalAmount) {
         EmployeePaymentFragment fragment = new EmployeePaymentFragment();
         Bundle args = new Bundle();
         args.putString(ARG_TICKET_ID, ticketId);
+        args.putString(ARG_CUSTOMER_NAME, customerName);
+        args.putString(ARG_SERVICE_NAME, serviceName);
+        args.putDouble(ARG_TOTAL_AMOUNT, totalAmount);
         fragment.setArguments(args);
         return fragment;
     }
@@ -59,8 +66,11 @@ public class EmployeePaymentFragment extends Fragment {
                              @Nullable Bundle savedInstanceState) {
         if (getArguments() != null) {
             ticketId = getArguments().getString(ARG_TICKET_ID);
+            customerName = getArguments().getString(ARG_CUSTOMER_NAME);
+            serviceName = getArguments().getString(ARG_SERVICE_NAME);
+            totalAmount = getArguments().getDouble(ARG_TOTAL_AMOUNT, 0.0);
         }
-        return inflater.inflate(R.layout.dialog_payment_selection, container, false);
+        return inflater.inflate(R.layout.fragment_employee_work_confirmpayment, container, false);
     }
 
     @Override
@@ -68,120 +78,104 @@ public class EmployeePaymentFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         initViews(view);
         setupClickListeners();
-        updatePaymentMethodButtons();
     }
 
     private void initViews(View view) {
-        btnCash = view.findViewById(R.id.btnCash);
-        btnOnline = view.findViewById(R.id.btnOnline);
-        tilAmount = view.findViewById(R.id.tilAmount);
-        tilNotes = view.findViewById(R.id.tilNotes);
-        etAmount = view.findViewById(R.id.etAmount);
-        etNotes = view.findViewById(R.id.etNotes);
-        btnCancel = view.findViewById(R.id.btnCancel);
-        btnComplete = view.findViewById(R.id.btnComplete);
+        tvTicketId = view.findViewById(R.id.tvTicketId);
+        tvCustomerName = view.findViewById(R.id.tvCustomerName);
+        tvServiceName = view.findViewById(R.id.tvServiceName);
+        tvTotalAmount = view.findViewById(R.id.tvTotalAmount);
+        btnPaymentConfirmed = view.findViewById(R.id.btnPaymentConfirmed);
+        tokenManager = new TokenManager(requireContext());
+
+        if (tvTicketId != null) {
+            tvTicketId.setText(ticketId != null ? ticketId : "");
+        }
+        if (tvCustomerName != null) {
+            tvCustomerName.setText(customerName != null ? customerName : "");
+        }
+        if (tvServiceName != null) {
+            tvServiceName.setText(serviceName != null ? serviceName : "");
+        }
+        if (tvTotalAmount != null) {
+            String amountText = "Php " + String.format("%.2f", totalAmount);
+            tvTotalAmount.setText(amountText);
+        }
     }
 
     private void setupClickListeners() {
-        btnCash.setOnClickListener(v -> {
-            selectedPaymentMethod = "cash";
-            updatePaymentMethodButtons();
-        });
-
-        btnOnline.setOnClickListener(v -> {
-            selectedPaymentMethod = "online";
-            updatePaymentMethodButtons();
-        });
-
-        etAmount.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) { }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-                try {
-                    String amountStr = s.toString().trim();
-                    if (!amountStr.isEmpty()) {
-                        amount = Double.parseDouble(amountStr);
-                    } else {
-                        amount = 0.0;
-                    }
-                } catch (NumberFormatException e) {
-                    amount = 0.0;
-                }
-                validateInputs();
-            }
-        });
-
-        btnCancel.setOnClickListener(v -> {
-            // Simply pop this fragment off the back stack
-            if (getParentFragmentManager() != null) {
-                getParentFragmentManager().popBackStack();
-            }
-        });
-
-        btnComplete.setOnClickListener(v -> {
-            if (!validateInputs()) {
-                return;
-            }
-
-            String notes = etNotes.getText() != null ? etNotes.getText().toString().trim() : "";
-
+        loadPaymentDetailsIfNeeded();
+        if (btnPaymentConfirmed == null) {
+            return;
+        }
+        btnPaymentConfirmed.setOnClickListener(v -> {
             if (getActivity() instanceof OnPaymentConfirmedListener) {
                 ((OnPaymentConfirmedListener) getActivity())
-                        .onPaymentConfirmed(selectedPaymentMethod, amount, notes);
+                        .onPaymentConfirmed("cash", totalAmount, "");
             } else if (getParentFragment() instanceof OnPaymentConfirmedListener) {
                 ((OnPaymentConfirmedListener) getParentFragment())
-                        .onPaymentConfirmed(selectedPaymentMethod, amount, notes);
-            } else {
-                Toast.makeText(getContext(), "Payment callback not implemented", Toast.LENGTH_SHORT).show();
+                        .onPaymentConfirmed("cash", totalAmount, "");
             }
 
-            // Close the fragment after sending result
             if (getParentFragmentManager() != null) {
                 getParentFragmentManager().popBackStack();
             }
         });
     }
 
-    private void updatePaymentMethodButtons() {
-        if (btnCash == null || btnOnline == null || getContext() == null) return;
-
-        if ("cash".equals(selectedPaymentMethod)) {
-            btnCash.setBackgroundTintList(getResources().getColorStateList(R.color.green));
-            btnCash.setTextColor(getResources().getColor(android.R.color.white));
-            btnOnline.setBackgroundTintList(getResources().getColorStateList(R.color.light_gray));
-            btnOnline.setTextColor(getResources().getColor(R.color.dark_gray));
-        } else {
-            btnOnline.setBackgroundTintList(getResources().getColorStateList(R.color.green));
-            btnOnline.setTextColor(getResources().getColor(android.R.color.white));
-            btnCash.setBackgroundTintList(getResources().getColorStateList(R.color.light_gray));
-            btnCash.setTextColor(getResources().getColor(R.color.dark_gray));
+    private void loadPaymentDetailsIfNeeded() {
+        if (ticketId == null || tokenManager == null) {
+            return;
         }
-    }
+        if (totalAmount > 0) {
+            return;
+        }
 
-    private boolean validateInputs() {
-        boolean isValid = true;
+        String token = tokenManager.getToken();
+        if (token == null) {
+            return;
+        }
 
-        if (amount <= 0) {
-            if (tilAmount != null) {
-                tilAmount.setError("Please enter a valid amount");
+        ApiService apiService = ApiClient.getApiService();
+        Call<PaymentDetailResponse> call = apiService.getPaymentByTicketId("Bearer " + token, ticketId);
+        call.enqueue(new Callback<PaymentDetailResponse>() {
+            @Override
+            public void onResponse(Call<PaymentDetailResponse> call, Response<PaymentDetailResponse> response) {
+                if (!isAdded() || response.body() == null || !response.body().isSuccess()) {
+                    return;
+                }
+
+                PaymentDetailResponse.PaymentDetail payment = response.body().getPayment();
+                if (payment == null) {
+                    return;
+                }
+
+                totalAmount = payment.getAmount();
+                if (tvTotalAmount != null) {
+                    String amountText = "Php " + String.format("%.2f", totalAmount);
+                    tvTotalAmount.setText(amountText);
+                }
+
+                if (tvServiceName != null && (serviceName == null || serviceName.trim().isEmpty())) {
+                    serviceName = payment.getServiceName();
+                    if (serviceName != null) {
+                        tvServiceName.setText(serviceName);
+                    }
+                }
+
+                if (tvCustomerName != null && (customerName == null || customerName.trim().isEmpty())) {
+                    customerName = payment.getCustomerName();
+                    if (customerName != null) {
+                        tvCustomerName.setText(customerName);
+                    }
+                }
             }
-            isValid = false;
-        } else {
-            if (tilAmount != null) {
-                tilAmount.setError(null);
+
+            @Override
+            public void onFailure(Call<PaymentDetailResponse> call, Throwable t) {
+                // Ignore to keep UI stable; amount will stay as-is.
             }
-        }
-
-        if (btnComplete != null) {
-            btnComplete.setEnabled(isValid && amount > 0);
-        }
-
-        return isValid;
+        });
     }
 }
 

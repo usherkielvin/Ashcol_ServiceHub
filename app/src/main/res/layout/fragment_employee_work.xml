@@ -5,146 +5,64 @@
     android:id="@+id/swipeRefreshLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F8F9FA"
+    android:background="@android:color/white"
     tools:context=".employee.EmployeeWorkFragment">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <!-- Header -->
-        <View
-            android:id="@+id/headerBackground"
+        <LinearLayout
+            android:id="@+id/activeContentContainer"
             android:layout_width="match_parent"
-            android:layout_height="180dp"
-            android:background="@drawable/header_green"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <TextView
-            android:id="@+id/tvTitle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="40dp"
-            android:text="My Assigned Work"
-            android:textColor="#FFFFFF"
-            android:textSize="28sp"
-            android:textStyle="bold"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <TextView
-            android:id="@+id/tvSubtitle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="View your assigned tickets"
-            android:textColor="#E0E0E0"
-            android:textSize="14sp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvTitle" />
-
-        <!-- Tabs Section -->
-        <HorizontalScrollView
-            android:id="@+id/scrollTabs"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="24dp"
-            android:layout_marginTop="16dp"
-            android:layout_marginEnd="24dp"
-            android:scrollbars="none"
-            android:clipToPadding="false"
-            app:layout_constraintTop_toBottomOf="@id/headerBackground">
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:paddingTop="8dp"
+            android:paddingBottom="16dp">
 
             <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:id="@+id/tabAll"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="12dp"
-                    android:background="@drawable/bg_status_badge"
-                    android:paddingHorizontal="20dp"
-                    android:paddingVertical="8dp"
-                    android:text="All"
-                    android:textColor="@android:color/white"
-                    android:textStyle="bold"
-                    android:textSize="14sp" />
-
-                <TextView
-                    android:id="@+id/tabPending"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="12dp"
-                    android:background="@drawable/bg_input_field"
-                    android:paddingHorizontal="20dp"
-                    android:paddingVertical="8dp"
-                    android:text="Pending"
-                    android:textColor="@color/dark_gray"
-                    android:textSize="14sp" />
-
-                <TextView
-                    android:id="@+id/tabInProgress"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="12dp"
-                    android:background="@drawable/bg_input_field"
-                    android:paddingHorizontal="20dp"
-                    android:paddingVertical="8dp"
-                    android:text="In Progress"
-                    android:textColor="@color/dark_gray"
-                    android:textSize="14sp" />
-
-                <TextView
-                    android:id="@+id/tabCompleted"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="12dp"
-                    android:background="@drawable/bg_input_field"
-                    android:paddingHorizontal="20dp"
-                    android:paddingVertical="8dp"
-                    android:text="Completed"
-                    android:textColor="@color/dark_gray"
-                    android:textSize="14sp" />
-
-                <TextView
-                    android:id="@+id/tabCancelled"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_input_field"
-                    android:paddingHorizontal="20dp"
-                    android:paddingVertical="8dp"
-                    android:text="Cancelled"
-                    android:textColor="@color/dark_gray"
-                    android:textSize="14sp" />
-            </LinearLayout>
-        </HorizontalScrollView>
-
-        <!-- Assigned Tickets List -->
-        <androidx.cardview.widget.CardView
-            android:id="@+id/listCard"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_marginStart="24dp"
-            android:layout_marginTop="16dp"
-            android:layout_marginEnd="24dp"
-            android:layout_marginBottom="24dp"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="8dp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/scrollTabs">
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/recyclerViewAssignedTickets"
+                android:id="@+id/mapContainer"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:padding="8dp"
-                android:clipToPadding="false" />
-        </androidx.cardview.widget.CardView>
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="12dp"
+                android:orientation="vertical">
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+                <com.google.android.gms.maps.MapView
+                    android:id="@+id/mapViewActiveJob"
+                    android:layout_width="match_parent"
+                    android:layout_height="180dp"
+                    app:liteMode="true" />
+            </LinearLayout>
 
+            <FrameLayout
+                android:id="@+id/workStatusContainer"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_marginTop="12dp"
+                android:layout_weight="1">
+
+                <androidx.core.widget.NestedScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:fillViewport="true"
+                    android:overScrollMode="never">
+
+                    <FrameLayout
+                        android:id="@+id/workStatusContainerInner"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+
+                </androidx.core.widget.NestedScrollView>
+
+            </FrameLayout>
+
+        </LinearLayout>
+
+        <FrameLayout
+            android:id="@+id/stateOverlayContainer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone" />
+    </FrameLayout>
 </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>

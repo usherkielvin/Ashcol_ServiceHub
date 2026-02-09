@@ -1,5 +1,6 @@
 package app.hub.employee;
 
+import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -93,31 +94,33 @@ public class EmployeeTicketsAdapter extends RecyclerView.Adapter<EmployeeTickets
         }
 
         public void bind(TicketListResponse.TicketItem ticket) {
-            tvTitle.setText(ticket.getTitle());
+            tvTitle.setText(getTitleOrTicketId(ticket));
             tvTicketId.setText(ticket.getTicketId());
-            tvServiceType.setText(ticket.getServiceType());
-            tvStatus.setText("Status: " + ticket.getStatus());
+            tvServiceType.setText(buildServiceText(ticket));
+            tvStatus.setText(buildStatusText(ticket));
             tvDescription.setText(ticket.getDescription());
             tvCustomerName
                     .setText("Customer: " + (ticket.getCustomerName() != null ? ticket.getCustomerName() : "Unknown"));
             tvAddress.setText("Location: " + (ticket.getAddress() != null ? ticket.getAddress() : "Not specified"));
 
-            // Set status color
+            // Set status color/tint
             String statusColor = ticket.getStatusColor();
             if (statusColor != null && !statusColor.isEmpty()) {
                 try {
-                    tvStatus.setTextColor(Color.parseColor(statusColor));
+                    int color = Color.parseColor(statusColor);
+                    tvStatus.setBackgroundTintList(ColorStateList.valueOf(color));
+                    tvStatus.setTextColor(Color.WHITE);
                 } catch (IllegalArgumentException e) {
                     // Fallback to default colors based on status
-                    setStatusColor(tvStatus, ticket.getStatus());
+                    setStatusColors(tvStatus, ticket.getStatus());
                 }
             } else {
-                setStatusColor(tvStatus, ticket.getStatus());
+                setStatusColors(tvStatus, ticket.getStatus());
             }
 
             // Format date
-            String formattedDate = formatDate(ticket.getCreatedAt());
-            tvDate.setText("Assigned: " + formattedDate);
+            String formattedDate = formatDate(getHistoryDate(ticket));
+            tvDate.setText("Completed: " + formattedDate);
 
             // Display schedule information
             if (ticket.getScheduledDate() != null && !ticket.getScheduledDate().isEmpty()) {
@@ -139,33 +142,90 @@ public class EmployeeTicketsAdapter extends RecyclerView.Adapter<EmployeeTickets
             }
         }
 
-        private void setStatusColor(TextView textView, String status) {
+        private void setStatusColors(TextView textView, String status) {
             if (status == null)
                 return;
 
             switch (status.toLowerCase()) {
                 case "pending":
-                    textView.setTextColor(Color.parseColor("#FFA500")); // Orange
+                    tintStatus(textView, "#FFA500");
                     break;
                 case "scheduled":
-                    textView.setTextColor(Color.parseColor("#6366F1")); // Indigo
+                    tintStatus(textView, "#6366F1");
                     break;
                 case "accepted":
                 case "in progress":
                 case "ongoing":
-                    textView.setTextColor(Color.parseColor("#2196F3")); // Blue
+                    tintStatus(textView, "#2196F3");
                     break;
                 case "completed":
-                    textView.setTextColor(Color.parseColor("#4CAF50")); // Green
+                    tintStatus(textView, "#4CAF50");
+                    break;
+                case "paid":
+                    tintStatus(textView, "#2E7D32");
                     break;
                 case "cancelled":
                 case "rejected":
-                    textView.setTextColor(Color.parseColor("#F44336")); // Red
+                    tintStatus(textView, "#F44336");
                     break;
                 default:
-                    textView.setTextColor(Color.parseColor("#757575")); // Gray
+                    tintStatus(textView, "#757575");
                     break;
             }
+        }
+
+        private void tintStatus(TextView textView, String colorHex) {
+            int color = Color.parseColor(colorHex);
+            textView.setBackgroundTintList(ColorStateList.valueOf(color));
+            textView.setTextColor(Color.WHITE);
+        }
+
+        private String buildStatusText(TicketListResponse.TicketItem ticket) {
+            String status = ticket.getStatus();
+            if (status == null || status.trim().isEmpty()) {
+                return "Completed";
+            }
+            String normalized = status.trim().toLowerCase(Locale.ENGLISH);
+            if (normalized.contains("paid")) {
+                return "Paid";
+            }
+            if (normalized.contains("completed") || normalized.contains("resolved") || normalized.contains("closed")) {
+                return "Completed";
+            }
+            return status.trim();
+        }
+
+        private String buildServiceText(TicketListResponse.TicketItem ticket) {
+            String service = ticket.getServiceType();
+            if (service == null || service.trim().isEmpty()) {
+                service = ticket.getDescription();
+            }
+            if (service == null || service.trim().isEmpty()) {
+                return "• Service";
+            }
+            return "• " + service.trim();
+        }
+
+        private String getHistoryDate(TicketListResponse.TicketItem ticket) {
+            if (ticket.getUpdatedAt() != null && !ticket.getUpdatedAt().isEmpty()) {
+                return ticket.getUpdatedAt();
+            }
+            if (ticket.getScheduledDate() != null && !ticket.getScheduledDate().isEmpty()) {
+                return ticket.getScheduledDate();
+            }
+            return ticket.getCreatedAt();
+        }
+
+        private String getTitleOrTicketId(TicketListResponse.TicketItem ticket) {
+            String title = ticket.getTitle();
+            if (title != null && !title.trim().isEmpty()) {
+                return title;
+            }
+            String ticketId = ticket.getTicketId();
+            if (ticketId != null && !ticketId.trim().isEmpty()) {
+                return ticketId;
+            }
+            return "Service";
         }
 
         private String formatDate(String dateString) {

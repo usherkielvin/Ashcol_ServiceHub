@@ -77,7 +77,7 @@ public class DailyScheduleAdapter extends RecyclerView.Adapter<DailyScheduleAdap
 
         void bind(EmployeeScheduleResponse.ScheduledTicket ticket) {
             tvTime.setText(ticket.getScheduledTime() != null ? ticket.getScheduledTime() : "Not set");
-            tvTitle.setText(ticket.getTitle() != null ? ticket.getTitle() : "No title");
+            tvTitle.setText(getTitleOrTicketId(ticket));
             tvCustomer.setText(ticket.getCustomerName() != null ? ticket.getCustomerName() : "Unknown");
             tvServiceType.setText(ticket.getServiceType() != null ? ticket.getServiceType() : "General Service");
             tvAddress.setText(ticket.getAddress() != null ? ticket.getAddress() : "No address");
@@ -105,6 +105,18 @@ public class DailyScheduleAdapter extends RecyclerView.Adapter<DailyScheduleAdap
                             android.content.res.ColorStateList.valueOf(Color.parseColor("#757575")));
                     break;
             }
+        }
+
+        private String getTitleOrTicketId(EmployeeScheduleResponse.ScheduledTicket ticket) {
+            String title = ticket.getTitle();
+            if (title != null && !title.trim().isEmpty()) {
+                return title;
+            }
+            String ticketId = ticket.getTicketId();
+            if (ticketId != null && !ticketId.trim().isEmpty()) {
+                return ticketId;
+            }
+            return "No title";
         }
     }
 }

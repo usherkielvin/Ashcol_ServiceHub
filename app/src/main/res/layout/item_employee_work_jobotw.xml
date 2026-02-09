@@ -68,34 +68,53 @@
 
             <!-- Step 2: On the Way (Active State) -->
 
-            <com.google.android.material.button.MaterialButton
+            <com.google.android.material.card.MaterialCardView
                 android:id="@+id/tvAssignedStatus"
-                style="@style/Widget.MaterialComponents.Button"
                 android:layout_width="0dp"
                 android:layout_height="44dp"
                 android:layout_marginStart="16dp"
-                android:backgroundTint="#D1E7D1"
-                android:fontFamily="@font/poppins_bold"
-                android:gravity="center_vertical"
-                android:insetTop="0dp"
-                android:insetBottom="0dp"
-                android:minWidth="0dp"
-                android:minHeight="0dp"
-                android:paddingHorizontal="16dp"
-                android:text="Assigned"
-                android:textAllCaps="false"
-                android:textColor="#1B5E20"
-                android:textSize="14sp"
-                app:cornerRadius="8dp"
-                app:elevation="0dp"
+                app:cardBackgroundColor="#D1E7D1"
+                app:cardCornerRadius="8dp"
+                app:cardElevation="0dp"
                 app:layout_constraintBottom_toBottomOf="@+id/ivStep1"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.0"
                 app:layout_constraintStart_toEndOf="@+id/ivStep1"
                 app:layout_constraintTop_toTopOf="@+id/ivStep1"
-                app:layout_constraintVertical_bias="0.0"
                 app:strokeColor="#1B5E20"
-                app:strokeWidth="1dp" />
+                app:strokeWidth="1dp">
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:paddingHorizontal="16dp">
+
+                    <TextView
+                        android:id="@+id/tvAssignedLabel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/poppins_bold"
+                        android:includeFontPadding="false"
+                        android:text="Assigned"
+                        android:textColor="#1B5E20"
+                        android:textSize="14sp"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                    <TextView
+                        android:id="@+id/tvAssignedTime"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/poppins_medium"
+                        android:includeFontPadding="false"
+                        android:text=""
+                        android:textColor="#1B5E20"
+                        android:textSize="12sp"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+                </androidx.constraintlayout.widget.ConstraintLayout>
+            </com.google.android.material.card.MaterialCardView>
 
             <ImageView
                 android:id="@+id/ivStep2"
@@ -148,6 +167,16 @@
                             android:text="Ticket ID: TCKTid_1004"
                             android:textColor="#424242"
                             android:textSize="13sp" />
+                        <TextView
+                            android:id="@+id/tvOnWayTime"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentEnd="true"
+                            android:layout_below="@id/tvTicketId"
+                            android:fontFamily="@font/poppins_medium"
+                            android:text=""
+                            android:textColor="#1B5E20"
+                            android:textSize="12sp" />
                     </RelativeLayout>
 
                     <TextView
@@ -160,15 +189,6 @@
                         android:textColor="#424242"
                         android:textSize="14sp" />
 
-                    <TextView
-                        android:id="@+id/tvTimestamp"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:fontFamily="@font/poppins_medium"
-                        android:text="Timestamp: auto-log pag clinic na ung otw"
-                        android:textColor="#424242"
-                        android:textSize="14sp" />
 
                     <TextView
                         android:id="@+id/tvPhone"
