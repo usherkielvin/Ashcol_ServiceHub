@@ -32,6 +32,7 @@ import app.hub.api.LogoutResponse;
 import app.hub.api.ProfilePhotoResponse;
 import app.hub.api.UserResponse;
 import app.hub.common.MainActivity;
+import app.hub.employee.EmployeePersonalInfoFragment;
 import app.hub.util.TokenManager;
 
 import java.io.File;
@@ -461,7 +462,7 @@ public class UserProfileFragment extends Fragment {
     private void setupClickListeners(View view) {
         setClickListener(view, R.id.logoutButton, this::showLogoutConfirmation);
         setClickListener(view, R.id.btn_sign_out, this::showLogoutConfirmation);
-        setClickListener(view, R.id.btn_personal_info, () -> showToast("Personal Information clicked"));
+        setClickListener(view, R.id.btn_personal_info, this::openPersonalInfo);
         setClickListener(view, R.id.btn_password_privacy, () -> navigateToChangePassword());
         setClickListener(view, R.id.btn_help, this::openAddressBook);
         setClickListener(view, R.id.btn_edit_photo, () -> showImagePickerDialog());
@@ -477,6 +478,23 @@ public class UserProfileFragment extends Fragment {
         if (button != null) {
             button.setOnClickListener(v -> action.run());
         }
+    }
+
+    private void openPersonalInfo() {
+        navigateToFragment(new EmployeePersonalInfoFragment());
+    }
+
+    private void navigateToFragment(Fragment fragment) {
+        if (!isAdded() || getActivity() == null) {
+            return;
+        }
+
+        getActivity().getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragmentContainerView, fragment)
+                .setReorderingAllowed(true)
+                .addToBackStack(null)
+                .commit();
     }
 
     private void showNotificationSettings() {

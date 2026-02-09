@@ -24,11 +24,14 @@ import androidx.fragment.app.Fragment;
 
 import com.google.android.material.datepicker.CalendarConstraints;
 import com.google.android.material.datepicker.MaterialDatePicker;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 import java.util.TimeZone;
 
 import app.hub.R;
@@ -112,6 +115,11 @@ public class UserCreateTicketFragment extends Fragment {
         locationHintText = view.findViewById(R.id.tvLocationHint);
 
         tokenManager = new TokenManager(getContext());
+
+        String registeredName = getRegisteredName();
+        if (fullNameInput != null && registeredName != null) {
+            fullNameInput.setText(registeredName);
+        }
 
         // Set default service type
         if (serviceTypeDisplay != null) {
@@ -273,7 +281,10 @@ public class UserCreateTicketFragment extends Fragment {
     }
 
     private void createTicket() {
-        String fullName = fullNameInput != null ? fullNameInput.getText().toString().trim() : "";
+        String fullName = getRegisteredName();
+        if (fullName == null) {
+            fullName = fullNameInput != null ? fullNameInput.getText().toString().trim() : "";
+        }
         String contact = contactInput != null ? contactInput.getText().toString().trim() : "";
         String landmark = landmarkInput != null ? landmarkInput.getText().toString().trim() : "";
         String description = descriptionInput != null ? descriptionInput.getText().toString().trim() : "";
@@ -325,6 +336,8 @@ public class UserCreateTicketFragment extends Fragment {
                 if (response.isSuccessful() && response.body() != null) {
                     CreateTicketResponse ticketResponse = response.body();
 
+                    pushTicketToFirestore(ticketResponse);
+
                     // Navigate to confirmation screen
                     Intent intent = new Intent(getActivity(), TicketConfirmationActivity.class);
                     intent.putExtra("ticket_id", ticketResponse.getTicketId());
@@ -352,6 +365,55 @@ public class UserCreateTicketFragment extends Fragment {
                 Toast.makeText(getContext(), "Network error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    private void pushTicketToFirestore(CreateTicketResponse ticketResponse) {
+        if (ticketResponse == null) {
+            return;
+        }
+
+        CreateTicketResponse.TicketData ticketData = ticketResponse.getTicket();
+        if (ticketData == null) {
+            return;
+        }
+
+        String ticketId = ticketData.getTicketId();
+        String status = ticketResponse.getStatus();
+        if (status == null && ticketData.getStatus() != null) {
+            status = ticketData.getStatus().getName();
+        }
+
+        String branchName = null;
+        if (ticketData.getBranch() != null) {
+            branchName = ticketData.getBranch().getName();
+        }
+
+        if (ticketId == null || ticketId.trim().isEmpty() || branchName == null || branchName.trim().isEmpty()) {
+            return;
+        }
+
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("ticketId", ticketId);
+        payload.put("status", status != null ? status : "pending");
+        payload.put("branch", branchName);
+        payload.put("updatedAt", System.currentTimeMillis());
+
+        FirebaseFirestore.getInstance()
+                .collection("tickets")
+                .document(ticketId)
+                .set(payload);
+    }
+
+    private String getRegisteredName() {
+        if (tokenManager == null) {
+            return null;
+        }
+        String name = tokenManager.getName();
+        return isValidName(name) ? name.trim() : null;
+    }
+
+    private boolean isValidName(String name) {
+        return name != null && !name.trim().isEmpty() && !"null".equalsIgnoreCase(name.trim());
     }
 
     private void clearForm() {

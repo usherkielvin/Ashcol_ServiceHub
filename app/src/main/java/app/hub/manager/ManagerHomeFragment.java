@@ -29,6 +29,8 @@ public class ManagerHomeFragment extends Fragment implements ManagerDataManager.
     ManagerDataManager.DashboardDataChangeListener,
     ManagerDataManager.TicketDataChangeListener {
 
+    private static final int RECENT_TICKETS_LIMIT = 2;
+
     private RecyclerView recentActivityRecyclerView;
     private RecentActivityAdapter recentActivityAdapter;
 
@@ -117,10 +119,10 @@ public class ManagerHomeFragment extends Fragment implements ManagerDataManager.
         }
 
         if (!recentTickets.isEmpty()) {
-            recentActivityAdapter.setRecentTickets(recentTickets);
+            recentActivityAdapter.setRecentTickets(limitRecentTickets(recentTickets));
         } else {
             List<DashboardStatsResponse.RecentTicket> fallback = buildRecentTicketsFromTickets(
-                    ManagerDataManager.getCachedTickets(), 6);
+                    ManagerDataManager.getCachedTickets(), RECENT_TICKETS_LIMIT);
             recentActivityAdapter.setRecentTickets(fallback);
         }
     }
@@ -173,10 +175,10 @@ public class ManagerHomeFragment extends Fragment implements ManagerDataManager.
                     getActivity().runOnUiThread(() -> {
                         updateDashboardStats(stats);
                         if (recentTickets != null && !recentTickets.isEmpty()) {
-                            recentActivityAdapter.setRecentTickets(recentTickets);
+                            recentActivityAdapter.setRecentTickets(limitRecentTickets(recentTickets));
                         } else {
                             List<DashboardStatsResponse.RecentTicket> fallback = buildRecentTicketsFromTickets(
-                                    ManagerDataManager.getCachedTickets(), 6);
+                                    ManagerDataManager.getCachedTickets(), RECENT_TICKETS_LIMIT);
                             recentActivityAdapter.setRecentTickets(fallback);
                         }
                     });
@@ -235,10 +237,10 @@ public class ManagerHomeFragment extends Fragment implements ManagerDataManager.
                     updateDashboardStats(stats);
                 }
                 if (recentTickets != null && !recentTickets.isEmpty()) {
-                    recentActivityAdapter.setRecentTickets(recentTickets);
+                    recentActivityAdapter.setRecentTickets(limitRecentTickets(recentTickets));
                 } else {
                     List<DashboardStatsResponse.RecentTicket> fallback = buildRecentTicketsFromTickets(
-                            ManagerDataManager.getCachedTickets(), 6);
+                            ManagerDataManager.getCachedTickets(), RECENT_TICKETS_LIMIT);
                     recentActivityAdapter.setRecentTickets(fallback);
                 }
             });
@@ -249,7 +251,8 @@ public class ManagerHomeFragment extends Fragment implements ManagerDataManager.
     public void onTicketDataChanged(List<TicketListResponse.TicketItem> tickets) {
         if (getActivity() != null) {
             getActivity().runOnUiThread(() -> {
-                List<DashboardStatsResponse.RecentTicket> fallback = buildRecentTicketsFromTickets(tickets, 6);
+                List<DashboardStatsResponse.RecentTicket> fallback = buildRecentTicketsFromTickets(
+                        tickets, RECENT_TICKETS_LIMIT);
                 if (!fallback.isEmpty()) {
                     recentActivityAdapter.setRecentTickets(fallback);
                 }
@@ -267,6 +270,12 @@ public class ManagerHomeFragment extends Fragment implements ManagerDataManager.
         int count = 0;
         for (TicketListResponse.TicketItem item : tickets) {
             if (item == null) {
+                continue;
+            }
+            if (!isAllowedRecentStatus(item.getStatus())) {
+                continue;
+            }
+            if (containsTicketId(recent, item.getTicketId())) {
                 continue;
             }
 
@@ -288,5 +297,52 @@ public class ManagerHomeFragment extends Fragment implements ManagerDataManager.
         }
 
         return recent;
+    }
+
+    private List<DashboardStatsResponse.RecentTicket> limitRecentTickets(
+            List<DashboardStatsResponse.RecentTicket> recentTickets) {
+        if (recentTickets == null || recentTickets.isEmpty()) {
+            return new ArrayList<>();
+        }
+        List<DashboardStatsResponse.RecentTicket> trimmed = new ArrayList<>();
+        for (DashboardStatsResponse.RecentTicket ticket : recentTickets) {
+            if (ticket == null) {
+                continue;
+            }
+            if (!isAllowedRecentStatus(ticket.getStatus())) {
+                continue;
+            }
+            if (containsTicketId(trimmed, ticket.getTicketId())) {
+                continue;
+            }
+            trimmed.add(ticket);
+            if (trimmed.size() >= RECENT_TICKETS_LIMIT) {
+                break;
+            }
+        }
+        return trimmed;
+    }
+
+    private boolean containsTicketId(List<DashboardStatsResponse.RecentTicket> tickets, String ticketId) {
+        if (ticketId == null || ticketId.trim().isEmpty()) {
+            return false;
+        }
+        for (DashboardStatsResponse.RecentTicket ticket : tickets) {
+            if (ticket != null && ticketId.equals(ticket.getTicketId())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isAllowedRecentStatus(String status) {
+        if (status == null) {
+            return false;
+        }
+        String normalized = status.trim();
+        return !"completed".equalsIgnoreCase(normalized)
+                && !"cancelled".equalsIgnoreCase(normalized)
+                && !"rejected".equalsIgnoreCase(normalized)
+                && !"failed".equalsIgnoreCase(normalized);
     }
 }

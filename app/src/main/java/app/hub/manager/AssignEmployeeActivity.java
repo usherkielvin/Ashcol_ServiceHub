@@ -432,10 +432,15 @@ public class AssignEmployeeActivity extends AppCompatActivity {
                     if (scheduleResponse.isSuccess()) {
                         Toast.makeText(AssignEmployeeActivity.this, "Ticket assigned and scheduled successfully",
                                 Toast.LENGTH_SHORT).show();
-                        // Clear caches so the lists will refresh with updated status
-                        ManagerDataManager.clearTicketCache();
-                        // Also clear employee schedule cache if possible
-                        // The employee app will need to refresh their schedule data
+                        String assignedStaff = scheduleResponse.getTicket() != null
+                            ? scheduleResponse.getTicket().getAssignedStaff()
+                            : null;
+                        ManagerDataManager.updateTicketAssignmentInCache(
+                            ticketId,
+                            "ongoing",
+                            assignedStaff,
+                            selectedDate,
+                            selectedTime);
 
                         // Notify the calling activity that assignment was successful
                         setResult(RESULT_OK);

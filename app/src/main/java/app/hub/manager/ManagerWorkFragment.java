@@ -309,10 +309,17 @@ public class ManagerWorkFragment extends Fragment implements TicketDataChangeLis
         for (TicketListResponse.TicketItem ticket : tickets) {
             boolean matchesFilter = true;
             boolean matchesSearch = true;
+            if (ticket == null) {
+                continue;
+            }
+
+            String ticketStatus = ticket.getStatus() != null ? ticket.getStatus().toLowerCase() : "";
+            if (isExcludedFromWork(ticketStatus)) {
+                continue;
+            }
 
             // Apply status filter
             if (!currentFilter.equals("all")) {
-                String ticketStatus = ticket.getStatus().toLowerCase();
                 switch (currentFilter) {
                     case "pending":
                         // Match both "pending" and "open" statuses for incoming tickets
@@ -360,6 +367,18 @@ public class ManagerWorkFragment extends Fragment implements TicketDataChangeLis
         }
 
         adapter.notifyDataSetChanged();
+    }
+
+    private boolean isExcludedFromWork(String status) {
+        if (status == null) {
+            return false;
+        }
+        return status.contains("cancelled")
+                || status.contains("rejected")
+                || status.contains("failed")
+                || status.contains("completed")
+                || status.contains("resolved")
+                || status.contains("closed");
     }
 
     @Override
