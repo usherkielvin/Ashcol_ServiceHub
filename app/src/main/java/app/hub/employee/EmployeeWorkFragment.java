@@ -102,7 +102,7 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
 
         activeContentContainer = view.findViewById(R.id.activeContentContainer);
         mapContainer = view.findViewById(R.id.mapContainer);
-        workStatusContainer = view.findViewById(R.id.workStatusContainer);
+        workStatusContainer = view.findViewById(R.id.workStatusContainerInner);
         stateOverlayContainer = view.findViewById(R.id.stateOverlayContainer);
         mapViewActiveJob = view.findViewById(R.id.mapViewActiveJob);
 
