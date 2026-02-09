@@ -383,4 +383,10 @@
     <string name="val_payment_method">Cash</string>
 
     <string name="btn_view_history">View Job History</string>
+
+    <!-- Onboarding Strings -->
+    <string name="onboarding_background_image">Onboarding background image</string>
+    <string name="ashcol_logo">Ashcol logo</string>
+    <string name="get_started">Get Started</string>
+    <string name="already_member">I\'m already a member</string>
 </resources>
