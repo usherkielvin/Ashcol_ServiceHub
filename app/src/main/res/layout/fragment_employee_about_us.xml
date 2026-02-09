@@ -1,198 +1,264 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?android:attr/colorBackground"
-    android:fillViewport="true">
+    android:background="?attr/colorSurface">
 
+    <!-- Header Section -->
     <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/header"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:paddingBottom="40dp">
+        android:layout_height="?attr/actionBarSize"
+        android:background="?attr/colorSurface"
+        android:elevation="4dp"
+        app:layout_constraintTop_toTopOf="parent">
 
-        <View
-            android:id="@+id/headerBackground"
-            android:layout_width="match_parent"
-            android:layout_height="200dp"
-            android:background="@drawable/header_green"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <com.google.android.material.button.MaterialButton
+        <ImageButton
             android:id="@+id/btnBack"
-            style="@style/Widget.Material3.Button.TextButton"
             android:layout_width="48dp"
             android:layout_height="48dp"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/btn_close_desc"
-            android:insetLeft="0dp"
-            android:insetTop="0dp"
-            android:insetRight="0dp"
-            android:insetBottom="0dp"
-            app:icon="@drawable/outline_arrow_back_24"
-            app:iconSize="32dp"
-            app:iconTint="#FFFFFF"
+            android:src="@drawable/outline_arrow_back_24"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            app:tint="?attr/colorOnSurface" />
 
         <TextView
             android:id="@+id/tvTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="About us"
-            android:textColor="#FFFFFF"
-            android:textSize="22sp"
+            android:fontFamily="@font/poppins_bold"
+            android:letterSpacing="0.05"
+            android:text="ABOUT US"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            android:textSize="20sp"
             android:textStyle="bold"
-            app:layout_constraintBottom_toBottomOf="@+id/btnBack"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/btnBack" />
+            app:layout_constraintTop_toTopOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
-        <com.facebook.shimmer.ShimmerFrameLayout
-            android:id="@+id/aboutShimmer"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="20dp"
-            android:layout_marginTop="24dp"
-            android:layout_marginEnd="20dp"
-            app:layout_constraintTop_toBottomOf="@id/tvTitle"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:shimmer_auto_start="true">
+    <!-- Scrollable Content -->
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:fillViewport="true"
+        android:overScrollMode="never"
+        app:layout_constraintBottom_toTopOf="@+id/footerDivider"
+        app:layout_constraintTop_toBottomOf="@id/header">
 
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                app:cardBackgroundColor="?attr/colorSurface"
-                app:cardCornerRadius="24dp"
-                app:cardElevation="10dp"
-                app:strokeWidth="0dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="24dp">
-
-                    <View
-                        android:layout_width="180dp"
-                        android:layout_height="20dp"
-                        android:background="#E0E0E0" />
-
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="16dp"
-                        android:layout_marginTop="12dp"
-                        android:background="#E0E0E0" />
-
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="16dp"
-                        android:layout_marginTop="8dp"
-                        android:background="#E0E0E0" />
-
-                    <View
-                        android:layout_width="140dp"
-                        android:layout_height="14dp"
-                        android:layout_marginTop="20dp"
-                        android:background="#E0E0E0" />
-
-                    <View
-                        android:layout_width="200dp"
-                        android:layout_height="14dp"
-                        android:layout_marginTop="12dp"
-                        android:background="#E0E0E0" />
-
-                    <View
-                        android:layout_width="200dp"
-                        android:layout_height="14dp"
-                        android:layout_marginTop="8dp"
-                        android:background="#E0E0E0" />
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-        </com.facebook.shimmer.ShimmerFrameLayout>
-
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/aboutCard"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="20dp"
-            android:layout_marginTop="24dp"
-            android:layout_marginEnd="20dp"
-            android:visibility="gone"
-            app:cardBackgroundColor="?attr/colorSurface"
-            app:cardCornerRadius="24dp"
-            app:cardElevation="10dp"
-            app:layout_constraintTop_toBottomOf="@id/tvTitle"
-            app:strokeWidth="0dp">
+            android:orientation="vertical"
+            android:padding="24dp">
 
-            <LinearLayout
+            <!-- Company Name -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/poppins_bold"
+                android:text="Company name"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/tvAboutTitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="24dp">
+                android:layout_marginTop="8dp"
+                android:fontFamily="@font/poppins_medium"
+                android:text="ASCHOL AIRCONDITIONING SERVICES CORPORATION"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="14sp" />
 
-                <TextView
-                    android:id="@+id/tvAboutTitle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="ASHCOL Service Hub"
-                    android:textColor="?attr/colorOnSurface"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
+            <!-- Address -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:fontFamily="@font/poppins_bold"
+                android:text="Address"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="16sp" />
 
-                <TextView
-                    android:id="@+id/tvAboutBody"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="We provide fast, reliable appliance services for homes and businesses. Our technicians deliver safe, professional, and on-time service across branches."
-                    android:textColor="?attr/colorOnSurfaceVariant"
-                    android:textSize="14sp" />
+            <TextView
+                android:id="@+id/tvAboutBody"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:fontFamily="@font/poppins_medium"
+                android:text="Units 4D, 4E and 4F Genesis Building 182-A 19th Avenue Brgy East Rembo Makati City 1216."
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="14sp" />
 
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:layout_marginVertical="16dp"
-                    android:background="?attr/colorOutlineVariant" />
+            <!-- Customer Hotline -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:fontFamily="@font/poppins_bold"
+                android:text="Customer Hotline"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="16sp" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Support"
-                    android:textColor="?attr/colorOnSurface"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
+            <TextView
+                android:id="@+id/tvHotlineStatic"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:fontFamily="@font/poppins_medium"
+                android:text="+63 (2) 77291293"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="14sp"
+                android:background="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true" />
 
-                <TextView
-                    android:id="@+id/tvSupportEmail"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="Email: support@ashcol.com"
-                    android:textColor="?attr/colorOnSurfaceVariant"
-                    android:textSize="13sp" />
+            <!-- Service / Technical Department -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:fontFamily="@font/poppins_bold"
+                android:text="Service / Technical Department"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="16sp" />
 
-                <TextView
-                    android:id="@+id/tvSupportPhone"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:text="Phone: +63 900 000 0000"
-                    android:textColor="?attr/colorOnSurfaceVariant"
-                    android:textSize="13sp" />
+            <TextView
+                android:id="@+id/tvSupportPhone"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:fontFamily="@font/poppins_medium"
+                android:text="+63 (2) 77541418"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="14sp"
+                android:background="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true" />
 
-                <TextView
-                    android:id="@+id/tvSupportHours"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:text="Hours: Mon - Sat, 8:00 AM - 6:00 PM"
-                    android:textColor="?attr/colorOnSurfaceVariant"
-                    android:textSize="13sp" />
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
+            <!-- Mobile Numbers -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:fontFamily="@font/poppins_bold"
+                android:text="Mobile Numbers"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="16sp" />
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
-</androidx.core.widget.NestedScrollView>
+            <TextView
+                android:id="@+id/tvMobileGlobe"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:fontFamily="@font/poppins_medium"
+                android:text="+63 (917) 7143810 (Globe)"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="14sp"
+                android:background="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <TextView
+                android:id="@+id/tvMobileSmart"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:fontFamily="@font/poppins_medium"
+                android:text="+63 (908) 8950849 (Smart)"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="14sp"
+                android:background="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <!-- Email -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:fontFamily="@font/poppins_bold"
+                android:text="Email"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/tvSupportEmail"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:fontFamily="@font/poppins_medium"
+                android:text="headoffice@ashcol.com.ph"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="14sp"
+                android:background="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <!-- Website -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:fontFamily="@font/poppins_bold"
+                android:text="Website"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/tvWebsite"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="32dp"
+                android:fontFamily="@font/poppins_medium"
+                android:text="ashcol.com.ph"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="14sp"
+                android:background="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <!-- Repurposed Compatibility IDs -->
+            <View android:id="@+id/headerBackground" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" tools:ignore="MissingConstraints" />
+            <View android:id="@+id/aboutShimmer" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" tools:ignore="MissingConstraints" />
+            <View android:id="@+id/aboutCard" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" tools:ignore="MissingConstraints" />
+            <TextView android:id="@+id/tvSupportHours" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" tools:ignore="MissingConstraints" />
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <View
+        android:id="@+id/footerDivider"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginBottom="16dp"
+        android:background="?attr/colorOutline"
+        android:alpha="0.2"
+        app:layout_constraintBottom_toTopOf="@+id/tvFacebook" />
+
+    <TextView
+        android:id="@+id/tvFacebook"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="24dp"
+        android:fontFamily="@font/poppins_bold"
+        android:text="Follow us on Facebook"
+        android:textColor="?attr/colorOnSurface"
+        android:textSize="14sp"
+        android:background="?attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true"
+        android:padding="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
