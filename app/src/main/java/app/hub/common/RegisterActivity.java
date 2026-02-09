@@ -208,6 +208,19 @@ public class RegisterActivity extends AppCompatActivity {
 		uval = findViewById(R.id.Uname_val);
 		phoneVal = findViewById(R.id.phone_val);
 
+		// Prefill with Google data if available
+		if (isGoogleSignIn) {
+			if (firstNameInput != null && userFirstName != null && !userFirstName.isEmpty()) {
+				firstNameInput.setText(userFirstName);
+			}
+			if (lastNameInput != null && userLastName != null && !userLastName.isEmpty()) {
+				lastNameInput.setText(userLastName);
+			}
+			if (usernameInput != null && userName != null && !userName.isEmpty()) {
+				usernameInput.setText(userName);
+			}
+		}
+
 		// Setup Region/City Logic
 		setupRegionCityLogic();
 
@@ -1280,9 +1293,6 @@ public class RegisterActivity extends AppCompatActivity {
 			String displayName, String idToken) {
 		Log.d(TAG, "handleGoogleSignInSuccess called - Email: " + email);
 
-		// Show loading message
-		Toast.makeText(this, "Checking account...", Toast.LENGTH_SHORT).show();
-
 		// Mark as Google Sign-In user (skip OTP)
 		isGoogleSignIn = true;
 
@@ -1307,8 +1317,8 @@ public class RegisterActivity extends AppCompatActivity {
 		// Store Google ID token for backend API call
 		googleIdToken = idToken;
 
-		// Check if account already exists before proceeding
-		checkGoogleAccountExistsForRegistration(email, firstName, lastName, "");
+		// Go straight to Tell Us form for Google sign-up
+		showTellUsFragment();
 	}
 
 	/**
