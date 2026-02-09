@@ -200,6 +200,13 @@
     <string name="label_email_notification">Email Notification</string>
     <string name="label_sms_notification">SMS Notification</string>
 
+    <!-- Employee Today Work -->
+    <string name="employee_today_job">Todays Job</string>
+    <string name="employee_status_ongoing">ONGOING</string>
+    <string name="employee_action_navigate">Navigate</string>
+    <string name="employee_action_call">Call</string>
+    <string name="employee_action_details">Details</string>
+
 
     <string name="title_about_us">About us</string>
     <string name="label_company_name">Company name</string>
@@ -278,6 +285,21 @@
     <string name="book_your_maintenance_today">Book Your Maintenance Today!</string>
     <string name="book_now">Book Now</string>
     <string name="default_branch_name">ASHCOL SERVICE HUB</string>
+
+    <!-- Employee Work Status -->
+    <string name="employee_work_status_title">Job Status</string>
+    <string name="employee_work_view_map">View larger map</string>
+    <string name="employee_work_assigned">Assigned</string>
+    <string name="employee_work_on_the_way">On the Way</string>
+    <string name="employee_work_arrived">Arrived</string>
+    <string name="employee_work_in_progress">In Progress</string>
+    <string name="employee_work_completed">Completed</string>
+    <string name="employee_work_mark_on_the_way">On the Way</string>
+    <string name="employee_work_mark_arrived">Arrived</string>
+    <string name="employee_work_start_service">Start Service</string>
+    <string name="employee_work_complete">Complete</string>
+    <string name="employee_work_no_active_jobs">No Active Jobs</string>
+    <string name="employee_work_no_active_subtitle">You do not have any assigned jobs right now.</string>
 
     <string name="filter_title">Filter Results</string>
     <string name="filter_date_label">Date Posted</string>

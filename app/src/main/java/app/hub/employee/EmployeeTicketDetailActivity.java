@@ -53,6 +53,9 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity
     private GoogleMap googleMap;
 
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1001;
+    private static final String EXTRA_OPEN_PAYMENT = "open_payment";
+
+    private boolean openPaymentOnLoad = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,6 +76,7 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity
         tokenManager = new TokenManager(this);
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         ticketId = getIntent().getStringExtra("ticket_id");
+        openPaymentOnLoad = getIntent().getBooleanExtra(EXTRA_OPEN_PAYMENT, false);
 
         if (ticketId != null) {
             loadTicketDetails();
@@ -216,6 +220,11 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity
 
         // Show/hide action buttons based on ticket status
         updateActionButtons(ticket.getStatus());
+
+        if (openPaymentOnLoad) {
+            openPaymentOnLoad = false;
+            showPaymentFragment();
+        }
     }
 
     private void updateActionButtons(String status) {
@@ -380,7 +389,13 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity
     }
 
     private void showPaymentFragment() {
-        EmployeePaymentFragment fragment = EmployeePaymentFragment.newInstance(ticketId);
+        String customerName = currentTicket != null ? currentTicket.getCustomerName() : null;
+        String serviceName = currentTicket != null ? currentTicket.getServiceType() : null;
+        EmployeePaymentFragment fragment = EmployeePaymentFragment.newInstance(
+            ticketId,
+            customerName,
+            serviceName,
+            0.0);
         getSupportFragmentManager()
                 .beginTransaction()
                 .add(android.R.id.content, fragment)
