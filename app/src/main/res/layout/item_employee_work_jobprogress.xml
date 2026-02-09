@@ -66,8 +66,6 @@
                 app:layout_constraintTop_toTopOf="parent"
                 app:tint="@color/white" />
 
-            <!-- Step 2: On the Way (Completed State) -->
-
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/tvAssignedStatus"
                 style="@style/Widget.MaterialComponents.Button"
@@ -79,8 +77,8 @@
                 android:gravity="center_vertical"
                 android:insetTop="0dp"
                 android:insetBottom="0dp"
-                android:minWidth="0dp"
                 android:minHeight="0dp"
+                android:minWidth="0dp"
                 android:paddingHorizontal="16dp"
                 android:text="Assigned"
                 android:textAllCaps="false"
@@ -90,13 +88,12 @@
                 app:elevation="0dp"
                 app:layout_constraintBottom_toBottomOf="@+id/ivStep1"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.0"
                 app:layout_constraintStart_toEndOf="@+id/ivStep1"
                 app:layout_constraintTop_toTopOf="@+id/ivStep1"
-                app:layout_constraintVertical_bias="0.0"
                 app:strokeColor="#1B5E20"
                 app:strokeWidth="1dp" />
 
+            <!-- Step 2: On the Way (Completed State) -->
             <ImageView
                 android:id="@+id/ivStep2"
                 android:layout_width="32dp"
@@ -319,8 +316,8 @@
                 android:fontFamily="@font/poppins_bold"
                 android:insetTop="0dp"
                 android:insetBottom="0dp"
-                android:paddingHorizontal="48dp"
-                android:text="Payment"
+                android:paddingHorizontal="32dp"
+                android:text="Mark as Completed"
                 android:textAllCaps="false"
                 android:textColor="#1B5E20"
                 android:textSize="14sp"

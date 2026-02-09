@@ -1,0 +1,421 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/white"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- Map Section -->
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/mapContainer"
+            android:layout_width="match_parent"
+            android:layout_height="250dp">
+
+            <fragment
+                android:id="@+id/map"
+                android:name="com.google.android.gms.maps.SupportMapFragment"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                tools:layout="@layout/mapp" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <!-- Content Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/statusCard"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="32dp"
+            app:cardBackgroundColor="@android:color/white"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="8dp"
+            app:cardUseCompatPadding="true"
+            app:strokeWidth="0dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="20dp">
+
+                <TextView
+                    android:id="@+id/tvJobStatusTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/poppins_bold"
+                    android:text="Job Status"
+                    android:textColor="#9E9E9E"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginTop="12dp"
+                    android:alpha="0.2"
+                    android:background="#BDBDBD" />
+
+                <!-- Vertical Progress Tracker -->
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp">
+
+                    <!-- Connector line -->
+                    <View
+                        android:id="@+id/vLine"
+                        android:layout_width="1dp"
+                        android:layout_height="0dp"
+                        android:alpha="0.3"
+                        android:background="#BDBDBD"
+                        app:layout_constraintBottom_toBottomOf="@+id/ivStep5"
+                        app:layout_constraintEnd_toEndOf="@+id/ivStep1"
+                        app:layout_constraintStart_toStartOf="@+id/ivStep1"
+                        app:layout_constraintTop_toTopOf="@+id/ivStep1" />
+
+                    <!-- Step 1: Assigned (Completed) -->
+                    <ImageView
+                        android:id="@+id/ivStep1"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:background="@drawable/bg_step_solid_green"
+                        android:padding="6dp"
+                        android:src="@drawable/ic_completed"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:tint="@color/white" />
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/layoutStep1"
+                        android:layout_width="0dp"
+                        android:layout_height="40dp"
+                        android:layout_marginStart="16dp"
+                        app:cardBackgroundColor="#D1E7D1"
+                        app:cardCornerRadius="8dp"
+                        app:cardElevation="0dp"
+                        app:strokeColor="#1B5E20"
+                        app:strokeWidth="1dp"
+                        app:layout_constraintBottom_toBottomOf="@+id/ivStep1"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toEndOf="@+id/ivStep1"
+                        app:layout_constraintTop_toTopOf="@+id/ivStep1">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal"
+                            android:paddingHorizontal="16dp">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:fontFamily="@font/poppins_bold"
+                                android:text="Assigned"
+                                android:textColor="#1B5E20"
+                                android:textSize="14sp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:fontFamily="@font/poppins_medium"
+                                android:text="10:00 AM"
+                                android:textColor="#1B5E20"
+                                android:textSize="12sp"
+                                android:alpha="0.8"/>
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <!-- Step 2: On the Way (Completed) -->
+                    <ImageView
+                        android:id="@+id/ivStep2"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:layout_marginTop="24dp"
+                        android:background="@drawable/bg_step_solid_green"
+                        android:padding="6dp"
+                        android:src="@drawable/ic_completed"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/layoutStep1"
+                        app:tint="@color/white" />
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/layoutStep2"
+                        android:layout_width="0dp"
+                        android:layout_height="40dp"
+                        android:layout_marginStart="16dp"
+                        app:cardBackgroundColor="#D1E7D1"
+                        app:cardCornerRadius="8dp"
+                        app:cardElevation="0dp"
+                        app:strokeColor="#1B5E20"
+                        app:strokeWidth="1dp"
+                        app:layout_constraintBottom_toBottomOf="@+id/ivStep2"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toEndOf="@+id/ivStep2"
+                        app:layout_constraintTop_toTopOf="@+id/ivStep2">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal"
+                            android:paddingHorizontal="16dp">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:fontFamily="@font/poppins_bold"
+                                android:text="On the Way"
+                                android:textColor="#1B5E20"
+                                android:textSize="14sp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:fontFamily="@font/poppins_medium"
+                                android:text="10:20 AM"
+                                android:textColor="#1B5E20"
+                                android:textSize="12sp"
+                                android:alpha="0.8"/>
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <!-- Step 3: Arrived (Completed) -->
+                    <ImageView
+                        android:id="@+id/ivStep3"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:layout_marginTop="24dp"
+                        android:background="@drawable/bg_step_solid_green"
+                        android:padding="6dp"
+                        android:src="@drawable/ic_completed"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/layoutStep2"
+                        app:tint="@color/white" />
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/layoutStep3"
+                        android:layout_width="0dp"
+                        android:layout_height="40dp"
+                        android:layout_marginStart="16dp"
+                        app:cardBackgroundColor="#D1E7D1"
+                        app:cardCornerRadius="8dp"
+                        app:cardElevation="0dp"
+                        app:strokeColor="#1B5E20"
+                        app:strokeWidth="1dp"
+                        app:layout_constraintBottom_toBottomOf="@+id/ivStep3"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toEndOf="@+id/ivStep3"
+                        app:layout_constraintTop_toTopOf="@+id/ivStep3">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal"
+                            android:paddingHorizontal="16dp">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:fontFamily="@font/poppins_bold"
+                                android:text="Arrived"
+                                android:textColor="#1B5E20"
+                                android:textSize="14sp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:fontFamily="@font/poppins_medium"
+                                android:text="10:45 AM"
+                                android:textColor="#1B5E20"
+                                android:textSize="12sp"
+                                android:alpha="0.8"/>
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <!-- Step 4: In Progress (Completed) -->
+                    <ImageView
+                        android:id="@+id/ivStep4"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:layout_marginTop="24dp"
+                        android:background="@drawable/bg_step_solid_green"
+                        android:padding="6dp"
+                        android:src="@drawable/ic_completed"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/layoutStep3"
+                        app:tint="@color/white" />
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/layoutStep4"
+                        android:layout_width="0dp"
+                        android:layout_height="40dp"
+                        android:layout_marginStart="16dp"
+                        app:cardBackgroundColor="#D1E7D1"
+                        app:cardCornerRadius="8dp"
+                        app:cardElevation="0dp"
+                        app:strokeColor="#1B5E20"
+                        app:strokeWidth="1dp"
+                        app:layout_constraintBottom_toBottomOf="@+id/ivStep4"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toEndOf="@+id/ivStep4"
+                        app:layout_constraintTop_toTopOf="@+id/ivStep4">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal"
+                            android:paddingHorizontal="16dp">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:fontFamily="@font/poppins_bold"
+                                android:text="In Progress"
+                                android:textColor="#1B5E20"
+                                android:textSize="14sp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:fontFamily="@font/poppins_medium"
+                                android:text="11:30 AM"
+                                android:textColor="#1B5E20"
+                                android:textSize="12sp"
+                                android:alpha="0.8"/>
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <!-- Step 5: Completed (Final Step) -->
+                    <ImageView
+                        android:id="@+id/ivStep5"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:layout_marginTop="32dp"
+                        android:background="@drawable/bg_step_solid_green"
+                        android:padding="6dp"
+                        android:src="@drawable/ic_completed"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/layoutStep4"
+                        app:tint="@color/white" />
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/cvCompletedDetailsBox"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        app:cardBackgroundColor="?attr/colorSurfaceVariant"
+                        app:cardCornerRadius="8dp"
+                        app:cardElevation="0dp"
+                        app:strokeColor="?attr/colorOutline"
+                        app:strokeWidth="1dp"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toEndOf="@id/ivStep5"
+                        app:layout_constraintTop_toTopOf="@id/ivStep5">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:padding="12dp">
+
+                            <RelativeLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content">
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:fontFamily="@font/poppins_bold"
+                                    android:text="Completed"
+                                    android:textColor="?attr/colorOnSurface"
+                                    android:textSize="15sp" />
+                                <TextView
+                                    android:id="@+id/tvTicketId"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_alignParentEnd="true"
+                                    android:fontFamily="@font/poppins_medium"
+                                    android:text="Ticket ID: TCKTid_1004"
+                                    android:textColor="?attr/colorOnSurfaceVariant"
+                                    android:textSize="13sp" />
+                            </RelativeLayout>
+
+                            <TextView
+                                android:id="@+id/tvServiceType"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="8dp"
+                                android:fontFamily="@font/poppins_medium"
+                                android:text="Service Type: Split AC General Cleaning"
+                                android:textColor="?attr/colorOnSurfaceVariant"
+                                android:textSize="13sp" />
+
+                            <TextView
+                                android:id="@+id/tvDuration"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp"
+                                android:fontFamily="@font/poppins_medium"
+                                android:text="Duration: Start - 10:00 AM  End - 4:30 PM"
+                                android:textColor="?attr/colorOnSurfaceVariant"
+                                android:textSize="13sp" />
+
+                            <View
+                                android:layout_width="match_parent"
+                                android:layout_height="1dp"
+                                android:layout_marginVertical="8dp"
+                                android:alpha="0.1"
+                                android:background="?attr/colorOutline" />
+
+                            <TextView
+                                android:id="@+id/tvTotalAmount"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:fontFamily="@font/poppins_medium"
+                                android:text="Total Amount: P8, 500.00"
+                                android:textColor="?attr/colorOnSurfaceVariant"
+                                android:textSize="13sp" />
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnRequestPayment"
+                        android:layout_width="wrap_content"
+                        android:layout_height="40dp"
+                        android:layout_marginTop="16dp"
+                        android:backgroundTint="@color/colorPrimaryContainer"
+                        android:fontFamily="@font/poppins_bold"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
+                        android:paddingHorizontal="48dp"
+                        android:text="Request Payment"
+                        android:textAllCaps="false"
+                        android:textColor="@color/colorOnPrimaryContainer"
+                        android:textSize="14sp"
+                        app:cornerRadius="20dp"
+                        app:strokeColor="@color/colorOnPrimaryContainer"
+                        app:strokeWidth="1dp"
+                        app:layout_constraintEnd_toEndOf="@+id/cvCompletedDetailsBox"
+                        app:layout_constraintStart_toStartOf="@+id/cvCompletedDetailsBox"
+                        app:layout_constraintTop_toBottomOf="@+id/cvCompletedDetailsBox" />
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>
