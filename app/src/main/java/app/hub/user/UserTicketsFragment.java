@@ -504,8 +504,9 @@ public class UserTicketsFragment extends Fragment {
                     }
 
                     // Handle "in progress" filter matching "In Progress" status
-                    if (normalizedFilter.equals("active")) {
+                        if (normalizedFilter.equals("active")) {
                         matchesFilter = normalizedStatus.equals("pending") ||
+                            normalizedStatus.equals("scheduled") ||
                                 normalizedStatus.equals("in progress") ||
                                 normalizedStatus.equals("in-progress") ||
                                 normalizedStatus.contains("progress") ||
@@ -523,7 +524,8 @@ public class UserTicketsFragment extends Fragment {
                                 normalizedStatus.equals("ongoing");
                     } else {
                         // Exact match for other statuses (pending, completed, etc.)
-                        matchesFilter = normalizedStatus.equals(normalizedFilter);
+                        matchesFilter = normalizedStatus.equals(normalizedFilter)
+                            || (normalizedFilter.equals("pending") && normalizedStatus.equals("scheduled"));
 
                         // Handle "cancelled" filter if we add a tab for it, or ensures it doesn't show
                         // in other tabs

@@ -39,6 +39,14 @@ android {
     buildFeatures {
         buildConfig = true
     }
+    testOptions {
+        unitTests {
+            isIncludeAndroidResources = true
+            all {
+                it.useJUnitPlatform()
+            }
+        }
+    }
     lint {
         abortOnError = false
         checkReleaseBuilds = false
@@ -81,20 +89,30 @@ dependencies {
     implementation(libs.navigation.ui)
     implementation(libs.cardview)
     implementation(libs.recyclerview)
-    implementation(libs.swiperefreshlayout)
-
-    // Google Services
-    implementation(libs.play.services.auth)
-    implementation(libs.play.services.maps)
-    implementation(libs.play.services.location)
-    implementation(libs.openlocationcode)
-
-    // Image & UI Effects
-    implementation(libs.picasso)
-    implementation(libs.shimmer)
-
-    // Testing
+    // SwipeRefreshLayout for pull-to-refresh
+    implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
+    // Google Sign-In
+    implementation("com.google.android.gms:play-services-auth:21.0.0")
+    // Firebase Firestore
+    implementation("com.google.firebase:firebase-firestore")
+    // Google Maps
+    implementation("com.google.android.gms:play-services-maps:19.0.0")
+    implementation("com.google.android.gms:play-services-location:21.3.0")
+    // Google Plus Codes (Open Location Code) - Official Library
+    implementation("com.google.openlocationcode:openlocationcode:1.0.4")
+    // Picasso for image loading
+    implementation("com.squareup.picasso:picasso:2.8")
+    implementation("com.facebook.shimmer:shimmer:0.5.0")
     testImplementation(libs.junit)
+    testImplementation("org.mockito:mockito-core:5.8.0")
+    testImplementation("org.robolectric:robolectric:4.11.1")
+    testImplementation("androidx.fragment:fragment-testing:1.6.2")
+    testImplementation("androidx.constraintlayout:constraintlayout:2.2.0")
+    // jqwik for property-based testing
+    testImplementation("net.jqwik:jqwik:1.8.2")
+    testRuntimeOnly("net.jqwik:jqwik-engine:1.8.2")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.10.1")
+    debugImplementation("androidx.fragment:fragment-testing:1.6.2")
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
 }
