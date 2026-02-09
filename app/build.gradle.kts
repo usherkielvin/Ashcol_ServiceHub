@@ -37,6 +37,14 @@ android {
     buildFeatures {
         buildConfig = true
     }
+    testOptions {
+        unitTests {
+            isIncludeAndroidResources = true
+            all {
+                it.useJUnitPlatform()
+            }
+        }
+    }
     lint {
         abortOnError = false
         checkReleaseBuilds = false
@@ -83,6 +91,8 @@ dependencies {
     implementation(libs.navigation.ui)
     implementation(libs.cardview)
     implementation(libs.recyclerview)
+    // ViewPager2 for onboarding screens
+    implementation("androidx.viewpager2:viewpager2:1.0.0")
     // SwipeRefreshLayout for pull-to-refresh
     implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
     // Google Sign-In
@@ -98,6 +108,15 @@ dependencies {
     implementation("com.squareup.picasso:picasso:2.8")
     implementation("com.facebook.shimmer:shimmer:0.5.0")
     testImplementation(libs.junit)
+    testImplementation("org.mockito:mockito-core:5.8.0")
+    testImplementation("org.robolectric:robolectric:4.11.1")
+    testImplementation("androidx.fragment:fragment-testing:1.6.2")
+    testImplementation("androidx.constraintlayout:constraintlayout:2.2.0")
+    // jqwik for property-based testing
+    testImplementation("net.jqwik:jqwik:1.8.2")
+    testRuntimeOnly("net.jqwik:jqwik-engine:1.8.2")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.10.1")
+    debugImplementation("androidx.fragment:fragment-testing:1.6.2")
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
 }
