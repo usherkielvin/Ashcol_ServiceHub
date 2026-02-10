@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/white"
+    android:background="#FFFFFF"
     android:fillViewport="true"
     tools:context=".EmployeeDashboardFragment">
 
@@ -67,18 +67,18 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:fontFamily="@font/poppins_bold"
-                android:text="Yooxie Batumbakal"
                 android:textColor="#1B4332"
-                android:textSize="22sp" />
+                android:textSize="22sp"
+                tools:text="Yooxie Batumbakal" />
 
             <TextView
                 android:id="@+id/tv_username"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/poppins_medium"
-                android:text="email@gmail.com"
-                android:textColor="#9E9E9E"
-                android:textSize="14sp" />
+                android:textColor="#8E8E8E"
+                android:textSize="14sp"
+                tools:text="email@gmail.com" />
 
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/branchCard"
@@ -98,9 +98,9 @@
                     android:fontFamily="@font/poppins_semibold"
                     android:paddingHorizontal="20dp"
                     android:paddingVertical="6dp"
-                    android:text="Technician | ASHCOL DASMA"
                     android:textColor="#1B5E20"
-                    android:textSize="13sp" />
+                    android:textSize="13sp"
+                    tools:text="Technician | ASHCOL DASMA" />
             </com.google.android.material.card.MaterialCardView>
 
         </LinearLayout>
@@ -111,10 +111,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="32dp"
-            app:cardBackgroundColor="@android:color/white"
-            app:cardElevation="12dp"
-            app:strokeWidth="1dp"
-            app:strokeColor="#F5F5F5"
+            app:cardBackgroundColor="#FFFFFF"
+            app:cardElevation="16dp"
+            app:strokeWidth="0dp"
             app:shapeAppearanceOverlay="@style/ProfileContentCardShape">
 
             <LinearLayout
@@ -148,7 +147,8 @@
                         android:layout_width="36dp"
                         android:layout_height="36dp"
                         android:background="@drawable/bg_icon_circle_green"
-                        android:backgroundTint="#000000">
+                        android:backgroundTint="#A5D6A7">
+
                         <ImageView
                             android:layout_width="20dp"
                             android:layout_height="20dp"
@@ -239,7 +239,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
                     android:layout_marginVertical="16dp"
-                    android:background="#EEEEEE" />
+                    android:background="#E0E0E0" />
 
                 <TextView
                     android:layout_width="wrap_content"

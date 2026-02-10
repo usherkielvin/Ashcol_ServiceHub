@@ -60,6 +60,10 @@ public interface ApiService {
     @POST("api/v1/user/update")
     Call<UserResponse> updateUser(@Header("Authorization") String token, @Body UpdateProfileRequest request);
 
+    @POST("api/v1/user/delete")
+    Call<DeleteAccountResponse> deleteAccount(@Header("Authorization") String token,
+            @Body DeleteAccountRequest request);
+
     @POST("api/v1/chatbot")
     Call<ChatResponse> sendMessage(@Header("Authorization") String token, @Body ChatRequest request);
 

@@ -32,8 +32,10 @@ import app.hub.api.LogoutResponse;
 import app.hub.api.ProfilePhotoResponse;
 import app.hub.api.UserResponse;
 import app.hub.common.MainActivity;
+import app.hub.common.ProfileAboutUsFragment;
 import app.hub.employee.EmployeePersonalInfoFragment;
 import app.hub.util.TokenManager;
+import app.hub.util.UiPreferences;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -88,6 +90,7 @@ public class UserProfileFragment extends Fragment {
 
         tokenManager = new TokenManager(requireContext());
         firestoreManager = new FirestoreManager(requireContext());
+        UiPreferences.applyTheme(tokenManager.getThemePreference());
         initializeViews(view);
         loadCachedData();
         loadProfileImage();
@@ -118,6 +121,12 @@ public class UserProfileFragment extends Fragment {
         });
 
         setupClickListeners(view);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        loadProfileImage();
     }
 
     @Override
@@ -470,7 +479,7 @@ public class UserProfileFragment extends Fragment {
         setClickListener(view, R.id.btn_notifications, () -> showNotificationSettings());
         setClickListener(view, R.id.btn_language, () -> showLanguageToggler());
         setClickListener(view, R.id.btn_payments, this::openPayments);
-        setClickListener(view, R.id.btn_about_us, () -> showToast("About us clicked"));
+        setClickListener(view, R.id.btn_about_us, () -> navigateToFragment(new ProfileAboutUsFragment()));
     }
 
     private void setClickListener(View view, int id, Runnable action) {
@@ -1047,6 +1056,10 @@ public class UserProfileFragment extends Fragment {
                 }
                 
                 tokenManager.setThemePreference(selectedTheme);
+                UiPreferences.applyTheme(selectedTheme);
+                if (getActivity() != null) {
+                    getActivity().recreate();
+                }
                 showToast("Theme updated to " + selectedTheme);
                 bottomSheetDialog.dismiss();
             });

@@ -1,6 +1,8 @@
 package app.hub.manager;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -14,13 +16,19 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.imageview.ShapeableImageView;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
 import app.hub.R;
 import app.hub.common.MainActivity;
 import app.hub.employee.EmployeePersonalInfoFragment;
 import app.hub.util.TokenManager;
+import app.hub.util.UiPreferences;
 
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
@@ -29,13 +37,21 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import app.hub.api.ApiClient;
 import app.hub.api.ApiService;
 import app.hub.api.LogoutResponse;
+import app.hub.api.UserResponse;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
 public class ManagerProfileFragment extends Fragment {
 
+    private static final long PROFILE_REFRESH_INTERVAL_MS = 15000;
+    private long lastProfileFetchMs = 0L;
+
     private TokenManager tokenManager;
+    private TextView tvName;
+    private TextView tvUsername;
+    private TextView tvManagerRole;
+    private ShapeableImageView imgProfile;
 
     public ManagerProfileFragment() {
         // Required empty public constructor
@@ -68,52 +84,216 @@ public class ManagerProfileFragment extends Fragment {
         setupClickListeners(view);
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        loadProfileImage();
+        if (shouldRefreshProfile()) {
+            fetchUserData();
+        }
+    }
+
     private void initializeViews(View view) {
-        // Initialize profile image and text views
-        // These will be populated when user data is loaded
+        tvName = view.findViewById(R.id.tv_name);
+        tvUsername = view.findViewById(R.id.tv_username);
+        tvManagerRole = view.findViewById(R.id.tv_manager_role);
+        imgProfile = view.findViewById(R.id.img_profile);
     }
 
     private void loadUserData() {
-        // Load user data from TokenManager
+        loadCachedUserData();
+        loadProfileImage();
+        fetchUserData();
+        UiPreferences.applyTheme(tokenManager.getThemePreference());
+    }
+
+    private void loadCachedUserData() {
         String name = tokenManager.getName();
         String email = tokenManager.getEmail();
         String role = tokenManager.getRole();
 
-        if (getView() != null) {
-            TextView tvName = getView().findViewById(R.id.tv_name);
-            TextView tvUsername = getView().findViewById(R.id.tv_username);
-            TextView tvManagerRole = getView().findViewById(R.id.tv_manager_role);
-
-            // Set name
-            if (tvName != null) {
-                if (name != null && !name.isEmpty()) {
-                    tvName.setText(name);
-                } else {
-                    tvName.setText("Manager");
-                }
-            }
-
-            // Set email/username
-            if (tvUsername != null) {
-                if (email != null && !email.isEmpty()) {
-                    tvUsername.setText(email);
-                } else {
-                    tvUsername.setText("manager@ashcol.com");
-                }
-            }
-
-            // Set manager role with branch
-            if (tvManagerRole != null) {
-                String branchName = ManagerDataManager.getCachedBranchName();
-                if (branchName != null && !branchName.isEmpty() && !branchName.equals("No Branch Assigned")) {
-                    tvManagerRole.setText("Manager of " + branchName);
-                } else {
-                    tvManagerRole.setText("Branch Manager");
-                }
+        if (tvName != null) {
+            if (name != null && !name.isEmpty()) {
+                tvName.setText(name);
+            } else {
+                tvName.setText("Manager");
             }
         }
 
-        Log.d("ManagerProfile", "Loaded user data - Name: " + name + ", Email: " + email + ", Role: " + role);
+        if (tvUsername != null) {
+            if (email != null && !email.isEmpty()) {
+                tvUsername.setText(email);
+            } else {
+                tvUsername.setText("manager@ashcol.com");
+            }
+        }
+
+        if (tvManagerRole != null) {
+            String branchName = ManagerDataManager.getCachedBranchName();
+            if (branchName != null && !branchName.isEmpty() && !branchName.equals("No Branch Assigned")) {
+                tvManagerRole.setText("Manager of " + branchName);
+            } else {
+                tvManagerRole.setText("Branch Manager");
+            }
+        }
+
+        Log.d("ManagerProfile", "Loaded cached data - Name: " + name + ", Email: " + email + ", Role: " + role);
+    }
+
+    private void fetchUserData() {
+        String token = tokenManager.getToken();
+        if (token == null) {
+            return;
+        }
+
+        lastProfileFetchMs = System.currentTimeMillis();
+
+        ApiService apiService = ApiClient.getApiService();
+        Call<UserResponse> call = apiService.getUser("Bearer " + token);
+        call.enqueue(new Callback<UserResponse>() {
+            @Override
+            public void onResponse(@NonNull Call<UserResponse> call, @NonNull Response<UserResponse> response) {
+                if (!isAdded() || response.body() == null || !response.body().isSuccess()) {
+                    return;
+                }
+
+                UserResponse.Data data = response.body().getData();
+                if (data == null) {
+                    return;
+                }
+
+                String name = buildNameFromApi(data);
+                String email = data.getEmail();
+                String branch = data.getBranch();
+
+                if (tvName != null) {
+                    tvName.setText(name != null && !name.isEmpty() ? name : "Manager");
+                }
+
+                if (tvUsername != null) {
+                    tvUsername.setText(email != null && !email.isEmpty() ? email : "manager@ashcol.com");
+                }
+
+                if (tvManagerRole != null) {
+                    if (branch != null && !branch.trim().isEmpty()) {
+                        tvManagerRole.setText("Manager of " + branch);
+                    } else {
+                        tvManagerRole.setText("Branch Manager");
+                    }
+                }
+
+                if (name != null && !name.isEmpty()) {
+                    tokenManager.saveName(name);
+                }
+                if (email != null && !email.isEmpty()) {
+                    tokenManager.saveEmail(email);
+                }
+
+                if (data.getProfilePhoto() != null && !data.getProfilePhoto().isEmpty()) {
+                    loadProfileImageFromUrl(data.getProfilePhoto());
+                } else {
+                    if (imgProfile != null) {
+                        imgProfile.setImageResource(R.mipmap.ic_launchericons_round);
+                    }
+                    clearCachedProfileImage();
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<UserResponse> call, @NonNull Throwable t) {
+                // Keep cached UI on failure.
+            }
+        });
+    }
+
+    private boolean shouldRefreshProfile() {
+        return System.currentTimeMillis() - lastProfileFetchMs > PROFILE_REFRESH_INTERVAL_MS;
+    }
+
+    private String buildNameFromApi(UserResponse.Data data) {
+        String apiName = data.getName();
+        if (apiName != null && !apiName.trim().isEmpty()) {
+            return apiName.trim();
+        }
+
+        String firstName = data.getFirstName();
+        String lastName = data.getLastName();
+
+        StringBuilder builder = new StringBuilder();
+        if (firstName != null && !firstName.trim().isEmpty()) {
+            builder.append(firstName.trim());
+        }
+        if (lastName != null && !lastName.trim().isEmpty()) {
+            if (builder.length() > 0) {
+                builder.append(" ");
+            }
+            builder.append(lastName.trim());
+        }
+
+        return builder.length() > 0 ? builder.toString() : null;
+    }
+
+    private void loadProfileImage() {
+        try {
+            File imageFile = new File(requireContext().getFilesDir(), "profile_image.jpg");
+            if (imageFile.exists() && imgProfile != null) {
+                Bitmap bitmap = BitmapFactory.decodeFile(imageFile.getAbsolutePath());
+                if (bitmap != null) {
+                    imgProfile.setImageBitmap(bitmap);
+                }
+            }
+        } catch (Exception ignored) {
+        }
+    }
+
+    private void loadProfileImageFromUrl(String imageUrl) {
+        if (imageUrl == null || imageUrl.isEmpty() || imgProfile == null) {
+            return;
+        }
+
+        new Thread(() -> {
+            try {
+                URL url = new URL(imageUrl);
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setDoInput(true);
+                connection.connect();
+                InputStream input = connection.getInputStream();
+                Bitmap bitmap = BitmapFactory.decodeStream(input);
+                if (bitmap != null && getActivity() != null) {
+                    getActivity().runOnUiThread(() -> {
+                        if (imgProfile != null) {
+                            imgProfile.setImageBitmap(bitmap);
+                            saveProfileImage(bitmap);
+                        }
+                    });
+                }
+            } catch (Exception e) {
+                loadProfileImage();
+            }
+        }).start();
+    }
+
+    private void saveProfileImage(Bitmap bitmap) {
+        if (bitmap == null) return;
+        try {
+            File imageFile = new File(requireContext().getFilesDir(), "profile_image.jpg");
+            FileOutputStream fos = new FileOutputStream(imageFile);
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 90, fos);
+            fos.flush();
+            fos.close();
+        } catch (Exception e) {
+            // Ignore cache write errors.
+        }
+    }
+
+    private void clearCachedProfileImage() {
+        try {
+            File imageFile = new File(requireContext().getFilesDir(), "profile_image.jpg");
+            if (imageFile.exists()) {
+                imageFile.delete();
+            }
+        } catch (Exception ignored) {
+        }
     }
 
     private void setupClickListeners(View view) {
@@ -229,6 +409,10 @@ public class ManagerProfileFragment extends Fragment {
                 }
                 
                 tokenManager.setThemePreference(selectedTheme);
+                UiPreferences.applyTheme(selectedTheme);
+                if (getActivity() != null) {
+                    getActivity().recreate();
+                }
                 Toast.makeText(getContext(), "Theme updated to " + selectedTheme, Toast.LENGTH_SHORT).show();
                 bottomSheetDialog.dismiss();
             });

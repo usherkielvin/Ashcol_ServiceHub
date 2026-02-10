@@ -129,9 +129,9 @@
                     android:paddingStart="0dp"
                     android:paddingEnd="0dp"
                     android:paddingBottom="8dp"
-                    android:text="Yooxie Boy"
                     android:textColor="?attr/colorOnSurface"
-                    android:textSize="18sp" />
+                    android:textSize="18sp"
+                    tools:text="Yooxie Boy" />
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
@@ -155,9 +155,9 @@
                 android:fontFamily="@font/poppins_bold"
                 android:inputType="text"
                 android:paddingBottom="8dp"
-                android:text="Yooxie123"
                 android:textColor="?attr/colorOnSurface"
-                android:textSize="18sp" />
+                android:textSize="18sp"
+                tools:text="Yooxie123" />
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
@@ -188,7 +188,8 @@
                     android:paddingBottom="8dp"
                     android:textColor="?attr/colorOnSurface"
                     android:textColorHint="?attr/colorOnSurfaceVariant"
-                    android:textSize="16sp" />
+                    android:textSize="16sp"
+                    tools:text="Male" />
 
                 <ImageView
                     android:layout_width="24dp"
@@ -228,7 +229,8 @@
                     android:paddingBottom="8dp"
                     android:textColor="?attr/colorOnSurface"
                     android:textColorHint="?attr/colorOnSurfaceVariant"
-                    android:textSize="16sp" />
+                    android:textSize="16sp"
+                    tools:text="02/10/2000" />
 
                 <ImageView
                     android:layout_width="24dp"
@@ -290,9 +292,9 @@
                 android:paddingStart="0dp"
                 android:paddingEnd="0dp"
                 android:paddingBottom="8dp"
-                android:text="yooxie12@gmail.com"
                 android:textColor="?attr/colorOnSurface"
-                android:textSize="18sp" />
+                android:textSize="18sp"
+                tools:text="yooxie12@gmail.com" />
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
