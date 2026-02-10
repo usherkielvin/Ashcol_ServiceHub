@@ -39,6 +39,8 @@ import java.util.Locale;
 import app.hub.R;
 import app.hub.api.ApiClient;
 import app.hub.api.ApiService;
+import app.hub.api.CompleteWorkRequest;
+import app.hub.api.CompleteWorkResponse;
 import app.hub.api.TicketListResponse;
 import app.hub.api.UpdateTicketStatusRequest;
 import app.hub.api.UpdateTicketStatusResponse;
@@ -469,7 +471,7 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
             }
             View requestPayment = statusView.findViewById(R.id.btnRequestPayment);
             if (requestPayment != null) {
-                requestPayment.setOnClickListener(v -> openPaymentFlow());
+                requestPayment.setOnClickListener(v -> requestOnlinePaymentFromWorkTab());
             }
         }
     }
@@ -558,7 +560,7 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
         view.setOnClickListener(v -> action.run());
     }
 
-    private void openPaymentFlow() {
+    private void openPaymentFlow(boolean requestOnly) {
         if (activeTicket == null || getContext() == null) {
             return;
         }
@@ -566,12 +568,60 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
         intent.putExtra("ticket_id", activeTicket.getTicketId());
         intent.putExtra(EXTRA_OPEN_PAYMENT, true);
         intent.putExtra(EXTRA_FINISH_AFTER_PAYMENT, true);
-        intent.putExtra(EmployeeTicketDetailActivity.EXTRA_REQUEST_PAYMENT, true);
+        intent.putExtra(EmployeeTicketDetailActivity.EXTRA_REQUEST_PAYMENT, requestOnly);
         if (paymentLauncher != null) {
             paymentLauncher.launch(intent);
         } else {
             startActivity(intent);
         }
+    }
+
+    private void requestOnlinePaymentFromWorkTab() {
+        if (activeTicket == null || tokenManager == null) {
+            return;
+        }
+        String token = tokenManager.getToken();
+        if (token == null) {
+            return;
+        }
+
+        double amount = activeTicket.getAmount();
+        if (amount <= 0) {
+            Toast.makeText(getContext(), "Missing amount. Please set the ticket amount first.", Toast.LENGTH_SHORT)
+                    .show();
+            return;
+        }
+
+        CompleteWorkRequest request = new CompleteWorkRequest("online", amount, "");
+        ApiService apiService = ApiClient.getApiService();
+        Call<CompleteWorkResponse> call = apiService.completeWorkWithPayment(
+                "Bearer " + token, activeTicket.getTicketId(), request);
+
+        call.enqueue(new Callback<CompleteWorkResponse>() {
+            @Override
+            public void onResponse(Call<CompleteWorkResponse> call, Response<CompleteWorkResponse> response) {
+                if (!isAdded()) {
+                    return;
+                }
+                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                    Toast.makeText(getContext(), "Payment request sent to customer.", Toast.LENGTH_SHORT).show();
+                    activeTicket.setStatus("completed");
+                    activeTicket.setStatusDetail("completed");
+                    markCompletedLocal();
+                    loadAssignedTickets(true);
+                    openPaymentFlow(false);
+                    return;
+                }
+                Toast.makeText(getContext(), "Failed to request payment", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onFailure(Call<CompleteWorkResponse> call, Throwable t) {
+                if (isAdded()) {
+                    Toast.makeText(getContext(), "Network error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
     }
 
 

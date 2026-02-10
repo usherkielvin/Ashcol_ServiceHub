@@ -55,7 +55,8 @@ public class UserCreateTicketFragment extends Fragment {
     private static final int PICK_IMAGE_REQUEST = 1002;
     private static final int MAX_IMAGE_SIZE_MB = 5;
 
-    private EditText fullNameInput, contactInput, landmarkInput, descriptionInput, dateInput, amountInput;
+    private EditText fullNameInput, contactInput, landmarkInput, descriptionInput, dateInput;
+    private TextView amountView;
     private Button submitButton;
     private RelativeLayout mapLocationButton;
     private LinearLayout uploadButton;
@@ -105,7 +106,7 @@ public class UserCreateTicketFragment extends Fragment {
         landmarkInput = view.findViewById(R.id.etLandmark);
         descriptionInput = view.findViewById(R.id.etDescription);
         dateInput = view.findViewById(R.id.etDate);
-        amountInput = view.findViewById(R.id.etEstimatedAmount);
+        amountView = view.findViewById(R.id.tvEstPrice);
         serviceTypeDisplay = view.findViewById(R.id.tvServiceType);
         submitButton = view.findViewById(R.id.btnSubmit);
         
@@ -135,6 +136,8 @@ public class UserCreateTicketFragment extends Fragment {
         
         // Set up unit type spinner
         setupUnitTypeSpinner();
+
+        updatePresetAmount();
 
         // Set up map location button
         if (mapLocationButton != null) {
@@ -178,6 +181,7 @@ public class UserCreateTicketFragment extends Fragment {
                 if (serviceTypeDisplay != null) {
                     serviceTypeDisplay.setText("Service Type:\n" + selectedServiceType);
                 }
+                updatePresetAmount();
             }
 
             @Override
@@ -207,6 +211,35 @@ public class UserCreateTicketFragment extends Fragment {
                 selectedUnitType = null;
             }
         });
+    }
+
+    private void updatePresetAmount() {
+        double amount = getPresetAmount(selectedServiceType);
+        if (amountView != null) {
+            amountView.setText(formatAmount(amount));
+        }
+    }
+
+    private double getPresetAmount(String serviceType) {
+        if (serviceType == null) {
+            return 8000.0;
+        }
+        switch (serviceType.trim().toLowerCase(java.util.Locale.ENGLISH)) {
+            case "cleaning":
+                return 8000.0;
+            case "maintenance":
+                return 6500.0;
+            case "repair":
+                return 7000.0;
+            case "installation":
+                return 9000.0;
+            default:
+                return 8000.0;
+        }
+    }
+
+    private String formatAmount(double amount) {
+        return "Php " + String.format(java.util.Locale.getDefault(), "%,.2f", amount);
     }
 
     private void prefillContactFromProfile() {
@@ -346,11 +379,7 @@ public class UserCreateTicketFragment extends Fragment {
             return;
         }
 
-        double amount = parseAmount();
-        if (amount <= 0) {
-            Toast.makeText(getContext(), "Please enter a valid amount", Toast.LENGTH_SHORT).show();
-            return;
-        }
+        double amount = getPresetAmount(selectedServiceType);
 
         // Combine address with landmark
         String fullAddress = selectedAddress;
@@ -426,20 +455,6 @@ public class UserCreateTicketFragment extends Fragment {
         });
     }
 
-    private double parseAmount() {
-        if (amountInput == null || amountInput.getText() == null) {
-            return 0.0;
-        }
-        String raw = amountInput.getText().toString().trim().replace(",", "");
-        if (raw.isEmpty()) {
-            return 0.0;
-        }
-        try {
-            return Double.parseDouble(raw);
-        } catch (NumberFormatException e) {
-            return 0.0;
-        }
-    }
 
     private void pushTicketToFirestore(CreateTicketResponse ticketResponse) {
         if (ticketResponse == null) {

@@ -61,7 +61,8 @@ public class ServiceSelectActivity extends AppCompatActivity {
     private static final int PICK_IMAGE_REQUEST = 1002;
     private static final int MAX_IMAGE_SIZE_MB = 5;
 
-    private EditText fullNameInput, contactInput, landmarkInput, descriptionInput, dateInput, amountInput;
+    private EditText fullNameInput, contactInput, landmarkInput, descriptionInput, dateInput;
+    private TextView amountView;
     private Button submitButton;
     private RelativeLayout mapLocationButton;
     private HorizontalScrollView imageScrollView;
@@ -98,7 +99,7 @@ public class ServiceSelectActivity extends AppCompatActivity {
         landmarkInput = findViewById(R.id.etLandmark);
         descriptionInput = findViewById(R.id.etDescription);
         dateInput = findViewById(R.id.etDate);
-        amountInput = findViewById(R.id.etEstimatedAmount);
+        amountView = findViewById(R.id.tvEstPrice);
         submitButton = findViewById(R.id.btnSubmit);
         
         mapLocationButton = findViewById(R.id.btnMapLocation);
@@ -134,6 +135,8 @@ public class ServiceSelectActivity extends AppCompatActivity {
         
         // Set up unit type spinner
         setupUnitTypeSpinner();
+
+        updatePresetAmount();
 
         // Set up back button
         findViewById(R.id.btnBack).setOnClickListener(v -> finish());
@@ -197,6 +200,7 @@ public class ServiceSelectActivity extends AppCompatActivity {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 selectedServiceType = serviceTypes[position];
+                updatePresetAmount();
             }
 
             @Override
@@ -274,6 +278,35 @@ public class ServiceSelectActivity extends AppCompatActivity {
                 // Ignore prefill failures.
             }
         });
+    }
+
+    private void updatePresetAmount() {
+        double amount = getPresetAmount(selectedServiceType);
+        if (amountView != null) {
+            amountView.setText(formatAmount(amount));
+        }
+    }
+
+    private double getPresetAmount(String serviceType) {
+        if (serviceType == null) {
+            return 8000.0;
+        }
+        switch (serviceType.trim().toLowerCase(java.util.Locale.ENGLISH)) {
+            case "cleaning":
+                return 8000.0;
+            case "maintenance":
+                return 6500.0;
+            case "repair":
+                return 7000.0;
+            case "installation":
+                return 9000.0;
+            default:
+                return 8000.0;
+        }
+    }
+
+    private String formatAmount(double amount) {
+        return "Php " + String.format(java.util.Locale.getDefault(), "%,.2f", amount);
     }
 
     private void showDatePicker() {
@@ -532,11 +565,7 @@ public class ServiceSelectActivity extends AppCompatActivity {
             fullDescription = "Service request";
         }
 
-        double amount = parseAmount();
-        if (amount <= 0) {
-            Toast.makeText(this, "Please enter a valid amount.", Toast.LENGTH_SHORT).show();
-            return;
-        }
+        double amount = getPresetAmount(selectedServiceType);
 
         ApiService apiService = ApiClient.getApiService();
         String token = tokenManager.getToken();
@@ -716,20 +745,6 @@ public class ServiceSelectActivity extends AppCompatActivity {
         }
     }
 
-    private double parseAmount() {
-        if (amountInput == null || amountInput.getText() == null) {
-            return 0.0;
-        }
-        String raw = amountInput.getText().toString().trim().replace(",", "");
-        if (raw.isEmpty()) {
-            return 0.0;
-        }
-        try {
-            return Double.parseDouble(raw);
-        } catch (NumberFormatException e) {
-            return 0.0;
-        }
-    }
 
     private void pushTicketToFirestore(CreateTicketResponse ticketResponse) {
         if (ticketResponse == null) {
