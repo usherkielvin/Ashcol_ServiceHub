@@ -1,6 +1,9 @@
 package app.hub.common;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
+import android.graphics.Paint;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,7 +13,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import com.facebook.shimmer.ShimmerFrameLayout;
 
 import app.hub.R;
 import app.hub.api.AboutResponse;
@@ -27,7 +29,8 @@ public class ProfileAboutUsFragment extends Fragment {
     private TextView tvSupportEmail;
     private TextView tvSupportPhone;
     private TextView tvSupportHours;
-    private ShimmerFrameLayout aboutShimmer;
+    private TextView tvFacebook;
+    private View aboutShimmer;
     private View aboutCard;
 
     @Override
@@ -44,12 +47,18 @@ public class ProfileAboutUsFragment extends Fragment {
         tvSupportEmail = view.findViewById(R.id.tvSupportEmail);
         tvSupportPhone = view.findViewById(R.id.tvSupportPhone);
         tvSupportHours = view.findViewById(R.id.tvSupportHours);
+        tvFacebook = view.findViewById(R.id.tvFacebook);
         aboutShimmer = view.findViewById(R.id.aboutShimmer);
         aboutCard = view.findViewById(R.id.aboutCard);
 
         View btnBack = view.findViewById(R.id.btnBack);
         if (btnBack != null) {
             btnBack.setOnClickListener(v -> navigateBack());
+        }
+
+        if (tvFacebook != null) {
+            tvFacebook.setPaintFlags(tvFacebook.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
+            tvFacebook.setOnClickListener(v -> openFacebookPage());
         }
 
         loadAboutContent();
@@ -109,16 +118,17 @@ public class ProfileAboutUsFragment extends Fragment {
 
     private void setLoading(boolean isLoading) {
         if (aboutShimmer != null) {
-            if (isLoading) {
-                aboutShimmer.setVisibility(View.VISIBLE);
-                aboutShimmer.startShimmer();
-            } else {
-                aboutShimmer.stopShimmer();
-                aboutShimmer.setVisibility(View.GONE);
-            }
+            aboutShimmer.setVisibility(isLoading ? View.VISIBLE : View.GONE);
         }
         if (aboutCard != null) {
             aboutCard.setVisibility(isLoading ? View.GONE : View.VISIBLE);
         }
+    }
+
+    private void openFacebookPage() {
+        if (getContext() == null) return;
+        String url = "https://www.facebook.com/AshcolCorp";
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+        startActivity(intent);
     }
 }

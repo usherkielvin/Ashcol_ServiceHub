@@ -400,10 +400,11 @@ public class AdminProfileFragment extends Fragment {
         setClickListener(view, R.id.btn_notifications, () -> 
             showNotificationSettings());
         setClickListener(view, R.id.btn_language, () -> showLanguageToggler());
-
+<<<<<<< HEAD
 //        setClickListener(view, R.id.btn_history, () ->
 //            showToast("History clicked"));
-
+=======
+>>>>>>> 13a57838cbbfe4dd1cedd1bfe46123ac61bed16f
     }
 
     private void setClickListener(View view, int id, Runnable action) {

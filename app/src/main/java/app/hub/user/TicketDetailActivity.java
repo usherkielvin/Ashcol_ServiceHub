@@ -29,10 +29,11 @@ import java.util.Locale;
 public class TicketDetailActivity extends AppCompatActivity implements OnMapReadyCallback {
 
     private TextView tvTicketId, tvTitle, tvDescription, tvServiceType, tvAddress, tvContact, tvStatus, tvBranch,
-            tvAssignedStaff, tvCreatedAt, tvUnitType;
+            tvAssignedStaff, tvCreatedAt;
     private Button btnViewMap, btnBack;
     private com.google.android.material.button.MaterialButton btnPayNow;
     private Chip chipPaid;
+        private View paymentInfoGroup;
     private View mapCardContainer;
     private TokenManager tokenManager;
     private FirestoreManager firestoreManager;
@@ -90,6 +91,10 @@ public class TicketDetailActivity extends AppCompatActivity implements OnMapRead
         btnBack = findViewById(R.id.btnBack);
         btnPayNow = findViewById(R.id.btnPayNow);
         chipPaid = findViewById(R.id.chipPaid);
+        paymentInfoGroup = findViewById(R.id.paymentInfoGroup);
+        tvPaymentAmount = findViewById(R.id.tvPaymentAmount);
+        tvPaymentCollectedBy = findViewById(R.id.tvPaymentCollectedBy);
+        tvPaymentCollectedDate = findViewById(R.id.tvPaymentCollectedDate);
         mapCardContainer = findViewById(R.id.mapCardContainer);
     }
 
@@ -169,7 +174,7 @@ public class TicketDetailActivity extends AppCompatActivity implements OnMapRead
 
         tvTicketId.setText(ticket.getTicketId());
         tvTitle.setText(ticket.getTitle());
-        tvDescription.setText(!otherDetails.isEmpty() ? otherDetails : ticket.getDescription());
+        tvDescription.setText(ticket.getDescription());
         tvServiceType.setText(ticket.getServiceType());
         
         // Display unit type or hide if not available
@@ -230,6 +235,9 @@ public class TicketDetailActivity extends AppCompatActivity implements OnMapRead
         if (chipPaid != null) {
             chipPaid.setVisibility(View.GONE);
         }
+        if (paymentInfoGroup != null) {
+            paymentInfoGroup.setVisibility(View.GONE);
+        }
         if (status == null) {
             return;
         }
@@ -255,6 +263,9 @@ public class TicketDetailActivity extends AppCompatActivity implements OnMapRead
                     if (chipPaid != null) {
                         chipPaid.setVisibility(View.GONE);
                     }
+                    if (paymentInfoGroup != null) {
+                        paymentInfoGroup.setVisibility(View.GONE);
+                    }
                 });
             }
 
@@ -279,6 +290,7 @@ public class TicketDetailActivity extends AppCompatActivity implements OnMapRead
                     if (btnPayNow != null) {
                         btnPayNow.setVisibility(View.GONE);
                     }
+                    bindPaymentInfo(payment);
                 });
             }
 
@@ -288,9 +300,45 @@ public class TicketDetailActivity extends AppCompatActivity implements OnMapRead
                     if (chipPaid != null) {
                         chipPaid.setVisibility(View.GONE);
                     }
+                    if (paymentInfoGroup != null) {
+                        paymentInfoGroup.setVisibility(View.GONE);
+                    }
                 });
             }
         });
+    }
+
+    private String cleanInfoText(String raw) {
+        if (raw == null) return "";
+        String trimmed = raw.trim();
+        String prefix = "Landmark/Additional Info:";
+        if (trimmed.regionMatches(true, 0, prefix, 0, prefix.length())) {
+            trimmed = trimmed.substring(prefix.length()).trim();
+        }
+        return trimmed;
+    }
+
+    private void bindPaymentInfo(FirestoreManager.PendingPayment payment) {
+        if (paymentInfoGroup == null || payment == null) {
+            return;
+        }
+
+        if (tvPaymentAmount != null) {
+            tvPaymentAmount.setText("Amount Paid: \u20b1" + String.format(Locale.getDefault(), "%.2f",
+                    payment.amount));
+        }
+        if (tvPaymentCollectedBy != null) {
+            String collectedBy = technicianName;
+            if (collectedBy == null || collectedBy.trim().isEmpty()) {
+                collectedBy = payment.technicianName;
+            }
+            String displayName = (collectedBy == null || collectedBy.trim().isEmpty()) ? "--" : collectedBy;
+            tvPaymentCollectedBy.setText("Collected by: " + displayName);
+        }
+        if (tvPaymentCollectedDate != null) {
+            tvPaymentCollectedDate.setText("Collected: --");
+        }
+        paymentInfoGroup.setVisibility(View.VISIBLE);
     }
 
     private void openPaymentFlow() {

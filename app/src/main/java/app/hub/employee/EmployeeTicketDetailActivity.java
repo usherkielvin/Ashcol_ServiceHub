@@ -1,9 +1,9 @@
 package app.hub.employee;
 
-import android.Manifest;
 import android.content.Intent;
-import android.content.pm.PackageManager;
+import android.content.res.ColorStateList;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -12,7 +12,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
@@ -31,7 +30,6 @@ import app.hub.api.UpdateTicketStatusRequest;
 import app.hub.api.UpdateTicketStatusResponse;
 import app.hub.api.CompleteWorkRequest;
 import app.hub.api.CompleteWorkResponse;
-import app.hub.map.EmployeeMapActivity;
 import app.hub.util.TokenManager;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -42,8 +40,9 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity
 
         private TextView tvTicketId, tvTitle, tvDescription, tvServiceType, tvAddress, tvContact, tvStatus, tvCustomerName,
             tvCreatedAt, tvScheduleDate, tvScheduleTime, tvScheduleNotes;
-        private TextView tvPaymentStatus, tvPaymentMethod, tvPaymentAmount, tvPaymentDate;
+        private TextView tvPaymentStatus, tvPaymentMethod, tvPaymentAmount, tvPaymentCollectedBy;
         private View paymentCard;
+        private View contentContainer;
     private Button btnViewMap, btnStartWork, btnCompleteWork;
     private ImageButton btnBack;
     private View mapCardContainer;
@@ -109,8 +108,9 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity
         tvPaymentStatus = findViewById(R.id.tvPaymentStatus);
         tvPaymentMethod = findViewById(R.id.tvPaymentMethod);
         tvPaymentAmount = findViewById(R.id.tvPaymentAmount);
-        tvPaymentDate = findViewById(R.id.tvPaymentDate);
+        tvPaymentCollectedBy = findViewById(R.id.tvPaymentCollectedBy);
         paymentCard = findViewById(R.id.paymentCard);
+        contentContainer = findViewById(R.id.contentContainer);
         btnViewMap = findViewById(R.id.btnViewMap);
         btnBack = findViewById(R.id.btnBack);
         btnStartWork = findViewById(R.id.btnStartWork);
@@ -121,29 +121,12 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity
     private void setupClickListeners() {
         btnBack.setOnClickListener(v -> finish());
 
-        btnViewMap.setOnClickListener(v -> {
-            if (customerLatitude != 0 && customerLongitude != 0) {
-                // Check location permission before opening map
-                if (ActivityCompat.checkSelfPermission(this,
-                        Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                    ActivityCompat.requestPermissions(this, new String[] { Manifest.permission.ACCESS_FINE_LOCATION },
-                            LOCATION_PERMISSION_REQUEST_CODE);
-                    return;
-                }
-
-                Intent intent = new Intent(this, EmployeeMapActivity.class);
-                intent.putExtra("customer_latitude", customerLatitude);
-                intent.putExtra("customer_longitude", customerLongitude);
-                intent.putExtra("customer_address", tvAddress.getText().toString());
-                intent.putExtra("ticket_id", ticketId);
-                startActivity(intent);
-            } else {
-                Toast.makeText(this, "Customer location not available", Toast.LENGTH_SHORT).show();
-            }
-        });
+        btnViewMap.setOnClickListener(v -> openInMapsApp());
 
         btnStartWork.setOnClickListener(v -> updateTicketStatus("ongoing"));
-        btnCompleteWork.setOnClickListener(v -> showPaymentFragment());
+        if (btnCompleteWork != null) {
+            btnCompleteWork.setVisibility(View.GONE);
+        }
     }
 
     private void loadTicketDetails() {
@@ -187,27 +170,29 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity
     }
 
     private void displayTicketDetails(TicketDetailResponse.TicketDetail ticket) {
+        if (contentContainer != null) {
+            contentContainer.setVisibility(View.VISIBLE);
+        }
         tvTicketId.setText(ticket.getTicketId());
-        tvTitle.setText(ticket.getTitle());
-        tvDescription.setText(ticket.getDescription());
+        tvTitle.setText(ticket.getTicketId());
+        tvDescription.setText(cleanInfoText(ticket.getDescription()));
         tvServiceType.setText(ticket.getServiceType());
         tvAddress.setText(ticket.getAddress());
         tvContact.setText(ticket.getContact());
-        tvStatus.setText(ticket.getStatus());
+        updateStatusBadge(tvStatus, ticket.getStatus(), ticket.getStatusColor());
         tvCustomerName
                 .setText("Customer: " + (ticket.getCustomerName() != null ? ticket.getCustomerName() : "Unknown"));
-        tvCreatedAt.setText("Created: " + ticket.getCreatedAt());
+        tvCreatedAt.setText(formatDateOnly(ticket.getCreatedAt()));
 
         // Display schedule information
-        if (ticket.getScheduledDate() != null && !ticket.getScheduledDate().isEmpty()) {
-            tvScheduleDate.setText("Scheduled Date: " + formatDate(ticket.getScheduledDate()));
-            tvScheduleDate.setVisibility(View.VISIBLE);
-        } else {
-            tvScheduleDate.setVisibility(View.GONE);
-        }
+        tvScheduleDate.setVisibility(View.GONE);
 
-        if (ticket.getScheduledTime() != null && !ticket.getScheduledTime().isEmpty()) {
-            tvScheduleTime.setText("Scheduled Time: " + formatTime(ticket.getScheduledTime()));
+        String scheduleTime = ticket.getScheduledTime();
+        if (scheduleTime == null || scheduleTime.trim().isEmpty()) {
+            scheduleTime = extractTimeFromDateTime(ticket.getCreatedAt());
+        }
+        if (scheduleTime != null && !scheduleTime.trim().isEmpty()) {
+            tvScheduleTime.setText(formatTime(scheduleTime));
             tvScheduleTime.setVisibility(View.VISIBLE);
         } else {
             tvScheduleTime.setVisibility(View.GONE);
@@ -220,8 +205,7 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity
             tvScheduleNotes.setVisibility(View.GONE);
         }
 
-        // Set status color
-        setStatusColor(tvStatus, ticket.getStatus(), ticket.getStatusColor());
+        // Status badge already applied above.
 
         // Store customer coordinates for map viewing
         customerLatitude = ticket.getLatitude();
@@ -243,6 +227,11 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity
 
     private void updatePaymentSection(String status) {
         if (paymentCard == null) return;
+
+        if (tvPaymentStatus != null) tvPaymentStatus.setVisibility(View.GONE);
+        if (tvPaymentMethod != null) tvPaymentMethod.setVisibility(View.GONE);
+        if (tvPaymentAmount != null) tvPaymentAmount.setVisibility(View.GONE);
+        if (tvPaymentCollectedBy != null) tvPaymentCollectedBy.setVisibility(View.GONE);
 
         if (status == null) {
             paymentCard.setVisibility(View.GONE);
@@ -292,21 +281,49 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity
 
     private void bindPayment(app.hub.api.PaymentDetailResponse.PaymentDetail payment) {
         if (payment == null) return;
+        String statusValue = payment.getStatus() != null ? payment.getStatus() : "";
+        boolean isPaid = isPaidStatus(statusValue);
+        String methodValue = payment.getPaymentMethod() != null ? payment.getPaymentMethod() : "";
+        boolean isCash = methodValue.trim().equalsIgnoreCase("cash");
+        boolean hasAmount = payment.getAmount() > 0;
         if (tvPaymentStatus != null) {
-            String status = payment.getStatus() != null ? payment.getStatus() : "Pending";
+            String status = statusValue.isEmpty() ? "Pending" : statusValue;
             tvPaymentStatus.setText("Status: " + status);
+            tvPaymentStatus.setVisibility(View.VISIBLE);
         }
         if (tvPaymentMethod != null) {
-            String method = payment.getPaymentMethod() != null ? payment.getPaymentMethod() : "--";
+            String method = methodValue.isEmpty() ? "--" : methodValue;
             tvPaymentMethod.setText("Method: " + method);
+            tvPaymentMethod.setVisibility(View.VISIBLE);
         }
         if (tvPaymentAmount != null) {
-            tvPaymentAmount.setText("Amount Paid: \u20b1" + String.format(java.util.Locale.getDefault(), "%.2f",
-                    payment.getAmount()));
+            if (isPaid) {
+                tvPaymentAmount.setText("Amount Paid: \u20b1" + String.format(java.util.Locale.getDefault(), "%.2f",
+                        payment.getAmount()));
+                tvPaymentAmount.setVisibility(View.VISIBLE);
+            } else {
+                tvPaymentAmount.setVisibility(View.GONE);
+            }
         }
-        if (tvPaymentDate != null) {
-            tvPaymentDate.setText("Collected: --");
+        if (tvPaymentCollectedBy != null) {
+            if (isPaid && isCash && hasAmount) {
+                String collectedBy = currentTicket != null ? currentTicket.getAssignedStaff() : null;
+                String displayName = (collectedBy == null || collectedBy.trim().isEmpty()) ? "--" : collectedBy;
+                tvPaymentCollectedBy.setText("Collected by: " + displayName);
+                tvPaymentCollectedBy.setVisibility(View.VISIBLE);
+            } else {
+                tvPaymentCollectedBy.setVisibility(View.GONE);
+            }
         }
+    }
+
+    private boolean isPaidStatus(String status) {
+        if (status == null) return false;
+        String normalized = status.trim().toLowerCase(java.util.Locale.ENGLISH);
+        return normalized.contains("paid")
+                || normalized.contains("completed")
+                || normalized.contains("resolved")
+                || normalized.contains("closed");
     }
 
     private void updateActionButtons(String status) {
@@ -318,22 +335,42 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity
             case "assigned":
             case "scheduled":
                 btnStartWork.setVisibility(View.VISIBLE);
-                btnCompleteWork.setVisibility(View.GONE);
+                if (btnCompleteWork != null) btnCompleteWork.setVisibility(View.GONE);
                 break;
             case "in progress":
             case "ongoing":
                 btnStartWork.setVisibility(View.GONE);
-                btnCompleteWork.setVisibility(View.VISIBLE);
+                if (btnCompleteWork != null) btnCompleteWork.setVisibility(View.GONE);
                 break;
             case "completed":
             case "cancelled":
                 btnStartWork.setVisibility(View.GONE);
-                btnCompleteWork.setVisibility(View.GONE);
+                if (btnCompleteWork != null) btnCompleteWork.setVisibility(View.GONE);
                 break;
             default:
                 btnStartWork.setVisibility(View.GONE);
-                btnCompleteWork.setVisibility(View.GONE);
+                if (btnCompleteWork != null) btnCompleteWork.setVisibility(View.GONE);
                 break;
+        }
+    }
+
+    private void openInMapsApp() {
+        if (customerLatitude == 0 || customerLongitude == 0) {
+            Toast.makeText(this, "Customer location not available", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        String address = tvAddress != null ? tvAddress.getText().toString() : "";
+        String label = address != null ? address : "Service Location";
+        String uri = "geo:" + customerLatitude + "," + customerLongitude
+                + "?q=" + customerLatitude + "," + customerLongitude + "(" + Uri.encode(label) + ")";
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
+        intent.setPackage("com.google.android.apps.maps");
+
+        if (intent.resolveActivity(getPackageManager()) != null) {
+            startActivity(intent);
+        } else {
+            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(uri)));
         }
     }
 
@@ -399,14 +436,97 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity
         return dateString;
     }
 
+    private String cleanInfoText(String raw) {
+        if (raw == null) return "";
+        String trimmed = raw.trim();
+        String prefix = "Landmark/Additional Info:";
+        if (trimmed.regionMatches(true, 0, prefix, 0, prefix.length())) {
+            trimmed = trimmed.substring(prefix.length()).trim();
+        }
+        return trimmed;
+    }
+
+    private String formatDateTime(String dateTimeString) {
+        if (dateTimeString == null || dateTimeString.trim().isEmpty()) {
+            return "";
+        }
+
+        String[] patterns = new String[] {
+                "yyyy-MM-dd HH:mm:ss",
+                "yyyy-MM-dd'T'HH:mm:ss",
+                "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
+                "yyyy-MM-dd"
+        };
+        java.text.SimpleDateFormat outputFormat = new java.text.SimpleDateFormat("MMM dd, yyyy h:mm a",
+                java.util.Locale.getDefault());
+
+        for (String pattern : patterns) {
+            try {
+                java.text.SimpleDateFormat inputFormat = new java.text.SimpleDateFormat(pattern,
+                        java.util.Locale.getDefault());
+                inputFormat.setLenient(true);
+                java.util.Date date = inputFormat.parse(dateTimeString);
+                if (date != null) {
+                    return outputFormat.format(date);
+                }
+            } catch (java.text.ParseException ignored) {
+            }
+        }
+
+        return dateTimeString;
+    }
+
+    private String formatDateOnly(String dateTimeString) {
+        if (dateTimeString == null || dateTimeString.trim().isEmpty()) {
+            return "";
+        }
+
+        String[] patterns = new String[] {
+                "yyyy-MM-dd HH:mm:ss",
+                "yyyy-MM-dd'T'HH:mm:ss",
+                "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
+                "yyyy-MM-dd"
+        };
+        java.text.SimpleDateFormat outputFormat = new java.text.SimpleDateFormat("MMM dd, yyyy",
+                java.util.Locale.getDefault());
+
+        for (String pattern : patterns) {
+            try {
+                java.text.SimpleDateFormat inputFormat = new java.text.SimpleDateFormat(pattern,
+                        java.util.Locale.getDefault());
+                inputFormat.setLenient(true);
+                java.util.Date date = inputFormat.parse(dateTimeString);
+                if (date != null) {
+                    return outputFormat.format(date);
+                }
+            } catch (java.text.ParseException ignored) {
+            }
+        }
+
+        return dateTimeString;
+    }
+
     private String formatTime(String timeString) {
         if (timeString == null || timeString.isEmpty()) {
             return "";
         }
 
         try {
+            java.text.SimpleDateFormat inputFormat = new java.text.SimpleDateFormat("HH:mm:ss",
+                java.util.Locale.getDefault());
+            java.text.SimpleDateFormat outputFormat = new java.text.SimpleDateFormat("h:mm a",
+                java.util.Locale.getDefault());
+
+            java.util.Date time = inputFormat.parse(timeString);
+            if (time != null) {
+            return outputFormat.format(time);
+            }
+        } catch (java.text.ParseException ignored) {
+        }
+
+        try {
             java.text.SimpleDateFormat inputFormat = new java.text.SimpleDateFormat("HH:mm",
-                    java.util.Locale.getDefault());
+                java.util.Locale.getDefault());
             java.text.SimpleDateFormat outputFormat = new java.text.SimpleDateFormat("h:mm a",
                     java.util.Locale.getDefault());
 
@@ -421,41 +541,81 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity
         return timeString;
     }
 
-    private void setStatusColor(TextView textView, String status, String statusColor) {
-        if (statusColor != null && !statusColor.isEmpty()) {
+    private String extractTimeFromDateTime(String dateTimeString) {
+        if (dateTimeString == null || dateTimeString.trim().isEmpty()) {
+            return null;
+        }
+
+        String[] patterns = new String[] {
+                "yyyy-MM-dd HH:mm:ss",
+                "yyyy-MM-dd'T'HH:mm:ss",
+                "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        };
+        java.text.SimpleDateFormat outputFormat = new java.text.SimpleDateFormat("HH:mm:ss",
+                java.util.Locale.getDefault());
+
+        for (String pattern : patterns) {
             try {
-                textView.setTextColor(Color.parseColor(statusColor));
-                return;
-            } catch (IllegalArgumentException e) {
+                java.text.SimpleDateFormat inputFormat = new java.text.SimpleDateFormat(pattern,
+                        java.util.Locale.getDefault());
+                inputFormat.setLenient(true);
+                java.util.Date date = inputFormat.parse(dateTimeString);
+                if (date != null) {
+                    return outputFormat.format(date);
+                }
+            } catch (java.text.ParseException ignored) {
             }
         }
 
-        if (status == null)
-            return;
+        return null;
+    }
 
-        switch (status.toLowerCase()) {
-            case "pending":
-                textView.setTextColor(Color.parseColor("#FFA500"));
-                break;
-            case "scheduled":
-                textView.setTextColor(Color.parseColor("#6366F1"));
-                break;
-            case "accepted":
-            case "in progress":
-            case "ongoing":
-                textView.setTextColor(Color.parseColor("#2196F3"));
-                break;
-            case "completed":
-                textView.setTextColor(Color.parseColor("#4CAF50"));
-                break;
-            case "cancelled":
-            case "rejected":
-                textView.setTextColor(Color.parseColor("#F44336"));
-                break;
-            default:
-                textView.setTextColor(Color.parseColor("#757575"));
-                break;
+    private void updateStatusBadge(TextView textView, String status, String statusColor) {
+        if (textView == null) return;
+
+        String safeStatus = status != null ? status.trim() : "";
+        textView.setText(safeStatus.isEmpty() ? "Unknown" : safeStatus);
+
+        Integer color = null;
+        if (statusColor != null && !statusColor.isEmpty()) {
+            try {
+                color = Color.parseColor(statusColor);
+            } catch (IllegalArgumentException ignored) {
+            }
         }
+
+        if (color == null) {
+            String normalized = safeStatus.toLowerCase();
+            switch (normalized) {
+                case "pending":
+                    color = Color.parseColor("#FFA500");
+                    break;
+                case "scheduled":
+                    color = Color.parseColor("#6366F1");
+                    break;
+                case "accepted":
+                case "in progress":
+                case "ongoing":
+                    color = Color.parseColor("#2196F3");
+                    break;
+                case "completed":
+                    color = Color.parseColor("#4CAF50");
+                    break;
+                case "paid":
+                    color = Color.parseColor("#2E7D32");
+                    break;
+                case "cancelled":
+                case "rejected":
+                    color = Color.parseColor("#F44336");
+                    break;
+                default:
+                    color = Color.parseColor("#757575");
+                    break;
+            }
+        }
+
+        textView.setTextColor(Color.WHITE);
+        textView.setBackgroundTintList(ColorStateList.valueOf(color));
     }
 
     @Override
