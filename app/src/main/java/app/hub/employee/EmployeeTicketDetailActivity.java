@@ -440,6 +440,9 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity
                         }
                         Toast.makeText(EmployeeTicketDetailActivity.this, message, Toast.LENGTH_LONG).show();
                         if (finishAfterPayment) {
+                            Intent result = new Intent();
+                            result.putExtra("ticket_id", ticketId);
+                            setResult(RESULT_OK, result);
                             finish();
                         } else {
                             loadTicketDetails();

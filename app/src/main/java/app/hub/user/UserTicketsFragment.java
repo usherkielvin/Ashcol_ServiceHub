@@ -522,8 +522,16 @@ public class UserTicketsFragment extends Fragment {
                                 normalizedStatus.equals("accepted") ||
                                 normalizedStatus.equals("assigned") ||
                                 normalizedStatus.equals("ongoing");
+                    } else if (normalizedFilter.equals("completed")) {
+                        boolean isCompleted = normalizedStatus.equals("completed")
+                                || normalizedStatus.equals("closed")
+                                || normalizedStatus.equals("resolved")
+                                || normalizedStatus.equals("paid");
+                        String ticketId = ticket.getTicketId();
+                        boolean isPaid = ticketId != null && paidTicketIds.contains(ticketId);
+                        matchesFilter = isCompleted || isPaid;
                     } else {
-                        // Exact match for other statuses (pending, completed, etc.)
+                        // Exact match for other statuses (pending, etc.)
                         matchesFilter = normalizedStatus.equals(normalizedFilter)
                             || (normalizedFilter.equals("pending") && normalizedStatus.equals("scheduled"));
 

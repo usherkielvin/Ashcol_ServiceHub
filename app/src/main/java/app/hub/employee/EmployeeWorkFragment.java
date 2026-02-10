@@ -13,6 +13,8 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.fragment.app.Fragment;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import androidx.core.content.ContextCompat;
@@ -63,6 +65,7 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
     private String cachedBranchName;
 
     private TicketListResponse.TicketItem activeTicket;
+    private ActivityResultLauncher<Intent> paymentLauncher;
 
     private static final String PREFS_NAME = "employee_work_steps";
     private static final String PREFS_TIMES = "employee_work_times";
@@ -75,9 +78,34 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
     private static final String EXTRA_OPEN_PAYMENT = "open_payment";
     private static final String EXTRA_FINISH_AFTER_PAYMENT = "finish_after_payment";
 
-        private static final Map<String, String> BRANCH_ADDRESS_MAP = new HashMap<>();
+    private static final Map<String, String> BRANCH_ADDRESS_MAP = new HashMap<>();
 
-        static {
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        paymentLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() != android.app.Activity.RESULT_OK) {
+                        return;
+                    }
+                    String ticketId = null;
+                    if (result.getData() != null) {
+                        ticketId = result.getData().getStringExtra("ticket_id");
+                    }
+                    if (ticketId == null && activeTicket != null) {
+                        ticketId = activeTicket.getTicketId();
+                    }
+                    if (ticketId == null) {
+                        return;
+                    }
+                    saveStepTime(ticketId, STEP_COMPLETED);
+                    saveStep(ticketId, STEP_COMPLETED);
+                    loadAssignedTickets();
+                });
+    }
+
+    static {
         BRANCH_ADDRESS_MAP.put(
             "ASHCOL - CALAUAN LAGUNA",
             "Purok 4 Kalye Pogi, Brgy. Bangyas, Calauan, Laguna");
@@ -87,7 +115,7 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
         BRANCH_ADDRESS_MAP.put(
             "ASHCOL - PAMPANGA",
             "202 CityCorp Business Center, San Isidro, City of San Fernando, Pampanga");
-        }
+    }
 
     @Nullable
     @Override
@@ -427,7 +455,11 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
         intent.putExtra("ticket_id", activeTicket.getTicketId());
         intent.putExtra(EXTRA_OPEN_PAYMENT, true);
         intent.putExtra(EXTRA_FINISH_AFTER_PAYMENT, true);
-        startActivity(intent);
+        if (paymentLauncher != null) {
+            paymentLauncher.launch(intent);
+        } else {
+            startActivity(intent);
+        }
     }
 
     private void bindTicketDetails(View root, TicketListResponse.TicketItem ticket) {
@@ -477,20 +509,95 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
     }
 
     private TicketListResponse.TicketItem findActiveTicket(List<TicketListResponse.TicketItem> tickets) {
+        if (tickets == null || tickets.isEmpty()) {
+            return null;
+        }
+
         TicketListResponse.TicketItem best = null;
+        int bestPriority = Integer.MAX_VALUE;
+        long bestTime = Long.MAX_VALUE;
+
+        TicketListResponse.TicketItem completedFallback = null;
+        long completedTime = Long.MAX_VALUE;
+
         for (TicketListResponse.TicketItem ticket : tickets) {
             if (ticket == null || ticket.getStatus() == null) {
                 continue;
             }
+
             String status = ticket.getStatus().trim().toLowerCase();
-            if (status.contains("ongoing") || status.contains("in progress")) {
-                return ticket;
+            long ticketTime = getTicketSortTime(ticket);
+
+            if (isTicketCompletedStatus(status) || isTicketLocallyCompleted(ticket)) {
+                if (completedFallback == null || ticketTime < completedTime) {
+                    completedFallback = ticket;
+                    completedTime = ticketTime;
+                }
+                continue;
             }
-            if (best == null && (status.contains("scheduled") || status.contains("pending"))) {
+
+            int priority = getTicketPriority(status);
+            if (priority < bestPriority || (priority == bestPriority && ticketTime < bestTime)) {
                 best = ticket;
+                bestPriority = priority;
+                bestTime = ticketTime;
             }
         }
-        return best;
+
+        return best != null ? best : completedFallback;
+    }
+
+    private boolean isTicketLocallyCompleted(TicketListResponse.TicketItem ticket) {
+        if (ticket == null || ticket.getTicketId() == null) {
+            return false;
+        }
+        String completedTime = getStepTime(ticket.getTicketId(), STEP_COMPLETED);
+        return completedTime != null && !completedTime.trim().isEmpty();
+    }
+
+    private boolean isTicketCompletedStatus(String status) {
+        if (status == null) {
+            return false;
+        }
+        return status.contains("completed") || status.contains("resolved") || status.contains("closed");
+    }
+
+    private int getTicketPriority(String status) {
+        if (status == null) {
+            return 3;
+        }
+        if (status.contains("ongoing") || status.contains("in progress") || status.contains("progress")
+                || status.contains("accepted")) {
+            return 0;
+        }
+        if (status.contains("scheduled") || status.contains("pending") || status.contains("open")) {
+            return 1;
+        }
+        return 2;
+    }
+
+    private long getTicketSortTime(TicketListResponse.TicketItem ticket) {
+        if (ticket == null) {
+            return Long.MAX_VALUE;
+        }
+        String createdAt = ticket.getCreatedAt();
+        if (createdAt == null || createdAt.trim().isEmpty()) {
+            return Long.MAX_VALUE;
+        }
+        String value = createdAt.trim();
+        try {
+            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+            Date date = format.parse(value);
+            return date != null ? date.getTime() : Long.MAX_VALUE;
+        } catch (Exception e) {
+            try {
+                SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault());
+                Date date = format.parse(value);
+                return date != null ? date.getTime() : Long.MAX_VALUE;
+            } catch (Exception ignored) {
+                return Long.MAX_VALUE;
+            }
+        }
     }
 
     private int resolveStep(TicketListResponse.TicketItem ticket) {
@@ -576,8 +683,7 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
         View markButton = root.findViewById(R.id.btnMarkCompleted);
         View requestButton = root.findViewById(R.id.btnRequestPayment);
         ImageView stepView = root.findViewById(R.id.ivStep5);
-        com.google.android.material.card.MaterialCardView completedCard =
-                root.findViewById(R.id.tvCompletedStatus);
+        View completedStatusView = root.findViewById(R.id.tvCompletedStatus);
         TextView completedLabel = root.findViewById(R.id.tvCompletedLabel);
 
         String completedTime = getStepTime(ticket.getTicketId(), STEP_COMPLETED);
@@ -602,7 +708,10 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
             }
         }
 
-        if (completedCard != null) {
+        int labelColor = isCompleted ? 0xFF1B5E20 : 0xFFBDBDBD;
+        if (completedStatusView instanceof com.google.android.material.card.MaterialCardView) {
+            com.google.android.material.card.MaterialCardView completedCard =
+                    (com.google.android.material.card.MaterialCardView) completedStatusView;
             if (isCompleted) {
                 completedCard.setCardBackgroundColor(0xFFD1E7D1);
                 completedCard.setStrokeColor(0xFF1B5E20);
@@ -612,11 +721,19 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
                 completedCard.setStrokeColor(0xFFBDBDBD);
                 completedCard.setStrokeWidth(dpToPx(1));
             }
-        }
-
-        if (completedLabel != null) {
-            int color = isCompleted ? 0xFF1B5E20 : 0xFFBDBDBD;
-            completedLabel.setTextColor(color);
+            if (completedLabel != null) {
+                completedLabel.setTextColor(labelColor);
+            }
+        } else if (completedStatusView instanceof TextView) {
+            TextView completedText = (TextView) completedStatusView;
+            completedText.setTextColor(labelColor);
+            if (isCompleted) {
+                completedText.setBackgroundColor(0xFFD1E7D1);
+            } else {
+                completedText.setBackgroundResource(R.drawable.bg_input_white);
+            }
+        } else if (completedLabel != null) {
+            completedLabel.setTextColor(labelColor);
         }
     }
 
