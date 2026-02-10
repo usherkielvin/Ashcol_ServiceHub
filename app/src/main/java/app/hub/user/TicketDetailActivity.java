@@ -29,7 +29,8 @@ import java.util.Locale;
 public class TicketDetailActivity extends AppCompatActivity implements OnMapReadyCallback {
 
     private TextView tvTicketId, tvTitle, tvDescription, tvServiceType, tvAddress, tvContact, tvStatus, tvBranch,
-            tvAssignedStaff, tvCreatedAt;
+            tvAssignedStaff, tvCreatedAt, tvUnitType;
+        private TextView tvPaymentAmount, tvPaymentCollectedBy, tvPaymentCollectedDate;
     private Button btnViewMap, btnBack;
     private com.google.android.material.button.MaterialButton btnPayNow;
     private Chip chipPaid;
