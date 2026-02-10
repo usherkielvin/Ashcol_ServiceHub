@@ -15,6 +15,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import app.hub.R;
+import app.hub.util.GooglePlayServicesUtils;
 
 public class MapViewActivity extends AppCompatActivity implements OnMapReadyCallback {
 
@@ -29,6 +30,11 @@ public class MapViewActivity extends AppCompatActivity implements OnMapReadyCall
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map_view);
+
+        if (!GooglePlayServicesUtils.ensureAvailable(this)) {
+            finish();
+            return;
+        }
 
         // Get data from intent
         latitude = getIntent().getDoubleExtra("latitude", 0.0);
