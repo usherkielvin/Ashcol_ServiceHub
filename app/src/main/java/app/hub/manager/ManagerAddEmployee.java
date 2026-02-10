@@ -30,25 +30,13 @@ import retrofit2.Response;
 public class ManagerAddEmployee extends AppCompatActivity {
 
     private TextInputEditText firstNameInput, lastNameInput, emailInput, passwordInput;
-    private AutoCompleteTextView roleSpinner, branchSpinner;
+    private AutoCompleteTextView roleSpinner;
+    private TextView branchDisplay;
     private MaterialButton btnBack, btnCreate;
     private TokenManager tokenManager;
     private String selectedRole = "technician";
     private String selectedBranch = null;
-    private String[] roles = {"technician", "manager"};
-    private String[] branches = {
-        "ASHCOL TAGUIG",
-        "ASHCOL VALENZUELA",
-        "ASHCOL RODRIGUEZ RIZAL",
-        "ASHCOL PAMPANGA",
-        "ASHCOL BULACAN",
-        "ASHCOL GENTRI CAVITE",
-        "ASHCOL DASMARINAS CAVITE",
-        "ASHCOL STA ROSA – TAGAYTAY RD",
-        "ASHCOL LAGUNA",
-        "ASHCOL BATANGAS",
-        "ASHCOL CANDELARIA QUEZON PROVINCE"
-    };
+    private String[] roles = {"technician"};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,11 +67,11 @@ public class ManagerAddEmployee extends AppCompatActivity {
             emailInput = findViewById(R.id.etEmail);
             passwordInput = findViewById(R.id.etPassword);
             roleSpinner = findViewById(R.id.spinnerRole);
-            branchSpinner = findViewById(R.id.spinnerBranch);
+            branchDisplay = findViewById(R.id.tvBranchDisplay);
             btnBack = findViewById(R.id.btnBack);
             btnCreate = findViewById(R.id.btnCreate);
 
-            // Setup role spinner
+            // Setup role spinner (only technician)
             ArrayAdapter<String> roleAdapter = new ArrayAdapter<>(this, 
                 android.R.layout.simple_dropdown_item_1line, roles);
             roleSpinner.setAdapter(roleAdapter);
@@ -92,17 +80,6 @@ public class ManagerAddEmployee extends AppCompatActivity {
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                     selectedRole = roles[position];
-                }
-            });
-
-            // Setup branch spinner
-            ArrayAdapter<String> branchAdapter = new ArrayAdapter<>(this, 
-                android.R.layout.simple_dropdown_item_1line, branches);
-            branchSpinner.setAdapter(branchAdapter);
-            branchSpinner.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                @Override
-                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                    selectedBranch = branches[position];
                 }
             });
 
@@ -117,8 +94,8 @@ public class ManagerAddEmployee extends AppCompatActivity {
                 android.util.Log.e("ManagerAddEmployee", "passwordInput is null");
             if (roleSpinner == null)
                 android.util.Log.e("ManagerAddEmployee", "roleSpinner is null");
-            if (branchSpinner == null)
-                android.util.Log.e("ManagerAddEmployee", "branchSpinner is null");
+            if (branchDisplay == null)
+                android.util.Log.e("ManagerAddEmployee", "branchDisplay is null");
             if (btnBack == null)
                 android.util.Log.e("ManagerAddEmployee", "btnBack is null");
             if (btnCreate == null)
@@ -177,7 +154,7 @@ public class ManagerAddEmployee extends AppCompatActivity {
             return;
         }
 
-        // Pre-select manager's branch in the spinner
+        // Load and display manager's branch (non-editable)
         ApiService apiService = ApiClient.getApiService();
         Call<UserResponse> call = apiService.getUser("Bearer " + token);
 
@@ -189,14 +166,11 @@ public class ManagerAddEmployee extends AppCompatActivity {
                     if (userResponse.isSuccess() && userResponse.getData() != null) {
                         String managerBranch = userResponse.getData().getBranch();
                         if (managerBranch != null && !managerBranch.isEmpty()) {
-                            // Find and select the manager's branch
-                            for (int i = 0; i < branches.length; i++) {
-                                if (branches[i].equalsIgnoreCase(managerBranch)) {
-                                    branchSpinner.setText(branches[i], false);
-                                    selectedBranch = branches[i];
-                                    break;
-                                }
-                            }
+                            // Display the manager's branch (non-editable)
+                            branchDisplay.setText(managerBranch);
+                            selectedBranch = managerBranch;
+                        } else {
+                            branchDisplay.setText("No branch assigned");
                         }
                     }
                 }
@@ -204,8 +178,8 @@ public class ManagerAddEmployee extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<UserResponse> call, Throwable t) {
-                // Silently fail - user can still select a branch manually
                 android.util.Log.w("ManagerAddEmployee", "Could not load manager branch: " + t.getMessage());
+                branchDisplay.setText("Error loading branch");
             }
         });
     }

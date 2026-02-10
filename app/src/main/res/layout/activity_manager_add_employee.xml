@@ -88,6 +88,7 @@
                         style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:paddingTop="0dp"
                         app:boxBackgroundColor="@android:color/transparent"
                         app:boxStrokeWidth="0dp"
                         app:boxStrokeWidthFocused="0dp"
@@ -98,8 +99,10 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:fontFamily="@font/poppins_medium"
+                            android:gravity="center_vertical"
                             android:hint="Enter first name"
                             android:inputType="textPersonName"
+                            android:padding="16dp"
                             android:textSize="14sp" />
                     </com.google.android.material.textfield.TextInputLayout>
                 </com.google.android.material.card.MaterialCardView>
@@ -120,6 +123,7 @@
                         style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:paddingTop="0dp"
                         app:boxBackgroundColor="@android:color/transparent"
                         app:boxStrokeWidth="0dp"
                         app:boxStrokeWidthFocused="0dp"
@@ -130,8 +134,10 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:fontFamily="@font/poppins_medium"
+                            android:gravity="center_vertical"
                             android:hint="Last name"
                             android:inputType="textPersonName"
+                            android:padding="16dp"
                             android:textSize="14sp" />
                     </com.google.android.material.textfield.TextInputLayout>
                 </com.google.android.material.card.MaterialCardView>
@@ -162,6 +168,7 @@
                     style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:paddingTop="0dp"
                     app:boxBackgroundColor="@android:color/transparent"
                     app:boxStrokeWidth="0dp"
                     app:boxStrokeWidthFocused="0dp"
@@ -172,8 +179,10 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/poppins_medium"
+                        android:gravity="center_vertical"
                         android:hint="example@gmail.com"
                         android:inputType="textEmailAddress"
+                        android:padding="16dp"
                         android:textSize="14sp" />
                 </com.google.android.material.textfield.TextInputLayout>
             </com.google.android.material.card.MaterialCardView>
@@ -203,6 +212,7 @@
                     style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox.ExposedDropdownMenu"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:paddingTop="0dp"
                     app:boxBackgroundColor="@android:color/transparent"
                     app:boxStrokeWidth="0dp"
                     app:boxStrokeWidthFocused="0dp"
@@ -213,8 +223,10 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/poppins_medium"
+                        android:gravity="center_vertical"
                         android:hint="Choose role"
                         android:inputType="none"
+                        android:padding="16dp"
                         android:textSize="14sp" />
                 </com.google.android.material.textfield.TextInputLayout>
             </com.google.android.material.card.MaterialCardView>
@@ -233,31 +245,21 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
-                app:cardBackgroundColor="?attr/colorSurface"
+                app:cardBackgroundColor="#F5F5F5"
                 app:cardCornerRadius="12dp"
                 app:cardElevation="4dp"
                 app:cardUseCompatPadding="true"
                 app:strokeWidth="0dp">
 
-                <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/layoutBranch"
-                    style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox.ExposedDropdownMenu"
+                <TextView
+                    android:id="@+id/tvBranchDisplay"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    app:boxBackgroundColor="@android:color/transparent"
-                    app:boxStrokeWidth="0dp"
-                    app:boxStrokeWidthFocused="0dp"
-                    app:hintEnabled="false">
-
-                    <AutoCompleteTextView
-                        android:id="@+id/spinnerBranch"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:fontFamily="@font/poppins_medium"
-                        android:hint="Silang, Cavite"
-                        android:inputType="none"
-                        android:textSize="14sp" />
-                </com.google.android.material.textfield.TextInputLayout>
+                    android:fontFamily="@font/poppins_medium"
+                    android:padding="16dp"
+                    android:text="Loading branch..."
+                    android:textColor="?attr/colorOnSurface"
+                    android:textSize="14sp" />
             </com.google.android.material.card.MaterialCardView>
 
             <!-- Password Section -->
@@ -285,6 +287,7 @@
                     style="@style/Widget.MaterialComponents.TextInputLayout.FilledBox"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:paddingTop="0dp"
                     app:boxBackgroundColor="@android:color/transparent"
                     app:boxStrokeWidth="0dp"
                     app:boxStrokeWidthFocused="0dp"
@@ -296,8 +299,10 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/poppins_medium"
+                        android:gravity="center_vertical"
                         android:hint="Enter password"
                         android:inputType="textPassword"
+                        android:padding="16dp"
                         android:textSize="14sp" />
                 </com.google.android.material.textfield.TextInputLayout>
             </com.google.android.material.card.MaterialCardView>
