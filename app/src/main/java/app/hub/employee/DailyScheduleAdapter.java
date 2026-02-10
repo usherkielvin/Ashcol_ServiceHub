@@ -76,8 +76,8 @@ public class DailyScheduleAdapter extends RecyclerView.Adapter<DailyScheduleAdap
         }
 
         void bind(EmployeeScheduleResponse.ScheduledTicket ticket) {
-            tvTime.setText(ticket.getScheduledTime() != null ? ticket.getScheduledTime() : "Not set");
-            tvTitle.setText(getTitleOrTicketId(ticket));
+            tvTime.setText(formatTime(ticket.getScheduledTime()));
+            tvTitle.setText(getTicketId(ticket));
             tvCustomer.setText(ticket.getCustomerName() != null ? ticket.getCustomerName() : "Unknown");
             tvServiceType.setText(ticket.getServiceType() != null ? ticket.getServiceType() : "General Service");
             tvAddress.setText(ticket.getAddress() != null ? ticket.getAddress() : "No address");
@@ -107,16 +107,35 @@ public class DailyScheduleAdapter extends RecyclerView.Adapter<DailyScheduleAdap
             }
         }
 
-        private String getTitleOrTicketId(EmployeeScheduleResponse.ScheduledTicket ticket) {
-            String title = ticket.getTitle();
-            if (title != null && !title.trim().isEmpty()) {
-                return title;
-            }
+        private String getTicketId(EmployeeScheduleResponse.ScheduledTicket ticket) {
             String ticketId = ticket.getTicketId();
             if (ticketId != null && !ticketId.trim().isEmpty()) {
                 return ticketId;
             }
-            return "No title";
+            return "Ticket";
+        }
+
+        private String formatTime(String timeString) {
+            if (timeString == null || timeString.trim().isEmpty()) {
+                return "Not set";
+            }
+
+            String[] patterns = new String[] { "HH:mm:ss", "HH:mm" };
+            java.text.SimpleDateFormat output = new java.text.SimpleDateFormat("h:mm a",
+                    java.util.Locale.getDefault());
+            for (String pattern : patterns) {
+                try {
+                    java.text.SimpleDateFormat input = new java.text.SimpleDateFormat(pattern,
+                            java.util.Locale.getDefault());
+                    java.util.Date date = input.parse(timeString);
+                    if (date != null) {
+                        return output.format(date);
+                    }
+                } catch (java.text.ParseException ignored) {
+                }
+            }
+
+            return timeString;
         }
     }
 }

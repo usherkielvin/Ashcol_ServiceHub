@@ -156,8 +156,8 @@ public class TicketDetailActivity extends AppCompatActivity implements OnMapRead
 
     private void displayTicketDetails(TicketDetailResponse.TicketDetail ticket) {
         tvTicketId.setText(ticket.getTicketId());
-        tvTitle.setText(ticket.getTitle());
-        tvDescription.setText(ticket.getDescription());
+        tvTitle.setText(ticket.getTicketId());
+        tvDescription.setText(cleanInfoText(ticket.getDescription()));
         tvServiceType.setText(ticket.getServiceType());
         tvAddress.setText(ticket.getAddress());
         tvContact.setText(ticket.getContact());
@@ -280,6 +280,16 @@ public class TicketDetailActivity extends AppCompatActivity implements OnMapRead
                 });
             }
         });
+    }
+
+    private String cleanInfoText(String raw) {
+        if (raw == null) return "";
+        String trimmed = raw.trim();
+        String prefix = "Landmark/Additional Info:";
+        if (trimmed.regionMatches(true, 0, prefix, 0, prefix.length())) {
+            trimmed = trimmed.substring(prefix.length()).trim();
+        }
+        return trimmed;
     }
 
     private void bindPaymentInfo(FirestoreManager.PendingPayment payment) {

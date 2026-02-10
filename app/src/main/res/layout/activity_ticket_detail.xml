@@ -163,7 +163,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="20dp"
-                        android:text="AC Repair &amp; Diagnostics"
+                        android:text="Ticket Number"
                         android:textColor="?attr/colorOnSurface"
                         android:textSize="24sp"
                         android:textStyle="bold" />
