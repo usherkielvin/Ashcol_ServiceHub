@@ -24,6 +24,7 @@ public class PaymentSelectionDialog extends Dialog {
     private double amount = 0.0;
     private String notes = "";
     private OnPaymentSelectedListener listener;
+    private boolean cashEnabled = true;
 
     private MaterialButton btnCash, btnOnline;
     private TextInputLayout tilAmount, tilNotes;
@@ -39,6 +40,18 @@ public class PaymentSelectionDialog extends Dialog {
         this.listener = listener;
     }
 
+    public PaymentSelectionDialog setDefaultPaymentMethod(String method) {
+        if (method != null && ("cash".equalsIgnoreCase(method) || "online".equalsIgnoreCase(method))) {
+            selectedPaymentMethod = method.toLowerCase();
+        }
+        return this;
+    }
+
+    public PaymentSelectionDialog setCashEnabled(boolean enabled) {
+        cashEnabled = enabled;
+        return this;
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -46,6 +59,7 @@ public class PaymentSelectionDialog extends Dialog {
         setContentView(R.layout.dialog_payment_selection);
 
         initViews();
+        applyPaymentModeSettings();
         setupClickListeners();
         updatePaymentMethodButtons();
     }
@@ -124,6 +138,15 @@ public class PaymentSelectionDialog extends Dialog {
             btnOnline.setTextColor(getContext().getResources().getColor(android.R.color.white));
             btnCash.setBackgroundTintList(getContext().getResources().getColorStateList(R.color.light_gray));
             btnCash.setTextColor(getContext().getResources().getColor(R.color.dark_gray));
+        }
+    }
+
+    private void applyPaymentModeSettings() {
+        if (!cashEnabled && btnCash != null) {
+            btnCash.setVisibility(View.GONE);
+        }
+        if (!cashEnabled && "cash".equals(selectedPaymentMethod)) {
+            selectedPaymentMethod = "online";
         }
     }
 

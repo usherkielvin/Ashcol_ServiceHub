@@ -31,6 +31,7 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.ListenerRegistration;
+import com.google.android.material.button.MaterialButton;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -42,6 +43,7 @@ import app.hub.R;
 import app.hub.api.ApiClient;
 import app.hub.api.ApiService;
 import app.hub.api.TicketListResponse;
+import app.hub.common.FirestoreManager;
 import app.hub.util.TokenManager;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -65,10 +67,17 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
     private View vStepAssigned, vStepOtw, vStepArrived, vStepWorking, vStepCompleted;
     private View vConnectorAssignedOtw, vConnectorOtwArrived, vConnectorArrivedWorking, vConnectorWorkingCompleted;
     private TextView tvStepAssigned, tvStepOtw, tvStepArrived, tvStepWorking, tvStepCompleted;
+    private View trackingCard;
+    private View pendingPaymentCard;
+    private TextView tvPendingPaymentMessage;
+    private MaterialButton btnPendingPayment;
     private Handler locationUpdateHandler;
     private Runnable locationUpdateRunnable;
     private FirebaseFirestore firestore;
     private ListenerRegistration ticketListener;
+    private FirestoreManager firestoreManager;
+    private FirestoreManager.PendingPayment pendingPayment;
+    private String pendingPaymentTicketId;
 
     public UserNotificationFragment() {
     }
@@ -89,12 +98,14 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
         emptyStateContainer = view.findViewById(R.id.emptyStateContainer);
         tokenManager = new TokenManager(getContext());
         firestore = FirebaseFirestore.getInstance();
+        firestoreManager = new FirestoreManager(getContext());
 
         swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout);
         if (swipeRefreshLayout != null) {
             swipeRefreshLayout.setOnRefreshListener(this::loadTickets);
         }
 
+        startPendingPaymentsListener();
         loadTickets();
     }
 
@@ -131,10 +142,17 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
                     }
                     
                     TicketListResponse.TicketItem inProgress = findInProgressTicket(tickets);
+                    TicketListResponse.TicketItem pendingPaymentTicket = findTicketById(tickets,
+                            pendingPaymentTicketId);
                     
                     if (inProgress != null) {
                         android.util.Log.d("UserNotification", "Found in-progress ticket: " + inProgress.getTicketId());
                         currentTicket = inProgress;
+                        showTrackingView();
+                    } else if (pendingPaymentTicket != null) {
+                        android.util.Log.d("UserNotification", "Found pending payment ticket: "
+                                + pendingPaymentTicket.getTicketId());
+                        currentTicket = pendingPaymentTicket;
                         showTrackingView();
                     } else {
                         android.util.Log.d("UserNotification", "No in-progress ticket found, showing empty state");
@@ -266,6 +284,10 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
         tvTicketId = trackingContainer.findViewById(R.id.tvTicketId);
         tvSpecificService = trackingContainer.findViewById(R.id.tvSpecificService);
         tvSchedule = trackingContainer.findViewById(R.id.tvSchedule);
+        trackingCard = trackingContainer.findViewById(R.id.trackingCard);
+        pendingPaymentCard = trackingContainer.findViewById(R.id.pendingPaymentCard);
+        tvPendingPaymentMessage = trackingContainer.findViewById(R.id.tvPendingPaymentMessage);
+        btnPendingPayment = trackingContainer.findViewById(R.id.btnPendingPayment);
 
         vStepAssigned = trackingContainer.findViewById(R.id.vStepAssigned);
         vStepOtw = trackingContainer.findViewById(R.id.vStepOtw);
@@ -281,6 +303,10 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
         tvStepArrived = trackingContainer.findViewById(R.id.tvStepArrived);
         tvStepWorking = trackingContainer.findViewById(R.id.tvStepWorking);
         tvStepCompleted = trackingContainer.findViewById(R.id.tvStepCompleted);
+
+        if (btnPendingPayment != null) {
+            btnPendingPayment.setOnClickListener(v -> openPendingPayment());
+        }
     }
 
     private void populateTicketData() {
@@ -334,6 +360,8 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
             : (statusDetail != null && !statusDetail.trim().isEmpty()
                 ? statusDetail
                 : status));
+
+        updatePendingPaymentUi();
     }
 
     @Override
@@ -499,6 +527,7 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
         }
 
         stopTicketListener();
+        stopPendingPaymentListeners();
         
         // Also hide RecyclerView if present
         if (getView() != null) {
@@ -743,6 +772,96 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
             locationUpdateHandler.removeCallbacks(locationUpdateRunnable);
         }
         stopTicketListener();
+        stopPendingPaymentListeners();
+    }
+
+    private void openPendingPayment() {
+        if (!isAdded() || getContext() == null || currentTicket == null) {
+            return;
+        }
+        String ticketId = currentTicket.getTicketId();
+        int paymentId = pendingPayment != null ? pendingPayment.paymentId : 0;
+        double amount = pendingPayment != null ? pendingPayment.amount : 0.0;
+        String serviceName = pendingPayment != null ? pendingPayment.serviceName : null;
+        String technicianName = pendingPayment != null ? pendingPayment.technicianName : null;
+        startActivity(UserPaymentActivity.createIntent(
+                getContext(),
+                ticketId,
+                paymentId,
+                amount,
+                serviceName,
+                technicianName));
+    }
+
+    private void updatePendingPaymentUi() {
+        boolean hasPending = pendingPaymentTicketId != null
+                && currentTicket != null
+                && pendingPaymentTicketId.equals(currentTicket.getTicketId());
+
+        if (trackingCard != null) {
+            trackingCard.setVisibility(hasPending ? View.GONE : View.VISIBLE);
+        }
+        if (pendingPaymentCard != null) {
+            pendingPaymentCard.setVisibility(hasPending ? View.VISIBLE : View.GONE);
+        }
+        if (hasPending && tvPendingPaymentMessage != null) {
+            tvPendingPaymentMessage.setText("Your payment is pending. Please continue to pay your ticket.");
+        }
+    }
+
+    private void startPendingPaymentsListener() {
+        if (firestoreManager == null) {
+            return;
+        }
+        firestoreManager.listenToPendingPayments(new FirestoreManager.PendingPaymentsListener() {
+            @Override
+            public void onPaymentsUpdated(java.util.List<FirestoreManager.PendingPayment> payments) {
+                FirestoreManager.PendingPayment matched = null;
+                FirestoreManager.PendingPayment first = null;
+                if (payments != null && !payments.isEmpty()) {
+                    first = payments.get(0);
+                    if (currentTicket != null) {
+                        for (FirestoreManager.PendingPayment payment : payments) {
+                            if (payment != null
+                                    && payment.ticketId != null
+                                    && payment.ticketId.equals(currentTicket.getTicketId())) {
+                                matched = payment;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                pendingPayment = matched != null ? matched : first;
+                pendingPaymentTicketId = pendingPayment != null ? pendingPayment.ticketId : null;
+
+                if (currentTicket == null) {
+                    if (pendingPaymentTicketId != null && isAdded()) {
+                        loadTickets();
+                    }
+                    return;
+                }
+
+                if (pendingPaymentTicketId != null
+                        && pendingPaymentTicketId.equals(currentTicket.getTicketId())) {
+                    updatePendingPaymentUi();
+                } else {
+                    pendingPayment = null;
+                    updatePendingPaymentUi();
+                }
+            }
+
+            @Override
+            public void onError(Exception e) {
+                android.util.Log.e("UserNotification", "Pending payment listener error", e);
+            }
+        });
+    }
+
+    private void stopPendingPaymentListeners() {
+        if (firestoreManager != null) {
+            firestoreManager.stopPaymentListening();
+        }
     }
 
     private void startTicketListener() {
@@ -793,5 +912,19 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
             ticketListener.remove();
             ticketListener = null;
         }
+    }
+
+    @Nullable
+    private TicketListResponse.TicketItem findTicketById(@Nullable List<TicketListResponse.TicketItem> list,
+            @Nullable String ticketId) {
+        if (list == null || ticketId == null || ticketId.trim().isEmpty()) {
+            return null;
+        }
+        for (TicketListResponse.TicketItem ticket : list) {
+            if (ticket != null && ticketId.equals(ticket.getTicketId())) {
+                return ticket;
+            }
+        }
+        return null;
     }
 }

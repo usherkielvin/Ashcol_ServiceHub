@@ -39,6 +39,8 @@ import java.util.Locale;
 import app.hub.R;
 import app.hub.api.ApiClient;
 import app.hub.api.ApiService;
+import app.hub.api.CompleteWorkRequest;
+import app.hub.api.CompleteWorkResponse;
 import app.hub.api.TicketListResponse;
 import app.hub.api.UpdateTicketStatusRequest;
 import app.hub.api.UpdateTicketStatusResponse;
@@ -469,7 +471,7 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
             }
             View requestPayment = statusView.findViewById(R.id.btnRequestPayment);
             if (requestPayment != null) {
-                requestPayment.setOnClickListener(v -> openPaymentFlow());
+                requestPayment.setOnClickListener(v -> openPaymentRequestDialog());
             }
         }
     }
@@ -571,6 +573,57 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
         } else {
             startActivity(intent);
         }
+    }
+
+    private void openPaymentRequestDialog() {
+        if (activeTicket == null || getContext() == null) {
+            return;
+        }
+        PaymentSelectionDialog dialog = new PaymentSelectionDialog(requireContext(),
+                (paymentMethod, amount, notes) -> completeWorkWithPayment(paymentMethod, amount, notes));
+        dialog.setDefaultPaymentMethod("online");
+        dialog.setCashEnabled(false);
+        dialog.show();
+    }
+
+    private void completeWorkWithPayment(String paymentMethod, double amount, String notes) {
+        if (activeTicket == null || tokenManager == null) {
+            return;
+        }
+        String token = tokenManager.getToken();
+        if (token == null) {
+            return;
+        }
+
+        CompleteWorkRequest request = new CompleteWorkRequest(paymentMethod, amount, notes);
+        ApiService apiService = ApiClient.getApiService();
+        Call<CompleteWorkResponse> call = apiService.completeWorkWithPayment(
+                "Bearer " + token, activeTicket.getTicketId(), request);
+
+        call.enqueue(new Callback<CompleteWorkResponse>() {
+            @Override
+            public void onResponse(Call<CompleteWorkResponse> call, Response<CompleteWorkResponse> response) {
+                if (!isAdded()) {
+                    return;
+                }
+                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                    Toast.makeText(getContext(), "Payment request sent to customer.", Toast.LENGTH_SHORT).show();
+                    activeTicket.setStatus("completed");
+                    activeTicket.setStatusDetail("completed");
+                    markCompletedLocal();
+                    loadAssignedTickets(true);
+                    return;
+                }
+                Toast.makeText(getContext(), "Failed to request payment", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onFailure(Call<CompleteWorkResponse> call, Throwable t) {
+                if (isAdded()) {
+                    Toast.makeText(getContext(), "Network error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
     }
 
     private void bindTicketDetails(View root, TicketListResponse.TicketItem ticket) {
