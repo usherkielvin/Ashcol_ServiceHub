@@ -203,7 +203,7 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity
         updateStatusBadge(tvStatus, ticket.getStatus(), ticket.getStatusColor());
         tvCustomerName
                 .setText("Customer: " + (ticket.getCustomerName() != null ? ticket.getCustomerName() : "Unknown"));
-        tvCreatedAt.setText("Created: " + ticket.getCreatedAt());
+        tvCreatedAt.setText(formatDateTime(ticket.getCreatedAt()));
 
         // Display schedule information
         if (ticket.getScheduledDate() != null && !ticket.getScheduledDate().isEmpty()) {
@@ -442,6 +442,36 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity
         }
 
         return dateString;
+    }
+
+    private String formatDateTime(String dateTimeString) {
+        if (dateTimeString == null || dateTimeString.trim().isEmpty()) {
+            return "";
+        }
+
+        String[] patterns = new String[] {
+                "yyyy-MM-dd HH:mm:ss",
+                "yyyy-MM-dd'T'HH:mm:ss",
+                "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
+                "yyyy-MM-dd"
+        };
+        java.text.SimpleDateFormat outputFormat = new java.text.SimpleDateFormat("MMM dd, yyyy h:mm a",
+                java.util.Locale.getDefault());
+
+        for (String pattern : patterns) {
+            try {
+                java.text.SimpleDateFormat inputFormat = new java.text.SimpleDateFormat(pattern,
+                        java.util.Locale.getDefault());
+                inputFormat.setLenient(true);
+                java.util.Date date = inputFormat.parse(dateTimeString);
+                if (date != null) {
+                    return outputFormat.format(date);
+                }
+            } catch (java.text.ParseException ignored) {
+            }
+        }
+
+        return dateTimeString;
     }
 
     private String formatTime(String timeString) {
