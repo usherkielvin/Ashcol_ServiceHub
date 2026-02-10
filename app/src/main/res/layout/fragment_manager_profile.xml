@@ -159,7 +159,7 @@
                             android:layout_width="36dp"
                             android:layout_height="36dp"
                             android:background="@drawable/bg_icon_circle_green"
-                            android:backgroundTint="#000000">
+                            android:backgroundTint="#A5D6A7">
 
                             <ImageView
                                 android:layout_width="20dp"
@@ -389,7 +389,8 @@
                             android:layout_width="36dp"
                             android:layout_height="36dp"
                             android:background="@drawable/bg_icon_circle_green"
-                            android:backgroundTint="#1B4332">
+                            android:backgroundTint="#A5D6A7">
+
                             <ImageView
                                 android:layout_width="20dp"
                                 android:layout_height="20dp"
