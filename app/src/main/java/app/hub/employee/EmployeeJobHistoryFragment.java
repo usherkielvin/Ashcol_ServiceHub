@@ -98,22 +98,7 @@ public class EmployeeJobHistoryFragment extends Fragment {
     }
 
     private void setupFilters() {
-        if (chipCompleted != null) {
-            chipCompleted.setChecked(true);
-        }
-
-        if (chipGroupStatus != null) {
-            chipGroupStatus.setOnCheckedStateChangeListener((group, checkedIds) -> {
-                if (checkedIds == null || checkedIds.isEmpty()) return;
-                int id = checkedIds.get(0);
-                if (id == R.id.chipCompleted) {
-                    statusFilter = "completed";
-                } else {
-                    statusFilter = "all";
-                }
-                loadHistoryTickets();
-            });
-        }
+        statusFilter = "completed";
 
         if (btnStartDate != null) {
             btnStartDate.setOnClickListener(v -> pickDate(true));
@@ -162,6 +147,8 @@ public class EmployeeJobHistoryFragment extends Fragment {
 
     private void loadHistoryTickets() {
         setLoading(true);
+        filteredTickets.clear();
+        adapter.notifyDataSetChanged();
         String token = tokenManager.getToken();
         if (token == null) {
             setLoading(false);
@@ -200,6 +187,7 @@ public class EmployeeJobHistoryFragment extends Fragment {
 
         for (TicketListResponse.TicketItem ticket : allTickets) {
             if (!matchesStatus(ticket)) continue;
+            if (!matchesTechnician(ticket)) continue;
             if (!matchesDate(ticket)) continue;
             filteredTickets.add(ticket);
         }
@@ -213,13 +201,30 @@ public class EmployeeJobHistoryFragment extends Fragment {
         if (status == null) return false;
         String normalized = status.trim().toLowerCase(Locale.ENGLISH);
 
-        if ("completed".equals(statusFilter) || "all".equals(statusFilter)) {
-            return normalized.contains("completed")
-                    || normalized.contains("resolved")
-                    || normalized.contains("closed")
-                    || normalized.contains("paid");
+        return normalized.contains("completed")
+                || normalized.contains("resolved")
+                || normalized.contains("closed")
+                || normalized.contains("paid");
+    }
+
+    private boolean matchesTechnician(TicketListResponse.TicketItem ticket) {
+        String assigned = ticket.getAssignedStaff();
+        String name = tokenManager.getName();
+        String email = tokenManager.getEmail();
+
+        if (assigned == null || assigned.trim().isEmpty()) {
+            return true;
         }
 
+        String normalizedAssigned = assigned.trim().toLowerCase(Locale.ENGLISH);
+        if (name != null && !name.trim().isEmpty()) {
+            if (normalizedAssigned.contains(name.trim().toLowerCase(Locale.ENGLISH))) {
+                return true;
+            }
+        }
+        if (email != null && !email.trim().isEmpty()) {
+            return normalizedAssigned.contains(email.trim().toLowerCase(Locale.ENGLISH));
+        }
         return false;
     }
 
@@ -270,13 +275,8 @@ public class EmployeeJobHistoryFragment extends Fragment {
 
     private void setLoading(boolean isLoading) {
         if (jobHistoryShimmer != null) {
-            if (isLoading) {
-                jobHistoryShimmer.setVisibility(View.VISIBLE);
-                jobHistoryShimmer.startShimmer();
-            } else {
-                jobHistoryShimmer.stopShimmer();
-                jobHistoryShimmer.setVisibility(View.GONE);
-            }
+            jobHistoryShimmer.stopShimmer();
+            jobHistoryShimmer.setVisibility(View.GONE);
         }
         if (recyclerView != null) {
             recyclerView.setVisibility(isLoading ? View.GONE : View.VISIBLE);

@@ -253,7 +253,7 @@ public class EmployeePersonalInfoFragment extends Fragment {
             return;
         }
 
-        String[] options = new String[] { "Male", "Female", "Other" };
+        String[] options = new String[] { "Male", "Female", "Other", "Prefer not to say" };
         ArrayAdapter<String> adapter = new ArrayAdapter<>(
                 requireContext(),
                 android.R.layout.simple_dropdown_item_1line,

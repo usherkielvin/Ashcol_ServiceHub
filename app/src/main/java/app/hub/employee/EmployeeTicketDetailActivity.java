@@ -39,8 +39,10 @@ import retrofit2.Response;
 public class EmployeeTicketDetailActivity extends AppCompatActivity
         implements EmployeePaymentFragment.OnPaymentConfirmedListener, OnMapReadyCallback {
 
-    private TextView tvTicketId, tvTitle, tvDescription, tvServiceType, tvAddress, tvContact, tvStatus, tvCustomerName,
+        private TextView tvTicketId, tvTitle, tvDescription, tvServiceType, tvAddress, tvContact, tvStatus, tvCustomerName,
             tvCreatedAt, tvScheduleDate, tvScheduleTime, tvScheduleNotes;
+        private TextView tvPaymentStatus, tvPaymentMethod, tvPaymentAmount, tvPaymentDate;
+        private View paymentCard;
     private Button btnViewMap, btnBack, btnStartWork, btnCompleteWork;
     private View mapCardContainer;
     private TokenManager tokenManager;
@@ -102,6 +104,11 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity
         tvScheduleDate = findViewById(R.id.tvScheduleDate);
         tvScheduleTime = findViewById(R.id.tvScheduleTime);
         tvScheduleNotes = findViewById(R.id.tvScheduleNotes);
+        tvPaymentStatus = findViewById(R.id.tvPaymentStatus);
+        tvPaymentMethod = findViewById(R.id.tvPaymentMethod);
+        tvPaymentAmount = findViewById(R.id.tvPaymentAmount);
+        tvPaymentDate = findViewById(R.id.tvPaymentDate);
+        paymentCard = findViewById(R.id.paymentCard);
         btnViewMap = findViewById(R.id.btnViewMap);
         btnBack = findViewById(R.id.btnBack);
         btnStartWork = findViewById(R.id.btnStartWork);
@@ -184,7 +191,7 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity
         tvServiceType.setText(ticket.getServiceType());
         tvAddress.setText(ticket.getAddress());
         tvContact.setText(ticket.getContact());
-        tvStatus.setText("Status: " + ticket.getStatus());
+        tvStatus.setText(ticket.getStatus());
         tvCustomerName
                 .setText("Customer: " + (ticket.getCustomerName() != null ? ticket.getCustomerName() : "Unknown"));
         tvCreatedAt.setText("Created: " + ticket.getCreatedAt());
@@ -224,9 +231,81 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity
         // Show/hide action buttons based on ticket status
         updateActionButtons(ticket.getStatus());
 
+        updatePaymentSection(ticket.getStatus());
+
         if (openPaymentOnLoad) {
             openPaymentOnLoad = false;
             showPaymentFragment();
+        }
+    }
+
+    private void updatePaymentSection(String status) {
+        if (paymentCard == null) return;
+
+        if (status == null) {
+            paymentCard.setVisibility(View.GONE);
+            return;
+        }
+
+        String normalized = status.trim().toLowerCase(java.util.Locale.ENGLISH);
+        boolean showPayment = normalized.contains("completed")
+                || normalized.contains("resolved")
+                || normalized.contains("closed")
+                || normalized.contains("paid");
+
+        if (!showPayment) {
+            paymentCard.setVisibility(View.GONE);
+            return;
+        }
+
+        paymentCard.setVisibility(View.VISIBLE);
+        loadPaymentDetails();
+    }
+
+    private void loadPaymentDetails() {
+        String token = tokenManager.getToken();
+        if (token == null || ticketId == null) {
+            return;
+        }
+
+        ApiService apiService = ApiClient.getApiService();
+        Call<app.hub.api.PaymentDetailResponse> call = apiService.getPaymentByTicketId("Bearer " + token, ticketId);
+        call.enqueue(new Callback<app.hub.api.PaymentDetailResponse>() {
+            @Override
+            public void onResponse(Call<app.hub.api.PaymentDetailResponse> call,
+                    Response<app.hub.api.PaymentDetailResponse> response) {
+                if (!isFinishing() && response.isSuccessful() && response.body() != null
+                        && response.body().isSuccess() && response.body().getPayment() != null) {
+                    app.hub.api.PaymentDetailResponse.PaymentDetail payment = response.body().getPayment();
+                    bindPayment(payment);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<app.hub.api.PaymentDetailResponse> call, Throwable t) {
+                // Keep existing payment UI state if request fails.
+            }
+        });
+    }
+
+    private void bindPayment(app.hub.api.PaymentDetailResponse.PaymentDetail payment) {
+        if (payment == null) return;
+        if (tvPaymentStatus != null) {
+            String status = payment.getStatus() != null ? payment.getStatus() : "Pending";
+            tvPaymentStatus.setText("Status: " + status);
+        }
+        if (tvPaymentMethod != null) {
+            String method = payment.getPaymentMethod() != null ? payment.getPaymentMethod() : "--";
+            tvPaymentMethod.setText("Method: " + method);
+        }
+        if (tvPaymentAmount != null) {
+            tvPaymentAmount.setText("Amount Paid: \u20b1" + String.format(java.util.Locale.getDefault(), "%.2f",
+                    payment.getAmount()));
+        }
+        if (tvPaymentDate != null) {
+            tvPaymentDate.setText("Collected: " + (payment.getCollectedAt() != null
+                    ? payment.getCollectedAt()
+                    : "--"));
         }
     }
 

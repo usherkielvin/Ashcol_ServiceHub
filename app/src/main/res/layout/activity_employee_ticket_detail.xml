@@ -319,6 +319,78 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/paymentCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="20dp"
+                android:layout_marginTop="8dp"
+                android:visibility="gone"
+                app:cardBackgroundColor="@android:color/white"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="12dp"
+                app:cardUseCompatPadding="true"
+                app:strokeColor="#EEEEEE"
+                app:strokeWidth="0.5dp"
+                app:layout_constraintTop_toBottomOf="@id/serviceDetailsCard">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/poppins_bold"
+                        android:text="Payment"
+                        android:textColor="#1B4332"
+                        android:textSize="16sp" />
+
+                    <TextView
+                        android:id="@+id/tvPaymentStatus"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:fontFamily="@font/poppins_semibold"
+                        android:text="Status: Pending"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textSize="14sp" />
+
+                    <TextView
+                        android:id="@+id/tvPaymentMethod"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:fontFamily="@font/poppins_medium"
+                        android:text="Method: --"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:textSize="13sp" />
+
+                    <TextView
+                        android:id="@+id/tvPaymentAmount"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:fontFamily="@font/poppins_medium"
+                        android:text="Amount Paid: --"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:textSize="13sp" />
+
+                    <TextView
+                        android:id="@+id/tvPaymentDate"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:fontFamily="@font/poppins_medium"
+                        android:text="Collected: --"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:textSize="13sp" />
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
             <!-- Service Location Card -->
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/locationCard"
@@ -332,7 +404,7 @@
                 app:cardUseCompatPadding="true"
                 app:strokeColor="#EEEEEE"
                 app:strokeWidth="0.5dp"
-                app:layout_constraintTop_toBottomOf="@id/serviceDetailsCard">
+                app:layout_constraintTop_toBottomOf="@id/paymentCard">
 
                 <LinearLayout
                     android:layout_width="match_parent"
