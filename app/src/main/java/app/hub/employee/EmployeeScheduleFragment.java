@@ -457,7 +457,8 @@ public class EmployeeScheduleFragment extends Fragment {
     }
 
     private void openTicketDetail(String ticketId) {
-        if (ticketId == null) {
+        if (ticketId == null || ticketId.trim().isEmpty()) {
+            Toast.makeText(getContext(), "Ticket details not available.", Toast.LENGTH_SHORT).show();
             return;
         }
 

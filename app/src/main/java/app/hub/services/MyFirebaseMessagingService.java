@@ -15,7 +15,7 @@ import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
 import app.hub.R;
-import app.hub.common.SplashActivity;
+import app.hub.common.MainActivity;
 import app.hub.util.TokenManager;
 
 /**
@@ -115,7 +115,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
      * Show notification in status bar
      */
     private void showNotification(String title, String body, java.util.Map<String, String> data) {
-        Intent intent = new Intent(this, SplashActivity.class);
+        Intent intent = new Intent(this, MainActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 
         // Add notification data to intent

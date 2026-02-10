@@ -7,6 +7,7 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -43,7 +44,8 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity
             tvCreatedAt, tvScheduleDate, tvScheduleTime, tvScheduleNotes;
         private TextView tvPaymentStatus, tvPaymentMethod, tvPaymentAmount, tvPaymentDate;
         private View paymentCard;
-    private Button btnViewMap, btnBack, btnStartWork, btnCompleteWork;
+    private Button btnViewMap, btnStartWork, btnCompleteWork;
+    private ImageButton btnBack;
     private View mapCardContainer;
     private TokenManager tokenManager;
     private String ticketId;
@@ -303,9 +305,7 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity
                     payment.getAmount()));
         }
         if (tvPaymentDate != null) {
-            tvPaymentDate.setText("Collected: " + (payment.getCollectedAt() != null
-                    ? payment.getCollectedAt()
-                    : "--"));
+            tvPaymentDate.setText("Collected: --");
         }
     }
 
