@@ -89,13 +89,13 @@ public class ManagerWorkFragment extends Fragment implements TicketDataChangeLis
 
             @Override
             public void onLoadComplete() {
+                android.util.Log.d("ManagerWork", "Data load complete");
             }
 
             @Override
             public void onLoadError(String error) {
-                if (getContext() != null) {
-                    Toast.makeText(getContext(), "Error: " + error, Toast.LENGTH_SHORT).show();
-                }
+                android.util.Log.e("ManagerWork", "Data load error: " + error);
+                // Don't show toast - errors are already logged
             }
         });
     }
@@ -296,6 +296,8 @@ public class ManagerWorkFragment extends Fragment implements TicketDataChangeLis
         } else {
             // No data available yet
             android.util.Log.d("ManagerWork", "No cached tickets available");
+            tickets.clear();
+            filterTickets(); // This will show empty state
         }
     }
 
@@ -314,11 +316,8 @@ public class ManagerWorkFragment extends Fragment implements TicketDataChangeLis
             }
 
             String ticketStatus = ticket.getStatus() != null ? ticket.getStatus().toLowerCase() : "";
-            if (isExcludedFromWork(ticketStatus)) {
-                continue;
-            }
 
-            // Apply status filter
+            // Apply status filter first
             if (!currentFilter.equals("all")) {
                 switch (currentFilter) {
                     case "pending":

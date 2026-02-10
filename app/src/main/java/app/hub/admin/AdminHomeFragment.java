@@ -52,22 +52,8 @@ public class AdminHomeFragment extends Fragment {
     }
     
     private void setupButtons(View view) {
-        // Branches card click listener
-        androidx.cardview.widget.CardView cardBranches = view.findViewById(R.id.cardBranches);
-        if (cardBranches != null) {
-            cardBranches.setOnClickListener(v -> {
-                try {
-                    Intent intent = new Intent(getActivity(), BranchesActivity.class);
-                    startActivity(intent);
-                } catch (Exception e) {
-                    Toast.makeText(getContext(), "Error opening branches: " + e.getMessage(), Toast.LENGTH_LONG).show();
-                    e.printStackTrace();
-                }
-            });
-        }
-        
-        // View All Managers button click listener
-        MaterialButton btnViewAllManagers = view.findViewById(R.id.btnViewAllManagers);
+        // View All Managers text click listener
+        TextView btnViewAllManagers = view.findViewById(R.id.btnViewAllManagers);
         if (btnViewAllManagers != null) {
             btnViewAllManagers.setOnClickListener(v -> {
                 try {
@@ -75,6 +61,20 @@ public class AdminHomeFragment extends Fragment {
                     startActivity(intent);
                 } catch (Exception e) {
                     Toast.makeText(getContext(), "Error opening managers: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                    e.printStackTrace();
+                }
+            });
+        }
+        
+        // View All Branches text click listener
+        TextView viewAllBranches = view.findViewById(R.id.viewAllBranches);
+        if (viewAllBranches != null) {
+            viewAllBranches.setOnClickListener(v -> {
+                try {
+                    Intent intent = new Intent(getActivity(), BranchesActivity.class);
+                    startActivity(intent);
+                } catch (Exception e) {
+                    Toast.makeText(getContext(), "Error opening branches: " + e.getMessage(), Toast.LENGTH_LONG).show();
                     e.printStackTrace();
                 }
             });

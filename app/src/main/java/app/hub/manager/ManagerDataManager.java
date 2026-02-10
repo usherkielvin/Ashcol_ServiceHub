@@ -221,6 +221,8 @@ public class ManagerDataManager {
         call.enqueue(new Callback<EmployeeResponse>() {
             @Override
             public void onResponse(Call<EmployeeResponse> call, Response<EmployeeResponse> response) {
+                Log.d(TAG, "Employees API response code: " + response.code());
+                
                 if (response.isSuccessful() && response.body() != null) {
                     EmployeeResponse employeeResponse = response.body();
 
@@ -246,19 +248,58 @@ public class ManagerDataManager {
 
                         checkLoadComplete();
                     } else {
-                        Log.e(TAG, "Technician API returned success=false");
-                        notifyLoadError("Failed to load technicians");
+                        String errorMsg = employeeResponse.getMessage() != null ? employeeResponse.getMessage() : "Unknown error";
+                        Log.e(TAG, "Technician API returned success=false: " + errorMsg);
+                        // Don't show error toast - just use empty list
+                        cachedBranchName = "No Branch Assigned";
+                        cachedEmployees = new ArrayList<>();
+                        notifyEmployeeListeners();
+                        for (DataLoadCallback cb : new ArrayList<>(activeCallbacks)) {
+                            cb.onEmployeesLoaded(cachedBranchName, cachedEmployees);
+                        }
+                        if (callback != null) {
+                            callback.onEmployeesLoaded(cachedBranchName, cachedEmployees);
+                        }
+                        checkLoadComplete();
                     }
                 } else {
-                    Log.e(TAG, "Technician API response not successful");
-                    notifyLoadError("Failed to load technicians");
+                    Log.e(TAG, "Technician API response not successful - Code: " + response.code());
+                    try {
+                        if (response.errorBody() != null) {
+                            String errorBody = response.errorBody().string();
+                            Log.e(TAG, "Error body: " + errorBody);
+                        }
+                    } catch (Exception e) {
+                        Log.e(TAG, "Could not read error body", e);
+                    }
+                    // Don't show error toast - just use empty list
+                    cachedBranchName = "No Branch Assigned";
+                    cachedEmployees = new ArrayList<>();
+                    notifyEmployeeListeners();
+                    for (DataLoadCallback cb : new ArrayList<>(activeCallbacks)) {
+                        cb.onEmployeesLoaded(cachedBranchName, cachedEmployees);
+                    }
+                    if (callback != null) {
+                        callback.onEmployeesLoaded(cachedBranchName, cachedEmployees);
+                    }
+                    checkLoadComplete();
                 }
             }
 
             @Override
             public void onFailure(Call<EmployeeResponse> call, Throwable t) {
                 Log.e(TAG, "Technician API network error: " + t.getMessage(), t);
-                notifyLoadError("Network error loading technicians: " + t.getMessage());
+                // Don't show error toast - just use empty list
+                cachedBranchName = "No Branch Assigned";
+                cachedEmployees = new ArrayList<>();
+                notifyEmployeeListeners();
+                for (DataLoadCallback cb : new ArrayList<>(activeCallbacks)) {
+                    cb.onEmployeesLoaded(cachedBranchName, cachedEmployees);
+                }
+                if (callback != null) {
+                    callback.onEmployeesLoaded(cachedBranchName, cachedEmployees);
+                }
+                checkLoadComplete();
             }
         });
     }
@@ -270,6 +311,8 @@ public class ManagerDataManager {
         call.enqueue(new Callback<TicketListResponse>() {
             @Override
             public void onResponse(Call<TicketListResponse> call, Response<TicketListResponse> response) {
+                Log.d(TAG, "Tickets API response code: " + response.code());
+                
                 if (response.isSuccessful() && response.body() != null) {
                     TicketListResponse ticketResponse = response.body();
 
@@ -289,19 +332,55 @@ public class ManagerDataManager {
 
                         checkLoadComplete();
                     } else {
-                        Log.e(TAG, "Ticket API returned success=false");
-                        notifyLoadError("Failed to load tickets");
+                        String errorMsg = ticketResponse.getMessage() != null ? ticketResponse.getMessage() : "Unknown error";
+                        Log.e(TAG, "Ticket API returned success=false: " + errorMsg);
+                        // Don't show error toast - just use empty list
+                        cachedTickets = new ArrayList<>();
+                        notifyTicketListeners();
+                        for (DataLoadCallback cb : new ArrayList<>(activeCallbacks)) {
+                            cb.onTicketsLoaded(cachedTickets);
+                        }
+                        if (callback != null) {
+                            callback.onTicketsLoaded(cachedTickets);
+                        }
+                        checkLoadComplete();
                     }
                 } else {
-                    Log.e(TAG, "Ticket API response not successful");
-                    notifyLoadError("Failed to load tickets");
+                    Log.e(TAG, "Ticket API response not successful - Code: " + response.code());
+                    try {
+                        if (response.errorBody() != null) {
+                            String errorBody = response.errorBody().string();
+                            Log.e(TAG, "Error body: " + errorBody);
+                        }
+                    } catch (Exception e) {
+                        Log.e(TAG, "Could not read error body", e);
+                    }
+                    // Don't show error toast - just use empty list
+                    cachedTickets = new ArrayList<>();
+                    notifyTicketListeners();
+                    for (DataLoadCallback cb : new ArrayList<>(activeCallbacks)) {
+                        cb.onTicketsLoaded(cachedTickets);
+                    }
+                    if (callback != null) {
+                        callback.onTicketsLoaded(cachedTickets);
+                    }
+                    checkLoadComplete();
                 }
             }
 
             @Override
             public void onFailure(Call<TicketListResponse> call, Throwable t) {
                 Log.e(TAG, "Ticket API network error: " + t.getMessage(), t);
-                notifyLoadError("Network error loading tickets: " + t.getMessage());
+                // Don't show error toast - just use empty list
+                cachedTickets = new ArrayList<>();
+                notifyTicketListeners();
+                for (DataLoadCallback cb : new ArrayList<>(activeCallbacks)) {
+                    cb.onTicketsLoaded(cachedTickets);
+                }
+                if (callback != null) {
+                    callback.onTicketsLoaded(cachedTickets);
+                }
+                checkLoadComplete();
             }
         });
     }
@@ -313,6 +392,8 @@ public class ManagerDataManager {
         call.enqueue(new Callback<DashboardStatsResponse>() {
             @Override
             public void onResponse(Call<DashboardStatsResponse> call, Response<DashboardStatsResponse> response) {
+                Log.d(TAG, "Dashboard API response code: " + response.code());
+                
                 if (response.isSuccessful() && response.body() != null) {
                     DashboardStatsResponse dashboardResponse = response.body();
 
@@ -334,19 +415,58 @@ public class ManagerDataManager {
 
                         checkLoadComplete();
                     } else {
-                        Log.e(TAG, "Dashboard API returned success=false");
-                        notifyLoadError("Failed to load dashboard stats");
+                        String errorMsg = dashboardResponse.getMessage() != null ? dashboardResponse.getMessage() : "Unknown error";
+                        Log.e(TAG, "Dashboard API returned success=false: " + errorMsg);
+                        // Don't show error toast - just use empty data
+                        cachedDashboardStats = new DashboardStatsResponse.Stats();
+                        cachedRecentTickets = new ArrayList<>();
+                        notifyDashboardListeners();
+                        for (DataLoadCallback cb : new ArrayList<>(activeCallbacks)) {
+                            cb.onDashboardStatsLoaded(cachedDashboardStats, cachedRecentTickets);
+                        }
+                        if (callback != null) {
+                            callback.onDashboardStatsLoaded(cachedDashboardStats, cachedRecentTickets);
+                        }
+                        checkLoadComplete();
                     }
                 } else {
-                    Log.e(TAG, "Dashboard API response not successful");
-                    notifyLoadError("Failed to load dashboard stats");
+                    Log.e(TAG, "Dashboard API response not successful - Code: " + response.code());
+                    try {
+                        if (response.errorBody() != null) {
+                            String errorBody = response.errorBody().string();
+                            Log.e(TAG, "Error body: " + errorBody);
+                        }
+                    } catch (Exception e) {
+                        Log.e(TAG, "Could not read error body", e);
+                    }
+                    // Don't show error toast - just use empty data
+                    cachedDashboardStats = new DashboardStatsResponse.Stats();
+                    cachedRecentTickets = new ArrayList<>();
+                    notifyDashboardListeners();
+                    for (DataLoadCallback cb : new ArrayList<>(activeCallbacks)) {
+                        cb.onDashboardStatsLoaded(cachedDashboardStats, cachedRecentTickets);
+                    }
+                    if (callback != null) {
+                        callback.onDashboardStatsLoaded(cachedDashboardStats, cachedRecentTickets);
+                    }
+                    checkLoadComplete();
                 }
             }
 
             @Override
             public void onFailure(Call<DashboardStatsResponse> call, Throwable t) {
                 Log.e(TAG, "Dashboard API network error: " + t.getMessage(), t);
-                notifyLoadError("Network error loading dashboard: " + t.getMessage());
+                // Don't show error toast - just use empty data
+                cachedDashboardStats = new DashboardStatsResponse.Stats();
+                cachedRecentTickets = new ArrayList<>();
+                notifyDashboardListeners();
+                for (DataLoadCallback cb : new ArrayList<>(activeCallbacks)) {
+                    cb.onDashboardStatsLoaded(cachedDashboardStats, cachedRecentTickets);
+                }
+                if (callback != null) {
+                    callback.onDashboardStatsLoaded(cachedDashboardStats, cachedRecentTickets);
+                }
+                checkLoadComplete();
             }
         });
     }

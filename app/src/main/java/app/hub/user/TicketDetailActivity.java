@@ -152,6 +152,19 @@ public class TicketDetailActivity extends AppCompatActivity implements OnMapRead
         // Store coordinates for map viewing
         latitude = ticket.getLatitude();
         longitude = ticket.getLongitude();
+        
+        Log.d("TicketDetailActivity", "Ticket loaded - Lat: " + latitude + ", Lng: " + longitude);
+        Log.d("TicketDetailActivity", "Address: " + ticket.getAddress());
+
+        // Ensure map container is visible by default
+        if (mapCardContainer != null) {
+            mapCardContainer.setVisibility(View.VISIBLE);
+            Log.d("TicketDetailActivity", "Map container set to VISIBLE");
+        }
+        if (btnViewMap != null) {
+            btnViewMap.setVisibility(View.VISIBLE);
+            Log.d("TicketDetailActivity", "View map button set to VISIBLE");
+        }
 
         // Update map if ready and coordinates are valid
         updateMapLocation();
@@ -163,8 +176,10 @@ public class TicketDetailActivity extends AppCompatActivity implements OnMapRead
     }
 
     private void updateMapLocation() {
-        if (googleMap == null)
+        if (googleMap == null) {
+            // Map not ready yet, but don't hide the container - it will update when ready
             return;
+        }
 
         if (latitude != 0 && longitude != 0) {
             // Use explicit coordinates
@@ -175,6 +190,7 @@ public class TicketDetailActivity extends AppCompatActivity implements OnMapRead
             if (!address.isEmpty() && !address.equals("No Address")) {
                 geocodeAndShowLocation(address);
             } else {
+                // Only hide if we truly have no location data
                 hideMap();
             }
         }
@@ -190,16 +206,24 @@ public class TicketDetailActivity extends AppCompatActivity implements OnMapRead
             googleMap.getUiSettings().setMapToolbarEnabled(false);
 
             // Ensure map is visible
-            btnViewMap.setVisibility(View.VISIBLE);
-            if (mapCardContainer != null)
+            if (btnViewMap != null) {
+                btnViewMap.setVisibility(View.VISIBLE);
+            }
+            if (mapCardContainer != null) {
                 mapCardContainer.setVisibility(View.VISIBLE);
+            }
+            Log.d("TicketDetailActivity", "Map location shown at: " + lat + ", " + lng);
         }
     }
 
     private void hideMap() {
-        btnViewMap.setVisibility(View.GONE);
-        if (mapCardContainer != null)
+        Log.d("TicketDetailActivity", "Hiding map - no valid location data");
+        if (btnViewMap != null) {
+            btnViewMap.setVisibility(View.GONE);
+        }
+        if (mapCardContainer != null) {
             mapCardContainer.setVisibility(View.GONE);
+        }
     }
 
     private void geocodeAndShowLocation(String addressStr) {
@@ -232,6 +256,14 @@ public class TicketDetailActivity extends AppCompatActivity implements OnMapRead
     @Override
     public void onMapReady(com.google.android.gms.maps.GoogleMap map) {
         this.googleMap = map;
+        Log.d("TicketDetailActivity", "Map is ready, updating location");
+        // Ensure map container is visible when map is ready
+        if (mapCardContainer != null) {
+            mapCardContainer.setVisibility(View.VISIBLE);
+        }
+        if (btnViewMap != null) {
+            btnViewMap.setVisibility(View.VISIBLE);
+        }
         updateMapLocation();
     }
 
