@@ -36,8 +36,6 @@ public class ManagerHomeFragment extends Fragment implements ManagerDataManager.
 
     private RecyclerView rvEmployeePreview;
     private EmployeePreviewAdapter employeePreviewAdapter;
-    private TextView tvEmployeeCount;
-    private ImageButton btnMenu;
 
     public ManagerHomeFragment() {
         // Required empty public constructor
@@ -58,12 +56,9 @@ public class ManagerHomeFragment extends Fragment implements ManagerDataManager.
     private void initializeViews(View view) {
         recentActivityRecyclerView = view.findViewById(R.id.recentActivityFlow);
         rvEmployeePreview = view.findViewById(R.id.rvEmployeePreview);
-        tvEmployeeCount = view.findViewById(R.id.tvEmployeeCount);
-        btnMenu = view.findViewById(R.id.btnMenu);
-
-        if (btnMenu != null) {
-            btnMenu.setOnClickListener(v -> showSideMenu());
-        }
+        // tvEmployeeCount and btnMenu are compatibility stub Views - skip initialization
+        // tvEmployeeCount = view.findViewById(R.id.tvEmployeeCount);
+        // btnMenu = view.findViewById(R.id.btnMenu);
     }
 
     private void showSideMenu() {
@@ -204,10 +199,8 @@ public class ManagerHomeFragment extends Fragment implements ManagerDataManager.
     }
 
     private void updateEmployeeCount(int count) {
-        if (tvEmployeeCount != null) {
-            String countText = count + (count == 1 ? " technician" : " technicians");
-            tvEmployeeCount.setText(countText);
-        }
+        // tvEmployeeCount is a compatibility stub - no longer used in the UI
+        // Employee count is now shown through the RecyclerView adapter
     }
 
     @Override
