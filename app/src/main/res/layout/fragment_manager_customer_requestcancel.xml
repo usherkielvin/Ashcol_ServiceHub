@@ -37,212 +37,211 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <androidx.core.widget.NestedScrollView
+    <!-- Scrollable Content - Single ScrollView -->
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:fillViewport="true"
+        android:fillViewport="false"
         android:overScrollMode="never"
         app:layout_constraintBottom_toTopOf="@+id/footerButtons"
         app:layout_constraintTop_toBottomOf="@id/header">
 
-        <LinearLayout
+        <!-- Single Card with All Content -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cvCancelDetails"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="20dp">
+            android:layout_margin="20dp"
+            app:cardBackgroundColor="@android:color/white"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="12dp"
+            app:strokeWidth="0dp">
 
-            <!-- Cancellation Details Card -->
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/cvCancelDetails"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardBackgroundColor="@android:color/white"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="12dp"
-                app:cardUseCompatPadding="true"
-                app:strokeWidth="0dp">
+                android:orientation="vertical"
+                android:padding="20dp">
 
-                <LinearLayout
+                <RelativeLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="20dp">
-
-                    <RelativeLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content">
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:fontFamily="@font/poppins_medium"
-                            android:text="Ticket ID:"
-                            android:textColor="#424242"
-                            android:textSize="14sp" />
-                        <TextView
-                            android:id="@+id/tvTicketId"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_alignParentEnd="true"
-                            android:fontFamily="@font/poppins_bold"
-                            android:text="CLN1005"
-                            android:textColor="@android:color/black"
-                            android:textSize="14sp" />
-                    </RelativeLayout>
-
-                    <RelativeLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp">
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:fontFamily="@font/poppins_medium"
-                            android:text="Customer:"
-                            android:textColor="#424242"
-                            android:textSize="14sp" />
-                        <TextView
-                            android:id="@+id/tvCustomerName"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_alignParentEnd="true"
-                            android:fontFamily="@font/poppins_bold"
-                            android:text="Sakura Ganda"
-                            android:textColor="@android:color/black"
-                            android:textSize="14sp" />
-                    </RelativeLayout>
-
-                    <RelativeLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp">
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:fontFamily="@font/poppins_medium"
-                            android:text="Service:"
-                            android:textColor="#424242"
-                            android:textSize="14sp" />
-                        <TextView
-                            android:id="@+id/tvService"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_alignParentEnd="true"
-                            android:fontFamily="@font/poppins_bold"
-                            android:text="Split AC General Maintenance"
-                            android:textColor="@android:color/black"
-                            android:textSize="14sp" />
-                    </RelativeLayout>
-
-                    <RelativeLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp">
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:fontFamily="@font/poppins_medium"
-                            android:text="Schedule:"
-                            android:textColor="#424242"
-                            android:textSize="14sp" />
-                        <TextView
-                            android:id="@+id/tvSchedule"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_alignParentEnd="true"
-                            android:fontFamily="@font/poppins_bold"
-                            android:text="Feb 11, 2026 - 11:00 AM"
-                            android:textColor="@android:color/black"
-                            android:textSize="14sp" />
-                    </RelativeLayout>
-
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:layout_marginTop="20dp"
-                        android:alpha="0.1"
-                        android:background="@android:color/black" />
-
+                    android:layout_height="wrap_content">
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="20dp"
+                        android:fontFamily="@font/poppins_medium"
+                        android:text="Ticket ID:"
+                        android:textColor="#424242"
+                        android:textSize="14sp" />
+                    <TextView
+                        android:id="@+id/tvTicketId"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentEnd="true"
                         android:fontFamily="@font/poppins_bold"
-                        android:text="Reason for Cancellation"
+                        android:text="CLN1005"
                         android:textColor="@android:color/black"
-                        android:textSize="15sp" />
+                        android:textSize="14sp" />
+                </RelativeLayout>
 
-                    <RadioGroup
-                        android:id="@+id/rgCancellationReason"
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/poppins_medium"
+                        android:text="Customer:"
+                        android:textColor="#424242"
+                        android:textSize="14sp" />
+                    <TextView
+                        android:id="@+id/tvCustomerName"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentEnd="true"
+                        android:fontFamily="@font/poppins_bold"
+                        android:text="Sakura Ganda"
+                        android:textColor="@android:color/black"
+                        android:textSize="14sp" />
+                </RelativeLayout>
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/poppins_medium"
+                        android:text="Service:"
+                        android:textColor="#424242"
+                        android:textSize="14sp" />
+                    <TextView
+                        android:id="@+id/tvService"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentEnd="true"
+                        android:fontFamily="@font/poppins_bold"
+                        android:text="Split AC General Maintenance"
+                        android:textColor="@android:color/black"
+                        android:textSize="14sp" />
+                </RelativeLayout>
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/poppins_medium"
+                        android:text="Schedule:"
+                        android:textColor="#424242"
+                        android:textSize="14sp" />
+                    <TextView
+                        android:id="@+id/tvSchedule"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentEnd="true"
+                        android:fontFamily="@font/poppins_bold"
+                        android:text="Feb 11, 2026 - 11:00 AM"
+                        android:textColor="@android:color/black"
+                        android:textSize="14sp" />
+                </RelativeLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginTop="20dp"
+                    android:alpha="0.1"
+                    android:background="@android:color/black" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:fontFamily="@font/poppins_bold"
+                    android:text="Reason for Cancellation"
+                    android:textColor="@android:color/black"
+                    android:textSize="15sp" />
+
+                <RadioGroup
+                    android:id="@+id/rgCancellationReason"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp">
+
+                    <RadioButton
+                        android:id="@+id/rbCustomerCancel"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp">
+                        android:fontFamily="@font/poppins_medium"
+                        android:text="Customer Cancellation"
+                        android:textColor="#424242"
+                        android:textSize="14sp"
+                        android:paddingVertical="8dp" />
 
-                        <RadioButton
-                            android:id="@+id/rbCustomerCancel"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:fontFamily="@font/poppins_medium"
-                            android:text="Customer Cancellation"
-                            android:textColor="#424242"
-                            android:textSize="14sp" />
-
-                        <RadioButton
-                            android:id="@+id/rbInvalidDetails"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:fontFamily="@font/poppins_medium"
-                            android:text="Invalid Request Details"
-                            android:textColor="#424242"
-                            android:textSize="14sp" />
-
-                        <RadioButton
-                            android:id="@+id/rbServiceNotAvailable"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:fontFamily="@font/poppins_medium"
-                            android:text="Service Not Available"
-                            android:textColor="#424242"
-                            android:textSize="14sp" />
-
-                        <RadioButton
-                            android:id="@+id/rbOther"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:fontFamily="@font/poppins_medium"
-                            android:text="Other"
-                            android:textColor="#424242"
-                            android:textSize="14sp" />
-                    </RadioGroup>
-
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/layoutOtherReason"
-                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                    <RadioButton
+                        android:id="@+id/rbInvalidDetails"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
-                        app:boxCornerRadiusBottomEnd="12dp"
-                        app:boxCornerRadiusBottomStart="12dp"
-                        app:boxCornerRadiusTopEnd="12dp"
-                        app:boxCornerRadiusTopStart="12dp"
-                        app:hintEnabled="false">
+                        android:fontFamily="@font/poppins_medium"
+                        android:text="Invalid Request Details"
+                        android:textColor="#424242"
+                        android:textSize="14sp"
+                        android:paddingVertical="8dp" />
 
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/etOtherReason"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:fontFamily="@font/poppins_medium"
-                            android:gravity="top"
-                            android:hint="Please state the reason for cancellation."
-                            android:minLines="4"
-                            android:textColor="?attr/colorOnSurface"
-                            android:textSize="12sp" />
-                    </com.google.android.material.textfield.TextInputLayout>
+                    <RadioButton
+                        android:id="@+id/rbServiceNotAvailable"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/poppins_medium"
+                        android:text="Service Not Available"
+                        android:textColor="#424242"
+                        android:textSize="14sp"
+                        android:paddingVertical="8dp" />
 
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
+                    <RadioButton
+                        android:id="@+id/rbOther"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/poppins_medium"
+                        android:text="Other"
+                        android:textColor="#424242"
+                        android:textSize="14sp"
+                        android:paddingVertical="8dp" />
+                </RadioGroup>
 
-        </LinearLayout>
-    </androidx.core.widget.NestedScrollView>
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/layoutOtherReason"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:visibility="gone"
+                    app:boxCornerRadiusBottomEnd="12dp"
+                    app:boxCornerRadiusBottomStart="12dp"
+                    app:boxCornerRadiusTopEnd="12dp"
+                    app:boxCornerRadiusTopStart="12dp"
+                    app:hintEnabled="false">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etOtherReason"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/poppins_medium"
+                        android:gravity="top"
+                        android:hint="Please state the reason for cancellation."
+                        android:minLines="4"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textSize="12sp" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+    </ScrollView>
 
     <!-- Footer Buttons -->
     <LinearLayout

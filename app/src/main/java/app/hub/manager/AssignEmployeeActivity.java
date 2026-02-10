@@ -53,8 +53,7 @@ public class AssignEmployeeActivity extends AppCompatActivity {
     private String ticketDescription;
     private String ticketAddress;
     private List<EmployeeResponse.Employee> employees;
-    private ArrayAdapter<String> employeeAdapter;
-    private List<String> employeeNames;
+    private TechnicianAdapter technicianAdapter;
     private int selectedEmployeeId = -1;
     private String selectedDate;
     private String selectedTime;
@@ -162,7 +161,6 @@ public class AssignEmployeeActivity extends AppCompatActivity {
 
             tokenManager = new TokenManager(this);
             employees = new ArrayList<>();
-            employeeNames = new ArrayList<>();
 
             android.util.Log.d("AssignEmployee", "initViews completed");
         } catch (Exception e) {
@@ -273,31 +271,32 @@ public class AssignEmployeeActivity extends AppCompatActivity {
                     EmployeeResponse employeeResponse = response.body();
                     if (employeeResponse.isSuccess()) {
                         employees.clear();
-                        employeeNames.clear();
 
                         for (EmployeeResponse.Employee employee : employeeResponse.getEmployees()) {
                             employees.add(employee);
-                            String name = (employee.getFirstName() != null ? employee.getFirstName() : "") +
-                                    " " + (employee.getLastName() != null ? employee.getLastName() : "");
-                            if (name.trim().isEmpty()) {
-                                name = employee.getEmail() != null ? employee.getEmail() : "Unknown Technician";
-                            }
-                            employeeNames.add(name.trim());
                         }
 
                         android.util.Log.d("AssignEmployee", "Loaded " + employees.size() + " technicians");
 
-                        employeeAdapter = new ArrayAdapter<>(AssignEmployeeActivity.this,
-                                android.R.layout.simple_dropdown_item_1line, employeeNames);
-                        actvEmployee.setAdapter(employeeAdapter);
+                        // Use custom adapter with status display
+                        technicianAdapter = new TechnicianAdapter(AssignEmployeeActivity.this, employees);
+                        actvEmployee.setAdapter(technicianAdapter);
 
+                        // Set threshold to 0 to show all items immediately
+                        actvEmployee.setThreshold(0);
+                        
                         // Force dropdown to show when clicked
                         actvEmployee.setOnClickListener(v -> {
+                            actvEmployee.setText("");
                             actvEmployee.showDropDown();
                         });
-
-                        // Also set threshold to 0 to show all items immediately
-                        actvEmployee.setThreshold(0);
+                        
+                        // Also show dropdown on focus
+                        actvEmployee.setOnFocusChangeListener((v, hasFocus) -> {
+                            if (hasFocus) {
+                                actvEmployee.showDropDown();
+                            }
+                        });
 
                         // Show a message if no technicians found
                         if (employees.isEmpty()) {

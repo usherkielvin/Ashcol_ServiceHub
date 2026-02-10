@@ -40,14 +40,17 @@ public class ManagerTicketDetailActivity extends AppCompatActivity
         implements com.google.android.gms.maps.OnMapReadyCallback {
 
     private TextView tvTicketId, tvTitle, tvDescription, tvServiceType, tvAddress, tvContact, tvStatus, tvBranch,
-            tvCustomerName, tvCreatedAt, tvAssignedTechnician;
-    private Button btnViewMap, btnBack, btnReject, btnAssignStaff;
+            tvCustomerName, tvCreatedAt, tvAssignedTechnician, tvUnitType;
+    private Button btnViewMap, btnReject, btnAssignStaff;
+    private android.widget.ImageButton btnBack;
+    private android.widget.AutoCompleteTextView spinnerTechnician;
     private View mapCardContainer;
     private TokenManager tokenManager;
     private String ticketId;
     private double latitude, longitude;
     private TicketDetailResponse.TicketDetail currentTicket;
     private List<EmployeeResponse.Employee> employees;
+    private TechnicianAdapter technicianAdapter;
 
     private com.google.android.gms.maps.MapView mapView;
     private com.google.android.gms.maps.GoogleMap googleMap;
@@ -143,6 +146,7 @@ public class ManagerTicketDetailActivity extends AppCompatActivity
             tvTitle = findViewById(R.id.tvTitle);
             tvDescription = findViewById(R.id.tvDescription);
             tvServiceType = findViewById(R.id.tvServiceType);
+            tvUnitType = findViewById(R.id.tvUnitType);
             tvAddress = findViewById(R.id.tvAddress);
             tvContact = findViewById(R.id.tvContact);
             tvStatus = findViewById(R.id.tvStatus);
@@ -154,6 +158,7 @@ public class ManagerTicketDetailActivity extends AppCompatActivity
             btnBack = findViewById(R.id.btnBack);
             btnReject = findViewById(R.id.btnReject);
             btnAssignStaff = findViewById(R.id.btnAssignStaff);
+            spinnerTechnician = findViewById(R.id.spinnerTechnician);
             mapCardContainer = findViewById(R.id.mapCardContainer);
 
             // Check if any critical views are null
@@ -191,10 +196,10 @@ public class ManagerTicketDetailActivity extends AppCompatActivity
         }
 
         if (btnReject != null) {
-            btnReject.setOnClickListener(v -> showRejectConfirmation());
+            btnReject.setOnClickListener(v -> showCancelConfirmDialog());
         }
         if (btnAssignStaff != null) {
-            btnAssignStaff.setOnClickListener(v -> launchAssignEmployeeActivity());
+            btnAssignStaff.setOnClickListener(v -> assignTechnicianFromDetail());
         }
     }
 
@@ -299,6 +304,11 @@ public class ManagerTicketDetailActivity extends AppCompatActivity
                     if (employeeResponse.isSuccess()) {
                         employees.clear();
                         employees.addAll(employeeResponse.getEmployees());
+                        
+                        android.util.Log.d("ManagerTicketDetail", "Loaded " + employees.size() + " technicians");
+                        
+                        // Set up the technician adapter
+                        setupTechnicianSpinner();
                     }
                 }
             }
@@ -306,8 +316,44 @@ public class ManagerTicketDetailActivity extends AppCompatActivity
             @Override
             public void onFailure(@NonNull Call<EmployeeResponse> call, @NonNull Throwable t) {
                 // Handle error silently for now
+                android.util.Log.e("ManagerTicketDetail", "Failed to load employees: " + t.getMessage());
             }
         });
+    }
+    
+    private void setupTechnicianSpinner() {
+        if (spinnerTechnician == null || employees == null) {
+            android.util.Log.e("ManagerTicketDetail", "Cannot setup spinner - spinner or employees is null");
+            return;
+        }
+        
+        // Use custom adapter with status display
+        technicianAdapter = new TechnicianAdapter(this, employees);
+        spinnerTechnician.setAdapter(technicianAdapter);
+        
+        // Set threshold to 0 to show all items immediately
+        spinnerTechnician.setThreshold(0);
+        
+        // Disable default click behavior to prevent stuttering
+        spinnerTechnician.setOnClickListener(null);
+        spinnerTechnician.setOnFocusChangeListener(null);
+        
+        // Set up proper touch listener to show dropdown
+        spinnerTechnician.setOnTouchListener((v, event) -> {
+            if (event.getAction() == android.view.MotionEvent.ACTION_UP) {
+                spinnerTechnician.showDropDown();
+            }
+            return false;
+        });
+        
+        // Also show dropdown when focused
+        spinnerTechnician.setOnFocusChangeListener((v, hasFocus) -> {
+            if (hasFocus) {
+                spinnerTechnician.showDropDown();
+            }
+        });
+        
+        android.util.Log.d("ManagerTicketDetail", "Technician spinner setup complete with " + employees.size() + " technicians");
     }
 
     private void displayTicketDetails(TicketDetailResponse.TicketDetail ticket) {
@@ -324,11 +370,29 @@ public class ManagerTicketDetailActivity extends AppCompatActivity
         String createdText = ticket.getCreatedAt() != null ? ticket.getCreatedAt()
                 : getString(R.string.manager_ticket_unknown);
 
+        // Parse unit type and description from the description field
+        String description = ticket.getDescription() != null ? ticket.getDescription() : "";
+        String unitType = "";
+        String otherDetails = description;
+        
+        // Check if description contains "Unit Type: " prefix
+        if (description.startsWith("Unit Type: ")) {
+            int lineBreak = description.indexOf('\n');
+            if (lineBreak > 0) {
+                unitType = description.substring("Unit Type: ".length(), lineBreak).trim();
+                otherDetails = description.substring(lineBreak + 1).trim();
+            } else {
+                unitType = description.substring("Unit Type: ".length()).trim();
+                otherDetails = "";
+            }
+        }
+
         // Set text with null checks
         safeSetText(tvTicketId, ticket.getTicketId() != null ? ticket.getTicketId() : "N/A");
         safeSetText(tvTitle, ticket.getTitle() != null ? ticket.getTitle() : "No Title");
-        safeSetText(tvDescription, ticket.getDescription() != null ? ticket.getDescription() : "No Description");
+        safeSetText(tvDescription, !otherDetails.isEmpty() ? otherDetails : "No Description");
         safeSetText(tvServiceType, ticket.getServiceType() != null ? ticket.getServiceType() : "N/A");
+        safeSetText(tvUnitType, !unitType.isEmpty() ? unitType : "N/A");
         safeSetText(tvAddress, ticket.getAddress() != null ? ticket.getAddress() : "No Address");
         safeSetText(tvContact, ticket.getContact() != null ? ticket.getContact() : "No Contact");
         safeSetText(tvStatus, getString(R.string.manager_ticket_status_format, statusText));
@@ -547,6 +611,185 @@ public class ManagerTicketDetailActivity extends AppCompatActivity
                         getString(R.string.manager_ticket_network_error, t.getMessage()), Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    private void assignTechnicianFromDetail() {
+        // Validate that a technician is selected
+        if (spinnerTechnician == null || spinnerTechnician.getText() == null || 
+            spinnerTechnician.getText().toString().trim().isEmpty()) {
+            Toast.makeText(this, "Please select a technician", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        // Find the selected technician
+        String selectedTechnicianName = spinnerTechnician.getText().toString().trim();
+        EmployeeResponse.Employee selectedTechnician = null;
+        
+        for (EmployeeResponse.Employee emp : employees) {
+            String name = (emp.getFirstName() != null ? emp.getFirstName() : "") +
+                    " " + (emp.getLastName() != null ? emp.getLastName() : "");
+            if (name.trim().isEmpty()) {
+                name = emp.getEmail() != null ? emp.getEmail() : "Unknown Technician";
+            }
+            if (name.trim().equals(selectedTechnicianName)) {
+                selectedTechnician = emp;
+                break;
+            }
+        }
+        
+        if (selectedTechnician == null) {
+            Toast.makeText(this, "Please select a valid technician", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        // Get the notes
+        com.google.android.material.textfield.TextInputEditText etNotes = findViewById(R.id.etNotes);
+        String notes = etNotes != null && etNotes.getText() != null ? 
+                       etNotes.getText().toString().trim() : "";
+        
+        // Use current date and time as default
+        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault());
+        java.text.SimpleDateFormat stf = new java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault());
+        String scheduledDate = sdf.format(new java.util.Date());
+        String scheduledTime = stf.format(new java.util.Date());
+        
+        // Call API to assign technician
+        assignTechnicianToTicket(selectedTechnician.getId(), scheduledDate, scheduledTime, notes, selectedTechnicianName);
+    }
+    
+    private void assignTechnicianToTicket(int technicianId, String scheduledDate, String scheduledTime, 
+                                          String notes, String technicianName) {
+        String token = tokenManager.getToken();
+        if (token == null) {
+            Toast.makeText(this, "You are not logged in.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        app.hub.api.SetScheduleRequest request = new app.hub.api.SetScheduleRequest();
+        request.setScheduledDate(scheduledDate);
+        request.setScheduledTime(scheduledTime);
+        request.setScheduleNotes(notes);
+        request.setAssignedStaffId(technicianId);
+        
+        android.util.Log.d("ManagerTicketDetail", "Assigning technician ID: " + technicianId);
+        
+        ApiService apiService = ApiClient.getApiService();
+        Call<app.hub.api.SetScheduleResponse> call = apiService.setTicketSchedule("Bearer " + token, ticketId, request);
+        
+        call.enqueue(new Callback<app.hub.api.SetScheduleResponse>() {
+            @Override
+            public void onResponse(@NonNull Call<app.hub.api.SetScheduleResponse> call, 
+                                 @NonNull Response<app.hub.api.SetScheduleResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    app.hub.api.SetScheduleResponse scheduleResponse = response.body();
+                    if (scheduleResponse.isSuccess()) {
+                        // Show confirmation dialog
+                        showAssignmentConfirmation(technicianName, scheduledDate, scheduledTime);
+                    } else {
+                        Toast.makeText(ManagerTicketDetailActivity.this, 
+                                "Failed to assign: " + scheduleResponse.getMessage(), 
+                                Toast.LENGTH_LONG).show();
+                    }
+                } else {
+                    Toast.makeText(ManagerTicketDetailActivity.this, 
+                            "Failed to assign technician. Please try again.", 
+                            Toast.LENGTH_SHORT).show();
+                }
+            }
+            
+            @Override
+            public void onFailure(@NonNull Call<app.hub.api.SetScheduleResponse> call, @NonNull Throwable t) {
+                Toast.makeText(ManagerTicketDetailActivity.this, 
+                        "Network error: " + t.getMessage(), 
+                        Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+    
+    private void showAssignmentConfirmation(String technicianName, String scheduledDate, String scheduledTime) {
+        // Format the service name
+        String serviceName = (currentTicket.getServiceType() != null ? currentTicket.getServiceType() : "") + 
+                           " - " + (currentTicket.getTitle() != null ? currentTicket.getTitle() : "");
+        
+        // Format date and time
+        String dateTime = scheduledDate + " - " + scheduledTime;
+        
+        AssignConfirmBottomSheet bottomSheet = AssignConfirmBottomSheet.newInstance(
+            ticketId, serviceName, technicianName, dateTime
+        );
+        
+        bottomSheet.setOnDoneClickListener(() -> {
+            // Refresh data and close activity
+            ManagerDataManager.refreshTickets(getApplicationContext(), new ManagerDataManager.DataLoadCallback() {
+                @Override
+                public void onEmployeesLoaded(String branchName, List<EmployeeResponse.Employee> employees) {
+                }
+
+                @Override
+                public void onTicketsLoaded(List<app.hub.api.TicketListResponse.TicketItem> tickets) {
+                    runOnUiThread(ManagerTicketDetailActivity.this::finish);
+                }
+
+                @Override
+                public void onDashboardStatsLoaded(app.hub.api.DashboardStatsResponse.Stats stats,
+                        List<app.hub.api.DashboardStatsResponse.RecentTicket> recentTickets) {
+                }
+
+                @Override
+                public void onLoadComplete() {
+                }
+
+                @Override
+                public void onLoadError(String error) {
+                    runOnUiThread(ManagerTicketDetailActivity.this::finish);
+                }
+            });
+        });
+        
+        bottomSheet.show(getSupportFragmentManager(), "AssignConfirmBottomSheet");
+    }
+    
+    private void showCancelConfirmDialog() {
+        CancelConfirmDialog dialog = CancelConfirmDialog.newInstance();
+        dialog.setOnConfirmClickListener(new CancelConfirmDialog.OnConfirmClickListener() {
+            @Override
+            public void onConfirmYes() {
+                // Show the cancellation reason bottom sheet
+                showCancelReasonBottomSheet();
+            }
+            
+            @Override
+            public void onConfirmNo() {
+                // Do nothing, dialog will dismiss
+            }
+        });
+        dialog.show(getSupportFragmentManager(), "CancelConfirmDialog");
+    }
+    
+    private void showCancelReasonBottomSheet() {
+        String service = (currentTicket.getServiceType() != null ? currentTicket.getServiceType() : "") + 
+                        " - " + (currentTicket.getTitle() != null ? currentTicket.getTitle() : "");
+        String schedule = currentTicket.getCreatedAt() != null ? currentTicket.getCreatedAt() : "N/A";
+        String customerName = currentTicket.getCustomerName() != null ? currentTicket.getCustomerName() : "Unknown";
+        
+        CancelReasonBottomSheet bottomSheet = CancelReasonBottomSheet.newInstance(
+            ticketId, customerName, service, schedule
+        );
+        
+        bottomSheet.setOnCancelConfirmListener(new CancelReasonBottomSheet.OnCancelConfirmListener() {
+            @Override
+            public void onCancelConfirmed(String reason) {
+                // Update ticket status to cancelled
+                updateTicketStatus("cancelled");
+            }
+            
+            @Override
+            public void onBack() {
+                // Do nothing, bottom sheet will dismiss
+            }
+        });
+        
+        bottomSheet.show(getSupportFragmentManager(), "CancelReasonBottomSheet");
     }
 
     private void showRejectConfirmation() {
