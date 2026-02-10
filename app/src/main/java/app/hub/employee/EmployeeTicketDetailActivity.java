@@ -439,13 +439,28 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity
                             message += "\nPayment collected: ₱" + String.format("%.2f", amount);
                         }
                         Toast.makeText(EmployeeTicketDetailActivity.this, message, Toast.LENGTH_LONG).show();
-                        if (finishAfterPayment) {
-                            Intent result = new Intent();
-                            result.putExtra("ticket_id", ticketId);
-                            setResult(RESULT_OK, result);
-                            finish();
+                        Runnable finishAction = () -> {
+                            if (finishAfterPayment) {
+                                Intent result = new Intent();
+                                result.putExtra("ticket_id", ticketId);
+                                setResult(RESULT_OK, result);
+                                finish();
+                            } else {
+                                loadTicketDetails();
+                            }
+                        };
+
+                        if ("cash".equals(paymentMethod)) {
+                            int paymentId = workResponse.getPayment() != null
+                                    ? workResponse.getPayment().getId()
+                                    : 0;
+                            if (paymentId > 0) {
+                                submitPaymentToManager(paymentId, finishAction);
+                            } else {
+                                finishAction.run();
+                            }
                         } else {
-                            loadTicketDetails();
+                            finishAction.run();
                         }
                     } else {
                         Toast.makeText(EmployeeTicketDetailActivity.this, "Failed: " + workResponse.getMessage(),
@@ -463,6 +478,42 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity
                 btnCompleteWork.setText("Complete Work");
                 Toast.makeText(EmployeeTicketDetailActivity.this, "Network error: " + t.getMessage(), Toast.LENGTH_LONG)
                         .show();
+            }
+        });
+    }
+
+    private void submitPaymentToManager(int paymentId, Runnable onComplete) {
+        String token = tokenManager.getToken();
+        if (token == null) {
+            if (onComplete != null) {
+                onComplete.run();
+            }
+            return;
+        }
+
+        ApiService apiService = ApiClient.getApiService();
+        Call<CompleteWorkResponse> call = apiService.submitPaymentToManager("Bearer " + token, paymentId);
+        call.enqueue(new Callback<CompleteWorkResponse>() {
+            @Override
+            public void onResponse(Call<CompleteWorkResponse> call, Response<CompleteWorkResponse> response) {
+                if (!response.isSuccessful()) {
+                    Toast.makeText(EmployeeTicketDetailActivity.this,
+                            "Payment submitted, but manager sync failed.",
+                            Toast.LENGTH_SHORT).show();
+                }
+                if (onComplete != null) {
+                    onComplete.run();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<CompleteWorkResponse> call, Throwable t) {
+                Toast.makeText(EmployeeTicketDetailActivity.this,
+                        "Payment submitted, but manager sync failed.",
+                        Toast.LENGTH_SHORT).show();
+                if (onComplete != null) {
+                    onComplete.run();
+                }
             }
         });
     }
