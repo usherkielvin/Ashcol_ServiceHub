@@ -10,6 +10,7 @@ import android.app.DatePickerDialog;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -23,6 +24,7 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.imageview.ShapeableImageView;
+import com.google.android.material.textfield.MaterialAutoCompleteTextView;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
@@ -59,7 +61,7 @@ public class EmployeePersonalInfoFragment extends Fragment {
     private TextView tvEmail;
     private TextView tvRole;
     private TextView tvBranch;
-    private TextView tvGender;
+    private MaterialAutoCompleteTextView tvGender;
     private TextView tvBirthdate;
     private TextView etUsername;
     private TextInputEditText inputFirstName;
@@ -128,13 +130,11 @@ public class EmployeePersonalInfoFragment extends Fragment {
             btnDelete.setOnClickListener(v -> showDeleteAccountDialog());
         }
 
-        if (tvGender != null) {
-            tvGender.setOnClickListener(v -> showGenderPicker());
-        }
-
         if (tvBirthdate != null) {
             tvBirthdate.setOnClickListener(v -> showBirthdatePicker());
         }
+
+        setupGenderDropdown();
 
         loadCachedProfileImage();
         loadProfile();
@@ -213,7 +213,7 @@ public class EmployeePersonalInfoFragment extends Fragment {
 
         if (tvGender != null) {
             selectedGender = data.getGender();
-            tvGender.setText(selectedGender != null ? selectedGender : "");
+            tvGender.setText(selectedGender != null ? selectedGender : "", false);
         }
 
         if (tvBirthdate != null) {
@@ -248,20 +248,18 @@ public class EmployeePersonalInfoFragment extends Fragment {
         }
     }
 
-    private void showGenderPicker() {
-        if (getContext() == null) {
+    private void setupGenderDropdown() {
+        if (getContext() == null || tvGender == null) {
             return;
         }
-        final String[] options = new String[] { "Male", "Female", "Other" };
-        new MaterialAlertDialogBuilder(requireContext())
-                .setTitle("Select gender")
-                .setItems(options, (dialog, which) -> {
-                    selectedGender = options[which];
-                    if (tvGender != null) {
-                        tvGender.setText(selectedGender);
-                    }
-                })
-                .show();
+
+        String[] options = new String[] { "Male", "Female", "Other" };
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(
+                requireContext(),
+                android.R.layout.simple_dropdown_item_1line,
+                options);
+        tvGender.setAdapter(adapter);
+        tvGender.setOnItemClickListener((parent, view, position, id) -> selectedGender = options[position]);
     }
 
     private void showBirthdatePicker() {
@@ -583,6 +581,7 @@ public class EmployeePersonalInfoFragment extends Fragment {
                         tokenManager.saveName(fullName.trim());
                         Toast.makeText(requireContext(), "Profile updated.", Toast.LENGTH_SHORT).show();
                         bindProfile(data);
+                        navigateBack();
                     }
                 } else {
                     Toast.makeText(requireContext(), "Failed to update profile.", Toast.LENGTH_SHORT).show();
