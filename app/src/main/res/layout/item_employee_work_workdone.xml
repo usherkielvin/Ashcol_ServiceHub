@@ -22,7 +22,7 @@
             android:fontFamily="@font/poppins_bold"
             android:letterSpacing="0.05"
             android:text="WORK COMPLETED"
-            android:textColor="?attr/colorOnSurfaceVariant"
+            android:textColor="#9E9E9E"
             android:textSize="20sp"
             android:textStyle="bold"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -61,7 +61,7 @@
                 android:layout_height="wrap_content"
                 android:gravity="center"
                 android:orientation="horizontal"
-                android:paddingVertical="16dp">
+                android:paddingVertical="24dp">
 
                 <LinearLayout
                     android:layout_width="0dp"
@@ -86,15 +86,15 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
                         android:fontFamily="@font/poppins_medium"
-                        android:text="Work"
-                        android:textColor="@color/apps_green"
-                        android:textSize="10sp" />
+                        android:text="Work Completed"
+                        android:textColor="#1B4332"
+                        android:textSize="9sp" />
                 </LinearLayout>
 
                 <View
                     android:layout_width="40dp"
                     android:layout_height="1dp"
-                    android:layout_marginBottom="12dp"
+                    android:layout_marginBottom="16dp"
                     android:background="@color/status_green" />
 
                 <LinearLayout
@@ -120,15 +120,15 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
                         android:fontFamily="@font/poppins_medium"
-                        android:text="Payment"
-                        android:textColor="@color/apps_green"
-                        android:textSize="10sp" />
+                        android:text="Payment Confirmed"
+                        android:textColor="#1B4332"
+                        android:textSize="9sp" />
                 </LinearLayout>
 
                 <View
                     android:layout_width="40dp"
                     android:layout_height="1dp"
-                    android:layout_marginBottom="12dp"
+                    android:layout_marginBottom="16dp"
                     android:background="@color/status_green" />
 
                 <LinearLayout
@@ -155,8 +155,8 @@
                         android:layout_marginTop="4dp"
                         android:fontFamily="@font/poppins_medium"
                         android:text="Successful"
-                        android:textColor="@color/apps_green"
-                        android:textSize="10sp" />
+                        android:textColor="#1B4332"
+                        android:textSize="9sp" />
                 </LinearLayout>
             </LinearLayout>
 
@@ -166,9 +166,9 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="32dp"
                 android:fontFamily="@font/poppins_bold"
-                android:text="Job Completed Successfully!"
-                android:textColor="@color/apps_green"
-                android:textSize="24sp"
+                android:text="Work Completed!"
+                android:textColor="#1B4332"
+                android:textSize="28sp"
                 android:textStyle="bold" />
 
             <TextView
@@ -178,21 +178,21 @@
                 android:layout_marginTop="16dp"
                 android:fontFamily="@font/poppins_medium"
                 android:gravity="center"
-                android:text="The payment has been confirmed and\nthe request is now complete."
-                android:textColor="?attr/colorOnSurfaceVariant"
-                android:textSize="14sp"
-                android:alpha="0.7" />
+                android:text="This job has been completed and\npayment has been confirmed."
+                android:textColor="#9E9E9E"
+                android:textSize="14sp" />
 
             <!-- Summary Card -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="40dp"
-                app:cardBackgroundColor="?attr/colorSurface"
-                app:cardCornerRadius="16dp"
+                app:cardBackgroundColor="#D1E7D1"
+                app:cardCornerRadius="12dp"
                 app:cardElevation="4dp"
-                app:strokeColor="?attr/colorOutline"
-                app:strokeWidth="1dp">
+                app:strokeColor="#1B5E20"
+                app:strokeWidth="1dp"
+                app:cardUseCompatPadding="true">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -208,63 +208,82 @@
                             android:layout_height="wrap_content"
                             android:fontFamily="@font/poppins_medium"
                             android:text="Ticket ID:"
-                            android:textColor="?attr/colorOnSurfaceVariant"
-                            android:textSize="14sp"
-                            android:alpha="0.7" />
+                            android:textColor="#424242"
+                            android:textSize="14sp" />
                         <TextView
                             android:id="@+id/tvTicketId"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_alignParentEnd="true"
                             android:fontFamily="@font/poppins_bold"
-                            android:text="TCKTid_1004"
-                            android:textColor="?attr/colorOnSurface"
+                            android:text="CLN1004"
+                            android:textColor="@android:color/black"
                             android:textSize="14sp" />
                     </RelativeLayout>
 
                     <RelativeLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp">
+                        android:layout_marginTop="8dp">
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:fontFamily="@font/poppins_medium"
                             android:text="Service:"
-                            android:textColor="?attr/colorOnSurfaceVariant"
-                            android:textSize="14sp"
-                            android:alpha="0.7" />
+                            android:textColor="#424242"
+                            android:textSize="14sp" />
                         <TextView
                             android:id="@+id/tvServiceName"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_alignParentEnd="true"
                             android:fontFamily="@font/poppins_bold"
-                            android:text="Split AC General Cleaning"
-                            android:textColor="?attr/colorOnSurface"
+                            android:text="Split AC General Cleaning - 1 unit"
+                            android:textColor="@android:color/black"
                             android:textSize="14sp" />
                     </RelativeLayout>
 
                     <RelativeLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp">
+                        android:layout_marginTop="8dp">
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:fontFamily="@font/poppins_medium"
-                            android:text="Customer:"
-                            android:textColor="?attr/colorOnSurfaceVariant"
-                            android:textSize="14sp"
-                            android:alpha="0.7" />
+                            android:text="Technician:"
+                            android:textColor="#424242"
+                            android:textSize="14sp" />
                         <TextView
-                            android:id="@+id/tvCustomerName"
+                            android:id="@+id/tvTechnicianName"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_alignParentEnd="true"
                             android:fontFamily="@font/poppins_bold"
                             android:text="Juan Dela Cruz"
-                            android:textColor="?attr/colorOnSurface"
+                            android:textColor="@android:color/black"
+                            android:textSize="14sp" />
+                    </RelativeLayout>
+
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/poppins_medium"
+                            android:text="Date &amp; Time:"
+                            android:textColor="#424242"
+                            android:textSize="14sp" />
+                        <TextView
+                            android:id="@+id/tvDateTime"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentEnd="true"
+                            android:fontFamily="@font/poppins_bold"
+                            android:text="Feb 9, 2026 - 9:00 AM"
+                            android:textColor="@android:color/black"
                             android:textSize="14sp" />
                     </RelativeLayout>
 
@@ -272,8 +291,8 @@
                         android:layout_width="match_parent"
                         android:layout_height="1dp"
                         android:layout_marginVertical="16dp"
-                        android:alpha="0.2"
-                        android:background="?attr/colorOutline" />
+                        android:alpha="0.1"
+                        android:background="@android:color/black" />
 
                     <RelativeLayout
                         android:layout_width="match_parent"
@@ -283,9 +302,8 @@
                             android:layout_height="wrap_content"
                             android:fontFamily="@font/poppins_medium"
                             android:text="Amount Paid:"
-                            android:textColor="?attr/colorOnSurfaceVariant"
-                            android:textSize="16sp"
-                            android:alpha="0.7" />
+                            android:textColor="#424242"
+                            android:textSize="16sp" />
                         <TextView
                             android:id="@+id/tvAmountPaid"
                             android:layout_width="wrap_content"
@@ -293,8 +311,30 @@
                             android:layout_alignParentEnd="true"
                             android:fontFamily="@font/poppins_bold"
                             android:text="Php 8,500.00"
-                            android:textColor="?attr/colorOnSurface"
+                            android:textColor="@android:color/black"
                             android:textSize="16sp" />
+                    </RelativeLayout>
+
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/poppins_medium"
+                            android:text="Payment Method:"
+                            android:textColor="#424242"
+                            android:textSize="14sp" />
+                        <TextView
+                            android:id="@+id/tvPaymentMethod"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentEnd="true"
+                            android:fontFamily="@font/poppins_bold"
+                            android:text="Online"
+                            android:textColor="@android:color/black"
+                            android:textSize="14sp" />
                     </RelativeLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
@@ -308,7 +348,7 @@
                 android:backgroundTint="#CCCCCC"
                 android:fontFamily="@font/poppins_semibold"
                 android:paddingHorizontal="40dp"
-                android:text="Back to Home"
+                android:text="View Job History"
                 android:textAllCaps="false"
                 android:textColor="@color/black"
                 android:textSize="14sp"
