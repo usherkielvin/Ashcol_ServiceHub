@@ -10,7 +10,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import com.facebook.shimmer.ShimmerFrameLayout;
 
 import app.hub.R;
 import app.hub.api.AboutResponse;
@@ -27,7 +26,7 @@ public class ProfileAboutUsFragment extends Fragment {
     private TextView tvSupportEmail;
     private TextView tvSupportPhone;
     private TextView tvSupportHours;
-    private ShimmerFrameLayout aboutShimmer;
+    private View aboutShimmer;
     private View aboutCard;
 
     @Override
@@ -109,13 +108,7 @@ public class ProfileAboutUsFragment extends Fragment {
 
     private void setLoading(boolean isLoading) {
         if (aboutShimmer != null) {
-            if (isLoading) {
-                aboutShimmer.setVisibility(View.VISIBLE);
-                aboutShimmer.startShimmer();
-            } else {
-                aboutShimmer.stopShimmer();
-                aboutShimmer.setVisibility(View.GONE);
-            }
+            aboutShimmer.setVisibility(isLoading ? View.VISIBLE : View.GONE);
         }
         if (aboutCard != null) {
             aboutCard.setVisibility(isLoading ? View.GONE : View.VISIBLE);

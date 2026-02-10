@@ -43,8 +43,9 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity
 
         private TextView tvTicketId, tvTitle, tvDescription, tvServiceType, tvAddress, tvContact, tvStatus, tvCustomerName,
             tvCreatedAt, tvScheduleDate, tvScheduleTime, tvScheduleNotes;
-        private TextView tvPaymentStatus, tvPaymentMethod, tvPaymentAmount, tvPaymentDate;
+        private TextView tvPaymentStatus, tvPaymentMethod, tvPaymentAmount, tvPaymentCollectedBy, tvPaymentDate;
         private View paymentCard;
+        private View contentContainer;
     private Button btnViewMap, btnStartWork, btnCompleteWork;
     private ImageButton btnBack;
     private View mapCardContainer;
@@ -110,8 +111,10 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity
         tvPaymentStatus = findViewById(R.id.tvPaymentStatus);
         tvPaymentMethod = findViewById(R.id.tvPaymentMethod);
         tvPaymentAmount = findViewById(R.id.tvPaymentAmount);
+        tvPaymentCollectedBy = findViewById(R.id.tvPaymentCollectedBy);
         tvPaymentDate = findViewById(R.id.tvPaymentDate);
         paymentCard = findViewById(R.id.paymentCard);
+        contentContainer = findViewById(R.id.contentContainer);
         btnViewMap = findViewById(R.id.btnViewMap);
         btnBack = findViewById(R.id.btnBack);
         btnStartWork = findViewById(R.id.btnStartWork);
@@ -188,6 +191,9 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity
     }
 
     private void displayTicketDetails(TicketDetailResponse.TicketDetail ticket) {
+        if (contentContainer != null) {
+            contentContainer.setVisibility(View.VISIBLE);
+        }
         tvTicketId.setText(ticket.getTicketId());
         tvTitle.setText(ticket.getTitle());
         tvDescription.setText(ticket.getDescription());
@@ -244,6 +250,12 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity
     private void updatePaymentSection(String status) {
         if (paymentCard == null) return;
 
+        if (tvPaymentStatus != null) tvPaymentStatus.setVisibility(View.GONE);
+        if (tvPaymentMethod != null) tvPaymentMethod.setVisibility(View.GONE);
+        if (tvPaymentAmount != null) tvPaymentAmount.setVisibility(View.GONE);
+        if (tvPaymentCollectedBy != null) tvPaymentCollectedBy.setVisibility(View.GONE);
+        if (tvPaymentDate != null) tvPaymentDate.setVisibility(View.GONE);
+
         if (status == null) {
             paymentCard.setVisibility(View.GONE);
             return;
@@ -292,21 +304,54 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity
 
     private void bindPayment(app.hub.api.PaymentDetailResponse.PaymentDetail payment) {
         if (payment == null) return;
+        String statusValue = payment.getStatus() != null ? payment.getStatus() : "";
+        boolean isPaid = isPaidStatus(statusValue);
         if (tvPaymentStatus != null) {
-            String status = payment.getStatus() != null ? payment.getStatus() : "Pending";
+            String status = statusValue.isEmpty() ? "Pending" : statusValue;
             tvPaymentStatus.setText("Status: " + status);
+            tvPaymentStatus.setVisibility(View.VISIBLE);
         }
         if (tvPaymentMethod != null) {
             String method = payment.getPaymentMethod() != null ? payment.getPaymentMethod() : "--";
             tvPaymentMethod.setText("Method: " + method);
+            tvPaymentMethod.setVisibility(View.VISIBLE);
         }
         if (tvPaymentAmount != null) {
-            tvPaymentAmount.setText("Amount Paid: \u20b1" + String.format(java.util.Locale.getDefault(), "%.2f",
-                    payment.getAmount()));
+            if (isPaid) {
+                tvPaymentAmount.setText("Amount Paid: \u20b1" + String.format(java.util.Locale.getDefault(), "%.2f",
+                        payment.getAmount()));
+                tvPaymentAmount.setVisibility(View.VISIBLE);
+            } else {
+                tvPaymentAmount.setVisibility(View.GONE);
+            }
+        }
+        if (tvPaymentCollectedBy != null) {
+            if (isPaid) {
+                String collectedBy = currentTicket != null ? currentTicket.getAssignedStaff() : null;
+                String displayName = (collectedBy == null || collectedBy.trim().isEmpty()) ? "--" : collectedBy;
+                tvPaymentCollectedBy.setText("Collected by: " + displayName);
+                tvPaymentCollectedBy.setVisibility(View.VISIBLE);
+            } else {
+                tvPaymentCollectedBy.setVisibility(View.GONE);
+            }
         }
         if (tvPaymentDate != null) {
-            tvPaymentDate.setText("Collected: --");
+            if (isPaid) {
+                tvPaymentDate.setText("Collected: --");
+                tvPaymentDate.setVisibility(View.VISIBLE);
+            } else {
+                tvPaymentDate.setVisibility(View.GONE);
+            }
         }
+    }
+
+    private boolean isPaidStatus(String status) {
+        if (status == null) return false;
+        String normalized = status.trim().toLowerCase(java.util.Locale.ENGLISH);
+        return normalized.contains("paid")
+                || normalized.contains("completed")
+                || normalized.contains("resolved")
+                || normalized.contains("closed");
     }
 
     private void updateActionButtons(String status) {

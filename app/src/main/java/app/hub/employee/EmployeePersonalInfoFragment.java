@@ -73,6 +73,8 @@ public class EmployeePersonalInfoFragment extends Fragment {
     private MaterialButton btnSave;
     private ShapeableImageView imgProfile;
     private MaterialButton btnEditPhoto;
+    private View personalInfoContent;
+    private View profileLoading;
     private Uri cameraImageUri;
     private ActivityResultLauncher<Intent> galleryLauncher;
     private ActivityResultLauncher<Intent> cameraLauncher;
@@ -111,6 +113,8 @@ public class EmployeePersonalInfoFragment extends Fragment {
         btnSave = view.findViewById(R.id.btnSaveProfile);
         imgProfile = view.findViewById(R.id.imgProfile);
         btnEditPhoto = view.findViewById(R.id.btnEditPhoto);
+        personalInfoContent = view.findViewById(R.id.personalInfoContent);
+        profileLoading = view.findViewById(R.id.profileLoading);
 
         View btnBack = view.findViewById(R.id.btnBack);
         if (btnBack != null) {
@@ -162,8 +166,10 @@ public class EmployeePersonalInfoFragment extends Fragment {
     }
 
     private void loadProfile() {
+        setLoading(true);
         String token = tokenManager.getToken();
         if (token == null) {
+            setLoading(false);
             Toast.makeText(requireContext(), "Authentication error. Please login again.", Toast.LENGTH_SHORT).show();
             return;
         }
@@ -181,14 +187,25 @@ public class EmployeePersonalInfoFragment extends Fragment {
                         bindProfile(data);
                     }
                 }
+                setLoading(false);
             }
 
             @Override
             public void onFailure(@NonNull Call<UserResponse> call, @NonNull Throwable t) {
                 if (!isAdded()) return;
+                setLoading(false);
                 Toast.makeText(requireContext(), "Failed to load profile.", Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    private void setLoading(boolean isLoading) {
+        if (profileLoading != null) {
+            profileLoading.setVisibility(isLoading ? View.VISIBLE : View.GONE);
+        }
+        if (personalInfoContent != null) {
+            personalInfoContent.setVisibility(isLoading ? View.GONE : View.VISIBLE);
+        }
     }
 
     private void bindProfile(UserResponse.Data data) {

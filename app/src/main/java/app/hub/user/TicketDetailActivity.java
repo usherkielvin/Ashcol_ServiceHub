@@ -30,9 +30,11 @@ public class TicketDetailActivity extends AppCompatActivity implements OnMapRead
 
     private TextView tvTicketId, tvTitle, tvDescription, tvServiceType, tvAddress, tvContact, tvStatus, tvBranch,
             tvAssignedStaff, tvCreatedAt;
+        private TextView tvPaymentAmount, tvPaymentCollectedBy, tvPaymentCollectedDate;
     private Button btnViewMap, btnBack;
     private com.google.android.material.button.MaterialButton btnPayNow;
     private Chip chipPaid;
+        private View paymentInfoGroup;
     private View mapCardContainer;
     private TokenManager tokenManager;
     private FirestoreManager firestoreManager;
@@ -89,6 +91,10 @@ public class TicketDetailActivity extends AppCompatActivity implements OnMapRead
         btnBack = findViewById(R.id.btnBack);
         btnPayNow = findViewById(R.id.btnPayNow);
         chipPaid = findViewById(R.id.chipPaid);
+        paymentInfoGroup = findViewById(R.id.paymentInfoGroup);
+        tvPaymentAmount = findViewById(R.id.tvPaymentAmount);
+        tvPaymentCollectedBy = findViewById(R.id.tvPaymentCollectedBy);
+        tvPaymentCollectedDate = findViewById(R.id.tvPaymentCollectedDate);
         mapCardContainer = findViewById(R.id.mapCardContainer);
     }
 
@@ -203,6 +209,9 @@ public class TicketDetailActivity extends AppCompatActivity implements OnMapRead
         if (chipPaid != null) {
             chipPaid.setVisibility(View.GONE);
         }
+        if (paymentInfoGroup != null) {
+            paymentInfoGroup.setVisibility(View.GONE);
+        }
         if (status == null) {
             return;
         }
@@ -228,6 +237,9 @@ public class TicketDetailActivity extends AppCompatActivity implements OnMapRead
                     if (chipPaid != null) {
                         chipPaid.setVisibility(View.GONE);
                     }
+                    if (paymentInfoGroup != null) {
+                        paymentInfoGroup.setVisibility(View.GONE);
+                    }
                 });
             }
 
@@ -252,6 +264,7 @@ public class TicketDetailActivity extends AppCompatActivity implements OnMapRead
                     if (btnPayNow != null) {
                         btnPayNow.setVisibility(View.GONE);
                     }
+                    bindPaymentInfo(payment);
                 });
             }
 
@@ -261,9 +274,35 @@ public class TicketDetailActivity extends AppCompatActivity implements OnMapRead
                     if (chipPaid != null) {
                         chipPaid.setVisibility(View.GONE);
                     }
+                    if (paymentInfoGroup != null) {
+                        paymentInfoGroup.setVisibility(View.GONE);
+                    }
                 });
             }
         });
+    }
+
+    private void bindPaymentInfo(FirestoreManager.PendingPayment payment) {
+        if (paymentInfoGroup == null || payment == null) {
+            return;
+        }
+
+        if (tvPaymentAmount != null) {
+            tvPaymentAmount.setText("Amount Paid: \u20b1" + String.format(Locale.getDefault(), "%.2f",
+                    payment.amount));
+        }
+        if (tvPaymentCollectedBy != null) {
+            String collectedBy = technicianName;
+            if (collectedBy == null || collectedBy.trim().isEmpty()) {
+                collectedBy = payment.technicianName;
+            }
+            String displayName = (collectedBy == null || collectedBy.trim().isEmpty()) ? "--" : collectedBy;
+            tvPaymentCollectedBy.setText("Collected by: " + displayName);
+        }
+        if (tvPaymentCollectedDate != null) {
+            tvPaymentCollectedDate.setText("Collected: --");
+        }
+        paymentInfoGroup.setVisibility(View.VISIBLE);
     }
 
     private void openPaymentFlow() {

@@ -357,9 +357,10 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
                         android:fontFamily="@font/poppins_semibold"
-                        android:text="Status: Pending"
                         android:textColor="?attr/colorOnSurface"
-                        android:textSize="14sp" />
+                        android:textSize="14sp"
+                        android:visibility="gone"
+                        tools:text="Status: Pending" />
 
                     <TextView
                         android:id="@+id/tvPaymentMethod"
@@ -367,9 +368,10 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="6dp"
                         android:fontFamily="@font/poppins_medium"
-                        android:text="Method: --"
                         android:textColor="?attr/colorOnSurfaceVariant"
-                        android:textSize="13sp" />
+                        android:textSize="13sp"
+                        android:visibility="gone"
+                        tools:text="Method: Cash" />
 
                     <TextView
                         android:id="@+id/tvPaymentAmount"
@@ -377,9 +379,21 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="6dp"
                         android:fontFamily="@font/poppins_medium"
-                        android:text="Amount Paid: --"
                         android:textColor="?attr/colorOnSurfaceVariant"
-                        android:textSize="13sp" />
+                        android:textSize="13sp"
+                        android:visibility="gone"
+                        tools:text="Amount Paid: ₱1,500.00" />
+
+                    <TextView
+                        android:id="@+id/tvPaymentCollectedBy"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:fontFamily="@font/poppins_medium"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:textSize="13sp"
+                        android:visibility="gone"
+                        tools:text="Collected by: Juan Dela Cruz" />
 
                     <TextView
                         android:id="@+id/tvPaymentDate"
@@ -387,9 +401,10 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="6dp"
                         android:fontFamily="@font/poppins_medium"
-                        android:text="Collected: --"
                         android:textColor="?attr/colorOnSurfaceVariant"
-                        android:textSize="13sp" />
+                        android:textSize="13sp"
+                        android:visibility="gone"
+                        tools:text="Collected: Feb 10, 2026" />
 
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
@@ -432,7 +447,6 @@
                         android:drawablePadding="12dp"
                         android:fontFamily="@font/poppins_medium"
                         android:gravity="center_vertical"
-                        android:text="123 Main Street, City, Province"
                         android:textColor="?attr/colorOnSurface"
                         android:textSize="14sp"
                         app:drawableTint="#1B4332" />
