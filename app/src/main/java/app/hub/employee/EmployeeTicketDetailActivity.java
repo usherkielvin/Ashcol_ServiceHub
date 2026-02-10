@@ -3,6 +3,7 @@ package app.hub.employee;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
@@ -193,7 +194,7 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity
         tvServiceType.setText(ticket.getServiceType());
         tvAddress.setText(ticket.getAddress());
         tvContact.setText(ticket.getContact());
-        tvStatus.setText(ticket.getStatus());
+        updateStatusBadge(tvStatus, ticket.getStatus(), ticket.getStatusColor());
         tvCustomerName
                 .setText("Customer: " + (ticket.getCustomerName() != null ? ticket.getCustomerName() : "Unknown"));
         tvCreatedAt.setText("Created: " + ticket.getCreatedAt());
@@ -220,8 +221,7 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity
             tvScheduleNotes.setVisibility(View.GONE);
         }
 
-        // Set status color
-        setStatusColor(tvStatus, ticket.getStatus(), ticket.getStatusColor());
+        // Status badge already applied above.
 
         // Store customer coordinates for map viewing
         customerLatitude = ticket.getLatitude();
@@ -421,41 +421,52 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity
         return timeString;
     }
 
-    private void setStatusColor(TextView textView, String status, String statusColor) {
+    private void updateStatusBadge(TextView textView, String status, String statusColor) {
+        if (textView == null) return;
+
+        String safeStatus = status != null ? status.trim() : "";
+        textView.setText(safeStatus.isEmpty() ? "Unknown" : safeStatus);
+
+        Integer color = null;
         if (statusColor != null && !statusColor.isEmpty()) {
             try {
-                textView.setTextColor(Color.parseColor(statusColor));
-                return;
-            } catch (IllegalArgumentException e) {
+                color = Color.parseColor(statusColor);
+            } catch (IllegalArgumentException ignored) {
             }
         }
 
-        if (status == null)
-            return;
-
-        switch (status.toLowerCase()) {
-            case "pending":
-                textView.setTextColor(Color.parseColor("#FFA500"));
-                break;
-            case "scheduled":
-                textView.setTextColor(Color.parseColor("#6366F1"));
-                break;
-            case "accepted":
-            case "in progress":
-            case "ongoing":
-                textView.setTextColor(Color.parseColor("#2196F3"));
-                break;
-            case "completed":
-                textView.setTextColor(Color.parseColor("#4CAF50"));
-                break;
-            case "cancelled":
-            case "rejected":
-                textView.setTextColor(Color.parseColor("#F44336"));
-                break;
-            default:
-                textView.setTextColor(Color.parseColor("#757575"));
-                break;
+        if (color == null) {
+            String normalized = safeStatus.toLowerCase();
+            switch (normalized) {
+                case "pending":
+                    color = Color.parseColor("#FFA500");
+                    break;
+                case "scheduled":
+                    color = Color.parseColor("#6366F1");
+                    break;
+                case "accepted":
+                case "in progress":
+                case "ongoing":
+                    color = Color.parseColor("#2196F3");
+                    break;
+                case "completed":
+                    color = Color.parseColor("#4CAF50");
+                    break;
+                case "paid":
+                    color = Color.parseColor("#2E7D32");
+                    break;
+                case "cancelled":
+                case "rejected":
+                    color = Color.parseColor("#F44336");
+                    break;
+                default:
+                    color = Color.parseColor("#757575");
+                    break;
+            }
         }
+
+        textView.setTextColor(Color.WHITE);
+        textView.setBackgroundTintList(ColorStateList.valueOf(color));
     }
 
     @Override

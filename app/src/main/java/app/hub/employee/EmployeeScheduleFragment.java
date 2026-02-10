@@ -63,7 +63,6 @@ public class EmployeeScheduleFragment extends Fragment {
     private final List<CalendarAdapter.CalendarDay> calendarDays = new ArrayList<>();
     private final Map<String, List<EmployeeScheduleResponse.ScheduledTicket>> allBufferedTickets = new HashMap<>();
     private final Map<String, List<EmployeeScheduleResponse.ScheduledTicket>> scheduledTicketsMap = new HashMap<>();
-    private static Map<String, List<EmployeeScheduleResponse.ScheduledTicket>> cachedScheduleMap;
 
     private TokenManager tokenManager;
     private FirebaseEmployeeListener firebaseListener;
@@ -96,12 +95,6 @@ public class EmployeeScheduleFragment extends Fragment {
         setupSwipeRefresh();
         setupFirebaseListener();
         initializeCalendar();
-
-        if (cachedScheduleMap != null && !cachedScheduleMap.isEmpty()) {
-            scheduledTicketsMap.clear();
-            scheduledTicketsMap.putAll(cachedScheduleMap);
-            rebuildScheduleMap();
-        }
 
         loadScheduleData(true);
 
@@ -449,8 +442,6 @@ public class EmployeeScheduleFragment extends Fragment {
                 scheduledTicketsMap.put(dateKey, dayTickets);
             }
         }
-
-        cachedScheduleMap = new HashMap<>(scheduledTicketsMap);
 
         android.util.Log.d("EmployeeSchedule", "Schedule entries: " + scheduledTicketsMap.size());
         updateCalendar();
