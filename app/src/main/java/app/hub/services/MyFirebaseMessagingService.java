@@ -16,6 +16,7 @@ import com.google.firebase.messaging.RemoteMessage;
 
 import app.hub.R;
 import app.hub.common.MainActivity;
+import app.hub.user.DashboardActivity;
 import app.hub.util.TokenManager;
 
 /**
@@ -115,7 +116,10 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
      * Show notification in status bar
      */
     private void showNotification(String title, String body, java.util.Map<String, String> data) {
-        Intent intent = new Intent(this, MainActivity.class);
+        String type = data != null ? data.get("type") : null;
+        Intent intent = "payment_pending".equals(type)
+            ? new Intent(this, DashboardActivity.class)
+            : new Intent(this, MainActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 
         // Add notification data to intent

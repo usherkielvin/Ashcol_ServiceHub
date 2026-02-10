@@ -39,6 +39,8 @@ public class UserPaymentFragment extends Fragment {
     private double amount;
     private String serviceName;
     private String technicianName;
+    private String paymentMethod;
+    private boolean autoPaymentTriggered = false;
 
     public UserPaymentFragment() {
         // Required empty public constructor
@@ -237,6 +239,7 @@ public class UserPaymentFragment extends Fragment {
                 amount = payment.getAmount();
                 serviceName = payment.getServiceName();
                 technicianName = payment.getTechnicianName();
+                paymentMethod = payment.getPaymentMethod();
 
                 if (getActivity() != null) {
                     getActivity().runOnUiThread(() -> {
@@ -252,8 +255,20 @@ public class UserPaymentFragment extends Fragment {
 
                         boolean pending = payment.getStatus() != null
                                 && payment.getStatus().equalsIgnoreCase("pending");
-                        btnContinuePayment.setText("Continue");
-                        btnContinuePayment.setEnabled(pending && paymentId > 0 && amount > 0);
+
+                        if (pending && isOnlinePayment(paymentMethod) && !autoPaymentTriggered) {
+                            autoPaymentTriggered = true;
+                            completePayment("Online");
+                            return;
+                        }
+
+                        if (isCashPayment(paymentMethod)) {
+                            btnContinuePayment.setText("Awaiting Cash Collection");
+                            btnContinuePayment.setEnabled(false);
+                        } else {
+                            btnContinuePayment.setText("Continue");
+                            btnContinuePayment.setEnabled(pending && paymentId > 0 && amount > 0);
+                        }
 
                         if (!pending && amount > 0) {
                             tvAmountDue.setText("Paid");
@@ -308,6 +323,14 @@ public class UserPaymentFragment extends Fragment {
                 Toast.makeText(getContext(), "Network error. Try again.", Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    private boolean isOnlinePayment(String method) {
+        return method != null && method.equalsIgnoreCase("online");
+    }
+
+    private boolean isCashPayment(String method) {
+        return method != null && method.equalsIgnoreCase("cash");
     }
 
     private String formatAmount(double value) {
