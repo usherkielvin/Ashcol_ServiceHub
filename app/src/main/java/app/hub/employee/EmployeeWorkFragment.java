@@ -18,6 +18,7 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.fragment.app.Fragment;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import androidx.core.content.ContextCompat;
+import androidx.core.widget.NestedScrollView;
 
 import java.util.ArrayList;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -341,6 +342,7 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
         if (step == STEP_COMPLETED) {
             View overlay = showOverlay(R.layout.item_employee_work_workdone);
             bindTicketDetails(overlay, activeTicket);
+            bindWorkCompletedOverlay(overlay, activeTicket);
             setMapVisible(false);
             return;
         }
@@ -374,6 +376,9 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
         }
         workStatusContainer.removeAllViews();
         View statusView = LayoutInflater.from(getContext()).inflate(layoutResId, workStatusContainer, false);
+        if (statusView instanceof NestedScrollView) {
+            ((NestedScrollView) statusView).setNestedScrollingEnabled(false);
+        }
         workStatusContainer.addView(statusView);
         return statusView;
     }
@@ -436,6 +441,77 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
                 requestPayment.setOnClickListener(v -> openPaymentFlow());
             }
         }
+    }
+
+    private void bindWorkCompletedOverlay(View overlay, TicketListResponse.TicketItem ticket) {
+        if (overlay == null || ticket == null) {
+            return;
+        }
+
+        View backHome = overlay.findViewById(R.id.btnViewHistory);
+        if (backHome != null) {
+            backHome.setOnClickListener(v -> navigateToHome());
+        }
+
+        loadPaidAmount(overlay, ticket.getTicketId());
+    }
+
+    private void navigateToHome() {
+        if (!isAdded() || getActivity() == null) {
+            return;
+        }
+        if (getActivity() instanceof EmployeeDashboardActivity) {
+            ((EmployeeDashboardActivity) getActivity()).updateNavigationIndicator(R.id.nav_home);
+            return;
+        }
+
+        getParentFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragment_container, new EmployeeDashboardFragment())
+                .commit();
+    }
+
+    private void loadPaidAmount(View overlay, String ticketId) {
+        TextView amountView = overlay.findViewById(R.id.tvAmountPaid);
+        if (amountView != null) {
+            amountView.setText("Php --");
+        }
+
+        if (ticketId == null || tokenManager == null) {
+            return;
+        }
+        String token = tokenManager.getToken();
+        if (token == null) {
+            return;
+        }
+
+        ApiService apiService = ApiClient.getApiService();
+        Call<app.hub.api.PaymentDetailResponse> call = apiService.getPaymentByTicketId("Bearer " + token, ticketId);
+        call.enqueue(new Callback<app.hub.api.PaymentDetailResponse>() {
+            @Override
+            public void onResponse(Call<app.hub.api.PaymentDetailResponse> call,
+                                   Response<app.hub.api.PaymentDetailResponse> response) {
+                if (!isAdded() || response.body() == null || !response.body().isSuccess()) {
+                    return;
+                }
+
+                app.hub.api.PaymentDetailResponse.PaymentDetail payment = response.body().getPayment();
+                if (payment == null || amountView == null) {
+                    return;
+                }
+
+                double amount = payment.getAmount();
+                if (amount > 0) {
+                    String amountText = "Php " + String.format(Locale.getDefault(), "%,.2f", amount);
+                    amountView.setText(amountText);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<app.hub.api.PaymentDetailResponse> call, Throwable t) {
+                // Keep UI stable; amount stays as placeholder.
+            }
+        });
     }
 
     private void setStepAction(View view, Runnable action) {
@@ -758,10 +834,123 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
         if (date == null && time == null) {
             return "";
         }
+        Date parsedDateTime = parseScheduleDateTime(date, time);
+        if (parsedDateTime != null) {
+            SimpleDateFormat output = new SimpleDateFormat("MMM d, yyyy • h:mm a", Locale.getDefault());
+            return output.format(parsedDateTime);
+        }
+
+        Date parsedDate = parseScheduleDate(date);
+        Date parsedTime = parseScheduleTime(time);
+
+        if (parsedDate != null && parsedTime != null) {
+            java.util.Calendar dateCal = java.util.Calendar.getInstance();
+            dateCal.setTime(parsedDate);
+            java.util.Calendar timeCal = java.util.Calendar.getInstance();
+            timeCal.setTime(parsedTime);
+            dateCal.set(java.util.Calendar.HOUR_OF_DAY, timeCal.get(java.util.Calendar.HOUR_OF_DAY));
+            dateCal.set(java.util.Calendar.MINUTE, timeCal.get(java.util.Calendar.MINUTE));
+            dateCal.set(java.util.Calendar.SECOND, 0);
+            dateCal.set(java.util.Calendar.MILLISECOND, 0);
+            SimpleDateFormat output = new SimpleDateFormat("MMM d, yyyy • h:mm a", Locale.getDefault());
+            return output.format(dateCal.getTime());
+        }
+
+        if (parsedDate != null) {
+            SimpleDateFormat outputDate = new SimpleDateFormat("MMM d, yyyy", Locale.getDefault());
+            return outputDate.format(parsedDate);
+        }
+
+        if (parsedTime != null) {
+            SimpleDateFormat outputTime = new SimpleDateFormat("h:mm a", Locale.getDefault());
+            return outputTime.format(parsedTime);
+        }
+
         if (date != null && time != null) {
             return date + " • " + time;
         }
         return date != null ? date : time;
+    }
+
+    private Date parseScheduleDateTime(String date, String time) {
+        if (date == null) {
+            return null;
+        }
+        String trimmed = date.trim();
+        if (time != null && !time.trim().isEmpty()) {
+            String combined = trimmed + " " + time.trim();
+            Date combinedParsed = tryParseDate(combined, "yyyy-MM-dd HH:mm:ss");
+            if (combinedParsed != null) {
+                return combinedParsed;
+            }
+            combinedParsed = tryParseDate(combined, "yyyy-MM-dd HH:mm");
+            if (combinedParsed != null) {
+                return combinedParsed;
+            }
+        }
+
+        Date parsed = tryParseDate(trimmed, "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+        if (parsed != null) {
+            return parsed;
+        }
+        parsed = tryParseDate(trimmed, "yyyy-MM-dd'T'HH:mm:ss'Z'");
+        if (parsed != null) {
+            return parsed;
+        }
+        parsed = tryParseDate(trimmed, "yyyy-MM-dd'T'HH:mm:ss");
+        if (parsed != null) {
+            return parsed;
+        }
+        return tryParseDate(trimmed, "yyyy-MM-dd HH:mm:ss");
+    }
+
+    private Date parseScheduleDate(String date) {
+        if (date == null) {
+            return null;
+        }
+        String trimmed = date.trim();
+        Date parsed = tryParseDate(trimmed, "yyyy-MM-dd");
+        if (parsed != null) {
+            return parsed;
+        }
+        parsed = tryParseDate(trimmed, "yyyy/MM/dd");
+        if (parsed != null) {
+            return parsed;
+        }
+        return tryParseDate(trimmed, "MM/dd/yyyy");
+    }
+
+    private Date parseScheduleTime(String time) {
+        if (time == null) {
+            return null;
+        }
+        String trimmed = time.trim();
+        Date parsed = tryParseDate(trimmed, "HH:mm:ss");
+        if (parsed != null) {
+            return parsed;
+        }
+        parsed = tryParseDate(trimmed, "HH:mm");
+        if (parsed != null) {
+            return parsed;
+        }
+        parsed = tryParseDate(trimmed, "hh:mm a");
+        if (parsed != null) {
+            return parsed;
+        }
+        return tryParseDate(trimmed, "h:mm a");
+    }
+
+    private Date tryParseDate(String value, String pattern) {
+        if (value == null) {
+            return null;
+        }
+        try {
+            SimpleDateFormat format = new SimpleDateFormat(pattern, Locale.getDefault());
+            format.setLenient(false);
+            return format.parse(value);
+        } catch (java.text.ParseException e) {
+            return null;
+        }
     }
 
     private void updateMapMarker(double latitude, double longitude) {

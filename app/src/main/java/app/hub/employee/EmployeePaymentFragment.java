@@ -12,6 +12,8 @@ import androidx.fragment.app.Fragment;
 
 import com.google.android.material.button.MaterialButton;
 
+    private boolean isPaymentLoading = false;
+    private String confirmButtonText = "Cash Received";
 import app.hub.R;
 import app.hub.api.ApiClient;
 import app.hub.api.ApiService;
@@ -21,6 +23,10 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+        if (btnPaymentConfirmed != null && btnPaymentConfirmed.getText() != null) {
+            confirmButtonText = btnPaymentConfirmed.getText().toString();
+        }
+
 /**
  * Full-width fragment version of the payment confirmation UI.
  */
@@ -28,6 +34,14 @@ public class EmployeePaymentFragment extends Fragment {
 
     public interface OnPaymentConfirmedListener {
         void onPaymentConfirmed(String paymentMethod, double amount, String notes);
+            if (isPaymentLoading || totalAmount <= 0) {
+                if (getContext() != null) {
+                    android.widget.Toast.makeText(getContext(),
+                            "Amount not ready yet. Please wait.",
+                            android.widget.Toast.LENGTH_SHORT).show();
+                }
+                return;
+            }
     }
 
     private static final String ARG_TICKET_ID = "ticket_id";
@@ -60,12 +74,14 @@ public class EmployeePaymentFragment extends Fragment {
     }
 
     @Nullable
-    @Override
+                if (!isAdded() || response.body() == null || !response.body().isSuccess()) {
+                    setPaymentLoading(false);
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         if (getArguments() != null) {
             ticketId = getArguments().getString(ARG_TICKET_ID);
+                    setPaymentLoading(false);
             customerName = getArguments().getString(ARG_CUSTOMER_NAME);
             serviceName = getArguments().getString(ARG_SERVICE_NAME);
             totalAmount = getArguments().getDouble(ARG_TOTAL_AMOUNT, 0.0);
@@ -94,10 +110,20 @@ public class EmployeePaymentFragment extends Fragment {
         if (tvCustomerName != null) {
             tvCustomerName.setText(customerName != null ? customerName : "");
         }
+                setPaymentLoading(false);
         if (tvServiceName != null) {
             tvServiceName.setText(serviceName != null ? serviceName : "");
         }
         if (tvTotalAmount != null) {
+
+    private void setPaymentLoading(boolean loading) {
+        isPaymentLoading = loading;
+        if (btnPaymentConfirmed == null) {
+            return;
+        }
+        btnPaymentConfirmed.setEnabled(!loading);
+        btnPaymentConfirmed.setText(loading ? "Loading..." : confirmButtonText);
+    }
             String amountText = "Php " + String.format("%.2f", totalAmount);
             tvTotalAmount.setText(amountText);
         }
@@ -131,8 +157,10 @@ public class EmployeePaymentFragment extends Fragment {
             return;
         }
 
+        setPaymentLoading(true);
         String token = tokenManager.getToken();
         if (token == null) {
+            setPaymentLoading(false);
             return;
         }
 
