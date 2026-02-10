@@ -277,6 +277,14 @@ public class MainActivity extends AppCompatActivity {
                     errorMessage = String.format(getString(R.string.google_sign_in_failed_code), e.getStatusCode());
             }
             Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show();
+            
+            // Re-enable login button after Google Sign-In failure/cancellation
+            if (loginButton != null) {
+                runOnUiThread(() -> {
+                    loginButton.setEnabled(true);
+                    loginButton.setText(R.string.login);
+                });
+            }
         }
     }
 
@@ -314,7 +322,15 @@ public class MainActivity extends AppCompatActivity {
                         Log.w(TAG, "Google Sign-In failed - API returned success=false");
                         String errorMsg = signInResponse.getMessage() != null ? signInResponse.getMessage()
                                 : getString(R.string.account_not_found_register);
-                        runOnUiThread(() -> showError(getString(R.string.login_failed_title), errorMsg));
+                        runOnUiThread(() -> {
+                            showError(getString(R.string.login_failed_title), errorMsg);
+                            
+                            // Re-enable login button after Google Sign-In failure
+                            if (loginButton != null) {
+                                loginButton.setEnabled(true);
+                                loginButton.setText(R.string.login);
+                            }
+                        });
                         signOutFromGoogle();
                     }
                 } else {
@@ -325,6 +341,12 @@ public class MainActivity extends AppCompatActivity {
                         runOnUiThread(() -> {
                             showError("Sign In Failed",
                                     "No account found with this Google account. Please register first.");
+                            
+                            // Re-enable login button after Google Sign-In failure
+                            if (loginButton != null) {
+                                loginButton.setEnabled(true);
+                                loginButton.setText(R.string.login);
+                            }
                         });
                         signOutFromGoogle();
                         return;
@@ -336,7 +358,15 @@ public class MainActivity extends AppCompatActivity {
                     }
                     Log.e(TAG, "Google Sign-In error: " + errorMsg);
                     final String finalErrorMsg = errorMsg;
-                    runOnUiThread(() -> showError(getString(R.string.login_failed_title), finalErrorMsg));
+                    runOnUiThread(() -> {
+                        showError(getString(R.string.login_failed_title), finalErrorMsg);
+                        
+                        // Re-enable login button after Google Sign-In failure
+                        if (loginButton != null) {
+                            loginButton.setEnabled(true);
+                            loginButton.setText(R.string.login);
+                        }
+                    });
                     signOutFromGoogle();
                 }
             }
@@ -346,8 +376,16 @@ public class MainActivity extends AppCompatActivity {
                 Log.e(TAG, "Google Sign-In request failed", t);
 
                 Log.e(TAG, String.format(getString(R.string.error_logging_in_google), t.getMessage()), t);
-                runOnUiThread(() -> showError(getString(R.string.connection_error_title),
-                    getString(R.string.connection_error_msg)));
+                runOnUiThread(() -> {
+                    showError(getString(R.string.connection_error_title),
+                        getString(R.string.connection_error_msg));
+                    
+                    // Re-enable login button after Google Sign-In failure
+                    if (loginButton != null) {
+                        loginButton.setEnabled(true);
+                        loginButton.setText(R.string.login);
+                    }
+                });
                 signOutFromGoogle();
             }
         });
@@ -489,7 +527,15 @@ public class MainActivity extends AppCompatActivity {
                         }
                     }
                     final String finalErrorMsg = errorMsg;
-                    runOnUiThread(() -> showError(getString(R.string.login_failed_title), finalErrorMsg));
+                    runOnUiThread(() -> {
+                        showError(getString(R.string.login_failed_title), finalErrorMsg);
+                        
+                        // Re-enable login button after login failure
+                        if (loginButton != null) {
+                            loginButton.setEnabled(true);
+                            loginButton.setText(R.string.login);
+                        }
+                    });
                 }
             }
 
@@ -581,6 +627,12 @@ public class MainActivity extends AppCompatActivity {
 
         // Handle Google Sign-In result
         if (requestCode == RC_SIGN_IN) {
+            // Re-enable login button regardless of result
+            if (loginButton != null) {
+                loginButton.setEnabled(true);
+                loginButton.setText(R.string.login);
+            }
+
             // Check result code first
             if (resultCode != RESULT_OK) {
                 if (!isGooglePlayServicesAvailable()) {
