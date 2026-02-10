@@ -566,6 +566,7 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
         intent.putExtra("ticket_id", activeTicket.getTicketId());
         intent.putExtra(EXTRA_OPEN_PAYMENT, true);
         intent.putExtra(EXTRA_FINISH_AFTER_PAYMENT, true);
+        intent.putExtra(EmployeeTicketDetailActivity.EXTRA_REQUEST_PAYMENT, true);
         if (paymentLauncher != null) {
             paymentLauncher.launch(intent);
         } else {

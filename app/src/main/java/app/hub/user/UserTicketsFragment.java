@@ -28,6 +28,7 @@ import app.hub.R;
 import app.hub.api.ApiClient;
 import app.hub.api.ApiService;
 import app.hub.api.TicketListResponse;
+import app.hub.employee.EmployeeTicketDetailActivity;
 import app.hub.util.TokenManager;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -241,8 +242,13 @@ public class UserTicketsFragment extends Fragment {
         // Set click listener for ticket items
         adapter.setOnTicketClickListener(ticket -> {
             Log.d(TAG, "Ticket clicked: " + ticket.getTicketId());
-            Intent intent = new Intent(getContext(), TicketDetailActivity.class);
+            boolean isCompleted = isCompletedStatus(ticket != null ? ticket.getStatus() : null);
+            Intent intent = new Intent(getContext(),
+                    isCompleted ? EmployeeTicketDetailActivity.class : TicketDetailActivity.class);
             intent.putExtra("ticket_id", ticket.getTicketId());
+            if (isCompleted) {
+                intent.putExtra(EmployeeTicketDetailActivity.EXTRA_READ_ONLY, true);
+            }
             startActivity(intent);
         });
 
@@ -262,6 +268,17 @@ public class UserTicketsFragment extends Fragment {
 
         // Setup SwipeRefreshLayout
         setupSwipeRefresh();
+    }
+
+    private boolean isCompletedStatus(String status) {
+        if (status == null) {
+            return false;
+        }
+        String normalized = status.trim().toLowerCase(java.util.Locale.ENGLISH);
+        return normalized.contains("completed")
+                || normalized.contains("paid")
+                || normalized.contains("resolved")
+                || normalized.contains("closed");
     }
 
     private void setupSwipeRefresh() {

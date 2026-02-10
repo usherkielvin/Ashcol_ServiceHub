@@ -11,6 +11,17 @@
 			"isBackground": false,
 			"problemMatcher": [],
 			"group": "build"
+		},
+		{
+			"label": "gradle assembleDebug",
+			"type": "shell",
+			"command": ".\\gradlew",
+			"args": [
+				"assembleDebug"
+			],
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
 		}
 	]
 }

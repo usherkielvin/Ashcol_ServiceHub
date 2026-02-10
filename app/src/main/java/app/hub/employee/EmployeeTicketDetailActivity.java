@@ -59,9 +59,13 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1001;
     private static final String EXTRA_OPEN_PAYMENT = "open_payment";
     public static final String EXTRA_FINISH_AFTER_PAYMENT = "finish_after_payment";
+    public static final String EXTRA_READ_ONLY = "read_only";
+    public static final String EXTRA_REQUEST_PAYMENT = "request_payment";
 
     private boolean openPaymentOnLoad = false;
     private boolean finishAfterPayment = false;
+    private boolean isReadOnly = false;
+    private boolean isRequestPayment = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,6 +88,13 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity
         ticketId = getIntent().getStringExtra("ticket_id");
         openPaymentOnLoad = getIntent().getBooleanExtra(EXTRA_OPEN_PAYMENT, false);
         finishAfterPayment = getIntent().getBooleanExtra(EXTRA_FINISH_AFTER_PAYMENT, false);
+        isReadOnly = getIntent().getBooleanExtra(EXTRA_READ_ONLY, false);
+        isRequestPayment = getIntent().getBooleanExtra(EXTRA_REQUEST_PAYMENT, false);
+        if (isReadOnly) {
+            openPaymentOnLoad = false;
+            finishAfterPayment = false;
+            isRequestPayment = false;
+        }
 
         if (ticketId != null) {
             loadTicketDetails();
@@ -123,6 +134,16 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity
         btnBack.setOnClickListener(v -> finish());
 
         btnViewMap.setOnClickListener(v -> openInMapsApp());
+
+        if (isReadOnly) {
+            if (btnStartWork != null) {
+                btnStartWork.setVisibility(View.GONE);
+            }
+            if (btnCompleteWork != null) {
+                btnCompleteWork.setVisibility(View.GONE);
+            }
+            return;
+        }
 
         btnStartWork.setOnClickListener(v -> updateTicketStatus("ongoing"));
         if (btnCompleteWork != null) {
@@ -328,6 +349,15 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity
     }
 
     private void updateActionButtons(String status) {
+        if (isReadOnly) {
+            if (btnStartWork != null) {
+                btnStartWork.setVisibility(View.GONE);
+            }
+            if (btnCompleteWork != null) {
+                btnCompleteWork.setVisibility(View.GONE);
+            }
+            return;
+        }
         if (status == null)
             return;
 
@@ -639,7 +669,8 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity
             ticketId,
             customerName,
             serviceName,
-            amount);
+            amount,
+            isRequestPayment);
         getSupportFragmentManager()
                 .beginTransaction()
                 .add(android.R.id.content, fragment)
