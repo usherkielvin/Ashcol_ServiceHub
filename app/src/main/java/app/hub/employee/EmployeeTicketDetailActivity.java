@@ -1,10 +1,9 @@
 package app.hub.employee;
 
-import android.Manifest;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -13,7 +12,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
@@ -32,7 +30,6 @@ import app.hub.api.UpdateTicketStatusRequest;
 import app.hub.api.UpdateTicketStatusResponse;
 import app.hub.api.CompleteWorkRequest;
 import app.hub.api.CompleteWorkResponse;
-import app.hub.map.EmployeeMapActivity;
 import app.hub.util.TokenManager;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -124,29 +121,12 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity
     private void setupClickListeners() {
         btnBack.setOnClickListener(v -> finish());
 
-        btnViewMap.setOnClickListener(v -> {
-            if (customerLatitude != 0 && customerLongitude != 0) {
-                // Check location permission before opening map
-                if (ActivityCompat.checkSelfPermission(this,
-                        Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                    ActivityCompat.requestPermissions(this, new String[] { Manifest.permission.ACCESS_FINE_LOCATION },
-                            LOCATION_PERMISSION_REQUEST_CODE);
-                    return;
-                }
-
-                Intent intent = new Intent(this, EmployeeMapActivity.class);
-                intent.putExtra("customer_latitude", customerLatitude);
-                intent.putExtra("customer_longitude", customerLongitude);
-                intent.putExtra("customer_address", tvAddress.getText().toString());
-                intent.putExtra("ticket_id", ticketId);
-                startActivity(intent);
-            } else {
-                Toast.makeText(this, "Customer location not available", Toast.LENGTH_SHORT).show();
-            }
-        });
+        btnViewMap.setOnClickListener(v -> openInMapsApp());
 
         btnStartWork.setOnClickListener(v -> updateTicketStatus("ongoing"));
-        btnCompleteWork.setOnClickListener(v -> showPaymentFragment());
+        if (btnCompleteWork != null) {
+            btnCompleteWork.setVisibility(View.GONE);
+        }
     }
 
     private void loadTicketDetails() {
@@ -355,22 +335,42 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity
             case "assigned":
             case "scheduled":
                 btnStartWork.setVisibility(View.VISIBLE);
-                btnCompleteWork.setVisibility(View.GONE);
+                if (btnCompleteWork != null) btnCompleteWork.setVisibility(View.GONE);
                 break;
             case "in progress":
             case "ongoing":
                 btnStartWork.setVisibility(View.GONE);
-                btnCompleteWork.setVisibility(View.VISIBLE);
+                if (btnCompleteWork != null) btnCompleteWork.setVisibility(View.GONE);
                 break;
             case "completed":
             case "cancelled":
                 btnStartWork.setVisibility(View.GONE);
-                btnCompleteWork.setVisibility(View.GONE);
+                if (btnCompleteWork != null) btnCompleteWork.setVisibility(View.GONE);
                 break;
             default:
                 btnStartWork.setVisibility(View.GONE);
-                btnCompleteWork.setVisibility(View.GONE);
+                if (btnCompleteWork != null) btnCompleteWork.setVisibility(View.GONE);
                 break;
+        }
+    }
+
+    private void openInMapsApp() {
+        if (customerLatitude == 0 || customerLongitude == 0) {
+            Toast.makeText(this, "Customer location not available", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        String address = tvAddress != null ? tvAddress.getText().toString() : "";
+        String label = address != null ? address : "Service Location";
+        String uri = "geo:" + customerLatitude + "," + customerLongitude
+                + "?q=" + customerLatitude + "," + customerLongitude + "(" + Uri.encode(label) + ")";
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(uri));
+        intent.setPackage("com.google.android.apps.maps");
+
+        if (intent.resolveActivity(getPackageManager()) != null) {
+            startActivity(intent);
+        } else {
+            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(uri)));
         }
     }
 

@@ -39,6 +39,7 @@ import app.hub.api.ApiClient;
 import app.hub.api.ApiService;
 import app.hub.api.CreateTicketRequest;
 import app.hub.api.CreateTicketResponse;
+import app.hub.api.UserResponse;
 import app.hub.map.MapSelectionActivity;
 import app.hub.util.TokenManager;
 import retrofit2.Call;
@@ -121,6 +122,8 @@ public class UserCreateTicketFragment extends Fragment {
             fullNameInput.setText(registeredName);
         }
 
+        prefillContactFromProfile();
+
         // Set default service type
         if (serviceTypeDisplay != null) {
             serviceTypeDisplay.setText("Service Type:\n" + selectedServiceType);
@@ -201,6 +204,54 @@ public class UserCreateTicketFragment extends Fragment {
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
                 selectedUnitType = null;
+            }
+        });
+    }
+
+    private void prefillContactFromProfile() {
+        if (contactInput == null || tokenManager == null) {
+            return;
+        }
+
+        String currentValue = contactInput.getText() != null
+                ? contactInput.getText().toString().trim()
+                : "";
+        if (!currentValue.isEmpty()) {
+            return;
+        }
+
+        String token = tokenManager.getToken();
+        if (token == null || token.trim().isEmpty()) {
+            return;
+        }
+
+        String authToken = token.startsWith("Bearer ") ? token : "Bearer " + token;
+        ApiService apiService = ApiClient.getApiService();
+        Call<UserResponse> call = apiService.getUser(authToken);
+        call.enqueue(new Callback<UserResponse>() {
+            @Override
+            public void onResponse(@NonNull Call<UserResponse> call, @NonNull Response<UserResponse> response) {
+                if (!isAdded()) return;
+
+                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                    UserResponse.Data data = response.body().getData();
+                    if (data != null && data.getPhone() != null) {
+                        String phone = data.getPhone().trim();
+                        if (!phone.isEmpty() && contactInput != null) {
+                            String current = contactInput.getText() != null
+                                    ? contactInput.getText().toString().trim()
+                                    : "";
+                            if (current.isEmpty()) {
+                                contactInput.setText(phone);
+                            }
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<UserResponse> call, @NonNull Throwable t) {
+                // Ignore prefill failures.
             }
         });
     }

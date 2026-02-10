@@ -69,6 +69,9 @@ public class FirebaseEmployeeListener {
             ticketListeners.add(firestore.collection("tickets")
                     .whereEqualTo("assigned_staff", employeeEmail)
                     .addSnapshotListener((snapshots, error) -> handleSnapshot(snapshots, error)));
+            ticketListeners.add(firestore.collection("tickets")
+                .whereEqualTo("assigned_staff_email", employeeEmail)
+                .addSnapshotListener((snapshots, error) -> handleSnapshot(snapshots, error)));
         }
     }
 

@@ -52,13 +52,7 @@ public class RecentActivityAdapter extends RecyclerView.Adapter<RecentActivityAd
         holder.tvAddress.setText(ticket.getAddress());
 
         // Set status badge color
-        try {
-            int color = Color.parseColor(ticket.getStatusColor());
-            holder.tvStatusBadge.getBackground().setTint(color);
-        } catch (Exception e) {
-            // Default to a safe color if parsing fails
-            holder.tvStatusBadge.getBackground().setTint(Color.parseColor("#757575"));
-        }
+        holder.tvStatusBadge.getBackground().setTint(resolveStatusColor(ticket));
 
         // Click listener to open ticket details
         holder.itemView.setOnClickListener(v -> {
@@ -86,5 +80,26 @@ public class RecentActivityAdapter extends RecyclerView.Adapter<RecentActivityAd
             tvDescription = itemView.findViewById(R.id.tvDescription);
             tvAddress = itemView.findViewById(R.id.tvAddress);
         }
+    }
+
+    private int resolveStatusColor(DashboardStatsResponse.RecentTicket ticket) {
+        if (ticket == null) {
+            return Color.parseColor("#757575");
+        }
+
+        String status = ticket.getStatus() != null ? ticket.getStatus().trim().toLowerCase() : "";
+        if (status.equals("ongoing") || status.equals("in progress") || status.equals("accepted")) {
+            return Color.parseColor("#2196F3");
+        }
+
+        String statusColor = ticket.getStatusColor();
+        if (statusColor != null && !statusColor.isEmpty()) {
+            try {
+                return Color.parseColor(statusColor);
+            } catch (IllegalArgumentException ignored) {
+            }
+        }
+
+        return Color.parseColor("#757575");
     }
 }
