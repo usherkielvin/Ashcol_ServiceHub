@@ -49,8 +49,6 @@ public class SplashActivity extends AppCompatActivity {
         }
         
         startActivity(intent);
-        // Apply transition: next activity slides in from top, this one slides out to bottom
-        overridePendingTransition(R.anim.slide_in_top, R.anim.slide_out_bottom);
         finish();
     }
 }
