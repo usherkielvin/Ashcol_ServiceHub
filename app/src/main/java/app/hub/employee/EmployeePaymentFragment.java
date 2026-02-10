@@ -34,11 +34,13 @@ public class EmployeePaymentFragment extends Fragment {
     private static final String ARG_CUSTOMER_NAME = "customer_name";
     private static final String ARG_SERVICE_NAME = "service_name";
     private static final String ARG_TOTAL_AMOUNT = "total_amount";
+    private static final String ARG_REQUEST_ONLY = "request_only";
 
     private String ticketId;
     private String customerName;
     private String serviceName;
     private double totalAmount;
+    private boolean requestOnly;
 
     private TextView tvTicketId;
     private TextView tvCustomerName;
@@ -51,15 +53,21 @@ public class EmployeePaymentFragment extends Fragment {
     private String confirmButtonText = "Cash Received";
 
     public static EmployeePaymentFragment newInstance(String ticketId, String customerName,
-            String serviceName, double totalAmount) {
+            String serviceName, double totalAmount, boolean requestOnly) {
         EmployeePaymentFragment fragment = new EmployeePaymentFragment();
         Bundle args = new Bundle();
         args.putString(ARG_TICKET_ID, ticketId);
         args.putString(ARG_CUSTOMER_NAME, customerName);
         args.putString(ARG_SERVICE_NAME, serviceName);
         args.putDouble(ARG_TOTAL_AMOUNT, totalAmount);
+        args.putBoolean(ARG_REQUEST_ONLY, requestOnly);
         fragment.setArguments(args);
         return fragment;
+    }
+
+    public static EmployeePaymentFragment newInstance(String ticketId, String customerName,
+            String serviceName, double totalAmount) {
+        return newInstance(ticketId, customerName, serviceName, totalAmount, false);
     }
 
     @Nullable
@@ -71,6 +79,7 @@ public class EmployeePaymentFragment extends Fragment {
             customerName = getArguments().getString(ARG_CUSTOMER_NAME);
             serviceName = getArguments().getString(ARG_SERVICE_NAME);
             totalAmount = getArguments().getDouble(ARG_TOTAL_AMOUNT, 0.0);
+            requestOnly = getArguments().getBoolean(ARG_REQUEST_ONLY, false);
         }
         return inflater.inflate(R.layout.fragment_employee_work_confirmpayment, container, false);
     }

@@ -242,13 +242,9 @@ public class UserTicketsFragment extends Fragment {
         // Set click listener for ticket items
         adapter.setOnTicketClickListener(ticket -> {
             Log.d(TAG, "Ticket clicked: " + ticket.getTicketId());
-            boolean isCompleted = isCompletedStatus(ticket != null ? ticket.getStatus() : null);
-            Intent intent = new Intent(getContext(),
-                    isCompleted ? EmployeeTicketDetailActivity.class : TicketDetailActivity.class);
+            Intent intent = new Intent(getContext(), EmployeeTicketDetailActivity.class);
             intent.putExtra("ticket_id", ticket.getTicketId());
-            if (isCompleted) {
-                intent.putExtra(EmployeeTicketDetailActivity.EXTRA_READ_ONLY, true);
-            }
+            intent.putExtra(EmployeeTicketDetailActivity.EXTRA_READ_ONLY, true);
             startActivity(intent);
         });
 
@@ -268,17 +264,6 @@ public class UserTicketsFragment extends Fragment {
 
         // Setup SwipeRefreshLayout
         setupSwipeRefresh();
-    }
-
-    private boolean isCompletedStatus(String status) {
-        if (status == null) {
-            return false;
-        }
-        String normalized = status.trim().toLowerCase(java.util.Locale.ENGLISH);
-        return normalized.contains("completed")
-                || normalized.contains("paid")
-                || normalized.contains("resolved")
-                || normalized.contains("closed");
     }
 
     private void setupSwipeRefresh() {
