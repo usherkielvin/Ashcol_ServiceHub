@@ -30,8 +30,10 @@ import app.hub.api.LogoutResponse;
 import app.hub.api.ProfilePhotoResponse;
 import app.hub.api.UserResponse;
 import app.hub.common.MainActivity;
+import app.hub.common.ProfileAboutUsFragment;
 import app.hub.employee.EmployeePersonalInfoFragment;
 import app.hub.util.TokenManager;
+import app.hub.util.UiPreferences;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -48,6 +50,9 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class AdminProfileFragment extends Fragment {
+
+    private static final long PROFILE_REFRESH_INTERVAL_MS = 15000;
+    private long lastProfileFetchMs = 0L;
 
     private TokenManager tokenManager;
     private String currentName;
@@ -75,11 +80,21 @@ public class AdminProfileFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         tokenManager = new TokenManager(requireContext());
+        UiPreferences.applyTheme(tokenManager.getThemePreference());
         initializeViews(view);
         loadCachedData();
         loadProfileImage();
         fetchUserData();
         setupClickListeners(view);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        loadProfileImage();
+        if (shouldRefreshProfile()) {
+            fetchUserData();
+        }
     }
 
     private void initializeLaunchers() {
@@ -143,6 +158,8 @@ public class AdminProfileFragment extends Fragment {
             return;
         }
 
+        lastProfileFetchMs = System.currentTimeMillis();
+
         ApiService apiService = ApiClient.getApiService();
         Call<UserResponse> call = apiService.getUser(token);
         call.enqueue(new Callback<UserResponse>() {
@@ -166,6 +183,10 @@ public class AdminProfileFragment extends Fragment {
                 fallbackToCachedData();
             }
         });
+    }
+
+    private boolean shouldRefreshProfile() {
+        return System.currentTimeMillis() - lastProfileFetchMs > PROFILE_REFRESH_INTERVAL_MS;
     }
 
     private void processUserData(UserResponse.Data userData) {
@@ -374,8 +395,7 @@ public class AdminProfileFragment extends Fragment {
         setClickListener(view, R.id.btn_personal_info, this::openPersonalInfo);
         setClickListener(view, R.id.btn_password, () -> 
             showToast("Password clicked"));
-        setClickListener(view, R.id.btn_about, () -> 
-            showToast("About us clicked"));
+        setClickListener(view, R.id.btn_about, () -> navigateToFragment(new ProfileAboutUsFragment()));
         setClickListener(view, R.id.btn_display, () -> showThemeToggler());
         setClickListener(view, R.id.btn_notifications, () -> 
             showNotificationSettings());
@@ -844,6 +864,10 @@ public class AdminProfileFragment extends Fragment {
                 }
                 
                 tokenManager.setThemePreference(selectedTheme);
+                UiPreferences.applyTheme(selectedTheme);
+                if (getActivity() != null) {
+                    getActivity().recreate();
+                }
                 showToast("Theme updated to " + selectedTheme);
                 bottomSheetDialog.dismiss();
             });

@@ -1,4 +1,4 @@
-package app.hub.employee;
+package app.hub.common;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -10,16 +10,17 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import com.facebook.shimmer.ShimmerFrameLayout;
+
 import app.hub.R;
 import app.hub.api.AboutResponse;
 import app.hub.api.ApiClient;
 import app.hub.api.ApiService;
-import com.facebook.shimmer.ShimmerFrameLayout;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class EmployeeAboutUsFragment extends Fragment {
+public class ProfileAboutUsFragment extends Fragment {
 
     private TextView tvAboutTitle;
     private TextView tvAboutBody;
@@ -74,7 +75,6 @@ public class EmployeeAboutUsFragment extends Fragment {
 
             @Override
             public void onFailure(@NonNull Call<AboutResponse> call, @NonNull Throwable t) {
-                // Keep existing static content
                 if (!isAdded()) return;
                 setLoading(false);
             }
