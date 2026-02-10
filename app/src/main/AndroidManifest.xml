@@ -35,15 +35,6 @@
             android:resource="@array/preloaded_fonts" />
 
         <activity
-            android:name=".common.SplashActivity"
-            android:exported="true"
-            android:theme="@style/Theme.ServiceHubApp">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-        <activity
             android:name=".IntroActivity"
             android:exported="false"
             android:theme="@style/Theme.ServiceHubApp" />
@@ -82,7 +73,12 @@
             android:exported="false" />
         <activity
             android:name=".common.MainActivity"
-            android:exported="false" />
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
         <activity
             android:name=".user.DashboardActivity"
             android:exported="false" />
