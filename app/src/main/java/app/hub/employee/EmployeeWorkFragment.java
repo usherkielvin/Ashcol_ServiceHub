@@ -70,6 +70,7 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
 
     private static final String PREFS_NAME = "employee_work_steps";
     private static final String PREFS_TIMES = "employee_work_times";
+    private static final String PREFS_DISMISSED = "employee_work_dismissed";
     private static final int STEP_ASSIGNED = 0;
     private static final int STEP_ON_THE_WAY = 1;
     private static final int STEP_ARRIVED = 2;
@@ -166,6 +167,9 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
             // Set refresh listener
             swipeRefreshLayout.setOnRefreshListener(() -> {
                 android.util.Log.d("EmployeeWork", "Pull-to-refresh triggered");
+                if (activeTicket != null && resolveStep(activeTicket) == STEP_COMPLETED) {
+                    dismissCompletedTicket(activeTicket.getTicketId());
+                }
                 loadAssignedTickets();
             });
 
@@ -353,6 +357,7 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
         bindStepTimes(statusView, activeTicket);
         bindStatusActions(statusView, step);
         applyCompletedUi(statusView, activeTicket);
+        setMapVisible(false);
         updateMapMarker(activeTicket.getLatitude(), activeTicket.getLongitude());
     }
 
@@ -450,7 +455,11 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
 
         View backHome = overlay.findViewById(R.id.btnViewHistory);
         if (backHome != null) {
-            backHome.setOnClickListener(v -> navigateToHome());
+            backHome.setOnClickListener(v -> {
+                dismissCompletedTicket(ticket.getTicketId());
+                loadAssignedTickets();
+                navigateToHome();
+            });
         }
 
         loadPaidAmount(overlay, ticket.getTicketId());
@@ -589,6 +598,8 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
             return null;
         }
 
+        java.util.Set<String> dismissed = getDismissedCompletedTickets();
+
         TicketListResponse.TicketItem best = null;
         int bestPriority = Integer.MAX_VALUE;
         long bestTime = Long.MAX_VALUE;
@@ -604,7 +615,17 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
             String status = ticket.getStatus().trim().toLowerCase();
             long ticketTime = getTicketSortTime(ticket);
 
+            if (!isTicketCompletedStatus(status) && !isTicketLocallyCompleted(ticket)) {
+                if (ticket.getTicketId() != null && dismissed.contains(ticket.getTicketId())) {
+                    dismissed.remove(ticket.getTicketId());
+                    saveDismissedCompletedTickets(dismissed);
+                }
+            }
+
             if (isTicketCompletedStatus(status) || isTicketLocallyCompleted(ticket)) {
+                if (ticket.getTicketId() != null && dismissed.contains(ticket.getTicketId())) {
+                    continue;
+                }
                 if (completedFallback == null || ticketTime < completedTime) {
                     completedFallback = ticket;
                     completedTime = ticketTime;
@@ -621,6 +642,34 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
         }
 
         return best != null ? best : completedFallback;
+    }
+
+    private java.util.Set<String> getDismissedCompletedTickets() {
+        if (!isAdded()) {
+            return new java.util.HashSet<>();
+        }
+        SharedPreferences prefs = requireContext().getSharedPreferences(PREFS_DISMISSED,
+                android.content.Context.MODE_PRIVATE);
+        java.util.Set<String> stored = prefs.getStringSet("dismissed", new java.util.HashSet<>());
+        return stored == null ? new java.util.HashSet<>() : new java.util.HashSet<>(stored);
+    }
+
+    private void saveDismissedCompletedTickets(java.util.Set<String> dismissed) {
+        if (!isAdded()) {
+            return;
+        }
+        SharedPreferences prefs = requireContext().getSharedPreferences(PREFS_DISMISSED,
+                android.content.Context.MODE_PRIVATE);
+        prefs.edit().putStringSet("dismissed", dismissed).apply();
+    }
+
+    private void dismissCompletedTicket(String ticketId) {
+        if (ticketId == null || !isAdded()) {
+            return;
+        }
+        java.util.Set<String> dismissed = getDismissedCompletedTickets();
+        dismissed.add(ticketId);
+        saveDismissedCompletedTickets(dismissed);
     }
 
     private boolean isTicketLocallyCompleted(TicketListResponse.TicketItem ticket) {
@@ -957,7 +1006,7 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
         if (googleMap == null || mapViewActiveJob == null) {
             return;
         }
-        setMapVisible(true);
+        setMapVisible(false);
 
         if (latitude != 0 && longitude != 0) {
             customerLatLng = new LatLng(latitude, longitude);
@@ -1040,8 +1089,7 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
         }
 
         if (markerCount == 0) {
-            // Keep the map visible to avoid flashing/clearing when data is delayed.
-            setMapVisible(true);
+            setMapVisible(false);
             return;
         }
 
@@ -1129,6 +1177,7 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
     @Override
     public void onMapReady(GoogleMap map) {
         googleMap = map;
+        setMapVisible(false);
         if (activeTicket != null) {
             updateMapMarker(activeTicket.getLatitude(), activeTicket.getLongitude());
         }

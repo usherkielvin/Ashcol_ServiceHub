@@ -12,8 +12,6 @@ import androidx.fragment.app.Fragment;
 
 import com.google.android.material.button.MaterialButton;
 
-    private boolean isPaymentLoading = false;
-    private String confirmButtonText = "Cash Received";
 import app.hub.R;
 import app.hub.api.ApiClient;
 import app.hub.api.ApiService;
@@ -23,10 +21,6 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-        if (btnPaymentConfirmed != null && btnPaymentConfirmed.getText() != null) {
-            confirmButtonText = btnPaymentConfirmed.getText().toString();
-        }
-
 /**
  * Full-width fragment version of the payment confirmation UI.
  */
@@ -34,14 +28,6 @@ public class EmployeePaymentFragment extends Fragment {
 
     public interface OnPaymentConfirmedListener {
         void onPaymentConfirmed(String paymentMethod, double amount, String notes);
-            if (isPaymentLoading || totalAmount <= 0) {
-                if (getContext() != null) {
-                    android.widget.Toast.makeText(getContext(),
-                            "Amount not ready yet. Please wait.",
-                            android.widget.Toast.LENGTH_SHORT).show();
-                }
-                return;
-            }
     }
 
     private static final String ARG_TICKET_ID = "ticket_id";
@@ -60,6 +46,8 @@ public class EmployeePaymentFragment extends Fragment {
     private TextView tvTotalAmount;
     private MaterialButton btnPaymentConfirmed;
     private TokenManager tokenManager;
+    private boolean isPaymentLoading = false;
+    private String confirmButtonText = "Cash Received";
 
     public static EmployeePaymentFragment newInstance(String ticketId, String customerName,
             String serviceName, double totalAmount) {
@@ -74,14 +62,11 @@ public class EmployeePaymentFragment extends Fragment {
     }
 
     @Nullable
-                if (!isAdded() || response.body() == null || !response.body().isSuccess()) {
-                    setPaymentLoading(false);
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         if (getArguments() != null) {
             ticketId = getArguments().getString(ARG_TICKET_ID);
-                    setPaymentLoading(false);
             customerName = getArguments().getString(ARG_CUSTOMER_NAME);
             serviceName = getArguments().getString(ARG_SERVICE_NAME);
             totalAmount = getArguments().getDouble(ARG_TOTAL_AMOUNT, 0.0);
@@ -104,26 +89,20 @@ public class EmployeePaymentFragment extends Fragment {
         btnPaymentConfirmed = view.findViewById(R.id.btnPaymentConfirmed);
         tokenManager = new TokenManager(requireContext());
 
+        if (btnPaymentConfirmed != null && btnPaymentConfirmed.getText() != null) {
+            confirmButtonText = btnPaymentConfirmed.getText().toString();
+        }
+
         if (tvTicketId != null) {
             tvTicketId.setText(ticketId != null ? ticketId : "");
         }
         if (tvCustomerName != null) {
             tvCustomerName.setText(customerName != null ? customerName : "");
         }
-                setPaymentLoading(false);
         if (tvServiceName != null) {
             tvServiceName.setText(serviceName != null ? serviceName : "");
         }
         if (tvTotalAmount != null) {
-
-    private void setPaymentLoading(boolean loading) {
-        isPaymentLoading = loading;
-        if (btnPaymentConfirmed == null) {
-            return;
-        }
-        btnPaymentConfirmed.setEnabled(!loading);
-        btnPaymentConfirmed.setText(loading ? "Loading..." : confirmButtonText);
-    }
             String amountText = "Php " + String.format("%.2f", totalAmount);
             tvTotalAmount.setText(amountText);
         }
@@ -135,6 +114,14 @@ public class EmployeePaymentFragment extends Fragment {
             return;
         }
         btnPaymentConfirmed.setOnClickListener(v -> {
+            if (isPaymentLoading || totalAmount <= 0) {
+                if (getContext() != null) {
+                    android.widget.Toast.makeText(getContext(),
+                            "Amount not ready yet. Please wait.",
+                            android.widget.Toast.LENGTH_SHORT).show();
+                }
+                return;
+            }
             if (getActivity() instanceof OnPaymentConfirmedListener) {
                 ((OnPaymentConfirmedListener) getActivity())
                         .onPaymentConfirmed("cash", totalAmount, "");
@@ -170,11 +157,13 @@ public class EmployeePaymentFragment extends Fragment {
             @Override
             public void onResponse(Call<PaymentDetailResponse> call, Response<PaymentDetailResponse> response) {
                 if (!isAdded() || response.body() == null || !response.body().isSuccess()) {
+                    setPaymentLoading(false);
                     return;
                 }
 
                 PaymentDetailResponse.PaymentDetail payment = response.body().getPayment();
                 if (payment == null) {
+                    setPaymentLoading(false);
                     return;
                 }
 
@@ -197,13 +186,25 @@ public class EmployeePaymentFragment extends Fragment {
                         tvCustomerName.setText(customerName);
                     }
                 }
+
+                setPaymentLoading(false);
             }
 
             @Override
             public void onFailure(Call<PaymentDetailResponse> call, Throwable t) {
+                setPaymentLoading(false);
                 // Ignore to keep UI stable; amount will stay as-is.
             }
         });
+    }
+
+    private void setPaymentLoading(boolean loading) {
+        isPaymentLoading = loading;
+        if (btnPaymentConfirmed == null) {
+            return;
+        }
+        btnPaymentConfirmed.setEnabled(!loading);
+        btnPaymentConfirmed.setText(loading ? "Loading..." : confirmButtonText);
     }
 }
 
