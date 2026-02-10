@@ -173,38 +173,27 @@
                 android:text="Gender"
                 android:textColor="?attr/colorOnSurface" />
 
-            <RelativeLayout
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/layoutGender"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="24dp">
+                android:layout_marginBottom="24dp"
+                app:endIconMode="dropdown_menu"
+                app:hintEnabled="false">
 
-                <TextView
+                <com.google.android.material.textfield.MaterialAutoCompleteTextView
                     android:id="@+id/tvGender"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:background="@null"
+                    android:background="@android:color/transparent"
                     android:fontFamily="@font/poppins_medium"
                     android:hint="Select gender"
-                    android:paddingBottom="8dp"
+                    android:inputType="text"
                     android:textColor="?attr/colorOnSurface"
                     android:textColorHint="?attr/colorOnSurfaceVariant"
                     android:textSize="16sp"
                     tools:text="Male" />
-
-                <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:layout_alignParentEnd="true"
-                    android:src="@drawable/down_arrow"
-                    app:tint="?attr/colorOnSurfaceVariant" />
-                
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:layout_alignParentBottom="true"
-                    android:background="?attr/colorOutline"
-                    android:alpha="0.2" />
-            </RelativeLayout>
+            </com.google.android.material.textfield.TextInputLayout>
 
             <!-- Date of Birth -->
             <TextView
