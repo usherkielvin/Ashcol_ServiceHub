@@ -1,341 +1,374 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?android:attr/colorBackground"
+    android:background="@android:color/white"
     tools:context="app.hub.EmployeeTicketDetailActivity">
 
+    <!-- Standardized Fixed Header Section with Deep Elevation -->
     <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/header"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingBottom="32dp">
+        android:background="?attr/colorSurface"
+        android:elevation="12dp"
+        android:paddingTop="40dp"
+        android:paddingBottom="12dp"
+        app:layout_constraintTop_toTopOf="parent">
 
-        <!-- Green Header Section -->
-        <View
-            android:id="@+id/headerBackground"
-            android:layout_width="match_parent"
-            android:layout_height="160dp"
-            android:background="@drawable/header_green"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <com.google.android.material.button.MaterialButton
+        <ImageButton
             android:id="@+id/btnBack"
-            style="@style/Widget.Material3.Button.TextButton"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
-            android:layout_marginStart="20dp"
-            android:layout_marginTop="48dp"
-            android:contentDescription="@string/desc_back"
-            android:insetLeft="0dp"
-            android:insetTop="0dp"
-            android:insetRight="0dp"
-            android:insetBottom="0dp"
-            app:backgroundTint="@android:color/transparent"
-            app:icon="@drawable/outline_arrow_back_24"
-            app:iconSize="32dp"
-            app:iconTint="#FFFFFF"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Back"
+            android:src="@drawable/outline_arrow_back_24"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:rippleColor="#40FFFFFF" />
+            app:tint="#1B4332" />
 
         <TextView
             android:id="@+id/tvHeaderTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Work Assignment"
-            android:textColor="#FFFFFF"
-            android:textSize="30sp"
+            android:fontFamily="@font/poppins_bold"
+            android:letterSpacing="0.05"
+            android:text="TICKET DETAILS"
+            android:textColor="#9E9E9E"
+            android:textSize="22sp"
             android:textStyle="bold"
-            app:layout_constraintBottom_toBottomOf="@+id/btnBack"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/btnBack" />
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toEndOf="@id/btnBack"
+            app:layout_constraintTop_toTopOf="parent" />
 
-        <!-- Ticket ID Card (Now Under Header) -->
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/ticketIdCard"
+        <!-- Legacy ID maintained for compatibility -->
+        <View
+            android:id="@+id/headerBackground"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:visibility="gone" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:fillViewport="true"
+        android:overScrollMode="never"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/header">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="24dp"
-            android:layout_marginTop="24dp"
-            android:layout_marginEnd="24dp"
-            app:cardBackgroundColor="?attr/colorSurface"
-            app:cardCornerRadius="12dp"
-            app:cardElevation="6dp"
-            app:layout_constraintTop_toBottomOf="@id/headerBackground"
-            app:strokeWidth="0dp">
+            android:paddingBottom="32dp">
 
-            <LinearLayout
+            <!-- Ticket ID & Status Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/ticketIdCard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:gravity="center"
-                android:orientation="vertical"
-                android:padding="16dp">
+                android:layout_marginHorizontal="20dp"
+                android:layout_marginTop="20dp"
+                app:cardBackgroundColor="@android:color/white"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="12dp"
+                app:cardUseCompatPadding="true"
+                app:strokeWidth="0.5dp"
+                app:strokeColor="#EEEEEE"
+                app:layout_constraintTop_toTopOf="parent">
 
-                <TextView
-                    android:id="@+id/tvTicketId"
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="TCKTId_0001"
-                    android:textColor="@color/service_icon_tint"
-                    android:textSize="24sp"
-                    android:textStyle="bold" />
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:padding="20dp">
 
-                <TextView
-                    android:id="@+id/tvStatus"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:background="@drawable/bg_status_badge"
-                    android:paddingHorizontal="16dp"
-                    android:paddingVertical="4dp"
-                    android:text="Status: In Progress"
-                    android:textColor="#FFFFFF"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
+                    <TextView
+                        android:id="@+id/tvTicketId"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/poppins_bold"
+                        android:text="TCKTId_0001"
+                        android:textColor="#1B4332"
+                        android:textSize="24sp" />
 
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
+                    <TextView
+                        android:id="@+id/tvStatus"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:background="@drawable/bg_status_rounded"
+                        android:backgroundTint="#FFC107"
+                        android:fontFamily="@font/poppins_bold"
+                        android:paddingHorizontal="16dp"
+                        android:paddingVertical="6dp"
+                        android:text="In Progress"
+                        android:textColor="#FFFFFF"
+                        android:textSize="12sp" />
 
-        <!-- Customer Information Card -->
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/customerCard"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="20dp"
-            android:layout_marginTop="16dp"
-            android:layout_marginEnd="20dp"
-            app:cardBackgroundColor="?attr/colorSurface"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="3dp"
-            app:layout_constraintTop_toBottomOf="@id/ticketIdCard"
-            app:strokeColor="?attr/colorOutline"
-            app:strokeWidth="1dp">
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
 
-            <LinearLayout
+            <!-- Customer Information Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/customerCard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="20dp">
+                android:layout_marginHorizontal="20dp"
+                android:layout_marginTop="8dp"
+                app:cardBackgroundColor="@android:color/white"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="12dp"
+                app:cardUseCompatPadding="true"
+                app:strokeColor="#EEEEEE"
+                app:strokeWidth="0.5dp"
+                app:layout_constraintTop_toBottomOf="@id/ticketIdCard">
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Customer Information"
-                    android:textColor="@color/quick_services_title_color"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/tvCustomerName"
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:text="Customer: John Doe"
-                    android:textColor="?attr/colorOnSurface"
-                    android:textSize="16sp" />
+                    android:orientation="vertical"
+                    android:padding="20dp">
 
-                <TextView
-                    android:id="@+id/tvContact"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:drawableStart="@drawable/phone"
-                    android:drawablePadding="12dp"
-                    android:gravity="center_vertical"
-                    android:text="+63 912 345 6789"
-                    android:textColor="?attr/colorOnSurface"
-                    android:textSize="16sp"
-                    app:drawableTint="@color/service_icon_tint" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/poppins_bold"
+                        android:text="Customer Information"
+                        android:textColor="#1B4332"
+                        android:textSize="16sp" />
 
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
+                    <TextView
+                        android:id="@+id/tvCustomerName"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:fontFamily="@font/poppins_medium"
+                        android:text="Customer: John Doe"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textSize="14sp" />
 
-        <!-- Service Details Card -->
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/serviceDetailsCard"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="20dp"
-            android:layout_marginTop="16dp"
-            android:layout_marginEnd="20dp"
-            app:cardBackgroundColor="?attr/colorSurface"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="3dp"
-            app:layout_constraintTop_toBottomOf="@id/customerCard"
-            app:strokeColor="?attr/colorOutline"
-            app:strokeWidth="1dp">
+                    <TextView
+                        android:id="@+id/tvContact"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:drawableStart="@drawable/phone"
+                        android:drawablePadding="12dp"
+                        android:fontFamily="@font/poppins_medium"
+                        android:gravity="center_vertical"
+                        android:text="+63 912 345 6789"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textSize="14sp"
+                        app:drawableTint="#1B4332" />
 
-            <LinearLayout
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Service Details Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/serviceDetailsCard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="20dp">
+                android:layout_marginHorizontal="20dp"
+                android:layout_marginTop="8dp"
+                app:cardBackgroundColor="@android:color/white"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="12dp"
+                app:cardUseCompatPadding="true"
+                app:strokeColor="#EEEEEE"
+                app:strokeWidth="0.5dp"
+                app:layout_constraintTop_toBottomOf="@id/customerCard">
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Service Details"
-                    android:textColor="@color/quick_services_title_color"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    style="@style/TextAppearance.Material3.LabelMedium"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:text="Service Title"
-                    android:textColor="?attr/colorOnSurfaceVariant" />
-
-                <TextView
-                    android:id="@+id/tvTitle"
-                    style="@style/TextAppearance.Material3.BodyLarge"
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="AC Repair &amp; Diagnostics"
-                    android:textColor="?attr/colorOnSurface" />
+                    android:orientation="vertical"
+                    android:padding="20dp">
 
-                <TextView
-                    style="@style/TextAppearance.Material3.LabelMedium"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:text="Service Type"
-                    android:textColor="?attr/colorOnSurfaceVariant" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/poppins_bold"
+                        android:text="Service Details"
+                        android:textColor="#1B4332"
+                        android:textSize="16sp" />
 
-                <TextView
-                    android:id="@+id/tvServiceType"
-                    style="@style/TextAppearance.Material3.BodyLarge"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="General Service"
-                    android:textColor="?attr/colorOnSurface" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:fontFamily="@font/poppins_medium"
+                        android:text="Service Title"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:textSize="12sp" />
 
+                    <TextView
+                        android:id="@+id/tvTitle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/poppins_bold"
+                        android:text="AC Repair &amp; Diagnostics"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textSize="15sp" />
 
-                <TextView
-                    style="@style/TextAppearance.Material3.LabelMedium"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:text="Description"
-                    android:textColor="?attr/colorOnSurfaceVariant" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:fontFamily="@font/poppins_medium"
+                        android:text="Service Type"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:textSize="12sp" />
 
-                <TextView
-                    android:id="@+id/tvDescription"
-                    style="@style/TextAppearance.Material3.BodyLarge"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="My AC needs a deep cleaning."
-                    android:textColor="?attr/colorOnSurface" />
+                    <TextView
+                        android:id="@+id/tvServiceType"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/poppins_bold"
+                        android:text="General Service"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textSize="15sp" />
 
-                <TextView
-                    style="@style/TextAppearance.Material3.LabelMedium"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:text="Assigned Date"
-                    android:textColor="?attr/colorOnSurfaceVariant" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:fontFamily="@font/poppins_medium"
+                        android:text="Description"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:textSize="12sp" />
 
-                <TextView
-                    android:id="@+id/tvCreatedAt"
-                    style="@style/TextAppearance.Material3.BodyLarge"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Jan 15, 2026 - 10:00 AM"
-                    android:textColor="?attr/colorOnSurface" />
+                    <TextView
+                        android:id="@+id/tvDescription"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/poppins_medium"
+                        android:text="My AC needs a deep cleaning."
+                        android:textColor="?attr/colorOnSurface"
+                        android:textSize="14sp" />
 
-                <TextView
-                    style="@style/TextAppearance.Material3.LabelMedium"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:text="Schedule"
-                    android:textColor="?attr/colorOnSurfaceVariant" />
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginVertical="16dp"
+                        android:alpha="0.1"
+                        android:background="?attr/colorOnSurface" />
 
-                <TextView
-                    android:id="@+id/tvScheduleDate"
-                    style="@style/TextAppearance.Material3.BodyLarge"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Scheduled Date: Feb 5, 2026"
-                    android:textColor="?attr/colorOnSurface" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/poppins_medium"
+                        android:text="Assigned Date"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:textSize="12sp" />
 
-                <TextView
-                    android:id="@+id/tvScheduleTime"
-                    style="@style/TextAppearance.Material3.BodyLarge"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:text="Scheduled Time: 9:00 AM"
-                    android:textColor="?attr/colorOnSurface" />
+                    <TextView
+                        android:id="@+id/tvCreatedAt"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/poppins_semibold"
+                        android:text="Jan 15, 2026 - 10:00 AM"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textSize="14sp" />
 
-                <TextView
-                    android:id="@+id/tvScheduleNotes"
-                    style="@style/TextAppearance.Material3.BodyMedium"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:text="Notes: Please bring ladder for roof access"
-                    android:textColor="?attr/colorOnSurfaceVariant"
-                    android:textStyle="italic"
-                    android:visibility="gone" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:fontFamily="@font/poppins_medium"
+                        android:text="Schedule"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:textSize="12sp" />
 
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
+                    <TextView
+                        android:id="@+id/tvScheduleDate"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/poppins_bold"
+                        android:text="Feb 5, 2026"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textSize="14sp" />
 
-        <!-- Service Location Card -->
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/locationCard"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="20dp"
-            android:layout_marginTop="16dp"
-            android:layout_marginEnd="20dp"
-            app:cardBackgroundColor="?attr/colorSurface"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="3dp"
-            app:layout_constraintTop_toBottomOf="@id/serviceDetailsCard"
-            app:strokeColor="?attr/colorOutline"
-            app:strokeWidth="1dp">
+                    <TextView
+                        android:id="@+id/tvScheduleTime"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:fontFamily="@font/poppins_semibold"
+                        android:text="9:00 AM"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textSize="14sp" />
 
-            <LinearLayout
+                    <TextView
+                        android:id="@+id/tvScheduleNotes"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:fontFamily="@font/poppins_medium"
+                        android:text="Notes: Please bring ladder for roof access"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:textStyle="italic"
+                        android:visibility="gone" />
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Service Location Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/locationCard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="20dp">
+                android:layout_marginHorizontal="20dp"
+                android:layout_marginTop="8dp"
+                app:cardBackgroundColor="@android:color/white"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="12dp"
+                app:cardUseCompatPadding="true"
+                app:strokeColor="#EEEEEE"
+                app:strokeWidth="0.5dp"
+                app:layout_constraintTop_toBottomOf="@id/serviceDetailsCard">
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Service Location"
-                    android:textColor="@color/quick_services_title_color"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/tvAddress"
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:drawableStart="@drawable/ic_pin"
-                    android:drawablePadding="12dp"
-                    android:gravity="center_vertical"
-                    android:text="123 Main Street, City, Province"
-                    android:textColor="?attr/colorOnSurface"
-                    android:textSize="16sp"
-                    app:drawableTint="@color/service_icon_tint" />
+                    android:orientation="vertical"
+                    android:padding="20dp">
 
-                    <!-- Map Card -->
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/poppins_bold"
+                        android:text="Service Location"
+                        android:textColor="#1B4332"
+                        android:textSize="16sp" />
+
+                    <TextView
+                        android:id="@+id/tvAddress"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:drawableStart="@drawable/ic_pin"
+                        android:drawablePadding="12dp"
+                        android:fontFamily="@font/poppins_medium"
+                        android:gravity="center_vertical"
+                        android:text="123 Main Street, City, Province"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textSize="14sp"
+                        app:drawableTint="#1B4332" />
+
                     <com.google.android.material.card.MaterialCardView
                         android:id="@+id/mapCardContainer"
                         android:layout_width="match_parent"
                         android:layout_height="200dp"
                         android:layout_marginTop="16dp"
                         android:visibility="gone"
-                        app:cardCornerRadius="20dp"
+                        app:cardCornerRadius="12dp"
                         app:cardElevation="0dp"
                         app:strokeColor="?attr/colorOutlineVariant"
                         app:strokeWidth="1dp">
@@ -354,53 +387,58 @@
                         android:layout_width="match_parent"
                         android:layout_height="56dp"
                         android:layout_marginTop="16dp"
+                        android:fontFamily="@font/poppins_bold"
                         android:text="Navigate to Customer"
                         android:textAllCaps="false"
-                        android:textColor="@color/service_icon_tint"
+                        android:textColor="#1B4332"
                         android:visibility="gone"
+                        app:cornerRadius="12dp"
                         app:icon="@drawable/location"
-                        app:iconTint="@color/service_icon_tint"
-                        app:strokeColor="@color/service_icon_tint" />
+                        app:iconTint="#1B4332"
+                        app:strokeColor="#1B4332" />
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Action Buttons -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="20dp"
+                android:layout_marginTop="24dp"
+                android:orientation="vertical"
+                app:layout_constraintTop_toBottomOf="@id/locationCard">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnStartWork"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:backgroundTint="#1B4332"
+                    android:fontFamily="@font/poppins_bold"
+                    android:text="Start Work"
+                    android:textAllCaps="false"
+                    android:textColor="#FFFFFF"
+                    app:cornerRadius="28dp"
+                    app:icon="@drawable/work"
+                    app:iconTint="#FFFFFF" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnCompleteWork"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:layout_marginTop="12dp"
+                    android:backgroundTint="#2196F3"
+                    android:fontFamily="@font/poppins_bold"
+                    android:text="Complete Work"
+                    android:textAllCaps="false"
+                    android:textColor="#FFFFFF"
+                    android:visibility="gone"
+                    app:cornerRadius="28dp"
+                    app:icon="@drawable/ic_completed"
+                    app:iconTint="#FFFFFF" />
 
             </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
 
-        <!-- Action Buttons -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="24dp"
-            android:layout_marginTop="32dp"
-            android:layout_marginEnd="24dp"
-            android:orientation="vertical"
-            app:layout_constraintTop_toBottomOf="@id/locationCard">
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnStartWork"
-                android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:backgroundTint="@color/service_icon_tint"
-                android:text="Start Work"
-                android:textAllCaps="false"
-                android:textColor="#FFFFFF"
-                app:cornerRadius="12dp"
-                app:icon="@drawable/work" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnCompleteWork"
-                android:layout_width="match_parent"
-                android:layout_height="56dp"
-                android:layout_marginTop="12dp"
-                android:backgroundTint="@color/blue"
-                android:text="Complete Work"
-                android:textAllCaps="false"
-                android:textColor="#FFFFFF"
-                android:visibility="gone"
-                app:cornerRadius="12dp"
-                app:icon="@drawable/ic_completed" />
-
-        </LinearLayout>
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
-
-</androidx.core.widget.NestedScrollView>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.core.widget.NestedScrollView>
+</androidx.constraintlayout.widget.ConstraintLayout>
