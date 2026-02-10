@@ -395,17 +395,6 @@
                         android:visibility="gone"
                         tools:text="Collected by: Juan Dela Cruz" />
 
-                    <TextView
-                        android:id="@+id/tvPaymentDate"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="6dp"
-                        android:fontFamily="@font/poppins_medium"
-                        android:textColor="?attr/colorOnSurfaceVariant"
-                        android:textSize="13sp"
-                        android:visibility="gone"
-                        tools:text="Collected: Feb 10, 2026" />
-
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 

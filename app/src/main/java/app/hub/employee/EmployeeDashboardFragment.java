@@ -236,7 +236,7 @@ public class EmployeeDashboardFragment extends Fragment {
         }
 
         if (activeTickets.isEmpty()) {
-            tvNoEventsToday.setText("No upcoming scheduled work.");
+            tvNoEventsToday.setText("No schedules available.");
             tvNoEventsToday.setVisibility(View.VISIBLE);
             return;
         }

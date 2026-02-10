@@ -43,7 +43,7 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity
 
         private TextView tvTicketId, tvTitle, tvDescription, tvServiceType, tvAddress, tvContact, tvStatus, tvCustomerName,
             tvCreatedAt, tvScheduleDate, tvScheduleTime, tvScheduleNotes;
-        private TextView tvPaymentStatus, tvPaymentMethod, tvPaymentAmount, tvPaymentCollectedBy, tvPaymentDate;
+        private TextView tvPaymentStatus, tvPaymentMethod, tvPaymentAmount, tvPaymentCollectedBy;
         private View paymentCard;
         private View contentContainer;
     private Button btnViewMap, btnStartWork, btnCompleteWork;
@@ -112,7 +112,6 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity
         tvPaymentMethod = findViewById(R.id.tvPaymentMethod);
         tvPaymentAmount = findViewById(R.id.tvPaymentAmount);
         tvPaymentCollectedBy = findViewById(R.id.tvPaymentCollectedBy);
-        tvPaymentDate = findViewById(R.id.tvPaymentDate);
         paymentCard = findViewById(R.id.paymentCard);
         contentContainer = findViewById(R.id.contentContainer);
         btnViewMap = findViewById(R.id.btnViewMap);
@@ -203,18 +202,17 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity
         updateStatusBadge(tvStatus, ticket.getStatus(), ticket.getStatusColor());
         tvCustomerName
                 .setText("Customer: " + (ticket.getCustomerName() != null ? ticket.getCustomerName() : "Unknown"));
-        tvCreatedAt.setText(formatDateTime(ticket.getCreatedAt()));
+        tvCreatedAt.setText(formatDateOnly(ticket.getCreatedAt()));
 
         // Display schedule information
-        if (ticket.getScheduledDate() != null && !ticket.getScheduledDate().isEmpty()) {
-            tvScheduleDate.setText("Scheduled Date: " + formatDate(ticket.getScheduledDate()));
-            tvScheduleDate.setVisibility(View.VISIBLE);
-        } else {
-            tvScheduleDate.setVisibility(View.GONE);
-        }
+        tvScheduleDate.setVisibility(View.GONE);
 
-        if (ticket.getScheduledTime() != null && !ticket.getScheduledTime().isEmpty()) {
-            tvScheduleTime.setText("Scheduled Time: " + formatTime(ticket.getScheduledTime()));
+        String scheduleTime = ticket.getScheduledTime();
+        if (scheduleTime == null || scheduleTime.trim().isEmpty()) {
+            scheduleTime = extractTimeFromDateTime(ticket.getCreatedAt());
+        }
+        if (scheduleTime != null && !scheduleTime.trim().isEmpty()) {
+            tvScheduleTime.setText(formatTime(scheduleTime));
             tvScheduleTime.setVisibility(View.VISIBLE);
         } else {
             tvScheduleTime.setVisibility(View.GONE);
@@ -254,7 +252,6 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity
         if (tvPaymentMethod != null) tvPaymentMethod.setVisibility(View.GONE);
         if (tvPaymentAmount != null) tvPaymentAmount.setVisibility(View.GONE);
         if (tvPaymentCollectedBy != null) tvPaymentCollectedBy.setVisibility(View.GONE);
-        if (tvPaymentDate != null) tvPaymentDate.setVisibility(View.GONE);
 
         if (status == null) {
             paymentCard.setVisibility(View.GONE);
@@ -306,13 +303,16 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity
         if (payment == null) return;
         String statusValue = payment.getStatus() != null ? payment.getStatus() : "";
         boolean isPaid = isPaidStatus(statusValue);
+        String methodValue = payment.getPaymentMethod() != null ? payment.getPaymentMethod() : "";
+        boolean isCash = methodValue.trim().equalsIgnoreCase("cash");
+        boolean hasAmount = payment.getAmount() > 0;
         if (tvPaymentStatus != null) {
             String status = statusValue.isEmpty() ? "Pending" : statusValue;
             tvPaymentStatus.setText("Status: " + status);
             tvPaymentStatus.setVisibility(View.VISIBLE);
         }
         if (tvPaymentMethod != null) {
-            String method = payment.getPaymentMethod() != null ? payment.getPaymentMethod() : "--";
+            String method = methodValue.isEmpty() ? "--" : methodValue;
             tvPaymentMethod.setText("Method: " + method);
             tvPaymentMethod.setVisibility(View.VISIBLE);
         }
@@ -326,21 +326,13 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity
             }
         }
         if (tvPaymentCollectedBy != null) {
-            if (isPaid) {
+            if (isPaid && isCash && hasAmount) {
                 String collectedBy = currentTicket != null ? currentTicket.getAssignedStaff() : null;
                 String displayName = (collectedBy == null || collectedBy.trim().isEmpty()) ? "--" : collectedBy;
                 tvPaymentCollectedBy.setText("Collected by: " + displayName);
                 tvPaymentCollectedBy.setVisibility(View.VISIBLE);
             } else {
                 tvPaymentCollectedBy.setVisibility(View.GONE);
-            }
-        }
-        if (tvPaymentDate != null) {
-            if (isPaid) {
-                tvPaymentDate.setText("Collected: --");
-                tvPaymentDate.setVisibility(View.VISIBLE);
-            } else {
-                tvPaymentDate.setVisibility(View.GONE);
             }
         }
     }
@@ -484,14 +476,57 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity
         return dateTimeString;
     }
 
+    private String formatDateOnly(String dateTimeString) {
+        if (dateTimeString == null || dateTimeString.trim().isEmpty()) {
+            return "";
+        }
+
+        String[] patterns = new String[] {
+                "yyyy-MM-dd HH:mm:ss",
+                "yyyy-MM-dd'T'HH:mm:ss",
+                "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
+                "yyyy-MM-dd"
+        };
+        java.text.SimpleDateFormat outputFormat = new java.text.SimpleDateFormat("MMM dd, yyyy",
+                java.util.Locale.getDefault());
+
+        for (String pattern : patterns) {
+            try {
+                java.text.SimpleDateFormat inputFormat = new java.text.SimpleDateFormat(pattern,
+                        java.util.Locale.getDefault());
+                inputFormat.setLenient(true);
+                java.util.Date date = inputFormat.parse(dateTimeString);
+                if (date != null) {
+                    return outputFormat.format(date);
+                }
+            } catch (java.text.ParseException ignored) {
+            }
+        }
+
+        return dateTimeString;
+    }
+
     private String formatTime(String timeString) {
         if (timeString == null || timeString.isEmpty()) {
             return "";
         }
 
         try {
+            java.text.SimpleDateFormat inputFormat = new java.text.SimpleDateFormat("HH:mm:ss",
+                java.util.Locale.getDefault());
+            java.text.SimpleDateFormat outputFormat = new java.text.SimpleDateFormat("h:mm a",
+                java.util.Locale.getDefault());
+
+            java.util.Date time = inputFormat.parse(timeString);
+            if (time != null) {
+            return outputFormat.format(time);
+            }
+        } catch (java.text.ParseException ignored) {
+        }
+
+        try {
             java.text.SimpleDateFormat inputFormat = new java.text.SimpleDateFormat("HH:mm",
-                    java.util.Locale.getDefault());
+                java.util.Locale.getDefault());
             java.text.SimpleDateFormat outputFormat = new java.text.SimpleDateFormat("h:mm a",
                     java.util.Locale.getDefault());
 
@@ -504,6 +539,35 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity
         }
 
         return timeString;
+    }
+
+    private String extractTimeFromDateTime(String dateTimeString) {
+        if (dateTimeString == null || dateTimeString.trim().isEmpty()) {
+            return null;
+        }
+
+        String[] patterns = new String[] {
+                "yyyy-MM-dd HH:mm:ss",
+                "yyyy-MM-dd'T'HH:mm:ss",
+                "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"
+        };
+        java.text.SimpleDateFormat outputFormat = new java.text.SimpleDateFormat("HH:mm:ss",
+                java.util.Locale.getDefault());
+
+        for (String pattern : patterns) {
+            try {
+                java.text.SimpleDateFormat inputFormat = new java.text.SimpleDateFormat(pattern,
+                        java.util.Locale.getDefault());
+                inputFormat.setLenient(true);
+                java.util.Date date = inputFormat.parse(dateTimeString);
+                if (date != null) {
+                    return outputFormat.format(date);
+                }
+            } catch (java.text.ParseException ignored) {
+            }
+        }
+
+        return null;
     }
 
     private void updateStatusBadge(TextView textView, String status, String statusColor) {
