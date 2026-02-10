@@ -67,6 +67,7 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
 
     private TicketListResponse.TicketItem activeTicket;
     private ActivityResultLauncher<Intent> paymentLauncher;
+    private boolean isLoadingTickets = false;
 
     private static final String PREFS_NAME = "employee_work_steps";
     private static final String PREFS_TIMES = "employee_work_times";
@@ -131,7 +132,8 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
         super.onViewCreated(view, savedInstanceState);
 
         initViews(view);
-        loadAssignedTickets();
+        showInitialState();
+        loadAssignedTickets(true);
     }
 
     private void initViews(View view) {
@@ -170,7 +172,7 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
                 if (activeTicket != null && resolveStep(activeTicket) == STEP_COMPLETED) {
                     dismissCompletedTicket(activeTicket.getTicketId());
                 }
-                loadAssignedTickets();
+                loadAssignedTickets(true);
             });
 
             android.util.Log.d("EmployeeWork", "SwipeRefreshLayout configured");
@@ -178,16 +180,23 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
     }
 
     private void loadAssignedTickets() {
+        loadAssignedTickets(false);
+    }
+
+    private void loadAssignedTickets(boolean preserveUi) {
         // Check if fragment is still attached and context is valid
         if (!isAdded() || getContext() == null) {
             android.util.Log.w("EmployeeWork", "Fragment detached or context null, skipping load");
             return;
         }
 
-        // Prevent stale map/status from flashing while loading.
-        setMapVisible(false);
-        if (workStatusContainer != null) {
-            workStatusContainer.removeAllViews();
+        isLoadingTickets = true;
+        if (!preserveUi) {
+            // Prevent stale map/status from flashing while loading.
+            setMapVisible(false);
+            if (workStatusContainer != null) {
+                workStatusContainer.removeAllViews();
+            }
         }
 
         String token = tokenManager.getToken();
@@ -221,6 +230,7 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
                     return;
                 }
 
+                isLoadingTickets = false;
                 swipeRefreshLayout.setRefreshing(false);
 
                 android.util.Log.d("EmployeeWork",
@@ -311,12 +321,24 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
                     return;
                 }
 
+                isLoadingTickets = false;
                 swipeRefreshLayout.setRefreshing(false);
                 String errorMessage = "Network error: " + t.getMessage();
                 Toast.makeText(getContext(), errorMessage, Toast.LENGTH_SHORT).show();
                 android.util.Log.e("EmployeeWork", "Network Error", t);
             }
         });
+    }
+
+    private void showInitialState() {
+        if (!isAdded()) {
+            return;
+        }
+        setMapVisible(false);
+        if (workStatusContainer != null) {
+            workStatusContainer.removeAllViews();
+        }
+        showOverlay(R.layout.fragment_employee_work_nojob);
     }
 
     private void setupMapView() {
@@ -457,7 +479,7 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
         if (backHome != null) {
             backHome.setOnClickListener(v -> {
                 dismissCompletedTicket(ticket.getTicketId());
-                loadAssignedTickets();
+                loadAssignedTickets(true);
                 navigateToHome();
             });
         }
@@ -1189,7 +1211,7 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
         if (mapViewActiveJob != null) {
             mapViewActiveJob.onResume();
         }
-        loadAssignedTickets();
+        loadAssignedTickets(true);
     }
 
     @Override

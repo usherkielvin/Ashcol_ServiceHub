@@ -141,30 +141,37 @@ public class CalendarAdapter extends RecyclerView.Adapter<CalendarAdapter.Calend
         }
 
         public void bind(CalendarDay day) {
+            // Hide placeholders for non-date cells
+            if (day.getDayOfMonth() <= 0 || !day.isCurrentMonth()) {
+                tvDayNumber.setText("");
+                tvDayNumber.setVisibility(View.INVISIBLE);
+                indicatorContainer.setVisibility(View.GONE);
+                indicator1.setVisibility(View.GONE);
+                indicator2.setVisibility(View.GONE);
+                indicator3.setVisibility(View.GONE);
+                cardDay.setCardBackgroundColor(Color.TRANSPARENT);
+                cardDay.setStrokeWidth(0);
+                return;
+            }
+
+            tvDayNumber.setVisibility(View.VISIBLE);
             // Set day number
             tvDayNumber.setText(String.valueOf(day.getDayOfMonth()));
 
             // Style based on month
-            if (day.isCurrentMonth()) {
-                tvDayNumber.setTextColor(Color.parseColor("#333333"));
-                cardDay.setCardBackgroundColor(Color.WHITE);
-                cardDay.setStrokeColor(Color.parseColor("#EEEEEE"));
-            } else {
-                tvDayNumber.setTextColor(Color.parseColor("#CCCCCC"));
-                cardDay.setCardBackgroundColor(Color.parseColor("#FAFAFA"));
-                cardDay.setStrokeColor(Color.parseColor("#EEEEEE"));
-            }
+            tvDayNumber.setTextColor(Color.parseColor("#333333"));
+            cardDay.setCardBackgroundColor(Color.WHITE);
+            cardDay.setStrokeColor(Color.parseColor("#EEEEEE"));
 
             // Highlight today
             Calendar today = Calendar.getInstance();
-            if (day.isCurrentMonth() &&
-                    day.getDayOfMonth() == today.get(Calendar.DAY_OF_MONTH) &&
+            if (day.getDayOfMonth() == today.get(Calendar.DAY_OF_MONTH) &&
                     day.getMonth() == today.get(Calendar.MONTH) &&
                     day.getYear() == today.get(Calendar.YEAR)) {
                 cardDay.setCardBackgroundColor(Color.parseColor("#E8F5E8"));
                 cardDay.setStrokeColor(Color.parseColor("#4CAF50"));
                 cardDay.setStrokeWidth(2);
-            } else if (day.isSelected() && day.isCurrentMonth()) {
+            } else if (day.isSelected()) {
                 cardDay.setCardBackgroundColor(Color.parseColor("#1B4332"));
                 tvDayNumber.setTextColor(Color.WHITE);
                 cardDay.setStrokeColor(Color.parseColor("#1B4332"));
