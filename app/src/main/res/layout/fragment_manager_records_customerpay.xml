@@ -29,7 +29,7 @@
             android:shadowDx="1.2"
             android:shadowDy="1.2"
             android:shadowRadius="1.5"
-            android:text="REPORTS"
+            android:text="CUSTOMER PAYMENTS"
             android:textColor="?attr/colorOnSurface"
             android:textSize="26sp"
             android:textStyle="bold"
@@ -57,16 +57,16 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:fontFamily="@font/poppins_bold"
+                    android:fontFamily="@font/poppins_medium"
                     android:text="Reports"
-                    android:textColor="@color/apps_green"
+                    android:textColor="?attr/colorOnSurfaceVariant"
                     android:textSize="14sp" />
 
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="2dp"
                     android:layout_marginTop="8dp"
-                    android:background="@color/apps_green" />
+                    android:background="@android:color/transparent" />
             </LinearLayout>
 
             <LinearLayout
@@ -82,23 +82,23 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:fontFamily="@font/poppins_medium"
+                    android:fontFamily="@font/poppins_bold"
                     android:text="Customer Payments"
-                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:textColor="@color/apps_green"
                     android:textSize="14sp" />
 
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="2dp"
                     android:layout_marginTop="8dp"
-                    android:background="@android:color/transparent" />
+                    android:background="@color/apps_green" />
             </LinearLayout>
         </LinearLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-        android:id="@+id/swipeRefreshRecords"
+        android:id="@+id/swipeRefreshPayments"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -117,54 +117,23 @@
                 android:paddingBottom="24dp">
 
                 <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/rvDailyJobs"
+                    android:id="@+id/recyclerPayments"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:clipToPadding="false"
-                    android:paddingHorizontal="16dp"
                     android:paddingTop="16dp"
-                    tools:listitem="@layout/item_daily_schedule_ticket" />
-
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/recyclerPayments"
-                    android:layout_width="0dp"
-                    android:layout_height="0dp"
-                    android:visibility="gone" />
+                    tools:listitem="@layout/item_manager_payment_history" />
 
             </LinearLayout>
 
         </androidx.core.widget.NestedScrollView>
-
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
+    <!-- Compatibility mappings -->
     <View android:id="@+id/headerBackground" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
     <TextView android:id="@+id/locationTitle" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
     <View android:id="@+id/searchCard" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
     <View android:id="@+id/searchEditText" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
     <View android:id="@+id/recordsOptions" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
-    <View android:id="@+id/calendarCard" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
-    <View android:id="@+id/rvCalendarGrid" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
-    <View android:id="@+id/tvMonthYear" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
-    <View android:id="@+id/btnPreviousMonth" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
-    <View android:id="@+id/btnNextMonth" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
-
-    <ProgressBar
-        android:id="@+id/paymentsLoading"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-    <TextView
-        android:id="@+id/tvPaymentsEmpty"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -36,6 +36,7 @@ import com.servicehub.model.Message;
 import app.hub.R;
 import app.hub.api.ApiClient;
 import app.hub.api.ApiService;
+import app.hub.util.TokenManager;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -50,6 +51,7 @@ public class DashboardActivity extends AppCompatActivity {
     private static final String TAG = "DashboardActivity";
 
     private ApiService apiService;
+    private TokenManager tokenManager;
     private View navIndicator;
     private BottomNavigationView bottomNavigationView;
     private FloatingActionButton fabChatbot;
@@ -63,6 +65,7 @@ public class DashboardActivity extends AppCompatActivity {
         setContentView(R.layout.activity_user_dashboard);
 
         apiService = ApiClient.getApiService();
+        tokenManager = new TokenManager(this);
         navIndicator = findViewById(R.id.navIndicator);
         bottomNavigationView = findViewById(R.id.bottomNavigationView);
         fabChatbot = findViewById(R.id.fab_chatbot);
@@ -332,7 +335,8 @@ public class DashboardActivity extends AppCompatActivity {
 
         RecyclerView recyclerView = dialogView.findViewById(R.id.recyclerView);
         TextInputEditText messageEditText = dialogView.findViewById(R.id.messageEditText);
-        ImageButton sendButton = dialogView.findViewById(R.id.sendButton);
+        com.google.android.material.button.MaterialButton sendButton = dialogView.findViewById(R.id.sendButton);
+        View loadingIndicator = dialogView.findViewById(R.id.loadingIndicator);
 
         List<Message> messageList = new ArrayList<>();
         ChatAdapter chatAdapter = new ChatAdapter(messageList);
@@ -343,11 +347,35 @@ public class DashboardActivity extends AppCompatActivity {
         messageList.add(new Message("Hello! How can I help you today?", false));
         chatAdapter.notifyItemInserted(messageList.size() - 1);
 
+        // Add TextWatcher to enable/disable send button based on input
+        messageEditText.addTextChangedListener(new android.text.TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                // Not needed
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                // Enable send button only if there's non-whitespace content
+                String text = s.toString().trim();
+                sendButton.setEnabled(!text.isEmpty() && !text.matches("\\s+"));
+            }
+
+            @Override
+            public void afterTextChanged(android.text.Editable s) {
+                // Not needed
+            }
+        });
+
+        // Initially disable send button if input is empty
+        sendButton.setEnabled(false);
+
         sendButton.setOnClickListener(v -> {
             if (messageEditText.getText() != null) {
                 String messageText = messageEditText.getText().toString().trim();
-                if (!messageText.isEmpty()) {
-                    sendMessage(messageText, messageList, chatAdapter, recyclerView);
+                // Prevent empty or whitespace-only messages
+                if (!messageText.isEmpty() && !messageText.matches("\\s+")) {
+                    sendMessage(messageText, messageList, chatAdapter, recyclerView, sendButton, loadingIndicator);
                     messageEditText.setText("");
                 }
             }
@@ -356,36 +384,137 @@ public class DashboardActivity extends AppCompatActivity {
         builder.create().show();
     }
 
-    private void sendMessage(String messageText, List<Message> messageList, ChatAdapter chatAdapter, RecyclerView recyclerView) {
+    private void sendMessage(String messageText, List<Message> messageList, ChatAdapter chatAdapter, RecyclerView recyclerView, com.google.android.material.button.MaterialButton sendButton, View loadingIndicator) {
         messageList.add(new Message(messageText, true));
         chatAdapter.notifyItemInserted(messageList.size() - 1);
         recyclerView.scrollToPosition(messageList.size() - 1);
 
-        Call<ChatResponse> call = apiService.sendMessage(new ChatRequest(messageText));
+        // Show loading indicator and disable send button
+        loadingIndicator.setVisibility(View.VISIBLE);
+        sendButton.setEnabled(false);
+
+        // Check network connectivity
+        if (!isNetworkAvailable()) {
+            messageList.add(new Message("No internet connection. Please check your network settings.", false));
+            chatAdapter.notifyItemInserted(messageList.size() - 1);
+            recyclerView.scrollToPosition(messageList.size() - 1);
+            loadingIndicator.setVisibility(View.GONE);
+            sendButton.setEnabled(true);
+            return;
+        }
+
+        String token = tokenManager.getToken();
+        if (token == null) {
+            messageList.add(new Message("Your session has expired. Please log in again.", false));
+            chatAdapter.notifyItemInserted(messageList.size() - 1);
+            recyclerView.scrollToPosition(messageList.size() - 1);
+            loadingIndicator.setVisibility(View.GONE);
+            sendButton.setEnabled(true);
+            return;
+        }
+
+        Call<ChatResponse> call = apiService.sendMessage("Bearer " + token, new ChatRequest(messageText));
         call.enqueue(new Callback<ChatResponse>() {
             @Override
             public void onResponse(@NonNull Call<ChatResponse> call, @NonNull Response<ChatResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    String reply = response.body().getReply();
-                    messageList.add(new Message(reply, false));
+                    ChatResponse chatResponse = response.body();
+                    
+                    // Validate response format
+                    if (chatResponse.getReply() == null || chatResponse.getReply().isEmpty()) {
+                        messageList.add(new Message("Unable to process response. Please try again.", false));
+                    } else if (chatResponse.getMethod() == null || 
+                               (!chatResponse.getMethod().equals("keyword") && 
+                                !chatResponse.getMethod().equals("ai") && 
+                                !chatResponse.getMethod().equals("fallback"))) {
+                        Log.w(TAG, "Invalid response method: " + chatResponse.getMethod());
+                        messageList.add(new Message(chatResponse.getReply(), false));
+                    } else {
+                        messageList.add(new Message(chatResponse.getReply(), false));
+                    }
                 } else {
                     handleApiError(response, messageList);
                 }
                 chatAdapter.notifyItemInserted(messageList.size() - 1);
                 recyclerView.scrollToPosition(messageList.size() - 1);
+                
+                // Hide loading indicator and re-enable send button
+                loadingIndicator.setVisibility(View.GONE);
+                sendButton.setEnabled(true);
             }
 
             @Override
             public void onFailure(@NonNull Call<ChatResponse> call, @NonNull Throwable t) {
                 Log.e(TAG, "API Failure: ", t);
-                messageList.add(new Message("Failed to connect to the server.", false));
+                String errorMessage = "Failed to connect to the server. Please check your internet connection and try again. For immediate assistance, contact support@ashcol.com";
+                
+                // Check if it's a timeout error
+                if (t instanceof java.net.SocketTimeoutException) {
+                    errorMessage = "Connection timeout. Please check your internet connection and try again.";
+                }
+                
+                messageList.add(new Message(errorMessage, false));
                 chatAdapter.notifyItemInserted(messageList.size() - 1);
                 recyclerView.scrollToPosition(messageList.size() - 1);
+                
+                // Hide loading indicator and re-enable send button
+                loadingIndicator.setVisibility(View.GONE);
+                sendButton.setEnabled(true);
             }
         });
     }
 
+    private boolean isNetworkAvailable() {
+        android.net.ConnectivityManager connectivityManager = 
+            (android.net.ConnectivityManager) getSystemService(android.content.Context.CONNECTIVITY_SERVICE);
+        
+        if (connectivityManager != null) {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+                android.net.Network network = connectivityManager.getActiveNetwork();
+                if (network == null) return false;
+                
+                android.net.NetworkCapabilities capabilities = connectivityManager.getNetworkCapabilities(network);
+                return capabilities != null && (
+                    capabilities.hasTransport(android.net.NetworkCapabilities.TRANSPORT_WIFI) ||
+                    capabilities.hasTransport(android.net.NetworkCapabilities.TRANSPORT_CELLULAR) ||
+                    capabilities.hasTransport(android.net.NetworkCapabilities.TRANSPORT_ETHERNET)
+                );
+            } else {
+                android.net.NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
+                return networkInfo != null && networkInfo.isConnected();
+            }
+        }
+        return false;
+    }
+
     private void handleApiError(Response<ChatResponse> response, List<Message> messageList) {
+        String errorMessage;
+        
+        switch (response.code()) {
+            case 400:
+                errorMessage = "Unable to process your message. Please try rephrasing.";
+                break;
+            case 401:
+                errorMessage = "Your session has expired. Please log in again.";
+                break;
+            case 403:
+                errorMessage = "You don't have permission to use the chatbot. Please contact support@ashcol.com";
+                break;
+            case 404:
+                errorMessage = "Chatbot service is temporarily unavailable. Please try again later.";
+                break;
+            case 500:
+                errorMessage = "Something went wrong on our end. Our team has been notified. Please try again later or contact support@ashcol.com";
+                break;
+            case 503:
+                errorMessage = "Chatbot service is temporarily unavailable for maintenance. Please try again later.";
+                break;
+            default:
+                errorMessage = "An error occurred. Please try again or contact support@ashcol.com";
+                break;
+        }
+        
+        // Log detailed error for debugging
         String errorBody = "No error body";
         try (okhttp3.ResponseBody errorResponseBody = response.errorBody()) {
             if (errorResponseBody != null) {
@@ -393,10 +522,10 @@ public class DashboardActivity extends AppCompatActivity {
             }
         } catch (IOException e) {
             Log.e(TAG, "Error parsing error body", e);
-            errorBody = "Error reading response";
         }
         Log.e(TAG, "API Error: " + response.code() + " " + errorBody);
-        messageList.add(new Message("Error: " + response.code(), false));
+        
+        messageList.add(new Message(errorMessage, false));
     }
 
     @Override

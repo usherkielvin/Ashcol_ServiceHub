@@ -1,12 +1,16 @@
 package app.hub.manager;
 
 import android.os.Bundle;
-import android.widget.Button;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 
 import java.util.List;
@@ -25,11 +29,14 @@ import retrofit2.Response;
 
 public class ManagerAddEmployee extends AppCompatActivity {
 
-    private TextInputEditText firstNameInput, lastNameInput, usernameInput, emailInput, passwordInput,
-            confirmPasswordInput;
-    private TextView branchInfoText;
+    private TextInputEditText firstNameInput, lastNameInput, emailInput, passwordInput;
+    private AutoCompleteTextView roleSpinner;
+    private TextView branchDisplay;
+    private MaterialButton btnBack, btnCreate;
     private TokenManager tokenManager;
-    private String managerBranch = null;
+    private String selectedRole = "technician";
+    private String selectedBranch = null;
+    private String[] roles = {"technician"};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,29 +62,44 @@ public class ManagerAddEmployee extends AppCompatActivity {
         try {
             android.util.Log.d("ManagerAddEmployee", "Initializing views");
 
-            firstNameInput = findViewById(R.id.firstNameInput);
-            lastNameInput = findViewById(R.id.lastNameInput);
-            usernameInput = findViewById(R.id.usernameInput);
-            emailInput = findViewById(R.id.Email_val);
-            passwordInput = findViewById(R.id.Pass_val);
-            confirmPasswordInput = findViewById(R.id.confirmPasswordInput);
-            branchInfoText = findViewById(R.id.branchInfoText);
+            firstNameInput = findViewById(R.id.etFirstName);
+            lastNameInput = findViewById(R.id.etLastName);
+            emailInput = findViewById(R.id.etEmail);
+            passwordInput = findViewById(R.id.etPassword);
+            roleSpinner = findViewById(R.id.spinnerRole);
+            branchDisplay = findViewById(R.id.tvBranchDisplay);
+            btnBack = findViewById(R.id.btnBack);
+            btnCreate = findViewById(R.id.btnCreate);
+
+            // Setup role spinner (only technician)
+            ArrayAdapter<String> roleAdapter = new ArrayAdapter<>(this, 
+                android.R.layout.simple_dropdown_item_1line, roles);
+            roleSpinner.setAdapter(roleAdapter);
+            roleSpinner.setText("technician", false);
+            roleSpinner.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                    selectedRole = roles[position];
+                }
+            });
 
             // Check if all views were found
             if (firstNameInput == null)
                 android.util.Log.e("ManagerAddEmployee", "firstNameInput is null");
             if (lastNameInput == null)
                 android.util.Log.e("ManagerAddEmployee", "lastNameInput is null");
-            if (usernameInput == null)
-                android.util.Log.e("ManagerAddEmployee", "usernameInput is null");
             if (emailInput == null)
                 android.util.Log.e("ManagerAddEmployee", "emailInput is null");
             if (passwordInput == null)
                 android.util.Log.e("ManagerAddEmployee", "passwordInput is null");
-            if (confirmPasswordInput == null)
-                android.util.Log.e("ManagerAddEmployee", "confirmPasswordInput is null");
-            if (branchInfoText == null)
-                android.util.Log.e("ManagerAddEmployee", "branchInfoText is null");
+            if (roleSpinner == null)
+                android.util.Log.e("ManagerAddEmployee", "roleSpinner is null");
+            if (branchDisplay == null)
+                android.util.Log.e("ManagerAddEmployee", "branchDisplay is null");
+            if (btnBack == null)
+                android.util.Log.e("ManagerAddEmployee", "btnBack is null");
+            if (btnCreate == null)
+                android.util.Log.e("ManagerAddEmployee", "btnCreate is null");
 
             android.util.Log.d("ManagerAddEmployee", "Views initialized successfully");
 
@@ -91,9 +113,8 @@ public class ManagerAddEmployee extends AppCompatActivity {
         try {
             android.util.Log.d("ManagerAddEmployee", "Setting up buttons");
 
-            Button createEmployeeButton = findViewById(R.id.createEmployeeButton);
-            if (createEmployeeButton != null) {
-                createEmployeeButton.setOnClickListener(v -> {
+            if (btnCreate != null) {
+                btnCreate.setOnClickListener(v -> {
                     try {
                         createEmployee();
                     } catch (Exception e) {
@@ -102,12 +123,11 @@ public class ManagerAddEmployee extends AppCompatActivity {
                     }
                 });
             } else {
-                android.util.Log.e("ManagerAddEmployee", "createEmployeeButton is null");
+                android.util.Log.e("ManagerAddEmployee", "btnCreate is null");
             }
 
-            Button backButton = findViewById(R.id.closeButton);
-            if (backButton != null) {
-                backButton.setOnClickListener(v -> {
+            if (btnBack != null) {
+                btnBack.setOnClickListener(v -> {
                     try {
                         finish();
                     } catch (Exception e) {
@@ -115,7 +135,7 @@ public class ManagerAddEmployee extends AppCompatActivity {
                     }
                 });
             } else {
-                android.util.Log.e("ManagerAddEmployee", "backButton is null");
+                android.util.Log.e("ManagerAddEmployee", "btnBack is null");
             }
 
             android.util.Log.d("ManagerAddEmployee", "Buttons setup completed");
@@ -134,8 +154,7 @@ public class ManagerAddEmployee extends AppCompatActivity {
             return;
         }
 
-        branchInfoText.setText("Loading your branch information...");
-
+        // Load and display manager's branch (non-editable)
         ApiService apiService = ApiClient.getApiService();
         Call<UserResponse> call = apiService.getUser("Bearer " + token);
 
@@ -145,45 +164,38 @@ public class ManagerAddEmployee extends AppCompatActivity {
                 if (response.isSuccessful() && response.body() != null) {
                     UserResponse userResponse = response.body();
                     if (userResponse.isSuccess() && userResponse.getData() != null) {
-                        managerBranch = userResponse.getData().getBranch();
-
+                        String managerBranch = userResponse.getData().getBranch();
                         if (managerBranch != null && !managerBranch.isEmpty()) {
-                            branchInfoText.setText("Technician will be assigned to: " + managerBranch);
+                            // Display the manager's branch (non-editable)
+                            branchDisplay.setText(managerBranch);
+                            selectedBranch = managerBranch;
                         } else {
-                            branchInfoText.setText("Warning: You don't have a branch assigned. Please contact admin.");
-                            managerBranch = null;
+                            branchDisplay.setText("No branch assigned");
                         }
-                    } else {
-                        branchInfoText.setText("Error: Could not load your information");
-                        managerBranch = null;
                     }
-                } else {
-                    branchInfoText.setText("Error: Could not load your information");
-                    managerBranch = null;
                 }
             }
 
             @Override
             public void onFailure(Call<UserResponse> call, Throwable t) {
-                branchInfoText.setText("Network error: Could not load branch information");
-                managerBranch = null;
+                android.util.Log.w("ManagerAddEmployee", "Could not load manager branch: " + t.getMessage());
+                branchDisplay.setText("Error loading branch");
             }
         });
     }
 
     private void createEmployee() {
         try {
-            android.util.Log.d("ManagerAddEmployee", "Starting technician creation process");
+            android.util.Log.d("ManagerAddEmployee", "Starting employee creation process");
 
             String firstName = firstNameInput.getText().toString().trim();
             String lastName = lastNameInput.getText().toString().trim();
-            String username = usernameInput.getText().toString().trim();
             String email = emailInput.getText().toString().trim();
             String password = passwordInput.getText().toString().trim();
-            String confirmPassword = confirmPasswordInput.getText().toString().trim();
+            String confirmPassword = password; // Using same password field
 
             android.util.Log.d("ManagerAddEmployee",
-                    "Form data collected - Username: " + username + ", Email: " + email);
+                    "Form data collected - Role: " + selectedRole + ", Branch: " + selectedBranch);
 
             // Validation
             if (firstName.isEmpty()) {
@@ -195,12 +207,6 @@ public class ManagerAddEmployee extends AppCompatActivity {
             if (lastName.isEmpty()) {
                 lastNameInput.setError("Last name is required");
                 lastNameInput.requestFocus();
-                return;
-            }
-
-            if (username.isEmpty()) {
-                usernameInput.setError("Username is required");
-                usernameInput.requestFocus();
                 return;
             }
 
@@ -222,28 +228,28 @@ public class ManagerAddEmployee extends AppCompatActivity {
                 return;
             }
 
-            if (!password.equals(confirmPassword)) {
-                confirmPasswordInput.setError("Passwords do not match");
-                confirmPasswordInput.requestFocus();
+            if (selectedRole == null || selectedRole.isEmpty()) {
+                Toast.makeText(this, "Please select a role", Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            // Check if manager has a branch
-            if (managerBranch == null || managerBranch.isEmpty()) {
-                Toast.makeText(this, "Cannot create technician: You don't have a branch assigned. Please contact admin.",
-                        Toast.LENGTH_LONG).show();
+            if (selectedBranch == null || selectedBranch.isEmpty()) {
+                Toast.makeText(this, "Please select a branch", Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            android.util.Log.d("ManagerAddEmployee", "Validation passed - Manager branch: " + managerBranch);
+            android.util.Log.d("ManagerAddEmployee", "Validation passed - Role: " + selectedRole + ", Branch: " + selectedBranch);
 
-                // Create technician with manager's branch
+            // Create username from first name + last name
+            String username = (firstName.toLowerCase() + "." + lastName.toLowerCase()).replaceAll("\\s+", "");
+
+            // Create employee with selected role and branch
             RegisterRequest registerRequest = new RegisterRequest(
                     username, firstName, lastName, email, "", "",
-                    password, confirmPassword, "technician", managerBranch);
+                    password, confirmPassword, selectedRole, selectedBranch);
 
             android.util.Log.d("ManagerAddEmployee",
-                    "RegisterRequest created - Role: technician, Branch: " + managerBranch);
+                    "RegisterRequest created - Role: " + selectedRole + ", Branch: " + selectedBranch);
 
             ApiService apiService = ApiClient.getApiService();
             if (apiService == null) {
@@ -259,7 +265,7 @@ public class ManagerAddEmployee extends AppCompatActivity {
                 return;
             }
 
-            android.util.Log.d("ManagerAddEmployee", "Making API call to register technician");
+            android.util.Log.d("ManagerAddEmployee", "Making API call to register employee");
 
             call.enqueue(new Callback<RegisterResponse>() {
                 @Override
@@ -274,7 +280,7 @@ public class ManagerAddEmployee extends AppCompatActivity {
                                     "Register response success: " + registerResponse.isSuccess());
 
                             if (registerResponse.isSuccess()) {
-                                android.util.Log.d("ManagerAddEmployee", "Technician created successfully");
+                                android.util.Log.d("ManagerAddEmployee", "Employee created successfully");
 
                                 // Clear employee cache to refresh the list
                                 try {
@@ -288,7 +294,7 @@ public class ManagerAddEmployee extends AppCompatActivity {
 
                                     // Immediately trigger a refresh to load the new employee
                                     // This will notify all listeners (including ManagerEmployeeFragment)
-                                    android.util.Log.d("ManagerAddEmployee", "Triggering immediate technician refresh");
+                                    android.util.Log.d("ManagerAddEmployee", "Triggering immediate employee refresh");
                                     ManagerDataManager.refreshEmployees(ManagerAddEmployee.this,
                                             new ManagerDataManager.DataLoadCallback() {
                                                 @Override
@@ -326,7 +332,8 @@ public class ManagerAddEmployee extends AppCompatActivity {
                                 }
 
                                 Toast.makeText(ManagerAddEmployee.this,
-                                        "Technician created successfully and assigned to " + managerBranch,
+                                        selectedRole.substring(0, 1).toUpperCase() + selectedRole.substring(1) + 
+                                        " created successfully and assigned to " + selectedBranch,
                                         Toast.LENGTH_LONG).show();
 
                                 // Use a delayed finish to ensure toast is shown and data is refreshed
@@ -347,7 +354,7 @@ public class ManagerAddEmployee extends AppCompatActivity {
 
                             } else {
                                 android.util.Log.e("ManagerAddEmployee", "Registration failed - success=false");
-                                String errorMessage = "Failed to create technician";
+                                String errorMessage = "Failed to create " + selectedRole;
                                 if (registerResponse.getErrors() != null) {
                                     StringBuilder sb = new StringBuilder();
                                     if (registerResponse.getErrors().getEmail() != null) {
@@ -376,7 +383,7 @@ public class ManagerAddEmployee extends AppCompatActivity {
                                     android.util.Log.e("ManagerAddEmployee", "Could not read error body", e);
                                 }
                             }
-                                Toast.makeText(ManagerAddEmployee.this, "Failed to create technician", Toast.LENGTH_SHORT)
+                                Toast.makeText(ManagerAddEmployee.this, "Failed to create " + selectedRole, Toast.LENGTH_SHORT)
                                     .show();
                         }
                     } catch (Exception e) {
@@ -400,7 +407,7 @@ public class ManagerAddEmployee extends AppCompatActivity {
 
         } catch (Exception e) {
             android.util.Log.e("ManagerAddEmployee", "Exception in createEmployee method", e);
-            Toast.makeText(this, "Error creating technician: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Error creating employee: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
     }
 }

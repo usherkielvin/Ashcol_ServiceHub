@@ -117,56 +117,56 @@ public class ManagerProfileFragment extends Fragment {
     }
 
     private void setupClickListeners(View view) {
-        // Edit Photo Button
+        // Edit Photo Button (this one is actually a MaterialButton)
         MaterialButton editPhotoButton = view.findViewById(R.id.btn_edit_photo);
         if (editPhotoButton != null) {
             editPhotoButton.setOnClickListener(v -> showEditPhotoOptions());
         }
 
-        // Appearance Button
-        MaterialButton appearanceButton = view.findViewById(R.id.btn_appearance);
+        // Appearance Button (LinearLayout)
+        View appearanceButton = view.findViewById(R.id.btn_appearance);
         if (appearanceButton != null) {
             appearanceButton.setOnClickListener(v -> showThemeToggler());
         }
 
-        // Notifications Button
-        MaterialButton notificationsButton = view.findViewById(R.id.btn_notifications);
+        // Notifications Button (LinearLayout)
+        View notificationsButton = view.findViewById(R.id.btn_notifications);
         if (notificationsButton != null) {
             notificationsButton.setOnClickListener(v -> showNotificationSettings());
         }
 
-        // Language Button
-        MaterialButton languageButton = view.findViewById(R.id.btn_language);
+        // Language Button (LinearLayout)
+        View languageButton = view.findViewById(R.id.btn_language);
         if (languageButton != null) {
             languageButton.setOnClickListener(v -> showLanguageToggler());
         }
 
-        // Personal Info Button
-        MaterialButton personalInfoButton = view.findViewById(R.id.btn_personal_info);
+        // Personal Info Button (LinearLayout)
+        View personalInfoButton = view.findViewById(R.id.btn_personal_info);
         if (personalInfoButton != null) {
             personalInfoButton.setOnClickListener(v -> showPersonalInfo());
         }
 
-        // Password/Privacy Button (already implemented)
-        MaterialButton passwordPrivacyButton = view.findViewById(R.id.btn_password_privacy);
+        // Password/Privacy Button (LinearLayout)
+        View passwordPrivacyButton = view.findViewById(R.id.btn_password_privacy);
         if (passwordPrivacyButton != null) {
             passwordPrivacyButton.setOnClickListener(v -> navigateToChangePassword());
         }
 
-        // Payroll Button
-        MaterialButton payrollButton = view.findViewById(R.id.btn_payroll);
+        // Payroll Button (LinearLayout)
+        View payrollButton = view.findViewById(R.id.btn_payroll);
         if (payrollButton != null) {
             payrollButton.setOnClickListener(v -> showPayrollInfo());
         }
 
-        // Help Button
-        MaterialButton helpButton = view.findViewById(R.id.btn_help);
+        // Help Button (LinearLayout)
+        View helpButton = view.findViewById(R.id.btn_help);
         if (helpButton != null) {
             helpButton.setOnClickListener(v -> showHelpAndFeedback());
         }
 
-        // Logout Button (already implemented)
-        MaterialButton logoutButton = view.findViewById(R.id.logoutButton);
+        // Logout Button (LinearLayout)
+        View logoutButton = view.findViewById(R.id.logoutButton);
         if (logoutButton != null) {
             logoutButton.setOnClickListener(v -> showLogoutConfirmation());
         }

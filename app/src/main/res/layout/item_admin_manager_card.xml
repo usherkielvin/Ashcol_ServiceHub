@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="16dp"
+    android:layout_marginVertical="8dp"
+    app:cardBackgroundColor="@android:color/white"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="6dp"
+    app:cardUseCompatPadding="true"
+    app:strokeWidth="0dp">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="12dp">
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/img_manager_profile"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:padding="2dp"
+            android:scaleType="centerCrop"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:shapeAppearanceOverlay="@style/CircleImage"
+            app:strokeColor="?attr/colorOutline"
+            app:strokeWidth="1dp"
+            tools:src="@drawable/user" />
+
+        <TextView
+            android:id="@+id/tv_manager_name"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:fontFamily="@font/poppins_bold"
+            android:text="Ana Marie"
+            android:textColor="#000000"
+            android:textSize="15sp"
+            app:layout_constraintEnd_toStartOf="@+id/statusBadge"
+            app:layout_constraintStart_toEndOf="@id/img_manager_profile"
+            app:layout_constraintTop_toTopOf="@id/img_manager_profile" />
+
+        <TextView
+            android:id="@+id/tv_manager_branch"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/poppins_semibold"
+            android:text="ASHCOL BATANGAS"
+            android:textColor="#333333"
+            android:textSize="11sp"
+            app:layout_constraintEnd_toStartOf="@+id/statusBadge"
+            app:layout_constraintStart_toStartOf="@id/tv_manager_name"
+            app:layout_constraintTop_toBottomOf="@id/tv_manager_name" />
+
+        <TextView
+            android:id="@+id/tv_manager_email"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:alpha="0.5"
+            android:fontFamily="@font/poppins_medium"
+            android:text="example@gmail.com"
+            android:textColor="#9E9E9E"
+            android:textSize="11sp"
+            app:layout_constraintEnd_toStartOf="@+id/statusBadge"
+            app:layout_constraintStart_toStartOf="@id/tv_manager_name"
+            app:layout_constraintTop_toBottomOf="@id/tv_manager_branch" />
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/statusBadge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:cardBackgroundColor="#D1E7D1"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="0dp"
+            app:strokeColor="#1B5E20"
+            app:strokeWidth="0.5dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <TextView
+                android:id="@+id/tv_status_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/poppins_bold"
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="4dp"
+                android:text="Active"
+                android:textColor="#1B5E20"
+                android:textSize="11sp" />
+        </com.google.android.material.card.MaterialCardView>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</com.google.android.material.card.MaterialCardView>
