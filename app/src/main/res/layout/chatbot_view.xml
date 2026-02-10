@@ -92,13 +92,25 @@
         </androidx.constraintlayout.widget.ConstraintLayout>
 
         <!-- Chat History Area -->
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recyclerView"
+        <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="320dp"
-            android:background="?android:attr/colorBackground"
-            android:clipToPadding="false"
-            android:padding="12dp" />
+            android:layout_height="320dp">
+            
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="?android:attr/colorBackground"
+                android:clipToPadding="false"
+                android:padding="12dp" />
+            
+            <ProgressBar
+                android:id="@+id/loadingIndicator"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:visibility="gone" />
+        </FrameLayout>
 
         <!-- Quick Suggestions bar (Modern AI Feature) -->
         <HorizontalScrollView
