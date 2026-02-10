@@ -353,7 +353,7 @@
     <string name="prompt_unit_type">Select AC Unit Type</string>
 
     <!-- MainActivity Strings -->
-    <string name="server_client_id">700225042346-1tkoait6tbj7eeo7ijvmodb0upa7siuu.apps.googleusercontent.com</string> <!-- TODO: Replace with actual Web Client ID -->
+    <string name="server_client_id">927228841081-p3q144ul75esbuagua8vvjdbsa1mroa2.apps.googleusercontent.com</string> <!-- Web OAuth Client ID from Firebase -->
     <string name="user_already_signed_in">User already signed in with Google</string>
     <string name="user_logged_in_roles">User is logged in with role: %s</string>
     <string name="user_not_logged_in">User is not logged in</string>
