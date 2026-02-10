@@ -62,6 +62,9 @@ public class TicketListResponse {
         @SerializedName("status")
         private String status;
 
+        @SerializedName("status_detail")
+        private String statusDetail;
+
         @SerializedName("status_color")
         private String statusColor;
 
@@ -70,6 +73,9 @@ public class TicketListResponse {
 
         @SerializedName("assigned_staff")
         private String assignedStaff;
+
+        @SerializedName("assigned_staff_phone")
+        private String assignedStaffPhone;
 
         @SerializedName("branch")
         private String branch;
@@ -163,6 +169,14 @@ public class TicketListResponse {
             this.status = status;
         }
 
+        public String getStatusDetail() {
+            return statusDetail;
+        }
+
+        public void setStatusDetail(String statusDetail) {
+            this.statusDetail = statusDetail;
+        }
+
         public String getStatusColor() {
             return statusColor;
         }
@@ -185,6 +199,14 @@ public class TicketListResponse {
 
         public void setAssignedStaff(String assignedStaff) {
             this.assignedStaff = assignedStaff;
+        }
+
+        public String getAssignedStaffPhone() {
+            return assignedStaffPhone;
+        }
+
+        public void setAssignedStaffPhone(String assignedStaffPhone) {
+            this.assignedStaffPhone = assignedStaffPhone;
         }
 
         public String getBranch() {

@@ -440,14 +440,18 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
 
         if (step == STEP_ASSIGNED) {
             View onTheWay = statusView.findViewById(R.id.tvOnWayStatus);
-            setStepAction(onTheWay, () -> advanceStep(STEP_ON_THE_WAY));
+            setStepAction(onTheWay, () -> updateTicketStatus("ongoing", "otw",
+                    () -> advanceStep(STEP_ON_THE_WAY)));
             View onTheWayCheck = statusView.findViewById(R.id.ivStep2);
-            setStepAction(onTheWayCheck, () -> advanceStep(STEP_ON_THE_WAY));
+            setStepAction(onTheWayCheck, () -> updateTicketStatus("ongoing", "otw",
+                    () -> advanceStep(STEP_ON_THE_WAY)));
         } else if (step == STEP_ON_THE_WAY) {
             View arrived = statusView.findViewById(R.id.tvArrivedStatus);
-            setStepAction(arrived, () -> advanceStep(STEP_ARRIVED));
+            setStepAction(arrived, () -> updateTicketStatus("ongoing", "arrived",
+                    () -> advanceStep(STEP_ARRIVED)));
             View arrivedCheck = statusView.findViewById(R.id.ivStep3);
-            setStepAction(arrivedCheck, () -> advanceStep(STEP_ARRIVED));
+            setStepAction(arrivedCheck, () -> updateTicketStatus("ongoing", "arrived",
+                    () -> advanceStep(STEP_ARRIVED)));
         } else if (step == STEP_ARRIVED) {
             View startService = statusView.findViewById(R.id.btnStartService);
             if (startService != null) {
@@ -455,7 +459,7 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
                     if (activeTicket == null) {
                         return;
                     }
-                    updateTicketStatus("ongoing", () -> advanceStep(STEP_IN_PROGRESS));
+                    updateTicketStatus("ongoing", "working", () -> advanceStep(STEP_IN_PROGRESS));
                 });
             }
         } else if (step == STEP_IN_PROGRESS) {
@@ -1160,13 +1164,13 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
         startActivity(intent);
     }
 
-    private void updateTicketStatus(String status, Runnable onSuccess) {
+    private void updateTicketStatus(String status, String statusDetail, Runnable onSuccess) {
         String token = tokenManager.getToken();
         if (token == null || activeTicket == null) {
             return;
         }
 
-        UpdateTicketStatusRequest request = new UpdateTicketStatusRequest(status);
+        UpdateTicketStatusRequest request = new UpdateTicketStatusRequest(status, statusDetail);
         ApiService apiService = ApiClient.getApiService();
         Call<UpdateTicketStatusResponse> call = apiService.updateTicketStatus(
                 "Bearer " + token, activeTicket.getTicketId(), request);
@@ -1177,6 +1181,7 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
                     Response<UpdateTicketStatusResponse> response) {
                 if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
                     activeTicket.setStatus(status);
+                    activeTicket.setStatusDetail(statusDetail);
                     if (onSuccess != null) {
                         onSuccess.run();
                     }

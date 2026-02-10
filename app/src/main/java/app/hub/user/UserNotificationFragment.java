@@ -29,8 +29,11 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import app.hub.R;
 import app.hub.api.ApiClient;
@@ -56,7 +59,9 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
     private GoogleMap googleMap;
     private TextView tvTechnicianName, tvTechnicianContact, tvTechnicianLocation;
     private TextView tvServiceType, tvTicketId, tvSpecificService, tvSchedule;
-    private TextView tvEtaMessage, tvEtaLocation;
+    private View vStepAssigned, vStepOtw, vStepArrived, vStepWorking, vStepCompleted;
+    private View vConnectorAssignedOtw, vConnectorOtwArrived, vConnectorArrivedWorking, vConnectorWorkingCompleted;
+    private TextView tvStepAssigned, tvStepOtw, tvStepArrived, tvStepWorking, tvStepCompleted;
     private Handler locationUpdateHandler;
     private Runnable locationUpdateRunnable;
 
@@ -252,8 +257,21 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
         tvTicketId = trackingContainer.findViewById(R.id.tvTicketId);
         tvSpecificService = trackingContainer.findViewById(R.id.tvSpecificService);
         tvSchedule = trackingContainer.findViewById(R.id.tvSchedule);
-        tvEtaMessage = trackingContainer.findViewById(R.id.tvEtaMessage);
-        tvEtaLocation = trackingContainer.findViewById(R.id.tvEtaLocation);
+
+        vStepAssigned = trackingContainer.findViewById(R.id.vStepAssigned);
+        vStepOtw = trackingContainer.findViewById(R.id.vStepOtw);
+        vStepArrived = trackingContainer.findViewById(R.id.vStepArrived);
+        vStepWorking = trackingContainer.findViewById(R.id.vStepWorking);
+        vStepCompleted = trackingContainer.findViewById(R.id.vStepCompleted);
+        vConnectorAssignedOtw = trackingContainer.findViewById(R.id.vConnectorAssignedOtw);
+        vConnectorOtwArrived = trackingContainer.findViewById(R.id.vConnectorOtwArrived);
+        vConnectorArrivedWorking = trackingContainer.findViewById(R.id.vConnectorArrivedWorking);
+        vConnectorWorkingCompleted = trackingContainer.findViewById(R.id.vConnectorWorkingCompleted);
+        tvStepAssigned = trackingContainer.findViewById(R.id.tvStepAssigned);
+        tvStepOtw = trackingContainer.findViewById(R.id.tvStepOtw);
+        tvStepArrived = trackingContainer.findViewById(R.id.tvStepArrived);
+        tvStepWorking = trackingContainer.findViewById(R.id.tvStepWorking);
+        tvStepCompleted = trackingContainer.findViewById(R.id.tvStepCompleted);
     }
 
     private void populateTicketData() {
@@ -265,7 +283,12 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
             tvTechnicianName.setText(techName != null ? techName : "Not assigned");
         }
         if (tvTechnicianContact != null) {
-            tvTechnicianContact.setText("Contact: Loading...");
+            String phone = currentTicket.getAssignedStaffPhone();
+            if (phone != null && !phone.trim().isEmpty()) {
+                tvTechnicianContact.setText(phone.trim());
+            } else {
+                tvTechnicianContact.setText("Not available");
+            }
         }
         if (tvTechnicianLocation != null) {
             tvTechnicianLocation.setText("En route to your location");
@@ -279,20 +302,29 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
             tvTicketId.setText("Ticket ID: " + currentTicket.getTicketId());
         }
         if (tvSpecificService != null) {
-            tvSpecificService.setText(currentTicket.getServiceType());
+            String specificService = currentTicket.getDescription();
+            if (specificService == null || specificService.trim().isEmpty()) {
+                specificService = "General";
+            }
+            tvSpecificService.setText(specificService);
         }
         if (tvSchedule != null) {
-            String schedule = currentTicket.getCreatedAt();
+            String schedule = buildScheduleText(
+                    currentTicket.getScheduledDate(),
+                    currentTicket.getScheduledTime(),
+                    currentTicket.getCreatedAt()
+            );
             tvSchedule.setText(schedule != null ? schedule : "Not scheduled");
         }
-        
-        // ETA info
-        if (tvEtaMessage != null) {
-            tvEtaMessage.setText("ETA: Calculating...");
-        }
-        if (tvEtaLocation != null) {
-            tvEtaLocation.setText(currentTicket.getAddress());
-        }
+
+        String status = currentTicket.getStatus();
+        String statusDetail = currentTicket.getStatusDetail();
+        boolean isCompleted = status != null && status.toLowerCase().contains("completed");
+        updateTrackingSteps(isCompleted
+            ? status
+            : (statusDetail != null && !statusDetail.trim().isEmpty()
+                ? statusDetail
+                : status));
     }
 
     @Override
@@ -422,6 +454,10 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
             public void run() {
                 // Update technician location from Firebase/Firestore
                 updateTechnicianLocation();
+
+                if (isAdded()) {
+                    loadTickets();
+                }
                 
                 // Schedule next update in 30 seconds
                 locationUpdateHandler.postDelayed(this, 30000);
@@ -492,6 +528,200 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
                 || normalized.equals("assigned")
                 || normalized.equals("ongoing")
                 || normalized.equals("on going");
+    }
+
+    private void updateTrackingSteps(@Nullable String status) {
+        if (vStepAssigned == null || vStepOtw == null || vStepArrived == null
+                || vStepWorking == null || vStepCompleted == null) {
+            return;
+        }
+
+        int activeStep = resolveStepFromStatus(status);
+        applyStepState(vStepAssigned, tvStepAssigned, activeStep > 1, activeStep == 1);
+        applyStepState(vStepOtw, tvStepOtw, activeStep > 2, activeStep == 2);
+        applyStepState(vStepArrived, tvStepArrived, activeStep > 3, activeStep == 3);
+        applyStepState(vStepWorking, tvStepWorking, activeStep > 4, activeStep == 4);
+        applyStepState(vStepCompleted, tvStepCompleted, activeStep >= 5, activeStep == 5);
+
+        applyConnectorState(vConnectorAssignedOtw, activeStep > 1);
+        applyConnectorState(vConnectorOtwArrived, activeStep > 2);
+        applyConnectorState(vConnectorArrivedWorking, activeStep > 3);
+        applyConnectorState(vConnectorWorkingCompleted, activeStep > 4);
+    }
+
+    private int resolveStepFromStatus(@Nullable String status) {
+        if (status == null) {
+            return 1;
+        }
+
+        String normalized = status.toLowerCase().trim().replace('_', ' ');
+        if (normalized.contains("completed") || normalized.contains("done")) {
+            return 5;
+        }
+        if (normalized.contains("in progress") || normalized.contains("ongoing")
+                || normalized.contains("working") || normalized.contains("progress")) {
+            return 4;
+        }
+        if (normalized.contains("arrived")) {
+            return 3;
+        }
+        if (normalized.contains("on the way") || normalized.equals("otw")) {
+            return 2;
+        }
+        return 1;
+    }
+
+    private void applyStepState(@NonNull View stepView, @Nullable TextView labelView,
+            boolean completed, boolean active) {
+        int green = androidx.core.content.ContextCompat.getColor(requireContext(), R.color.status_green);
+        int gray = 0xFFBDBDBD;
+        int color = completed || active ? green : gray;
+
+        stepView.setBackgroundResource(R.drawable.shape_circle_gray);
+        stepView.setBackgroundTintList(android.content.res.ColorStateList.valueOf(color));
+
+        if (labelView != null) {
+            labelView.setTextColor(color);
+        }
+    }
+
+    private void applyConnectorState(@Nullable View connectorView, boolean active) {
+        if (connectorView == null) {
+            return;
+        }
+        int green = androidx.core.content.ContextCompat.getColor(requireContext(), R.color.status_green);
+        int gray = 0xFFBDBDBD;
+        connectorView.setBackgroundColor(active ? green : gray);
+    }
+
+    @Nullable
+    private String buildScheduleText(@Nullable String date, @Nullable String time, @Nullable String fallback) {
+        Date parsedDateTime = parseScheduleDateTime(date, time, fallback);
+        if (parsedDateTime != null) {
+            SimpleDateFormat output = new SimpleDateFormat("MMM d, yyyy • h:mm a", Locale.getDefault());
+            return output.format(parsedDateTime);
+        }
+
+        Date parsedDate = parseScheduleDate(date);
+        Date parsedTime = parseScheduleTime(time);
+
+        if (parsedDate != null && parsedTime != null) {
+            java.util.Calendar dateCal = java.util.Calendar.getInstance();
+            dateCal.setTime(parsedDate);
+            java.util.Calendar timeCal = java.util.Calendar.getInstance();
+            timeCal.setTime(parsedTime);
+            dateCal.set(java.util.Calendar.HOUR_OF_DAY, timeCal.get(java.util.Calendar.HOUR_OF_DAY));
+            dateCal.set(java.util.Calendar.MINUTE, timeCal.get(java.util.Calendar.MINUTE));
+            dateCal.set(java.util.Calendar.SECOND, 0);
+            dateCal.set(java.util.Calendar.MILLISECOND, 0);
+            SimpleDateFormat output = new SimpleDateFormat("MMM d, yyyy • h:mm a", Locale.getDefault());
+            return output.format(dateCal.getTime());
+        }
+
+        if (parsedDate != null) {
+            SimpleDateFormat outputDate = new SimpleDateFormat("MMM d, yyyy", Locale.getDefault());
+            return outputDate.format(parsedDate);
+        }
+
+        if (parsedTime != null) {
+            SimpleDateFormat outputTime = new SimpleDateFormat("h:mm a", Locale.getDefault());
+            return outputTime.format(parsedTime);
+        }
+
+        if (date != null && time != null) {
+            return date + " • " + time;
+        }
+        if (date != null && !date.trim().isEmpty()) {
+            return date;
+        }
+        if (time != null && !time.trim().isEmpty()) {
+            return time;
+        }
+        return fallback;
+    }
+
+    @Nullable
+    private Date parseScheduleDateTime(@Nullable String date, @Nullable String time, @Nullable String fallback) {
+        if (date != null && !date.trim().isEmpty()) {
+            String trimmed = date.trim();
+            if (time != null && !time.trim().isEmpty()) {
+                String combined = trimmed + " " + time.trim();
+                Date combinedParsed = tryParseDate(combined, "yyyy-MM-dd HH:mm:ss");
+                if (combinedParsed != null) {
+                    return combinedParsed;
+                }
+                combinedParsed = tryParseDate(combined, "yyyy-MM-dd HH:mm");
+                if (combinedParsed != null) {
+                    return combinedParsed;
+                }
+            }
+            Date parsed = tryParseDate(trimmed, "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+            if (parsed != null) {
+                return parsed;
+            }
+            parsed = tryParseDate(trimmed, "yyyy-MM-dd'T'HH:mm:ss'Z'");
+            if (parsed != null) {
+                return parsed;
+            }
+            parsed = tryParseDate(trimmed, "yyyy-MM-dd'T'HH:mm:ss");
+            if (parsed != null) {
+                return parsed;
+            }
+            parsed = tryParseDate(trimmed, "yyyy-MM-dd HH:mm:ss");
+            if (parsed != null) {
+                return parsed;
+            }
+        }
+        if (fallback != null && !fallback.trim().isEmpty()) {
+            Date parsed = tryParseDate(fallback.trim(), "yyyy-MM-dd HH:mm:ss");
+            if (parsed != null) {
+                return parsed;
+            }
+            parsed = tryParseDate(fallback.trim(), "yyyy-MM-dd'T'HH:mm:ss");
+            if (parsed != null) {
+                return parsed;
+            }
+        }
+        return null;
+    }
+
+    @Nullable
+    private Date parseScheduleDate(@Nullable String date) {
+        if (date == null || date.trim().isEmpty()) {
+            return null;
+        }
+        Date parsed = tryParseDate(date.trim(), "yyyy-MM-dd");
+        if (parsed != null) {
+            return parsed;
+        }
+        return tryParseDate(date.trim(), "MMM d, yyyy");
+    }
+
+    @Nullable
+    private Date parseScheduleTime(@Nullable String time) {
+        if (time == null || time.trim().isEmpty()) {
+            return null;
+        }
+        Date parsed = tryParseDate(time.trim(), "HH:mm:ss");
+        if (parsed != null) {
+            return parsed;
+        }
+        parsed = tryParseDate(time.trim(), "HH:mm");
+        if (parsed != null) {
+            return parsed;
+        }
+        return tryParseDate(time.trim(), "h:mm a");
+    }
+
+    @Nullable
+    private Date tryParseDate(@NonNull String value, @NonNull String pattern) {
+        try {
+            SimpleDateFormat format = new SimpleDateFormat(pattern, Locale.getDefault());
+            format.setLenient(false);
+            return format.parse(value);
+        } catch (Exception ignored) {
+            return null;
+        }
     }
 
     @Override
