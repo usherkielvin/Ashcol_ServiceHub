@@ -227,10 +227,30 @@
                 android:focusable="true" />
 
             <!-- Repurposed Compatibility IDs -->
-            <View android:id="@+id/headerBackground" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" tools:ignore="MissingConstraints" />
-            <View android:id="@+id/aboutShimmer" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" tools:ignore="MissingConstraints" />
-            <View android:id="@+id/aboutCard" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" tools:ignore="MissingConstraints" />
-            <TextView android:id="@+id/tvSupportHours" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" tools:ignore="MissingConstraints" />
+            <View
+                android:id="@+id/headerBackground"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:visibility="gone"
+                tools:ignore="MissingConstraints" />
+            <View
+                android:id="@+id/aboutShimmer"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:visibility="gone"
+                tools:ignore="MissingConstraints" />
+            <View
+                android:id="@+id/aboutCard"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:visibility="gone"
+                tools:ignore="MissingConstraints" />
+            <TextView
+                android:id="@+id/tvSupportHours"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:visibility="gone"
+                tools:ignore="MissingConstraints" />
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>

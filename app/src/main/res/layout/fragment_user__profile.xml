@@ -66,18 +66,18 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:fontFamily="@font/poppins_bold"
-                android:text="Yooxie Batumbakal"
                 android:textColor="#1B4332"
-                android:textSize="22sp" />
+                android:textSize="22sp"
+                tools:text="Yooxie Batumbakal" />
 
             <TextView
                 android:id="@+id/tv_username"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/poppins_medium"
-                android:text="email@gmail.com"
                 android:textColor="#9E9E9E"
-                android:textSize="14sp" />
+                android:textSize="14sp"
+                tools:text="email@gmail.com" />
 
             <TextView
                 android:id="@+id/tv_branch"
@@ -85,11 +85,11 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
                 android:fontFamily="@font/poppins_medium"
-                android:text="Loading branch..."
                 android:textColor="#00B050"
                 android:textSize="13sp"
                 android:textStyle="italic"
-                android:visibility="gone" />
+                android:visibility="gone"
+                tools:text="ASHCOL DASMA" />
 
         </LinearLayout>
 

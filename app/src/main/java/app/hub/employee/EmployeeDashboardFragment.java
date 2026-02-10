@@ -27,6 +27,8 @@ public class EmployeeDashboardFragment extends Fragment {
 
     private LinearLayout todayWorkContainer;
     private FirebaseEmployeeListener firebaseEmployeeListener;
+    private static List<TicketListResponse.TicketItem> cachedTodayWork = null;
+    private static List<TicketListResponse.TicketItem> cachedScheduleTickets = null;
 
     public EmployeeDashboardFragment() {
         // Required empty public constructor
@@ -81,7 +83,12 @@ public class EmployeeDashboardFragment extends Fragment {
             }
         }
 
-        // Set current date
+        // Set date header and legacy date view (if used elsewhere)
+        String headerDate = new SimpleDateFormat("MMMM d, yyyy", Locale.ENGLISH).format(new Date());
+        TextView tvTodayWorkTitle = view.findViewById(R.id.tvTodayWorkTitle);
+        if (tvTodayWorkTitle != null) {
+            tvTodayWorkTitle.setText(headerDate);
+        }
         if (tvTodayDate != null) {
             SimpleDateFormat dateFormat = new SimpleDateFormat("EEEE, MMM d", Locale.ENGLISH);
             String currentDate = dateFormat.format(new Date()).toUpperCase();
@@ -109,6 +116,14 @@ public class EmployeeDashboardFragment extends Fragment {
         }
 
         todayWorkContainer = view.findViewById(R.id.todayWorkContainer);
+
+        // Preload cached data to keep home tab smooth when switching
+        if (cachedTodayWork != null) {
+            displayTodayWork(new ArrayList<>(cachedTodayWork));
+        }
+        if (cachedScheduleTickets != null) {
+            displayAssignedSchedules(new ArrayList<>(cachedScheduleTickets));
+        }
 
         // Load all assigned tickets for schedules section
         loadAssignedSchedules();
@@ -173,7 +188,9 @@ public class EmployeeDashboardFragment extends Fragment {
 
                 if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
                     List<TicketListResponse.TicketItem> tickets = response.body().getTickets();
-                    displayAssignedSchedules(tickets != null ? tickets : new ArrayList<>());
+                    List<TicketListResponse.TicketItem> safeTickets = tickets != null ? tickets : new ArrayList<>();
+                    cachedScheduleTickets = new ArrayList<>(safeTickets);
+                    displayAssignedSchedules(safeTickets);
                 } else {
                     displayAssignedSchedules(new ArrayList<>());
                 }
@@ -250,7 +267,9 @@ public class EmployeeDashboardFragment extends Fragment {
 
                 if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
                     List<TicketListResponse.TicketItem> tickets = response.body().getTickets();
-                    displayTodayWork(tickets != null ? tickets : new ArrayList<>());
+                    List<TicketListResponse.TicketItem> safeTickets = tickets != null ? tickets : new ArrayList<>();
+                    cachedTodayWork = new ArrayList<>(safeTickets);
+                    displayTodayWork(safeTickets);
                 } else {
                     displayTodayWork(new ArrayList<>());
                 }

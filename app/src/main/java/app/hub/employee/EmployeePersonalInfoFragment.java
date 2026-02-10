@@ -6,9 +6,11 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.app.DatePickerDialog;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -22,6 +24,7 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.imageview.ShapeableImageView;
+import com.google.android.material.textfield.MaterialAutoCompleteTextView;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
@@ -31,6 +34,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Locale;
 
 import app.hub.R;
 import app.hub.BuildConfig;
@@ -39,6 +45,8 @@ import app.hub.api.ApiService;
 import app.hub.api.ProfilePhotoResponse;
 import app.hub.api.UpdateProfileRequest;
 import app.hub.api.UserResponse;
+import app.hub.api.DeleteAccountRequest;
+import app.hub.api.DeleteAccountResponse;
 import app.hub.util.TokenManager;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
@@ -53,6 +61,9 @@ public class EmployeePersonalInfoFragment extends Fragment {
     private TextView tvEmail;
     private TextView tvRole;
     private TextView tvBranch;
+    private MaterialAutoCompleteTextView tvGender;
+    private TextView tvBirthdate;
+    private TextView etUsername;
     private TextInputEditText inputFirstName;
     private TextInputEditText inputLastName;
     private TextInputEditText inputPhone;
@@ -65,6 +76,8 @@ public class EmployeePersonalInfoFragment extends Fragment {
     private Uri cameraImageUri;
     private ActivityResultLauncher<Intent> galleryLauncher;
     private ActivityResultLauncher<Intent> cameraLauncher;
+    private String selectedGender;
+    private String selectedBirthdate;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
@@ -86,6 +99,9 @@ public class EmployeePersonalInfoFragment extends Fragment {
         tvEmail = view.findViewById(R.id.tvProfileEmail);
         tvRole = view.findViewById(R.id.tvProfileRole);
         tvBranch = view.findViewById(R.id.tvProfileBranch);
+        tvGender = view.findViewById(R.id.tvGender);
+        tvBirthdate = view.findViewById(R.id.etDob);
+        etUsername = view.findViewById(R.id.etUsername);
         inputFirstName = view.findViewById(R.id.inputFirstName);
         inputLastName = view.findViewById(R.id.inputLastName);
         inputPhone = view.findViewById(R.id.inputPhone);
@@ -108,6 +124,17 @@ public class EmployeePersonalInfoFragment extends Fragment {
         if (btnEditPhoto != null) {
             btnEditPhoto.setOnClickListener(v -> showPhotoOptions());
         }
+
+        View btnDelete = view.findViewById(R.id.btnDeleteAccount);
+        if (btnDelete != null) {
+            btnDelete.setOnClickListener(v -> showDeleteAccountDialog());
+        }
+
+        if (tvBirthdate != null) {
+            tvBirthdate.setOnClickListener(v -> showBirthdatePicker());
+        }
+
+        setupGenderDropdown();
 
         loadCachedProfileImage();
         loadProfile();
@@ -142,7 +169,7 @@ public class EmployeePersonalInfoFragment extends Fragment {
         }
 
         ApiService apiService = ApiClient.getApiService();
-        Call<UserResponse> call = apiService.getUser(token);
+        Call<UserResponse> call = apiService.getUser("Bearer " + token);
         call.enqueue(new Callback<UserResponse>() {
             @Override
             public void onResponse(@NonNull Call<UserResponse> call, @NonNull Response<UserResponse> response) {
@@ -176,6 +203,24 @@ public class EmployeePersonalInfoFragment extends Fragment {
             tvBranch.setText(branch != null ? branch : "--");
         }
 
+        if (etUsername != null) {
+            etUsername.setText(data.getUsername() != null ? data.getUsername() : "");
+        }
+
+        if (inputPhone != null) {
+            inputPhone.setText(data.getPhone() != null ? data.getPhone() : "");
+        }
+
+        if (tvGender != null) {
+            selectedGender = data.getGender();
+            tvGender.setText(selectedGender != null ? selectedGender : "", false);
+        }
+
+        if (tvBirthdate != null) {
+            selectedBirthdate = data.getBirthdate();
+            tvBirthdate.setText(formatBirthdateForDisplay(selectedBirthdate));
+        }
+
         if (inputFirstName != null) {
             inputFirstName.setText(data.getFirstName() != null ? data.getFirstName() : "");
         }
@@ -183,11 +228,83 @@ public class EmployeePersonalInfoFragment extends Fragment {
             inputLastName.setText(data.getLastName() != null ? data.getLastName() : "");
         }
         if (inputLocation != null) {
-            inputLocation.setText(data.getLocation() != null ? data.getLocation() : "");
+            String location = data.getLocation();
+            if (location == null || location.trim().isEmpty()) {
+                location = data.getCity();
+            }
+            if (location == null || location.trim().isEmpty()) {
+                location = data.getRegion();
+            }
+            inputLocation.setText(location != null ? location : "");
+        }
+
+        String profilePhoto = data.getProfilePhoto();
+        if (profilePhoto != null && !profilePhoto.trim().isEmpty()) {
+            loadProfileImageFromUrl(profilePhoto);
         }
 
         if (imgProfile != null && data.getProfilePhoto() != null && !data.getProfilePhoto().isEmpty()) {
             loadProfileImageFromUrl(data.getProfilePhoto());
+        }
+    }
+
+    private void setupGenderDropdown() {
+        if (getContext() == null || tvGender == null) {
+            return;
+        }
+
+        String[] options = new String[] { "Male", "Female", "Other", "Prefer not to say" };
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(
+                requireContext(),
+                android.R.layout.simple_dropdown_item_1line,
+                options);
+        tvGender.setAdapter(adapter);
+        tvGender.setOnItemClickListener((parent, view, position, id) -> selectedGender = options[position]);
+    }
+
+    private void showBirthdatePicker() {
+        if (getContext() == null) {
+            return;
+        }
+
+        Calendar calendar = Calendar.getInstance();
+        if (selectedBirthdate != null && !selectedBirthdate.trim().isEmpty()) {
+            String[] parts = selectedBirthdate.split("-");
+            if (parts.length == 3) {
+                try {
+                    calendar.set(Calendar.YEAR, Integer.parseInt(parts[0]));
+                    calendar.set(Calendar.MONTH, Integer.parseInt(parts[1]) - 1);
+                    calendar.set(Calendar.DAY_OF_MONTH, Integer.parseInt(parts[2]));
+                } catch (NumberFormatException ignored) {
+                }
+            }
+        }
+
+        DatePickerDialog dialog = new DatePickerDialog(
+                requireContext(),
+                (view, year, month, dayOfMonth) -> {
+                    selectedBirthdate = String.format(Locale.getDefault(), "%04d-%02d-%02d",
+                            year, month + 1, dayOfMonth);
+                    if (tvBirthdate != null) {
+                        tvBirthdate.setText(formatBirthdateForDisplay(selectedBirthdate));
+                    }
+                },
+                calendar.get(Calendar.YEAR),
+                calendar.get(Calendar.MONTH),
+                calendar.get(Calendar.DAY_OF_MONTH));
+        dialog.show();
+    }
+
+    private String formatBirthdateForDisplay(String value) {
+        if (value == null || value.trim().isEmpty()) {
+            return "";
+        }
+        try {
+            SimpleDateFormat input = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+            SimpleDateFormat output = new SimpleDateFormat("MMM dd, yyyy", Locale.getDefault());
+            return output.format(input.parse(value));
+        } catch (Exception e) {
+            return value;
         }
     }
 
@@ -355,12 +472,25 @@ public class EmployeePersonalInfoFragment extends Fragment {
                                 imgProfile.setImageBitmap(bitmap);
                             }
                         });
+                        saveProfileBitmap(bitmap);
                     }
                     input.close();
                 }
             } catch (Exception ignored) {
             }
         }).start();
+    }
+
+    private void saveProfileBitmap(Bitmap bitmap) {
+        if (bitmap == null) return;
+        try {
+            File imageFile = new File(requireContext().getFilesDir(), "profile_image.jpg");
+            FileOutputStream outputStream = new FileOutputStream(imageFile);
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 90, outputStream);
+            outputStream.flush();
+            outputStream.close();
+        } catch (IOException ignored) {
+        }
     }
 
     private void saveProfileImage(Uri imageUri) {
@@ -413,14 +543,11 @@ public class EmployeePersonalInfoFragment extends Fragment {
         String lastName = inputLastName != null ? inputLastName.getText().toString().trim() : "";
         String phone = inputPhone != null ? inputPhone.getText().toString().trim() : "";
         String location = inputLocation != null ? inputLocation.getText().toString().trim() : "";
+        String username = etUsername != null ? etUsername.getText().toString().trim() : "";
+        String gender = selectedGender != null ? selectedGender : "";
+        String birthdate = selectedBirthdate != null ? selectedBirthdate : "";
 
-        if (firstName.isEmpty()) {
-            if (layoutFirstName != null) layoutFirstName.setError("First name is required");
-            return;
-        }
-
-        if (lastName.isEmpty()) {
-            if (layoutLastName != null) layoutLastName.setError("Last name is required");
+        if (!validateRequiredFields(firstName, lastName, username, phone, gender, birthdate)) {
             return;
         }
 
@@ -435,9 +562,10 @@ public class EmployeePersonalInfoFragment extends Fragment {
             btnSave.setText("Saving...");
         }
 
-        UpdateProfileRequest request = new UpdateProfileRequest(firstName, lastName, phone, location);
+        UpdateProfileRequest request = new UpdateProfileRequest(firstName, lastName, username,
+            phone, location, gender, birthdate);
         ApiService apiService = ApiClient.getApiService();
-        Call<UserResponse> call = apiService.updateUser(token, request);
+        Call<UserResponse> call = apiService.updateUser("Bearer " + token, request);
 
         call.enqueue(new Callback<UserResponse>() {
             @Override
@@ -453,6 +581,7 @@ public class EmployeePersonalInfoFragment extends Fragment {
                         tokenManager.saveName(fullName.trim());
                         Toast.makeText(requireContext(), "Profile updated.", Toast.LENGTH_SHORT).show();
                         bindProfile(data);
+                        navigateBack();
                     }
                 } else {
                     Toast.makeText(requireContext(), "Failed to update profile.", Toast.LENGTH_SHORT).show();
@@ -473,6 +602,133 @@ public class EmployeePersonalInfoFragment extends Fragment {
             btnSave.setEnabled(true);
             btnSave.setText("Save changes");
         }
+    }
+
+    private boolean validateRequiredFields(String firstName, String lastName, String username,
+            String phone, String gender, String birthdate) {
+        boolean valid = true;
+
+        if (layoutFirstName != null) layoutFirstName.setError(null);
+        if (layoutLastName != null) layoutLastName.setError(null);
+
+        if (firstName.isEmpty()) {
+            if (layoutFirstName != null) layoutFirstName.setError("First name is required");
+            valid = false;
+        }
+
+        if (lastName.isEmpty()) {
+            if (layoutLastName != null) layoutLastName.setError("Last name is required");
+            valid = false;
+        }
+
+        if (username.isEmpty()) {
+            Toast.makeText(requireContext(), "Username is required", Toast.LENGTH_SHORT).show();
+            valid = false;
+        }
+
+        if (phone.isEmpty()) {
+            Toast.makeText(requireContext(), "Phone number is required", Toast.LENGTH_SHORT).show();
+            valid = false;
+        }
+
+        if (gender.isEmpty()) {
+            Toast.makeText(requireContext(), "Gender is required", Toast.LENGTH_SHORT).show();
+            valid = false;
+        }
+
+        if (birthdate.isEmpty()) {
+            Toast.makeText(requireContext(), "Birthdate is required", Toast.LENGTH_SHORT).show();
+            valid = false;
+        }
+
+        return valid;
+    }
+
+    private void showDeleteAccountDialog() {
+        if (getContext() == null) {
+            return;
+        }
+
+        android.widget.LinearLayout layout = new android.widget.LinearLayout(requireContext());
+        layout.setOrientation(android.widget.LinearLayout.VERTICAL);
+        int padding = (int) (20 * getResources().getDisplayMetrics().density);
+        layout.setPadding(padding, padding, padding, padding);
+
+        TextInputLayout passwordLayout = new TextInputLayout(requireContext());
+        passwordLayout.setHint("Password");
+        TextInputEditText passwordInput = new TextInputEditText(requireContext());
+        passwordInput.setInputType(android.text.InputType.TYPE_CLASS_TEXT
+                | android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD);
+        passwordLayout.addView(passwordInput);
+
+        TextInputLayout confirmLayout = new TextInputLayout(requireContext());
+        confirmLayout.setHint("Type DELETE to confirm");
+        TextInputEditText confirmInput = new TextInputEditText(requireContext());
+        confirmLayout.addView(confirmInput);
+
+        layout.addView(passwordLayout);
+        layout.addView(confirmLayout);
+
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle("Delete account")
+                .setMessage("This will permanently delete your account and data.")
+                .setView(layout)
+                .setPositiveButton("Delete", (dialog, which) -> {
+                    String password = passwordInput.getText() != null
+                            ? passwordInput.getText().toString().trim()
+                            : "";
+                    String confirm = confirmInput.getText() != null
+                            ? confirmInput.getText().toString().trim()
+                            : "";
+                    if (password.isEmpty()) {
+                        Toast.makeText(requireContext(), "Password is required", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    if (!"DELETE".equals(confirm)) {
+                        Toast.makeText(requireContext(), "Please type DELETE to confirm", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    deleteAccount(password);
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    private void deleteAccount(String password) {
+        String token = tokenManager.getToken();
+        if (token == null) {
+            Toast.makeText(requireContext(), "Authentication error. Please login again.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        ApiService apiService = ApiClient.getApiService();
+        DeleteAccountRequest request = new DeleteAccountRequest(password);
+        Call<DeleteAccountResponse> call = apiService.deleteAccount("Bearer " + token, request);
+        call.enqueue(new Callback<DeleteAccountResponse>() {
+            @Override
+            public void onResponse(@NonNull Call<DeleteAccountResponse> call,
+                    @NonNull Response<DeleteAccountResponse> response) {
+                if (!isAdded()) return;
+                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                    tokenManager.clear();
+                    Toast.makeText(requireContext(), "Account deleted.", Toast.LENGTH_SHORT).show();
+                    if (getActivity() != null) {
+                        Intent intent = new Intent(getActivity(), app.hub.common.MainActivity.class);
+                        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(intent);
+                        getActivity().finish();
+                    }
+                } else {
+                    Toast.makeText(requireContext(), "Failed to delete account.", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<DeleteAccountResponse> call, @NonNull Throwable t) {
+                if (!isAdded()) return;
+                Toast.makeText(requireContext(), "Network error. Please try again.", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void navigateBack() {

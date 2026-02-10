@@ -278,6 +278,6 @@ public class TokenManager {
     }
 
     public String getLanguagePreference() {
-        return sharedPreferences.getString(KEY_LANGUAGE_PREFERENCE, "filipino");
+        return sharedPreferences.getString(KEY_LANGUAGE_PREFERENCE, "english_us");
     }
 }

@@ -63,6 +63,7 @@ public class EmployeeScheduleFragment extends Fragment {
     private final List<CalendarAdapter.CalendarDay> calendarDays = new ArrayList<>();
     private final Map<String, List<EmployeeScheduleResponse.ScheduledTicket>> allBufferedTickets = new HashMap<>();
     private final Map<String, List<EmployeeScheduleResponse.ScheduledTicket>> scheduledTicketsMap = new HashMap<>();
+    private static Map<String, List<EmployeeScheduleResponse.ScheduledTicket>> cachedScheduleMap;
 
     private TokenManager tokenManager;
     private FirebaseEmployeeListener firebaseListener;
@@ -96,7 +97,13 @@ public class EmployeeScheduleFragment extends Fragment {
         setupFirebaseListener();
         initializeCalendar();
 
-        loadScheduleData();
+        if (cachedScheduleMap != null && !cachedScheduleMap.isEmpty()) {
+            scheduledTicketsMap.clear();
+            scheduledTicketsMap.putAll(cachedScheduleMap);
+            rebuildScheduleMap();
+        }
+
+        loadScheduleData(true);
 
         return rootView;
     }
@@ -123,7 +130,7 @@ public class EmployeeScheduleFragment extends Fragment {
         if (swipeRefreshLayout != null) {
             swipeRefreshLayout.setOnRefreshListener(() -> {
                 android.util.Log.d("EmployeeSchedule", "Pull-to-refresh triggered");
-                loadScheduleData();
+                loadScheduleData(true);
             });
         }
     }
@@ -338,6 +345,10 @@ public class EmployeeScheduleFragment extends Fragment {
     }
 
     private void loadScheduleData() {
+        loadScheduleData(false);
+    }
+
+    private void loadScheduleData(boolean preserveUi) {
         String token = tokenManager.getToken();
         if (token == null) {
             Toast.makeText(getContext(), "You are not logged in.", Toast.LENGTH_SHORT).show();
@@ -347,10 +358,12 @@ public class EmployeeScheduleFragment extends Fragment {
             return;
         }
 
-        if (swipeRefreshLayout == null || !swipeRefreshLayout.isRefreshing()) {
-            progressBar.setVisibility(View.VISIBLE);
+        if (!preserveUi) {
+            if (swipeRefreshLayout == null || !swipeRefreshLayout.isRefreshing()) {
+                progressBar.setVisibility(View.VISIBLE);
+            }
+            setLoadingState(true);
         }
-        setLoadingState(true);
 
         ApiService apiService = ApiClient.getApiService();
         Call<EmployeeScheduleResponse> call = apiService.getEmployeeSchedule("Bearer " + token);
@@ -437,6 +450,8 @@ public class EmployeeScheduleFragment extends Fragment {
             }
         }
 
+        cachedScheduleMap = new HashMap<>(scheduledTicketsMap);
+
         android.util.Log.d("EmployeeSchedule", "Schedule entries: " + scheduledTicketsMap.size());
         updateCalendar();
     }
@@ -513,7 +528,7 @@ public class EmployeeScheduleFragment extends Fragment {
         if (firebaseListener != null) {
             firebaseListener.startListening();
         }
-        loadScheduleData();
+        loadScheduleData(true);
     }
 
     @Override

@@ -7,7 +7,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
+import com.google.android.material.imageview.ShapeableImageView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -19,6 +21,9 @@ import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
 import java.io.File;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
 import app.hub.R;
 import app.hub.api.ApiClient;
@@ -26,7 +31,9 @@ import app.hub.api.ApiService;
 import app.hub.api.ChangePasswordRequest;
 import app.hub.api.ChangePasswordResponse;
 import app.hub.common.MainActivity;
+import app.hub.common.ProfileAboutUsFragment;
 import app.hub.util.TokenManager;
+import app.hub.util.UiPreferences;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -44,7 +51,14 @@ import java.util.concurrent.TimeoutException;
 
 public class EmployeeProfileFragment extends Fragment {
 
+    private static final long PROFILE_REFRESH_INTERVAL_MS = 15000;
+    private long lastProfileFetchMs = 0L;
+
     private TokenManager tokenManager;
+    private TextView tvName;
+    private TextView tvUsername;
+    private TextView tvBranch;
+    private ShapeableImageView imgProfile;
 
     public EmployeeProfileFragment() {
         // Required empty public constructor
@@ -68,6 +82,7 @@ public class EmployeeProfileFragment extends Fragment {
         }
 
         tokenManager = new TokenManager(getContext());
+        UiPreferences.applyTheme(tokenManager.getThemePreference());
 
         // Appearance button
         View appearanceButton = view.findViewById(R.id.btn_appearance);
@@ -75,39 +90,14 @@ public class EmployeeProfileFragment extends Fragment {
             appearanceButton.setOnClickListener(v -> showThemeToggler());
         }
 
-            // Bind UI Elements with null checks
-            android.widget.TextView tvName = view.findViewById(R.id.tv_name);
-            android.widget.TextView tvUsername = view.findViewById(R.id.tv_username);
-            android.widget.TextView tvBranch = view.findViewById(R.id.tv_branch);
+        // Bind UI Elements with null checks
+        tvName = view.findViewById(R.id.tv_name);
+        tvUsername = view.findViewById(R.id.tv_username);
+        tvBranch = view.findViewById(R.id.tv_branch);
+        imgProfile = view.findViewById(R.id.img_profile);
 
-            // Populate Data with null safety
-            if (tvName != null) {
-                String name = tokenManager.getName();
-                tvName.setText(name != null ? name : "Unknown User");
-            }
-
-            if (tvUsername != null) {
-                String email = tokenManager.getEmail();
-                tvUsername.setText(email != null ? email : "No email");
-            }
-
-            if (tvBranch != null) {
-                String branch = tokenManager.getUserBranch();
-                if (branch != null && !branch.isEmpty()) {
-                    tvBranch.setText("Branch: " + branch);
-                    tvBranch.setVisibility(View.VISIBLE);
-                } else {
-                    // Fallback to cached branch if relevant
-                    String cachedBranch = tokenManager.getCachedBranch();
-                    if (cachedBranch != null) {
-                        tvBranch.setText("Branch: " + cachedBranch);
-                        tvBranch.setVisibility(View.VISIBLE);
-                    } else {
-                        tvBranch.setText("Branch: --");
-                        tvBranch.setVisibility(View.VISIBLE);
-                    }
-                }
-            }
+        loadCachedProfileImage();
+        loadProfile();
 
         // Button Listeners
         View notificationButton = view.findViewById(R.id.btn_notifications);
@@ -138,7 +128,7 @@ public class EmployeeProfileFragment extends Fragment {
 
         View aboutUsButton = view.findViewById(R.id.btn_about_us);
         if (aboutUsButton != null) {
-            aboutUsButton.setOnClickListener(v -> navigateToFragment(new EmployeeAboutUsFragment()));
+            aboutUsButton.setOnClickListener(v -> navigateToFragment(new ProfileAboutUsFragment()));
         }
 
         setupPlaceholderButton(view, R.id.btn_edit_photo, "Edit Photo");
@@ -149,11 +139,133 @@ public class EmployeeProfileFragment extends Fragment {
         }
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        loadCachedProfileImage();
+        if (shouldRefreshProfile()) {
+            loadProfile();
+        }
+    }
+
     private void setupPlaceholderButton(View view, int id, String featureName) {
         View btn = view.findViewById(id);
         if (btn != null) {
             btn.setOnClickListener(v -> Toast
                     .makeText(getContext(), featureName + " feature coming soon!", Toast.LENGTH_SHORT).show());
+        }
+    }
+
+    private void loadProfile() {
+        String token = tokenManager.getToken();
+        if (token == null) {
+            return;
+        }
+
+        lastProfileFetchMs = System.currentTimeMillis();
+
+        ApiService apiService = ApiClient.getApiService();
+        Call<app.hub.api.UserResponse> call = apiService.getUser("Bearer " + token);
+        call.enqueue(new Callback<app.hub.api.UserResponse>() {
+            @Override
+            public void onResponse(@NonNull Call<app.hub.api.UserResponse> call,
+                    @NonNull Response<app.hub.api.UserResponse> response) {
+                if (!isAdded() || response.body() == null || !response.body().isSuccess()) {
+                    return;
+                }
+
+                app.hub.api.UserResponse.Data data = response.body().getData();
+                if (data == null) {
+                    return;
+                }
+
+                if (tvName != null) {
+                    String name = data.getName();
+                    if (name == null || name.trim().isEmpty()) {
+                        String first = data.getFirstName() != null ? data.getFirstName() : "";
+                        String last = data.getLastName() != null ? data.getLastName() : "";
+                        name = (first + " " + last).trim();
+                    }
+                    tvName.setText(name != null && !name.isEmpty() ? name : "Unknown User");
+                }
+
+                if (tvUsername != null) {
+                    String email = data.getEmail();
+                    tvUsername.setText(email != null ? email : "No email");
+                }
+
+                if (tvBranch != null) {
+                    String branch = data.getBranch() != null ? data.getBranch() : tokenManager.getCachedBranch();
+                    if (branch != null && !branch.isEmpty()) {
+                        tvBranch.setText("Technician | " + branch);
+                        tvBranch.setVisibility(View.VISIBLE);
+                    } else {
+                        tvBranch.setText("Technician | ASHCOL");
+                        tvBranch.setVisibility(View.VISIBLE);
+                    }
+                }
+
+                if (imgProfile != null && data.getProfilePhoto() != null && !data.getProfilePhoto().isEmpty()) {
+                    loadProfileImageFromUrl(data.getProfilePhoto());
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<app.hub.api.UserResponse> call, @NonNull Throwable t) {
+                // Keep UI stable on failure.
+            }
+        });
+    }
+
+    private boolean shouldRefreshProfile() {
+        return System.currentTimeMillis() - lastProfileFetchMs > PROFILE_REFRESH_INTERVAL_MS;
+    }
+
+    private void loadProfileImageFromUrl(String url) {
+        new Thread(() -> {
+            try {
+                HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
+                connection.connect();
+                if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
+                    InputStream input = connection.getInputStream();
+                    android.graphics.Bitmap bitmap = android.graphics.BitmapFactory.decodeStream(input);
+                    if (bitmap != null && getActivity() != null) {
+                        getActivity().runOnUiThread(() -> {
+                            if (imgProfile != null) {
+                                imgProfile.setImageBitmap(bitmap);
+                            }
+                        });
+                        saveProfileImage(bitmap);
+                    }
+                    input.close();
+                }
+            } catch (Exception ignored) {
+            }
+        }).start();
+    }
+
+    private void saveProfileImage(android.graphics.Bitmap bitmap) {
+        if (bitmap == null) return;
+        try {
+            File imageFile = new File(requireContext().getFilesDir(), "profile_image.jpg");
+            java.io.FileOutputStream outputStream = new java.io.FileOutputStream(imageFile);
+            bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 90, outputStream);
+            outputStream.flush();
+            outputStream.close();
+        } catch (Exception ignored) {
+        }
+    }
+
+    private void loadCachedProfileImage() {
+        try {
+            File imageFile = new File(requireContext().getFilesDir(), "profile_image.jpg");
+            if (imageFile.exists() && imgProfile != null) {
+                android.graphics.Bitmap bitmap = android.graphics.BitmapFactory.decodeFile(imageFile.getAbsolutePath());
+                if (bitmap != null) {
+                    imgProfile.setImageBitmap(bitmap);
+                }
+            }
+        } catch (Exception ignored) {
         }
     }
 
@@ -633,6 +745,10 @@ public class EmployeeProfileFragment extends Fragment {
                 }
                 
                 tokenManager.setThemePreference(selectedTheme);
+                UiPreferences.applyTheme(selectedTheme);
+                if (getActivity() != null) {
+                    getActivity().recreate();
+                }
                 Toast.makeText(getContext(), "Theme updated to " + selectedTheme, Toast.LENGTH_SHORT).show();
                 bottomSheetDialog.dismiss();
             });

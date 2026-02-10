@@ -29,6 +29,11 @@ public class UserResponse {
         private String email;
         private String role;
         private String profile_photo;
+        private String phone;
+        private String gender;
+        private String birthdate;
+        private String region;
+        private String city;
         private String location;
         private String branch;
         public int getId() {
@@ -93,6 +98,46 @@ public class UserResponse {
 
         public void setProfilePhoto(String profile_photo) {
             this.profile_photo = profile_photo;
+        }
+
+        public String getPhone() {
+            return phone;
+        }
+
+        public void setPhone(String phone) {
+            this.phone = phone;
+        }
+
+        public String getGender() {
+            return gender;
+        }
+
+        public void setGender(String gender) {
+            this.gender = gender;
+        }
+
+        public String getBirthdate() {
+            return birthdate;
+        }
+
+        public void setBirthdate(String birthdate) {
+            this.birthdate = birthdate;
+        }
+
+        public String getRegion() {
+            return region;
+        }
+
+        public void setRegion(String region) {
+            this.region = region;
+        }
+
+        public String getCity() {
+            return city;
+        }
+
+        public void setCity(String city) {
+            this.city = city;
         }
 
         public String getLocation() {

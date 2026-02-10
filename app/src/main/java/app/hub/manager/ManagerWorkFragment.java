@@ -241,6 +241,7 @@ public class ManagerWorkFragment extends Fragment implements TicketDataChangeLis
             // Set refresh listener - refresh from centralized manager
             swipeRefreshLayout.setOnRefreshListener(() -> {
                 android.util.Log.d("ManagerWork", "Pull-to-refresh triggered - refreshing tickets");
+                displayTicketData();
                 ManagerDataManager.refreshTickets(getContext(), new ManagerDataManager.DataLoadCallback() {
                     @Override
                     public void onEmployeesLoaded(String branchName, List<EmployeeResponse.Employee> employees) {
@@ -250,6 +251,8 @@ public class ManagerWorkFragment extends Fragment implements TicketDataChangeLis
                     @Override
                     public void onTicketsLoaded(List<TicketListResponse.TicketItem> tickets) {
                         displayTicketData();
+                        stopSwipeRefresh();
+                        Toast.makeText(getContext(), "Tickets refreshed", Toast.LENGTH_SHORT).show();
                     }
 
                     @Override
@@ -260,17 +263,11 @@ public class ManagerWorkFragment extends Fragment implements TicketDataChangeLis
 
                     @Override
                     public void onLoadComplete() {
-                        if (swipeRefreshLayout != null && swipeRefreshLayout.isRefreshing()) {
-                            swipeRefreshLayout.setRefreshing(false);
-                        }
-                        Toast.makeText(getContext(), "Tickets refreshed", Toast.LENGTH_SHORT).show();
                     }
 
                     @Override
                     public void onLoadError(String error) {
-                        if (swipeRefreshLayout != null && swipeRefreshLayout.isRefreshing()) {
-                            swipeRefreshLayout.setRefreshing(false);
-                        }
+                        stopSwipeRefresh();
                         Toast.makeText(getContext(), "Error: " + error, Toast.LENGTH_SHORT).show();
                     }
                 });
@@ -298,6 +295,12 @@ public class ManagerWorkFragment extends Fragment implements TicketDataChangeLis
             android.util.Log.d("ManagerWork", "No cached tickets available");
             tickets.clear();
             filterTickets(); // This will show empty state
+        }
+    }
+
+    private void stopSwipeRefresh() {
+        if (swipeRefreshLayout != null && swipeRefreshLayout.isRefreshing()) {
+            swipeRefreshLayout.setRefreshing(false);
         }
     }
 
