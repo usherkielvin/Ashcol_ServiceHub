@@ -58,6 +58,9 @@ public class TicketDetailResponse {
         @SerializedName("contact")
         private String contact;
 
+        @SerializedName("amount")
+        private double amount;
+
         @SerializedName("status")
         private String status;
 
@@ -152,6 +155,14 @@ public class TicketDetailResponse {
 
         public void setContact(String contact) {
             this.contact = contact;
+        }
+
+        public double getAmount() {
+            return amount;
+        }
+
+        public void setAmount(double amount) {
+            this.amount = amount;
         }
 
         public String getStatus() {

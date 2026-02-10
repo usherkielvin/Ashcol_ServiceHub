@@ -45,6 +45,7 @@ public class EmployeePaymentFragment extends Fragment {
     private TextView tvServiceName;
     private TextView tvTotalAmount;
     private MaterialButton btnPaymentConfirmed;
+    private MaterialButton btnRequestOnlinePayment;
     private TokenManager tokenManager;
     private boolean isPaymentLoading = false;
     private String confirmButtonText = "Cash Received";
@@ -87,6 +88,7 @@ public class EmployeePaymentFragment extends Fragment {
         tvServiceName = view.findViewById(R.id.tvServiceName);
         tvTotalAmount = view.findViewById(R.id.tvTotalAmount);
         btnPaymentConfirmed = view.findViewById(R.id.btnPaymentConfirmed);
+        btnRequestOnlinePayment = view.findViewById(R.id.btnRequestOnlinePayment);
         tokenManager = new TokenManager(requireContext());
 
         if (btnPaymentConfirmed != null && btnPaymentConfirmed.getText() != null) {
@@ -110,30 +112,53 @@ public class EmployeePaymentFragment extends Fragment {
 
     private void setupClickListeners() {
         loadPaymentDetailsIfNeeded();
-        if (btnPaymentConfirmed == null) {
-            return;
-        }
-        btnPaymentConfirmed.setOnClickListener(v -> {
-            if (isPaymentLoading || totalAmount <= 0) {
-                if (getContext() != null) {
-                    android.widget.Toast.makeText(getContext(),
-                            "Amount not ready yet. Please wait.",
-                            android.widget.Toast.LENGTH_SHORT).show();
+        if (btnRequestOnlinePayment != null) {
+            btnRequestOnlinePayment.setOnClickListener(v -> {
+                if (isPaymentLoading || totalAmount <= 0) {
+                    if (getContext() != null) {
+                        android.widget.Toast.makeText(getContext(),
+                                "Amount not ready yet. Please wait.",
+                                android.widget.Toast.LENGTH_SHORT).show();
+                    }
+                    return;
                 }
-                return;
-            }
-            if (getActivity() instanceof OnPaymentConfirmedListener) {
-                ((OnPaymentConfirmedListener) getActivity())
-                        .onPaymentConfirmed("cash", totalAmount, "");
-            } else if (getParentFragment() instanceof OnPaymentConfirmedListener) {
-                ((OnPaymentConfirmedListener) getParentFragment())
-                        .onPaymentConfirmed("cash", totalAmount, "");
-            }
+                if (getActivity() instanceof OnPaymentConfirmedListener) {
+                    ((OnPaymentConfirmedListener) getActivity())
+                            .onPaymentConfirmed("online", totalAmount, "");
+                } else if (getParentFragment() instanceof OnPaymentConfirmedListener) {
+                    ((OnPaymentConfirmedListener) getParentFragment())
+                            .onPaymentConfirmed("online", totalAmount, "");
+                }
 
-            if (getParentFragmentManager() != null) {
-                getParentFragmentManager().popBackStack();
-            }
-        });
+                if (getParentFragmentManager() != null) {
+                    getParentFragmentManager().popBackStack();
+                }
+            });
+        }
+
+        if (btnPaymentConfirmed != null) {
+            btnPaymentConfirmed.setOnClickListener(v -> {
+                if (isPaymentLoading || totalAmount <= 0) {
+                    if (getContext() != null) {
+                        android.widget.Toast.makeText(getContext(),
+                                "Amount not ready yet. Please wait.",
+                                android.widget.Toast.LENGTH_SHORT).show();
+                    }
+                    return;
+                }
+                if (getActivity() instanceof OnPaymentConfirmedListener) {
+                    ((OnPaymentConfirmedListener) getActivity())
+                            .onPaymentConfirmed("cash", totalAmount, "");
+                } else if (getParentFragment() instanceof OnPaymentConfirmedListener) {
+                    ((OnPaymentConfirmedListener) getParentFragment())
+                            .onPaymentConfirmed("cash", totalAmount, "");
+                }
+
+                if (getParentFragmentManager() != null) {
+                    getParentFragmentManager().popBackStack();
+                }
+            });
+        }
     }
 
     private void loadPaymentDetailsIfNeeded() {
@@ -200,11 +225,13 @@ public class EmployeePaymentFragment extends Fragment {
 
     private void setPaymentLoading(boolean loading) {
         isPaymentLoading = loading;
-        if (btnPaymentConfirmed == null) {
-            return;
+        if (btnPaymentConfirmed != null) {
+            btnPaymentConfirmed.setEnabled(!loading);
+            btnPaymentConfirmed.setText(loading ? "Loading..." : confirmButtonText);
         }
-        btnPaymentConfirmed.setEnabled(!loading);
-        btnPaymentConfirmed.setText(loading ? "Loading..." : confirmButtonText);
+        if (btnRequestOnlinePayment != null) {
+            btnRequestOnlinePayment.setEnabled(!loading);
+        }
     }
 }
 

@@ -104,6 +104,9 @@ public class TicketListResponse {
         @SerializedName("longitude")
         private double longitude;
 
+        @SerializedName("amount")
+        private double amount;
+
         // Getters and setters
         public int getId() {
             return id;
@@ -280,6 +283,14 @@ public class TicketListResponse {
         public void setLongitude(double longitude) {
             this.longitude = longitude;
         }
+
+        public double getAmount() {
+            return amount;
+        }
+
+        public void setAmount(double amount) {
+            this.amount = amount;
+        }
     }
 
     /**
@@ -297,6 +308,9 @@ public class TicketListResponse {
         item.setServiceType(data.getServiceType());
         item.setAddress(data.getAddress());
         item.setContact(data.getContact());
+        if (data.getAmount() != null) {
+            item.setAmount(data.getAmount());
+        }
         item.setStatus(
                 statusName != null ? statusName : (data.getStatus() != null ? data.getStatus().getName() : "Pending"));
         item.setStatusColor(

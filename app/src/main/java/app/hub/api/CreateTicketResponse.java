@@ -79,6 +79,9 @@ public class CreateTicketResponse {
         
         @SerializedName("contact")
         private String contact;
+
+        @SerializedName("amount")
+        private Double amount;
         
         @SerializedName("status")
         private StatusData status;
@@ -110,6 +113,9 @@ public class CreateTicketResponse {
         
         public String getContact() { return contact; }
         public void setContact(String contact) { this.contact = contact; }
+
+        public Double getAmount() { return amount; }
+        public void setAmount(Double amount) { this.amount = amount; }
         
         public StatusData getStatus() { return status; }
         public void setStatus(StatusData status) { this.status = status; }

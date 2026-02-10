@@ -634,11 +634,12 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity
     private void showPaymentFragment() {
         String customerName = currentTicket != null ? currentTicket.getCustomerName() : null;
         String serviceName = currentTicket != null ? currentTicket.getServiceType() : null;
+        double amount = currentTicket != null ? currentTicket.getAmount() : 0.0;
         EmployeePaymentFragment fragment = EmployeePaymentFragment.newInstance(
             ticketId,
             customerName,
             serviceName,
-            0.0);
+            amount);
         getSupportFragmentManager()
                 .beginTransaction()
                 .add(android.R.id.content, fragment)

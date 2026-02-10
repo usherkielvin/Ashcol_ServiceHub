@@ -55,7 +55,7 @@ public class UserCreateTicketFragment extends Fragment {
     private static final int PICK_IMAGE_REQUEST = 1002;
     private static final int MAX_IMAGE_SIZE_MB = 5;
 
-    private EditText fullNameInput, contactInput, landmarkInput, descriptionInput, dateInput;
+    private EditText fullNameInput, contactInput, landmarkInput, descriptionInput, dateInput, amountInput;
     private Button submitButton;
     private RelativeLayout mapLocationButton;
     private LinearLayout uploadButton;
@@ -105,6 +105,7 @@ public class UserCreateTicketFragment extends Fragment {
         landmarkInput = view.findViewById(R.id.etLandmark);
         descriptionInput = view.findViewById(R.id.etDescription);
         dateInput = view.findViewById(R.id.etDate);
+        amountInput = view.findViewById(R.id.etEstimatedAmount);
         serviceTypeDisplay = view.findViewById(R.id.tvServiceType);
         submitButton = view.findViewById(R.id.btnSubmit);
         
@@ -345,6 +346,12 @@ public class UserCreateTicketFragment extends Fragment {
             return;
         }
 
+        double amount = parseAmount();
+        if (amount <= 0) {
+            Toast.makeText(getContext(), "Please enter a valid amount", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         // Combine address with landmark
         String fullAddress = selectedAddress;
         if (!landmark.isEmpty()) {
@@ -365,7 +372,8 @@ public class UserCreateTicketFragment extends Fragment {
         }
 
         CreateTicketRequest request = new CreateTicketRequest(fullName, fullDescription, selectedServiceType, fullAddress, contact,
-                preferredDate, selectedLatitude != 0.0 ? selectedLatitude : null, selectedLongitude != 0.0 ? selectedLongitude : null);
+            preferredDate, selectedLatitude != 0.0 ? selectedLatitude : null,
+            selectedLongitude != 0.0 ? selectedLongitude : null, amount);
         ApiService apiService = ApiClient.getApiService();
         String token = tokenManager.getToken();
 
@@ -416,6 +424,21 @@ public class UserCreateTicketFragment extends Fragment {
                 Toast.makeText(getContext(), "Network error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    private double parseAmount() {
+        if (amountInput == null || amountInput.getText() == null) {
+            return 0.0;
+        }
+        String raw = amountInput.getText().toString().trim().replace(",", "");
+        if (raw.isEmpty()) {
+            return 0.0;
+        }
+        try {
+            return Double.parseDouble(raw);
+        } catch (NumberFormatException e) {
+            return 0.0;
+        }
     }
 
     private void pushTicketToFirestore(CreateTicketResponse ticketResponse) {
