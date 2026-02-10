@@ -28,6 +28,9 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.ListenerRegistration;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -64,6 +67,8 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
     private TextView tvStepAssigned, tvStepOtw, tvStepArrived, tvStepWorking, tvStepCompleted;
     private Handler locationUpdateHandler;
     private Runnable locationUpdateRunnable;
+    private FirebaseFirestore firestore;
+    private ListenerRegistration ticketListener;
 
     public UserNotificationFragment() {
     }
@@ -83,6 +88,7 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
 
         emptyStateContainer = view.findViewById(R.id.emptyStateContainer);
         tokenManager = new TokenManager(getContext());
+        firestore = FirebaseFirestore.getInstance();
 
         swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout);
         if (swipeRefreshLayout != null) {
@@ -208,6 +214,7 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
             android.util.Log.d("UserNotification", "Tracking container already exists, updating data");
             populateTicketData();
             updateMapLocation();
+            startTicketListener();
             return;
         }
         
@@ -242,6 +249,8 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
         
         // Populate data
         populateTicketData();
+
+        startTicketListener();
         
         // Start location updates
         startLocationUpdates();
@@ -488,6 +497,8 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
             trackingContainer.setVisibility(View.GONE);
             android.util.Log.d("UserNotification", "Tracking container hidden");
         }
+
+        stopTicketListener();
         
         // Also hide RecyclerView if present
         if (getView() != null) {
@@ -730,6 +741,57 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
         // Stop location updates
         if (locationUpdateHandler != null && locationUpdateRunnable != null) {
             locationUpdateHandler.removeCallbacks(locationUpdateRunnable);
+        }
+        stopTicketListener();
+    }
+
+    private void startTicketListener() {
+        if (currentTicket == null || firestore == null) {
+            return;
+        }
+
+        stopTicketListener();
+
+        String ticketId = currentTicket.getTicketId();
+        if (ticketId == null || ticketId.trim().isEmpty()) {
+            return;
+        }
+
+        ticketListener = firestore.collection("tickets")
+                .document(ticketId)
+                .addSnapshotListener((DocumentSnapshot snapshot, com.google.firebase.firestore.FirebaseFirestoreException error) -> {
+                    if (error != null) {
+                        android.util.Log.e("UserNotification", "Ticket listener error", error);
+                        return;
+                    }
+                    if (snapshot == null || !snapshot.exists()) {
+                        return;
+                    }
+
+                    String status = snapshot.getString("status");
+                    String statusDetail = snapshot.getString("statusDetail");
+                    if (currentTicket != null) {
+                        if (status != null) {
+                            currentTicket.setStatus(status);
+                        }
+                        if (statusDetail != null) {
+                            currentTicket.setStatusDetail(statusDetail);
+                        }
+                        boolean isCompleted = status != null && status.toLowerCase().contains("completed");
+                        String effective = isCompleted
+                                ? status
+                                : (statusDetail != null && !statusDetail.trim().isEmpty()
+                                        ? statusDetail
+                                        : status);
+                        updateTrackingSteps(effective);
+                    }
+                });
+    }
+
+    private void stopTicketListener() {
+        if (ticketListener != null) {
+            ticketListener.remove();
+            ticketListener = null;
         }
     }
 }
