@@ -30,7 +30,6 @@ public class TicketDetailActivity extends AppCompatActivity implements OnMapRead
 
     private TextView tvTicketId, tvTitle, tvDescription, tvServiceType, tvAddress, tvContact, tvStatus, tvBranch,
             tvAssignedStaff, tvCreatedAt;
-        private TextView tvPaymentAmount, tvPaymentCollectedBy, tvPaymentCollectedDate;
     private Button btnViewMap, btnBack;
     private com.google.android.material.button.MaterialButton btnPayNow;
     private Chip chipPaid;
@@ -81,6 +80,7 @@ public class TicketDetailActivity extends AppCompatActivity implements OnMapRead
         tvTitle = findViewById(R.id.tvTitle);
         tvDescription = findViewById(R.id.tvDescription);
         tvServiceType = findViewById(R.id.tvServiceType);
+        tvUnitType = findViewById(R.id.tvUnitType);
         tvAddress = findViewById(R.id.tvAddress);
         tvContact = findViewById(R.id.tvContact);
         tvStatus = findViewById(R.id.tvStatus);
@@ -155,10 +155,36 @@ public class TicketDetailActivity extends AppCompatActivity implements OnMapRead
     }
 
     private void displayTicketDetails(TicketDetailResponse.TicketDetail ticket) {
+        // Parse unit type and description from the description field
+        String description = ticket.getDescription() != null ? ticket.getDescription() : "";
+        String unitType = "";
+        String otherDetails = description;
+        
+        // Check if description contains "Unit Type: " prefix
+        if (description.startsWith("Unit Type: ")) {
+            int lineBreak = description.indexOf('\n');
+            if (lineBreak > 0) {
+                unitType = description.substring("Unit Type: ".length(), lineBreak).trim();
+                otherDetails = description.substring(lineBreak + 1).trim();
+            } else {
+                unitType = description.substring("Unit Type: ".length()).trim();
+                otherDetails = "";
+            }
+        }
+
         tvTicketId.setText(ticket.getTicketId());
-        tvTitle.setText(ticket.getTicketId());
-        tvDescription.setText(cleanInfoText(ticket.getDescription()));
+        tvTitle.setText(ticket.getTitle());
+        tvDescription.setText(ticket.getDescription());
         tvServiceType.setText(ticket.getServiceType());
+        
+        // Display unit type or hide if not available
+        if (!unitType.isEmpty()) {
+            tvUnitType.setText(unitType);
+            tvUnitType.setVisibility(View.VISIBLE);
+        } else {
+            tvUnitType.setVisibility(View.GONE);
+        }
+        
         tvAddress.setText(ticket.getAddress());
         tvContact.setText(ticket.getContact());
         tvStatus.setText("Status: " + ticket.getStatus());

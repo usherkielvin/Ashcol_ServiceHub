@@ -320,6 +320,11 @@ public class ManagerWorkFragment extends Fragment implements TicketDataChangeLis
 
             String ticketStatus = ticket.getStatus() != null ? ticket.getStatus().toLowerCase() : "";
 
+            // Skip historical tickets (completed/cancelled) - they belong in Reports tab
+            if (isHistoricalTicket(ticketStatus)) {
+                continue;
+            }
+
             // Apply status filter first
             if (!currentFilter.equals("all")) {
                 switch (currentFilter) {
@@ -369,6 +374,17 @@ public class ManagerWorkFragment extends Fragment implements TicketDataChangeLis
         }
 
         adapter.notifyDataSetChanged();
+    }
+
+    private boolean isHistoricalTicket(String status) {
+        if (status == null) return false;
+        String normalized = status.toLowerCase().trim();
+        return normalized.contains("completed") 
+            || normalized.contains("resolved")
+            || normalized.contains("closed")
+            || normalized.contains("cancelled")
+            || normalized.contains("rejected")
+            || normalized.contains("failed");
     }
 
     private boolean isExcludedFromWork(String status) {
