@@ -13,9 +13,12 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.fragment.app.Fragment;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import androidx.core.content.ContextCompat;
+import androidx.core.widget.NestedScrollView;
 
 import java.util.ArrayList;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -63,9 +66,12 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
     private String cachedBranchName;
 
     private TicketListResponse.TicketItem activeTicket;
+    private ActivityResultLauncher<Intent> paymentLauncher;
+    private boolean isLoadingTickets = false;
 
     private static final String PREFS_NAME = "employee_work_steps";
     private static final String PREFS_TIMES = "employee_work_times";
+    private static final String PREFS_DISMISSED = "employee_work_dismissed";
     private static final int STEP_ASSIGNED = 0;
     private static final int STEP_ON_THE_WAY = 1;
     private static final int STEP_ARRIVED = 2;
@@ -75,9 +81,34 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
     private static final String EXTRA_OPEN_PAYMENT = "open_payment";
     private static final String EXTRA_FINISH_AFTER_PAYMENT = "finish_after_payment";
 
-        private static final Map<String, String> BRANCH_ADDRESS_MAP = new HashMap<>();
+    private static final Map<String, String> BRANCH_ADDRESS_MAP = new HashMap<>();
 
-        static {
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        paymentLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() != android.app.Activity.RESULT_OK) {
+                        return;
+                    }
+                    String ticketId = null;
+                    if (result.getData() != null) {
+                        ticketId = result.getData().getStringExtra("ticket_id");
+                    }
+                    if (ticketId == null && activeTicket != null) {
+                        ticketId = activeTicket.getTicketId();
+                    }
+                    if (ticketId == null) {
+                        return;
+                    }
+                    saveStepTime(ticketId, STEP_COMPLETED);
+                    saveStep(ticketId, STEP_COMPLETED);
+                    loadAssignedTickets();
+                });
+    }
+
+    static {
         BRANCH_ADDRESS_MAP.put(
             "ASHCOL - CALAUAN LAGUNA",
             "Purok 4 Kalye Pogi, Brgy. Bangyas, Calauan, Laguna");
@@ -87,7 +118,7 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
         BRANCH_ADDRESS_MAP.put(
             "ASHCOL - PAMPANGA",
             "202 CityCorp Business Center, San Isidro, City of San Fernando, Pampanga");
-        }
+    }
 
     @Nullable
     @Override
@@ -101,7 +132,8 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
         super.onViewCreated(view, savedInstanceState);
 
         initViews(view);
-        loadAssignedTickets();
+        showInitialState();
+        loadAssignedTickets(true);
     }
 
     private void initViews(View view) {
@@ -137,7 +169,10 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
             // Set refresh listener
             swipeRefreshLayout.setOnRefreshListener(() -> {
                 android.util.Log.d("EmployeeWork", "Pull-to-refresh triggered");
-                loadAssignedTickets();
+                if (activeTicket != null && resolveStep(activeTicket) == STEP_COMPLETED) {
+                    dismissCompletedTicket(activeTicket.getTicketId());
+                }
+                loadAssignedTickets(true);
             });
 
             android.util.Log.d("EmployeeWork", "SwipeRefreshLayout configured");
@@ -145,16 +180,23 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
     }
 
     private void loadAssignedTickets() {
+        loadAssignedTickets(false);
+    }
+
+    private void loadAssignedTickets(boolean preserveUi) {
         // Check if fragment is still attached and context is valid
         if (!isAdded() || getContext() == null) {
             android.util.Log.w("EmployeeWork", "Fragment detached or context null, skipping load");
             return;
         }
 
-        // Prevent stale map/status from flashing while loading.
-        setMapVisible(false);
-        if (workStatusContainer != null) {
-            workStatusContainer.removeAllViews();
+        isLoadingTickets = true;
+        if (!preserveUi) {
+            // Prevent stale map/status from flashing while loading.
+            setMapVisible(false);
+            if (workStatusContainer != null) {
+                workStatusContainer.removeAllViews();
+            }
         }
 
         String token = tokenManager.getToken();
@@ -188,6 +230,7 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
                     return;
                 }
 
+                isLoadingTickets = false;
                 swipeRefreshLayout.setRefreshing(false);
 
                 android.util.Log.d("EmployeeWork",
@@ -278,12 +321,24 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
                     return;
                 }
 
+                isLoadingTickets = false;
                 swipeRefreshLayout.setRefreshing(false);
                 String errorMessage = "Network error: " + t.getMessage();
                 Toast.makeText(getContext(), errorMessage, Toast.LENGTH_SHORT).show();
                 android.util.Log.e("EmployeeWork", "Network Error", t);
             }
         });
+    }
+
+    private void showInitialState() {
+        if (!isAdded()) {
+            return;
+        }
+        setMapVisible(false);
+        if (workStatusContainer != null) {
+            workStatusContainer.removeAllViews();
+        }
+        showOverlay(R.layout.fragment_employee_work_nojob);
     }
 
     private void setupMapView() {
@@ -313,6 +368,7 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
         if (step == STEP_COMPLETED) {
             View overlay = showOverlay(R.layout.item_employee_work_workdone);
             bindTicketDetails(overlay, activeTicket);
+            bindWorkCompletedOverlay(overlay, activeTicket);
             setMapVisible(false);
             return;
         }
@@ -323,6 +379,7 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
         bindStepTimes(statusView, activeTicket);
         bindStatusActions(statusView, step);
         applyCompletedUi(statusView, activeTicket);
+        setMapVisible(false);
         updateMapMarker(activeTicket.getLatitude(), activeTicket.getLongitude());
     }
 
@@ -346,6 +403,9 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
         }
         workStatusContainer.removeAllViews();
         View statusView = LayoutInflater.from(getContext()).inflate(layoutResId, workStatusContainer, false);
+        if (statusView instanceof NestedScrollView) {
+            ((NestedScrollView) statusView).setNestedScrollingEnabled(false);
+        }
         workStatusContainer.addView(statusView);
         return statusView;
     }
@@ -410,6 +470,81 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
         }
     }
 
+    private void bindWorkCompletedOverlay(View overlay, TicketListResponse.TicketItem ticket) {
+        if (overlay == null || ticket == null) {
+            return;
+        }
+
+        View backHome = overlay.findViewById(R.id.btnViewHistory);
+        if (backHome != null) {
+            backHome.setOnClickListener(v -> {
+                dismissCompletedTicket(ticket.getTicketId());
+                loadAssignedTickets(true);
+                navigateToHome();
+            });
+        }
+
+        loadPaidAmount(overlay, ticket.getTicketId());
+    }
+
+    private void navigateToHome() {
+        if (!isAdded() || getActivity() == null) {
+            return;
+        }
+        if (getActivity() instanceof EmployeeDashboardActivity) {
+            ((EmployeeDashboardActivity) getActivity()).updateNavigationIndicator(R.id.nav_home);
+            return;
+        }
+
+        getParentFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragment_container, new EmployeeDashboardFragment())
+                .commit();
+    }
+
+    private void loadPaidAmount(View overlay, String ticketId) {
+        TextView amountView = overlay.findViewById(R.id.tvAmountPaid);
+        if (amountView != null) {
+            amountView.setText("Php --");
+        }
+
+        if (ticketId == null || tokenManager == null) {
+            return;
+        }
+        String token = tokenManager.getToken();
+        if (token == null) {
+            return;
+        }
+
+        ApiService apiService = ApiClient.getApiService();
+        Call<app.hub.api.PaymentDetailResponse> call = apiService.getPaymentByTicketId("Bearer " + token, ticketId);
+        call.enqueue(new Callback<app.hub.api.PaymentDetailResponse>() {
+            @Override
+            public void onResponse(Call<app.hub.api.PaymentDetailResponse> call,
+                                   Response<app.hub.api.PaymentDetailResponse> response) {
+                if (!isAdded() || response.body() == null || !response.body().isSuccess()) {
+                    return;
+                }
+
+                app.hub.api.PaymentDetailResponse.PaymentDetail payment = response.body().getPayment();
+                if (payment == null || amountView == null) {
+                    return;
+                }
+
+                double amount = payment.getAmount();
+                if (amount > 0) {
+                    String amountText = "Php " + String.format(Locale.getDefault(), "%,.2f", amount);
+                    amountView.setText(amountText);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<app.hub.api.PaymentDetailResponse> call, Throwable t) {
+                // Keep UI stable; amount stays as placeholder.
+            }
+        });
+    }
+
     private void setStepAction(View view, Runnable action) {
         if (view == null || action == null) {
             return;
@@ -427,7 +562,11 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
         intent.putExtra("ticket_id", activeTicket.getTicketId());
         intent.putExtra(EXTRA_OPEN_PAYMENT, true);
         intent.putExtra(EXTRA_FINISH_AFTER_PAYMENT, true);
-        startActivity(intent);
+        if (paymentLauncher != null) {
+            paymentLauncher.launch(intent);
+        } else {
+            startActivity(intent);
+        }
     }
 
     private void bindTicketDetails(View root, TicketListResponse.TicketItem ticket) {
@@ -477,20 +616,135 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
     }
 
     private TicketListResponse.TicketItem findActiveTicket(List<TicketListResponse.TicketItem> tickets) {
+        if (tickets == null || tickets.isEmpty()) {
+            return null;
+        }
+
+        java.util.Set<String> dismissed = getDismissedCompletedTickets();
+
         TicketListResponse.TicketItem best = null;
+        int bestPriority = Integer.MAX_VALUE;
+        long bestTime = Long.MAX_VALUE;
+
+        TicketListResponse.TicketItem completedFallback = null;
+        long completedTime = Long.MAX_VALUE;
+
         for (TicketListResponse.TicketItem ticket : tickets) {
             if (ticket == null || ticket.getStatus() == null) {
                 continue;
             }
+
             String status = ticket.getStatus().trim().toLowerCase();
-            if (status.contains("ongoing") || status.contains("in progress")) {
-                return ticket;
+            long ticketTime = getTicketSortTime(ticket);
+
+            if (!isTicketCompletedStatus(status) && !isTicketLocallyCompleted(ticket)) {
+                if (ticket.getTicketId() != null && dismissed.contains(ticket.getTicketId())) {
+                    dismissed.remove(ticket.getTicketId());
+                    saveDismissedCompletedTickets(dismissed);
+                }
             }
-            if (best == null && (status.contains("scheduled") || status.contains("pending"))) {
+
+            if (isTicketCompletedStatus(status) || isTicketLocallyCompleted(ticket)) {
+                if (ticket.getTicketId() != null && dismissed.contains(ticket.getTicketId())) {
+                    continue;
+                }
+                if (completedFallback == null || ticketTime < completedTime) {
+                    completedFallback = ticket;
+                    completedTime = ticketTime;
+                }
+                continue;
+            }
+
+            int priority = getTicketPriority(status);
+            if (priority < bestPriority || (priority == bestPriority && ticketTime < bestTime)) {
                 best = ticket;
+                bestPriority = priority;
+                bestTime = ticketTime;
             }
         }
-        return best;
+
+        return best != null ? best : completedFallback;
+    }
+
+    private java.util.Set<String> getDismissedCompletedTickets() {
+        if (!isAdded()) {
+            return new java.util.HashSet<>();
+        }
+        SharedPreferences prefs = requireContext().getSharedPreferences(PREFS_DISMISSED,
+                android.content.Context.MODE_PRIVATE);
+        java.util.Set<String> stored = prefs.getStringSet("dismissed", new java.util.HashSet<>());
+        return stored == null ? new java.util.HashSet<>() : new java.util.HashSet<>(stored);
+    }
+
+    private void saveDismissedCompletedTickets(java.util.Set<String> dismissed) {
+        if (!isAdded()) {
+            return;
+        }
+        SharedPreferences prefs = requireContext().getSharedPreferences(PREFS_DISMISSED,
+                android.content.Context.MODE_PRIVATE);
+        prefs.edit().putStringSet("dismissed", dismissed).apply();
+    }
+
+    private void dismissCompletedTicket(String ticketId) {
+        if (ticketId == null || !isAdded()) {
+            return;
+        }
+        java.util.Set<String> dismissed = getDismissedCompletedTickets();
+        dismissed.add(ticketId);
+        saveDismissedCompletedTickets(dismissed);
+    }
+
+    private boolean isTicketLocallyCompleted(TicketListResponse.TicketItem ticket) {
+        if (ticket == null || ticket.getTicketId() == null) {
+            return false;
+        }
+        String completedTime = getStepTime(ticket.getTicketId(), STEP_COMPLETED);
+        return completedTime != null && !completedTime.trim().isEmpty();
+    }
+
+    private boolean isTicketCompletedStatus(String status) {
+        if (status == null) {
+            return false;
+        }
+        return status.contains("completed") || status.contains("resolved") || status.contains("closed");
+    }
+
+    private int getTicketPriority(String status) {
+        if (status == null) {
+            return 3;
+        }
+        if (status.contains("ongoing") || status.contains("in progress") || status.contains("progress")
+                || status.contains("accepted")) {
+            return 0;
+        }
+        if (status.contains("scheduled") || status.contains("pending") || status.contains("open")) {
+            return 1;
+        }
+        return 2;
+    }
+
+    private long getTicketSortTime(TicketListResponse.TicketItem ticket) {
+        if (ticket == null) {
+            return Long.MAX_VALUE;
+        }
+        String createdAt = ticket.getCreatedAt();
+        if (createdAt == null || createdAt.trim().isEmpty()) {
+            return Long.MAX_VALUE;
+        }
+        String value = createdAt.trim();
+        try {
+            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+            Date date = format.parse(value);
+            return date != null ? date.getTime() : Long.MAX_VALUE;
+        } catch (Exception e) {
+            try {
+                SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault());
+                Date date = format.parse(value);
+                return date != null ? date.getTime() : Long.MAX_VALUE;
+            } catch (Exception ignored) {
+                return Long.MAX_VALUE;
+            }
+        }
     }
 
     private int resolveStep(TicketListResponse.TicketItem ticket) {
@@ -576,8 +830,7 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
         View markButton = root.findViewById(R.id.btnMarkCompleted);
         View requestButton = root.findViewById(R.id.btnRequestPayment);
         ImageView stepView = root.findViewById(R.id.ivStep5);
-        com.google.android.material.card.MaterialCardView completedCard =
-                root.findViewById(R.id.tvCompletedStatus);
+        View completedStatusView = root.findViewById(R.id.tvCompletedStatus);
         TextView completedLabel = root.findViewById(R.id.tvCompletedLabel);
 
         String completedTime = getStepTime(ticket.getTicketId(), STEP_COMPLETED);
@@ -602,7 +855,10 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
             }
         }
 
-        if (completedCard != null) {
+        int labelColor = isCompleted ? 0xFF1B5E20 : 0xFFBDBDBD;
+        if (completedStatusView instanceof com.google.android.material.card.MaterialCardView) {
+            com.google.android.material.card.MaterialCardView completedCard =
+                    (com.google.android.material.card.MaterialCardView) completedStatusView;
             if (isCompleted) {
                 completedCard.setCardBackgroundColor(0xFFD1E7D1);
                 completedCard.setStrokeColor(0xFF1B5E20);
@@ -612,11 +868,19 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
                 completedCard.setStrokeColor(0xFFBDBDBD);
                 completedCard.setStrokeWidth(dpToPx(1));
             }
-        }
-
-        if (completedLabel != null) {
-            int color = isCompleted ? 0xFF1B5E20 : 0xFFBDBDBD;
-            completedLabel.setTextColor(color);
+            if (completedLabel != null) {
+                completedLabel.setTextColor(labelColor);
+            }
+        } else if (completedStatusView instanceof TextView) {
+            TextView completedText = (TextView) completedStatusView;
+            completedText.setTextColor(labelColor);
+            if (isCompleted) {
+                completedText.setBackgroundColor(0xFFD1E7D1);
+            } else {
+                completedText.setBackgroundResource(R.drawable.bg_input_white);
+            }
+        } else if (completedLabel != null) {
+            completedLabel.setTextColor(labelColor);
         }
     }
 
@@ -641,17 +905,130 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
         if (date == null && time == null) {
             return "";
         }
+        Date parsedDateTime = parseScheduleDateTime(date, time);
+        if (parsedDateTime != null) {
+            SimpleDateFormat output = new SimpleDateFormat("MMM d, yyyy • h:mm a", Locale.getDefault());
+            return output.format(parsedDateTime);
+        }
+
+        Date parsedDate = parseScheduleDate(date);
+        Date parsedTime = parseScheduleTime(time);
+
+        if (parsedDate != null && parsedTime != null) {
+            java.util.Calendar dateCal = java.util.Calendar.getInstance();
+            dateCal.setTime(parsedDate);
+            java.util.Calendar timeCal = java.util.Calendar.getInstance();
+            timeCal.setTime(parsedTime);
+            dateCal.set(java.util.Calendar.HOUR_OF_DAY, timeCal.get(java.util.Calendar.HOUR_OF_DAY));
+            dateCal.set(java.util.Calendar.MINUTE, timeCal.get(java.util.Calendar.MINUTE));
+            dateCal.set(java.util.Calendar.SECOND, 0);
+            dateCal.set(java.util.Calendar.MILLISECOND, 0);
+            SimpleDateFormat output = new SimpleDateFormat("MMM d, yyyy • h:mm a", Locale.getDefault());
+            return output.format(dateCal.getTime());
+        }
+
+        if (parsedDate != null) {
+            SimpleDateFormat outputDate = new SimpleDateFormat("MMM d, yyyy", Locale.getDefault());
+            return outputDate.format(parsedDate);
+        }
+
+        if (parsedTime != null) {
+            SimpleDateFormat outputTime = new SimpleDateFormat("h:mm a", Locale.getDefault());
+            return outputTime.format(parsedTime);
+        }
+
         if (date != null && time != null) {
             return date + " • " + time;
         }
         return date != null ? date : time;
     }
 
+    private Date parseScheduleDateTime(String date, String time) {
+        if (date == null) {
+            return null;
+        }
+        String trimmed = date.trim();
+        if (time != null && !time.trim().isEmpty()) {
+            String combined = trimmed + " " + time.trim();
+            Date combinedParsed = tryParseDate(combined, "yyyy-MM-dd HH:mm:ss");
+            if (combinedParsed != null) {
+                return combinedParsed;
+            }
+            combinedParsed = tryParseDate(combined, "yyyy-MM-dd HH:mm");
+            if (combinedParsed != null) {
+                return combinedParsed;
+            }
+        }
+
+        Date parsed = tryParseDate(trimmed, "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+        if (parsed != null) {
+            return parsed;
+        }
+        parsed = tryParseDate(trimmed, "yyyy-MM-dd'T'HH:mm:ss'Z'");
+        if (parsed != null) {
+            return parsed;
+        }
+        parsed = tryParseDate(trimmed, "yyyy-MM-dd'T'HH:mm:ss");
+        if (parsed != null) {
+            return parsed;
+        }
+        return tryParseDate(trimmed, "yyyy-MM-dd HH:mm:ss");
+    }
+
+    private Date parseScheduleDate(String date) {
+        if (date == null) {
+            return null;
+        }
+        String trimmed = date.trim();
+        Date parsed = tryParseDate(trimmed, "yyyy-MM-dd");
+        if (parsed != null) {
+            return parsed;
+        }
+        parsed = tryParseDate(trimmed, "yyyy/MM/dd");
+        if (parsed != null) {
+            return parsed;
+        }
+        return tryParseDate(trimmed, "MM/dd/yyyy");
+    }
+
+    private Date parseScheduleTime(String time) {
+        if (time == null) {
+            return null;
+        }
+        String trimmed = time.trim();
+        Date parsed = tryParseDate(trimmed, "HH:mm:ss");
+        if (parsed != null) {
+            return parsed;
+        }
+        parsed = tryParseDate(trimmed, "HH:mm");
+        if (parsed != null) {
+            return parsed;
+        }
+        parsed = tryParseDate(trimmed, "hh:mm a");
+        if (parsed != null) {
+            return parsed;
+        }
+        return tryParseDate(trimmed, "h:mm a");
+    }
+
+    private Date tryParseDate(String value, String pattern) {
+        if (value == null) {
+            return null;
+        }
+        try {
+            SimpleDateFormat format = new SimpleDateFormat(pattern, Locale.getDefault());
+            format.setLenient(false);
+            return format.parse(value);
+        } catch (java.text.ParseException e) {
+            return null;
+        }
+    }
+
     private void updateMapMarker(double latitude, double longitude) {
         if (googleMap == null || mapViewActiveJob == null) {
             return;
         }
-        setMapVisible(true);
+        setMapVisible(false);
 
         if (latitude != 0 && longitude != 0) {
             customerLatLng = new LatLng(latitude, longitude);
@@ -734,8 +1111,7 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
         }
 
         if (markerCount == 0) {
-            // Keep the map visible to avoid flashing/clearing when data is delayed.
-            setMapVisible(true);
+            setMapVisible(false);
             return;
         }
 
@@ -823,6 +1199,7 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
     @Override
     public void onMapReady(GoogleMap map) {
         googleMap = map;
+        setMapVisible(false);
         if (activeTicket != null) {
             updateMapMarker(activeTicket.getLatitude(), activeTicket.getLongitude());
         }
@@ -834,7 +1211,7 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
         if (mapViewActiveJob != null) {
             mapViewActiveJob.onResume();
         }
-        loadAssignedTickets();
+        loadAssignedTickets(true);
     }
 
     @Override

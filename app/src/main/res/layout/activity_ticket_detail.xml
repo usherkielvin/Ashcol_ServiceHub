@@ -100,6 +100,19 @@
                         android:textSize="14sp"
                         android:textStyle="bold" />
 
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipPaid"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="Paid"
+                        android:textColor="#FFFFFF"
+                        android:textSize="12sp"
+                        android:visibility="gone"
+                        app:chipBackgroundColor="#2E7D32"
+                        app:chipMinHeight="24dp"
+                        app:chipStrokeWidth="0dp" />
+
                     <View
                         android:layout_width="match_parent"
                         android:layout_height="1dp"
@@ -186,6 +199,24 @@
                                 android:textStyle="bold" />
                         </LinearLayout>
                     </LinearLayout>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnPayNow"
+                        style="@style/Widget.MaterialComponents.Button"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:layout_marginTop="20dp"
+                        android:fontFamily="@font/poppins_bold"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
+                        android:text="Pay Now"
+                        android:textAllCaps="false"
+                        android:textColor="@android:color/white"
+                        android:textSize="14sp"
+                        android:visibility="gone"
+                        app:backgroundTint="#00B050"
+                        app:cornerRadius="24dp"
+                        app:elevation="2dp" />
                 </LinearLayout>
 
                 <!-- Perforation Line -->

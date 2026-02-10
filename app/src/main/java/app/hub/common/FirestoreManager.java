@@ -23,6 +23,7 @@ public class FirestoreManager {
     private ListenerRegistration userProfileListener;
     private ListenerRegistration addressListener;
     private ListenerRegistration paymentListener;
+    private ListenerRegistration completedPaymentListener;
     private ListenerRegistration pendingPaymentsListener;
     private ListenerRegistration completedPaymentsListener;
 
@@ -318,6 +319,33 @@ public class FirestoreManager {
                 });
     }
 
+    public void listenToCompletedPayment(@Nullable String ticketId, PendingPaymentListener listener) {
+        String email = tokenManager.getEmail();
+        if (email == null || ticketId == null) {
+            listener.onError(new Exception("Missing user or ticket id"));
+            return;
+        }
+
+        completedPaymentListener = db.collection("payments")
+                .whereEqualTo("customerEmail", email)
+                .whereEqualTo("ticketId", ticketId)
+                .whereEqualTo("status", "completed")
+                .addSnapshotListener((snapshots, error) -> {
+                    if (error != null) {
+                        listener.onError(error);
+                        return;
+                    }
+
+                    if (snapshots != null && !snapshots.isEmpty()) {
+                        DocumentSnapshot doc = snapshots.getDocuments().get(0);
+                        PendingPayment payment = doc.toObject(PendingPayment.class);
+                        if (payment != null) {
+                            listener.onPaymentUpdated(payment);
+                        }
+                    }
+                });
+    }
+
     public void listenToPendingPayments(PendingPaymentsListener listener) {
         String email = tokenManager.getEmail();
         if (email == null) {
@@ -382,6 +410,10 @@ public class FirestoreManager {
         if (paymentListener != null) {
             paymentListener.remove();
             paymentListener = null;
+        }
+        if (completedPaymentListener != null) {
+            completedPaymentListener.remove();
+            completedPaymentListener = null;
         }
         if (pendingPaymentsListener != null) {
             pendingPaymentsListener.remove();

@@ -12,11 +12,13 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.material.chip.Chip;
 
 import app.hub.R;
 import app.hub.api.ApiClient;
 import app.hub.api.ApiService;
 import app.hub.api.TicketDetailResponse;
+import app.hub.common.FirestoreManager;
 import app.hub.map.MapViewActivity;
 import app.hub.util.TokenManager;
 import retrofit2.Call;
@@ -29,9 +31,16 @@ public class TicketDetailActivity extends AppCompatActivity implements OnMapRead
     private TextView tvTicketId, tvTitle, tvDescription, tvServiceType, tvAddress, tvContact, tvStatus, tvBranch,
             tvAssignedStaff, tvCreatedAt;
     private Button btnViewMap, btnBack;
+    private com.google.android.material.button.MaterialButton btnPayNow;
+    private Chip chipPaid;
     private View mapCardContainer;
     private TokenManager tokenManager;
+    private FirestoreManager firestoreManager;
     private String ticketId;
+    private String serviceName;
+    private String technicianName;
+    private FirestoreManager.PendingPayment pendingPayment;
+    private FirestoreManager.PendingPayment completedPayment;
     private double latitude, longitude;
 
     private com.google.android.gms.maps.MapView mapView;
@@ -54,6 +63,7 @@ public class TicketDetailActivity extends AppCompatActivity implements OnMapRead
         setupClickListeners();
 
         tokenManager = new TokenManager(this);
+        firestoreManager = new FirestoreManager(this);
         ticketId = getIntent().getStringExtra("ticket_id");
 
         if (ticketId != null) {
@@ -77,6 +87,8 @@ public class TicketDetailActivity extends AppCompatActivity implements OnMapRead
         tvCreatedAt = findViewById(R.id.tvCreatedAt);
         btnViewMap = findViewById(R.id.btnViewMap);
         btnBack = findViewById(R.id.btnBack);
+        btnPayNow = findViewById(R.id.btnPayNow);
+        chipPaid = findViewById(R.id.chipPaid);
         mapCardContainer = findViewById(R.id.mapCardContainer);
     }
 
@@ -91,6 +103,10 @@ public class TicketDetailActivity extends AppCompatActivity implements OnMapRead
                 Toast.makeText(this, "Location not available", Toast.LENGTH_SHORT).show();
             }
         });
+
+        if (btnPayNow != null) {
+            btnPayNow.setOnClickListener(v -> openPaymentFlow());
+        }
     }
 
     private void loadTicketDetails() {
@@ -146,6 +162,9 @@ public class TicketDetailActivity extends AppCompatActivity implements OnMapRead
                 + (ticket.getAssignedStaff() != null ? ticket.getAssignedStaff() : "Not assigned"));
         tvCreatedAt.setText("Created: " + ticket.getCreatedAt());
 
+        serviceName = ticket.getServiceType();
+        technicianName = ticket.getAssignedStaff();
+
         // Set status color
         setStatusColor(tvStatus, ticket.getStatus(), ticket.getStatusColor());
 
@@ -160,6 +179,101 @@ public class TicketDetailActivity extends AppCompatActivity implements OnMapRead
         if (ticket.getAssignedStaff() == null || ticket.getAssignedStaff().isEmpty()) {
             tvAssignedStaff.setVisibility(View.GONE);
         }
+
+        updatePaymentStatusUI(ticket.getStatus());
+    }
+
+    private void updatePaymentStatusUI(String status) {
+        if (btnPayNow != null) {
+            btnPayNow.setVisibility(View.GONE);
+        }
+        if (chipPaid != null) {
+            chipPaid.setVisibility(View.GONE);
+        }
+        if (status == null) {
+            return;
+        }
+
+        String normalized = status.trim().toLowerCase();
+        boolean isCompleted = normalized.equals("completed")
+                || normalized.equals("closed")
+                || normalized.equals("resolved")
+                || normalized.equals("paid");
+
+        if (!isCompleted || ticketId == null) {
+            return;
+        }
+
+        firestoreManager.listenToPendingPayment(ticketId, new FirestoreManager.PendingPaymentListener() {
+            @Override
+            public void onPaymentUpdated(FirestoreManager.PendingPayment payment) {
+                pendingPayment = payment;
+                runOnUiThread(() -> {
+                    if (btnPayNow != null && completedPayment == null) {
+                        btnPayNow.setVisibility(View.VISIBLE);
+                    }
+                    if (chipPaid != null) {
+                        chipPaid.setVisibility(View.GONE);
+                    }
+                });
+            }
+
+            @Override
+            public void onError(Exception e) {
+                runOnUiThread(() -> {
+                    if (btnPayNow != null) {
+                        btnPayNow.setVisibility(View.GONE);
+                    }
+                });
+            }
+        });
+
+        firestoreManager.listenToCompletedPayment(ticketId, new FirestoreManager.PendingPaymentListener() {
+            @Override
+            public void onPaymentUpdated(FirestoreManager.PendingPayment payment) {
+                completedPayment = payment;
+                runOnUiThread(() -> {
+                    if (chipPaid != null) {
+                        chipPaid.setVisibility(View.VISIBLE);
+                    }
+                    if (btnPayNow != null) {
+                        btnPayNow.setVisibility(View.GONE);
+                    }
+                });
+            }
+
+            @Override
+            public void onError(Exception e) {
+                runOnUiThread(() -> {
+                    if (chipPaid != null) {
+                        chipPaid.setVisibility(View.GONE);
+                    }
+                });
+            }
+        });
+    }
+
+    private void openPaymentFlow() {
+        if (ticketId == null) {
+            return;
+        }
+
+        int paymentId = pendingPayment != null ? pendingPayment.paymentId : 0;
+        double amount = pendingPayment != null ? pendingPayment.amount : 0.0;
+        String paymentServiceName = pendingPayment != null && pendingPayment.serviceName != null
+                ? pendingPayment.serviceName
+                : serviceName;
+        String paymentTechnician = pendingPayment != null && pendingPayment.technicianName != null
+                ? pendingPayment.technicianName
+                : technicianName;
+
+        startActivity(UserPaymentActivity.createIntent(
+                this,
+                ticketId,
+                paymentId,
+                amount,
+                paymentServiceName,
+                paymentTechnician));
     }
 
     private void updateMapLocation() {
@@ -268,6 +382,9 @@ public class TicketDetailActivity extends AppCompatActivity implements OnMapRead
         super.onDestroy();
         if (mapView != null)
             mapView.onDestroy();
+        if (firestoreManager != null) {
+            firestoreManager.stopPaymentListening();
+        }
     }
 
     @Override
