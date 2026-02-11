@@ -114,8 +114,7 @@
                         app:hintEnabled="false"
                         app:startIconDrawable="@drawable/profile_icon"
                         app:startIconTint="#1B4332"
-                        app:startIconMinSize="24dp"
-                        app:startIconPadding="12dp">
+                        app:startIconMinSize="24dp">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/Email_val"
@@ -157,8 +156,7 @@
                         app:hintEnabled="false"
                         app:startIconDrawable="@drawable/lock"
                         app:startIconTint="#1B4332"
-                        app:startIconMinSize="24dp"
-                        app:startIconPadding="12dp">
+                        app:startIconMinSize="24dp">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/Pass_val"

@@ -66,7 +66,7 @@ public class FCMTokenHelper {
      */
     private static void sendTokenToBackend(Context context, String fcmToken) {
         TokenManager tokenManager = new TokenManager(context);
-        String authToken = tokenManager.getToken();
+        String authToken = tokenManager.getAuthToken();
 
         if (authToken == null) {
             Log.w(TAG, "No auth token available");
@@ -75,9 +75,7 @@ public class FCMTokenHelper {
 
         FCMTokenRequest request = new FCMTokenRequest(fcmToken);
 
-        Call<FCMTokenResponse> call = ApiClient.getApiService().registerFCMToken(
-                "Bearer " + authToken,
-                request);
+        Call<FCMTokenResponse> call = ApiClient.getApiService().registerFCMToken(authToken, request);
 
         call.enqueue(new Callback<FCMTokenResponse>() {
             @Override
@@ -101,7 +99,7 @@ public class FCMTokenHelper {
      */
     public static void updateLocation(Context context, String email, double latitude, double longitude) {
         TokenManager tokenManager = new TokenManager(context);
-        String authToken = tokenManager.getToken();
+        String authToken = tokenManager.getAuthToken();
 
         if (authToken == null) {
             Log.w(TAG, "No auth token available");
@@ -114,9 +112,7 @@ public class FCMTokenHelper {
 
         app.hub.api.UpdateLocationRequest request = new app.hub.api.UpdateLocationRequest(latitude, longitude);
 
-        Call<app.hub.api.UpdateLocationResponse> call = ApiClient.getApiService().updateLocation(
-                "Bearer " + authToken,
-                request);
+        Call<app.hub.api.UpdateLocationResponse> call = ApiClient.getApiService().updateLocation(authToken, request);
 
         call.enqueue(new Callback<app.hub.api.UpdateLocationResponse>() {
             @Override
