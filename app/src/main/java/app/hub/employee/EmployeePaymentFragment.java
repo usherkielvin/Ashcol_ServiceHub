@@ -30,6 +30,10 @@ public class EmployeePaymentFragment extends Fragment {
         void onPaymentConfirmed(String paymentMethod, double amount, String notes);
     }
 
+    public interface OnPaymentRequestListener {
+        void onPaymentRequested(double amount, String notes);
+    }
+
     private static final String ARG_TICKET_ID = "ticket_id";
     private static final String ARG_CUSTOMER_NAME = "customer_name";
     private static final String ARG_SERVICE_NAME = "service_name";
@@ -92,6 +96,8 @@ public class EmployeePaymentFragment extends Fragment {
     }
 
     private void initViews(View view) {
+        TextView tvPaymentHeader = view.findViewById(R.id.tvPaymentHeader);
+        TextView tvConfirmationStatus = view.findViewById(R.id.tvConfirmationStatus);
         tvTicketId = view.findViewById(R.id.tvTicketId);
         tvCustomerName = view.findViewById(R.id.tvCustomerName);
         tvServiceName = view.findViewById(R.id.tvServiceName);
@@ -117,6 +123,18 @@ public class EmployeePaymentFragment extends Fragment {
             String amountText = "Php " + String.format("%.2f", totalAmount);
             tvTotalAmount.setText(amountText);
         }
+
+        if (requestOnly) {
+            if (btnPaymentConfirmed != null) {
+                btnPaymentConfirmed.setVisibility(View.GONE);
+            }
+            if (tvPaymentHeader != null) {
+                tvPaymentHeader.setText("REQUEST PAYMENT");
+            }
+            if (tvConfirmationStatus != null) {
+                tvConfirmationStatus.setText("Request online payment from the customer.");
+            }
+        }
     }
 
     private void setupClickListeners() {
@@ -131,12 +149,16 @@ public class EmployeePaymentFragment extends Fragment {
                     }
                     return;
                 }
-                if (getActivity() instanceof OnPaymentConfirmedListener) {
-                    ((OnPaymentConfirmedListener) getActivity())
-                            .onPaymentConfirmed("online", totalAmount, "");
-                } else if (getParentFragment() instanceof OnPaymentConfirmedListener) {
-                    ((OnPaymentConfirmedListener) getParentFragment())
-                            .onPaymentConfirmed("online", totalAmount, "");
+                if (getActivity() instanceof OnPaymentRequestListener) {
+                    ((OnPaymentRequestListener) getActivity())
+                            .onPaymentRequested(totalAmount, "");
+                } else if (getParentFragment() instanceof OnPaymentRequestListener) {
+                    ((OnPaymentRequestListener) getParentFragment())
+                            .onPaymentRequested(totalAmount, "");
+                } else if (getContext() != null) {
+                    android.widget.Toast.makeText(getContext(),
+                            "Unable to request payment right now.",
+                            android.widget.Toast.LENGTH_SHORT).show();
                 }
 
                 if (getParentFragmentManager() != null) {

@@ -163,6 +163,9 @@ public class UserProfileFragment extends Fragment {
         tvUsername = view.findViewById(R.id.tv_username);
         tvBranch = view.findViewById(R.id.tv_branch);
         imgProfile = view.findViewById(R.id.img_profile);
+        if (tvBranch != null) {
+            tvBranch.setVisibility(View.GONE);
+        }
     }
 
     private void loadCachedData() {
@@ -192,15 +195,7 @@ public class UserProfileFragment extends Fragment {
             }
         }
 
-        // Load and display cached branch immediately
-        String cachedBranch = tokenManager.getCachedBranch();
-        if (cachedBranch != null && !cachedBranch.isEmpty()) {
-            currentBranch = cachedBranch;
-            if (tvBranch != null) {
-                tvBranch.setText("📍 " + cachedBranch);
-                tvBranch.setVisibility(View.VISIBLE);
-            }
-        }
+        // Branch display hidden for customer profile.
     }
 
     private void fetchUserData() {
@@ -380,18 +375,8 @@ public class UserProfileFragment extends Fragment {
     }
 
     private void updateBranchDisplay() {
-        if (currentBranch != null && !currentBranch.isEmpty() && tvBranch != null) {
-            tvBranch.setText("📍 " + currentBranch);
-            tvBranch.setVisibility(View.VISIBLE);
-            // Cache the branch info
-            tokenManager.saveBranchInfo(currentBranch, 0);
-        } else {
-            // Try to load from cache
-            String cachedBranch = tokenManager.getCachedBranch();
-            if (cachedBranch != null && !cachedBranch.isEmpty() && tvBranch != null) {
-                tvBranch.setText("📍 " + cachedBranch);
-                tvBranch.setVisibility(View.VISIBLE);
-            }
+        if (tvBranch != null) {
+            tvBranch.setVisibility(View.GONE);
         }
     }
 
@@ -478,7 +463,6 @@ public class UserProfileFragment extends Fragment {
         setClickListener(view, R.id.btn_appearance, () -> showThemeToggler());
         setClickListener(view, R.id.btn_notifications, () -> showNotificationSettings());
         setClickListener(view, R.id.btn_language, () -> showLanguageToggler());
-        setClickListener(view, R.id.btn_payments, this::openPayments);
         setClickListener(view, R.id.btn_about_us, () -> navigateToFragment(new ProfileAboutUsFragment()));
     }
 

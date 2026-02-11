@@ -37,7 +37,9 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class EmployeeTicketDetailActivity extends AppCompatActivity
-        implements EmployeePaymentFragment.OnPaymentConfirmedListener, OnMapReadyCallback {
+    implements EmployeePaymentFragment.OnPaymentConfirmedListener,
+    EmployeePaymentFragment.OnPaymentRequestListener,
+    OnMapReadyCallback {
 
         private TextView tvTicketId, tvTitle, tvDescription, tvServiceType, tvAddress, tvContact, tvStatus, tvCustomerName,
             tvCreatedAt, tvScheduleDate, tvScheduleTime, tvScheduleNotes;
@@ -675,7 +677,70 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity
 
     @Override
     public void onPaymentConfirmed(String paymentMethod, double amount, String notes) {
+        if ("online".equals(paymentMethod) && isRequestPayment) {
+            requestPayment(amount, notes);
+            return;
+        }
         completeWorkWithPayment(paymentMethod, amount, notes);
+    }
+
+    @Override
+    public void onPaymentRequested(double amount, String notes) {
+        requestPayment(amount, notes);
+    }
+
+    private void requestPayment(double amount, String notes) {
+        String token = tokenManager.getToken();
+        if (token == null) {
+            Toast.makeText(this, "You are not logged in.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        int technicianId = tokenManager.getUserIdInt();
+        if (technicianId <= 0) {
+            Toast.makeText(this, "Unable to identify technician.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        ApiService apiService = ApiClient.getApiService();
+        app.hub.api.PaymentRequestBody request = new app.hub.api.PaymentRequestBody(ticketId, technicianId);
+        Call<app.hub.api.PaymentRequestResponse> call = apiService.requestPayment("Bearer " + token, request);
+
+        call.enqueue(new Callback<app.hub.api.PaymentRequestResponse>() {
+            @Override
+            public void onResponse(Call<app.hub.api.PaymentRequestResponse> call,
+                                   Response<app.hub.api.PaymentRequestResponse> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                    Toast.makeText(EmployeeTicketDetailActivity.this,
+                            "Payment request sent to customer.", Toast.LENGTH_LONG).show();
+                    if (currentTicket != null) {
+                        currentTicket.setStatus("Pending Payment");
+                        currentTicket.setStatusDetail("Pending Payment");
+                    }
+                    if (finishAfterPayment) {
+                        Intent result = new Intent();
+                        result.putExtra("ticket_id", ticketId);
+                        setResult(RESULT_OK, result);
+                        finish();
+                    } else {
+                        loadTicketDetails();
+                    }
+                    return;
+                }
+
+                String message = "Failed to request payment";
+                if (response.body() != null && response.body().getMessage() != null) {
+                    message = response.body().getMessage();
+                }
+                Toast.makeText(EmployeeTicketDetailActivity.this, message, Toast.LENGTH_LONG).show();
+            }
+
+            @Override
+            public void onFailure(Call<app.hub.api.PaymentRequestResponse> call, Throwable t) {
+                Toast.makeText(EmployeeTicketDetailActivity.this,
+                        "Network error: " + t.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
     private void completeWorkWithPayment(String paymentMethod, double amount, String notes) {

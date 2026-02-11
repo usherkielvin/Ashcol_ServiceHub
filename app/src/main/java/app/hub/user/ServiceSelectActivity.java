@@ -541,17 +541,12 @@ public class ServiceSelectActivity extends AppCompatActivity {
             preferredDate = DATE_FORMAT_API.format(cal.getTime());
         }
 
-        // Build full description with unit type and landmark
+        // Build full description with unit type only
         String fullDescription = "";
         
         // Add unit type if selected
         if (selectedUnitType != null && !selectedUnitType.isEmpty()) {
             fullDescription = "Unit Type: " + selectedUnitType + "\n";
-        }
-        
-        // Add landmark/additional location info if provided
-        if (!landmark.isEmpty()) {
-            fullDescription += "Landmark/Additional Info: " + landmark + "\n";
         }
         
         // Add main description
