@@ -39,7 +39,7 @@ public class ManagerTicketsAdapter extends RecyclerView.Adapter<ManagerTicketsAd
     @Override
     public ManagerTicketViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.item_manager_ticket, parent, false);
+                .inflate(R.layout.item_employee_ticket, parent, false);
         return new ManagerTicketViewHolder(view);
     }
 
@@ -69,6 +69,10 @@ public class ManagerTicketsAdapter extends RecyclerView.Adapter<ManagerTicketsAd
         private TextView tvDate;
         private TextView tvDescription;
         private TextView tvCustomerName;
+        private TextView tvAddress;
+        private TextView tvScheduleDate;
+        private TextView tvScheduleNotes;
+        private android.widget.LinearLayout scheduleContainer;
 
         public ManagerTicketViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -79,63 +83,117 @@ public class ManagerTicketsAdapter extends RecyclerView.Adapter<ManagerTicketsAd
             tvDate = itemView.findViewById(R.id.tvDate);
             tvDescription = itemView.findViewById(R.id.tvDescription);
             tvCustomerName = itemView.findViewById(R.id.tvCustomerName);
+            tvAddress = itemView.findViewById(R.id.tvAddress);
+            tvScheduleDate = itemView.findViewById(R.id.tvScheduleDate);
+            tvScheduleNotes = itemView.findViewById(R.id.tvScheduleNotes);
+            scheduleContainer = itemView.findViewById(R.id.scheduleContainer);
 
         }
 
         public void bind(TicketListResponse.TicketItem ticket) {
-            tvTitle.setText(ticket.getTitle());
+            tvTitle.setText(getTitleOrTicketId(ticket));
             tvTicketId.setText(ticket.getTicketId());
-            tvServiceType.setText(ticket.getServiceType());
-            tvStatus.setText("Status: " + ticket.getStatus());
+            tvServiceType.setText(buildServiceText(ticket));
+            tvStatus.setText(buildStatusText(ticket));
             tvDescription.setText(ticket.getDescription());
             tvCustomerName
                     .setText("Customer: " + (ticket.getCustomerName() != null ? ticket.getCustomerName() : "Unknown"));
+            if (tvAddress != null) {
+                tvAddress.setText("Location: " + (ticket.getAddress() != null ? ticket.getAddress() : "Not specified"));
+            }
 
             // Set status color
             String statusColor = ticket.getStatusColor();
             if (statusColor != null && !statusColor.isEmpty()) {
                 try {
-                    tvStatus.setTextColor(Color.parseColor(statusColor));
+                    int color = Color.parseColor(statusColor);
+                    tvStatus.setBackgroundTintList(android.content.res.ColorStateList.valueOf(color));
+                    tvStatus.setTextColor(Color.WHITE);
                 } catch (IllegalArgumentException e) {
-                    // Fallback to default colors based on status
-                    setStatusColor(tvStatus, ticket.getStatus());
+                    setStatusColors(tvStatus, ticket.getStatus());
                 }
             } else {
-                setStatusColor(tvStatus, ticket.getStatus());
+                setStatusColors(tvStatus, ticket.getStatus());
             }
 
             // Format date
-            String formattedDate = formatDate(ticket.getCreatedAt());
-            tvDate.setText(formattedDate);
+            String formattedDate = formatDate(getHistoryDate(ticket));
+            tvDate.setText("Updated: " + formattedDate);
+
+            if (scheduleContainer != null) {
+                scheduleContainer.setVisibility(View.GONE);
+            }
         }
 
-        private void setStatusColor(TextView textView, String status) {
+        private void setStatusColors(TextView textView, String status) {
             if (status == null)
                 return;
 
             switch (status.toLowerCase()) {
                 case "pending":
-                    textView.setTextColor(Color.parseColor("#FFA500")); // Orange
-                    break;
-                case "scheduled":
-                    textView.setTextColor(Color.parseColor("#6366F1")); // Indigo
+                case "open":
+                    tintStatus(textView, "#FFA500");
                     break;
                 case "accepted":
                 case "in progress":
                 case "ongoing":
-                    textView.setTextColor(Color.parseColor("#2196F3")); // Blue
-                    break;
-                case "completed":
-                    textView.setTextColor(Color.parseColor("#4CAF50")); // Green
-                    break;
-                case "cancelled":
-                case "rejected":
-                    textView.setTextColor(Color.parseColor("#F44336")); // Red
+                    tintStatus(textView, "#2196F3");
                     break;
                 default:
-                    textView.setTextColor(Color.parseColor("#757575")); // Gray
+                    tintStatus(textView, "#757575");
                     break;
             }
+        }
+
+        private void tintStatus(TextView textView, String colorHex) {
+            int color = Color.parseColor(colorHex);
+            textView.setBackgroundTintList(android.content.res.ColorStateList.valueOf(color));
+            textView.setTextColor(Color.WHITE);
+        }
+
+        private String buildStatusText(TicketListResponse.TicketItem ticket) {
+            String status = ticket.getStatus();
+            if (status == null || status.trim().isEmpty()) {
+                return "Pending";
+            }
+            String normalized = status.trim().toLowerCase(Locale.ENGLISH);
+            if (normalized.contains("ongoing") || normalized.contains("progress") || normalized.contains("accepted")) {
+                return "Ongoing";
+            }
+            if (normalized.contains("pending") || normalized.contains("open")) {
+                return "Pending";
+            }
+            return status.trim();
+        }
+
+        private String buildServiceText(TicketListResponse.TicketItem ticket) {
+            String service = ticket.getServiceType();
+            if (service == null || service.trim().isEmpty()) {
+                service = ticket.getDescription();
+            }
+            if (service == null || service.trim().isEmpty()) {
+                return "• Service";
+            }
+            return "• " + service.trim();
+        }
+
+        private String getHistoryDate(TicketListResponse.TicketItem ticket) {
+            if (ticket.getUpdatedAt() != null && !ticket.getUpdatedAt().isEmpty()) {
+                return ticket.getUpdatedAt();
+            }
+            return ticket.getCreatedAt();
+        }
+
+        private String getTitleOrTicketId(TicketListResponse.TicketItem ticket) {
+            String title = ticket.getTitle();
+            if (title != null && !title.trim().isEmpty()) {
+                return title;
+            }
+            String ticketId = ticket.getTicketId();
+            if (ticketId != null && !ticketId.trim().isEmpty()) {
+                return ticketId;
+            }
+            return "Service";
         }
 
         private String formatDate(String dateString) {

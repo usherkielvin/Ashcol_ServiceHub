@@ -59,7 +59,7 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
     private SwipeRefreshLayout swipeRefreshLayout;
     private TokenManager tokenManager;
     private TicketListResponse.TicketItem currentTicket;
-    
+
     // Map and tracking views
     private GoogleMap googleMap;
     private TextView tvTechnicianName, tvTechnicianContact, tvTechnicianLocation;
@@ -83,7 +83,7 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
     private String pendingPaymentTicketId;
     private String previousTicketStatus = null; // Track previous status to detect changes
     private String lastNotificationTicketId = null; // Track which ticket we last notified for
-    private long lastNotificationTime = 0; // Track when we last showed notification
+    private String lastNotificationTimestamp = null; // Track the updatedAt timestamp of last notification
 
     public UserNotificationFragment() {
     }
@@ -113,7 +113,7 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
 
         startPendingPaymentsListener();
         loadTickets();
-        
+
         // Start auto-refresh in background (every 10 seconds)
         startAutoRefresh();
     }
@@ -121,7 +121,7 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
     @Override
     public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        
+
         // Handle payment confirmation result
         if (requestCode == 1001 && resultCode == getActivity().RESULT_OK) {
             if (data != null && data.getBooleanExtra("payment_confirmed", false)) {
@@ -134,12 +134,13 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
 
     private void loadTickets() {
         android.util.Log.d("UserNotification", "Loading tickets...");
-        
+
         String token = tokenManager.getToken();
         if (token == null) {
             android.util.Log.e("UserNotification", "Token is null");
             showEmptyState();
-            if (swipeRefreshLayout != null) swipeRefreshLayout.setRefreshing(false);
+            if (swipeRefreshLayout != null)
+                swipeRefreshLayout.setRefreshing(false);
             return;
         }
 
@@ -150,24 +151,27 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
         call.enqueue(new Callback<TicketListResponse>() {
             @Override
             public void onResponse(Call<TicketListResponse> call, Response<TicketListResponse> response) {
-                if (swipeRefreshLayout != null) swipeRefreshLayout.setRefreshing(false);
+                if (swipeRefreshLayout != null)
+                    swipeRefreshLayout.setRefreshing(false);
 
-                android.util.Log.d("UserNotification", "API Response - Code: " + response.code() + ", Success: " + response.isSuccessful());
+                android.util.Log.d("UserNotification",
+                        "API Response - Code: " + response.code() + ", Success: " + response.isSuccessful());
 
                 if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
                     List<TicketListResponse.TicketItem> tickets = response.body().getTickets();
                     android.util.Log.d("UserNotification", "Total tickets: " + (tickets != null ? tickets.size() : 0));
-                    
+
                     if (tickets != null) {
                         for (TicketListResponse.TicketItem ticket : tickets) {
-                            android.util.Log.d("UserNotification", "Ticket: " + ticket.getTicketId() + " - Status: " + ticket.getStatus());
+                            android.util.Log.d("UserNotification",
+                                    "Ticket: " + ticket.getTicketId() + " - Status: " + ticket.getStatus());
                         }
                     }
-                    
+
                     TicketListResponse.TicketItem inProgress = findInProgressTicket(tickets);
                     TicketListResponse.TicketItem pendingPaymentTicket = findTicketById(tickets,
                             pendingPaymentTicketId);
-                    
+
                     if (inProgress != null) {
                         android.util.Log.d("UserNotification", "Found in-progress ticket: " + inProgress.getTicketId());
                         currentTicket = inProgress;
@@ -197,7 +201,8 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
 
             @Override
             public void onFailure(Call<TicketListResponse> call, Throwable t) {
-                if (swipeRefreshLayout != null) swipeRefreshLayout.setRefreshing(false);
+                if (swipeRefreshLayout != null)
+                    swipeRefreshLayout.setRefreshing(false);
                 showEmptyState();
                 android.util.Log.e("UserNotification", "Failed to load activity: " + t.getMessage(), t);
             }
@@ -209,19 +214,19 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
             android.util.Log.e("UserNotification", "Cannot show tracking: view or ticket is null");
             return;
         }
-        
+
         android.util.Log.d("UserNotification", "Showing tracking view for ticket: " + currentTicket.getTicketId());
-        
+
         // Don't redirect to payment notification - keep showing tracking view
         // The "Pay Now" button will appear at the bottom if payment is pending
-        
+
         // Get the SwipeRefreshLayout
         SwipeRefreshLayout swipeRefresh = getView().findViewById(R.id.swipeRefreshLayout);
         if (swipeRefresh == null) {
             android.util.Log.e("UserNotification", "SwipeRefreshLayout not found");
             return;
         }
-        
+
         // Find the FrameLayout inside SwipeRefreshLayout (skip CircleImageView)
         FrameLayout frameLayout = null;
         for (int i = 0; i < swipeRefresh.getChildCount(); i++) {
@@ -232,27 +237,27 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
                 break;
             }
         }
-        
+
         if (frameLayout == null) {
             android.util.Log.e("UserNotification", "FrameLayout not found in SwipeRefreshLayout");
             return;
         }
-        
+
         android.util.Log.d("UserNotification", "FrameLayout found");
-        
+
         // Remove RecyclerView if present
         View recyclerView = frameLayout.findViewById(R.id.rvActivity);
         if (recyclerView != null) {
             recyclerView.setVisibility(View.GONE);
             android.util.Log.d("UserNotification", "RecyclerView hidden");
         }
-        
+
         // Hide empty state
         if (emptyStateContainer != null) {
             emptyStateContainer.setVisibility(View.GONE);
             android.util.Log.d("UserNotification", "Empty state hidden");
         }
-        
+
         // Check if tracking container already exists - if so, just update data
         if (trackingContainer != null && trackingContainer.getParent() != null) {
             android.util.Log.d("UserNotification", "Tracking container already exists, updating data");
@@ -261,7 +266,7 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
             startTicketListener();
             return;
         }
-        
+
         // Remove any existing map fragment to prevent duplicate ID error
         SupportMapFragment existingMapFragment = (SupportMapFragment) getChildFragmentManager()
                 .findFragmentById(R.id.map);
@@ -271,16 +276,16 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
                     .remove(existingMapFragment)
                     .commitNow();
         }
-        
+
         // Inflate tracking layout into FrameLayout
         trackingContainer = getLayoutInflater().inflate(R.layout.fragment_user__activity_item, frameLayout, false);
         frameLayout.addView(trackingContainer);
-        
+
         android.util.Log.d("UserNotification", "Tracking layout inflated and added");
-        
+
         // Initialize views
         initializeTrackingViews();
-        
+
         // Setup map
         SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager()
                 .findFragmentById(R.id.map);
@@ -290,12 +295,12 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
         } else {
             android.util.Log.e("UserNotification", "Map fragment not found!");
         }
-        
+
         // Populate data
         populateTicketData();
 
         startTicketListener();
-        
+
         // Start location updates
         startLocationUpdates();
     }
@@ -304,15 +309,15 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
         if (getView() == null || currentTicket == null) {
             return;
         }
-        
+
         android.util.Log.d("UserNotification", "Showing pending payment notification");
-        
+
         // Get the SwipeRefreshLayout
         SwipeRefreshLayout swipeRefresh = getView().findViewById(R.id.swipeRefreshLayout);
         if (swipeRefresh == null) {
             return;
         }
-        
+
         // Find the FrameLayout inside SwipeRefreshLayout
         FrameLayout frameLayout = null;
         for (int i = 0; i < swipeRefresh.getChildCount(); i++) {
@@ -322,11 +327,11 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
                 break;
             }
         }
-        
+
         if (frameLayout == null) {
             return;
         }
-        
+
         // Hide empty state and recycler view
         if (emptyStateContainer != null) {
             emptyStateContainer.setVisibility(View.GONE);
@@ -335,23 +340,24 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
         if (recyclerView != null) {
             recyclerView.setVisibility(View.GONE);
         }
-        
+
         // Remove existing tracking container if present
         if (trackingContainer != null && trackingContainer.getParent() != null) {
             frameLayout.removeView(trackingContainer);
             trackingContainer = null;
         }
-        
+
         // Inflate notification card layout
-        View notificationCard = getLayoutInflater().inflate(R.layout.card_pending_payment_notification, frameLayout, false);
+        View notificationCard = getLayoutInflater().inflate(R.layout.card_pending_payment_notification, frameLayout,
+                false);
         frameLayout.addView(notificationCard);
-        
+
         // Setup notification card
         TextView tvTicketId = notificationCard.findViewById(R.id.tvNotificationTicketId);
         TextView tvServiceType = notificationCard.findViewById(R.id.tvNotificationServiceType);
         TextView tvAmount = notificationCard.findViewById(R.id.tvNotificationAmount);
         MaterialButton btnPayNow = notificationCard.findViewById(R.id.btnNotificationPayNow);
-        
+
         if (tvTicketId != null) {
             tvTicketId.setText("Ticket ID: " + currentTicket.getTicketId());
         }
@@ -364,14 +370,15 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
         if (btnPayNow != null) {
             btnPayNow.setOnClickListener(v -> openPendingPayment());
         }
-        
+
         // Make the entire card clickable
         notificationCard.setOnClickListener(v -> openPendingPayment());
     }
 
     private void initializeTrackingViews() {
-        if (trackingContainer == null) return;
-        
+        if (trackingContainer == null)
+            return;
+
         tvTechnicianName = trackingContainer.findViewById(R.id.tvTechnicianName);
         tvTechnicianContact = trackingContainer.findViewById(R.id.tvTechnicianContact);
         tvTechnicianLocation = trackingContainer.findViewById(R.id.tvTechnicianLocation);
@@ -406,8 +413,9 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
     }
 
     private void populateTicketData() {
-        if (currentTicket == null) return;
-        
+        if (currentTicket == null)
+            return;
+
         // Technician info
         String techName = currentTicket.getAssignedStaff();
         if (tvTechnicianName != null) {
@@ -424,7 +432,7 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
         if (tvTechnicianLocation != null) {
             tvTechnicianLocation.setText("En route to your location");
         }
-        
+
         // Job details
         if (tvServiceType != null) {
             tvServiceType.setText(currentTicket.getServiceType());
@@ -443,8 +451,7 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
             String schedule = buildScheduleText(
                     currentTicket.getScheduledDate(),
                     currentTicket.getScheduledTime(),
-                    currentTicket.getCreatedAt()
-            );
+                    currentTicket.getCreatedAt());
             tvSchedule.setText(schedule != null ? schedule : "Not scheduled");
         }
 
@@ -452,10 +459,10 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
         String statusDetail = currentTicket.getStatusDetail();
         boolean isCompleted = status != null && status.toLowerCase().contains("completed");
         updateTrackingSteps(isCompleted
-            ? status
-            : (statusDetail != null && !statusDetail.trim().isEmpty()
-                ? statusDetail
-                : status));
+                ? status
+                : (statusDetail != null && !statusDetail.trim().isEmpty()
+                        ? statusDetail
+                        : status));
 
         updatePendingPaymentUi();
     }
@@ -465,24 +472,24 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
         googleMap = map;
         updateMapLocation();
     }
-    
+
     private void updateMapLocation() {
         if (googleMap == null || currentTicket == null) {
             android.util.Log.e("UserNotification", "Cannot update map: googleMap or ticket is null");
             return;
         }
-        
+
         // Get customer location from ticket
         double customerLat = currentTicket.getLatitude();
         double customerLng = currentTicket.getLongitude();
-        
+
         android.util.Log.d("UserNotification", "Ticket coordinates: lat=" + customerLat + ", lng=" + customerLng);
-        
+
         // If no coordinates in ticket, try to geocode the address (Plus Code)
         if (customerLat == 0 && customerLng == 0) {
             String address = currentTicket.getAddress();
             android.util.Log.w("UserNotification", "No coordinates in ticket, trying to geocode address: " + address);
-            
+
             if (address != null && !address.isEmpty()) {
                 geocodeAddressAndShowMap(address);
                 return;
@@ -493,23 +500,24 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
                 android.util.Log.w("UserNotification", "No address either, using default Manila location");
             }
         }
-        
+
         showMarkersOnMap(customerLat, customerLng);
     }
-    
+
     private void geocodeAddressAndShowMap(String address) {
         new Thread(() -> {
             try {
-                android.location.Geocoder geocoder = new android.location.Geocoder(getContext(), java.util.Locale.getDefault());
+                android.location.Geocoder geocoder = new android.location.Geocoder(getContext(),
+                        java.util.Locale.getDefault());
                 java.util.List<android.location.Address> addresses = geocoder.getFromLocationName(address, 1);
-                
+
                 if (addresses != null && !addresses.isEmpty()) {
                     android.location.Address location = addresses.get(0);
                     double lat = location.getLatitude();
                     double lng = location.getLongitude();
-                    
+
                     android.util.Log.d("UserNotification", "Geocoded address to: lat=" + lat + ", lng=" + lng);
-                    
+
                     // Update UI on main thread
                     if (getActivity() != null) {
                         getActivity().runOnUiThread(() -> showMarkersOnMap(lat, lng));
@@ -530,46 +538,47 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
             }
         }).start();
     }
-    
+
     private void showMarkersOnMap(double customerLat, double customerLng) {
         if (googleMap == null) {
             android.util.Log.e("UserNotification", "Cannot show markers: googleMap is null");
             return;
         }
-        
-        android.util.Log.d("UserNotification", "Showing markers at customer location: " + customerLat + ", " + customerLng);
-        
+
+        android.util.Log.d("UserNotification",
+                "Showing markers at customer location: " + customerLat + ", " + customerLng);
+
         LatLng customerLocation = new LatLng(customerLat, customerLng);
-        
+
         // Clear existing markers
         googleMap.clear();
-        
+
         // Add customer location marker (RED)
         googleMap.addMarker(new MarkerOptions()
                 .position(customerLocation)
                 .title("Your Location")
                 .snippet(currentTicket.getAddress())
                 .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)));
-        
+
         // Add technician location marker (BLUE) - simulated nearby for now
         // TODO: Replace with real-time technician location from Firebase
         double techLat = customerLat + 0.01; // Simulated nearby location
         double techLng = customerLng + 0.01;
         LatLng techLocation = new LatLng(techLat, techLng);
-        
+
         String techName = currentTicket.getAssignedStaff();
         googleMap.addMarker(new MarkerOptions()
                 .position(techLocation)
                 .title("Technician: " + (techName != null ? techName : "Unknown"))
                 .snippet("En route to your location")
                 .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));
-        
+
         // Zoom to show both markers
         LatLngBounds.Builder builder = new LatLngBounds.Builder();
         builder.include(customerLocation);
         builder.include(techLocation);
         LatLngBounds bounds = builder.build();
-        
+
         try {
             googleMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 100));
             android.util.Log.d("UserNotification", "Map camera updated to show both markers");
@@ -591,12 +600,12 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
                 if (isAdded()) {
                     loadTickets();
                 }
-                
+
                 // Schedule next update in 30 seconds
                 locationUpdateHandler.postDelayed(this, 30000);
             }
         };
-        
+
         // Start updates
         locationUpdateHandler.post(locationUpdateRunnable);
     }
@@ -609,14 +618,14 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
 
     private void showEmptyState() {
         android.util.Log.d("UserNotification", "Showing empty state");
-        
+
         if (emptyStateContainer != null) {
             emptyStateContainer.setVisibility(View.VISIBLE);
             android.util.Log.d("UserNotification", "Empty state container made visible");
         } else {
             android.util.Log.e("UserNotification", "Empty state container is null!");
         }
-        
+
         if (trackingContainer != null) {
             trackingContainer.setVisibility(View.GONE);
             android.util.Log.d("UserNotification", "Tracking container hidden");
@@ -624,7 +633,7 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
 
         stopTicketListener();
         stopPendingPaymentListeners();
-        
+
         // Also hide RecyclerView if present
         if (getView() != null) {
             View recyclerView = getView().findViewById(R.id.rvActivity);
@@ -875,7 +884,7 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
         stopTicketListener();
         stopPendingPaymentListeners();
     }
-    
+
     private void startAutoRefresh() {
         autoRefreshHandler = new Handler(Looper.getMainLooper());
         autoRefreshRunnable = new Runnable() {
@@ -886,14 +895,14 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
                     android.util.Log.d("UserNotification", "Auto-refreshing tickets in background");
                     loadTickets();
                 }
-                
+
                 // Schedule next refresh in 5 seconds
                 if (autoRefreshHandler != null) {
                     autoRefreshHandler.postDelayed(this, 5000);
                 }
             }
         };
-        
+
         // Start auto-refresh after 5 seconds
         autoRefreshHandler.postDelayed(autoRefreshRunnable, 5000);
     }
@@ -902,54 +911,60 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
         if (!isAdded() || getContext() == null || currentTicket == null) {
             return;
         }
-        
+
         // Get ticket details
         String ticketId = currentTicket.getTicketId();
         String serviceType = currentTicket.getServiceType();
         double amount = currentTicket.getAmount();
         Intent intent = UserPaymentActivity.createIntent(getContext(), ticketId, 0, amount,
-            serviceType, currentTicket.getAssignedStaff());
+                serviceType, currentTicket.getAssignedStaff());
         startActivity(intent);
     }
 
     private void updatePendingPaymentUi() {
         // Check if current ticket has "Pending Payment" status
-        boolean hasPending = currentTicket != null && 
-                             currentTicket.getStatus() != null && 
-                             currentTicket.getStatus().equalsIgnoreCase("Pending Payment");
+        boolean hasPending = currentTicket != null &&
+                currentTicket.getStatus() != null &&
+                currentTicket.getStatus().equalsIgnoreCase("Pending Payment");
 
         // Show notification when payment is pending AND it's a new request
         if (hasPending && isAdded() && getContext() != null) {
             String currentTicketId = currentTicket.getTicketId();
             String updatedAt = currentTicket.getUpdatedAt();
-            
-            // Show notification if:
+
+            // Show notification only if:
             // 1. This is a different ticket than last notification, OR
-            // 2. The updated_at timestamp is different (means tech clicked request payment again)
+            // 2. The updated_at timestamp is different (means tech clicked request payment
+            // again)
             boolean isDifferentTicket = !currentTicketId.equals(lastNotificationTicketId);
-            boolean isNewRequest = updatedAt != null && !updatedAt.equals(String.valueOf(lastNotificationTime));
-            
+            boolean isNewRequest = updatedAt != null && !updatedAt.equals(lastNotificationTimestamp);
+
             if (isDifferentTicket || isNewRequest) {
                 android.util.Log.d("UserNotification", "New payment request detected - showing notification");
+                android.util.Log.d("UserNotification", "Ticket: " + currentTicketId + ", Updated: " + updatedAt);
+                android.util.Log.d("UserNotification",
+                        "Last notified: " + lastNotificationTicketId + " at " + lastNotificationTimestamp);
+
                 double amount = currentTicket.getAmount();
                 String serviceType = currentTicket.getServiceType();
                 int customerId = tokenManager.getUserIdInt();
-                
+
                 app.hub.util.NotificationHelper.showPaymentRequestNotification(
-                        getContext(), 
+                        getContext(),
                         currentTicketId,
                         serviceType,
                         amount,
-                    customerId,
-                    null
-                );
-                
+                        customerId,
+                        null);
+
                 // Remember this notification
                 lastNotificationTicketId = currentTicketId;
-                lastNotificationTime = updatedAt != null ? updatedAt.hashCode() : System.currentTimeMillis();
+                lastNotificationTimestamp = updatedAt;
+            } else {
+                android.util.Log.d("UserNotification", "Skipping duplicate notification for same payment request");
             }
         }
-        
+
         // Update previous status
         if (currentTicket != null && currentTicket.getStatus() != null) {
             previousTicketStatus = currentTicket.getStatus();
@@ -968,7 +983,7 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
             tvPendingPaymentMessage.setText("Work completed! Tap below to proceed with payment.");
         }
     }
-    
+
     private boolean isStatusPendingPayment(String status) {
         return status != null && status.equalsIgnoreCase("Pending Payment");
     }
@@ -1042,33 +1057,34 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
 
         ticketListener = firestore.collection("tickets")
                 .document(ticketId)
-                .addSnapshotListener((DocumentSnapshot snapshot, com.google.firebase.firestore.FirebaseFirestoreException error) -> {
-                    if (error != null) {
-                        android.util.Log.e("UserNotification", "Ticket listener error", error);
-                        return;
-                    }
-                    if (snapshot == null || !snapshot.exists()) {
-                        return;
-                    }
+                .addSnapshotListener(
+                        (DocumentSnapshot snapshot, com.google.firebase.firestore.FirebaseFirestoreException error) -> {
+                            if (error != null) {
+                                android.util.Log.e("UserNotification", "Ticket listener error", error);
+                                return;
+                            }
+                            if (snapshot == null || !snapshot.exists()) {
+                                return;
+                            }
 
-                    String status = snapshot.getString("status");
-                    String statusDetail = snapshot.getString("statusDetail");
-                    if (currentTicket != null) {
-                        if (status != null) {
-                            currentTicket.setStatus(status);
-                        }
-                        if (statusDetail != null) {
-                            currentTicket.setStatusDetail(statusDetail);
-                        }
-                        boolean isCompleted = status != null && status.toLowerCase().contains("completed");
-                        String effective = isCompleted
-                                ? status
-                                : (statusDetail != null && !statusDetail.trim().isEmpty()
-                                        ? statusDetail
-                                        : status);
-                        updateTrackingSteps(effective);
-                    }
-                });
+                            String status = snapshot.getString("status");
+                            String statusDetail = snapshot.getString("statusDetail");
+                            if (currentTicket != null) {
+                                if (status != null) {
+                                    currentTicket.setStatus(status);
+                                }
+                                if (statusDetail != null) {
+                                    currentTicket.setStatusDetail(statusDetail);
+                                }
+                                boolean isCompleted = status != null && status.toLowerCase().contains("completed");
+                                String effective = isCompleted
+                                        ? status
+                                        : (statusDetail != null && !statusDetail.trim().isEmpty()
+                                                ? statusDetail
+                                                : status);
+                                updateTrackingSteps(effective);
+                            }
+                        });
     }
 
     private void stopTicketListener() {

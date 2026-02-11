@@ -320,8 +320,7 @@ public class ManagerWorkFragment extends Fragment implements TicketDataChangeLis
 
             String ticketStatus = ticket.getStatus() != null ? ticket.getStatus().toLowerCase() : "";
 
-            // Skip historical tickets (completed/cancelled) - they belong in Reports tab
-            if (isHistoricalTicket(ticketStatus)) {
+            if (!isPendingOrOngoingTicket(ticketStatus)) {
                 continue;
             }
 
@@ -329,23 +328,14 @@ public class ManagerWorkFragment extends Fragment implements TicketDataChangeLis
             if (!currentFilter.equals("all")) {
                 switch (currentFilter) {
                     case "pending":
-                        // Match both "pending" and "open" statuses for incoming tickets
                         matchesFilter = ticketStatus.contains("pending")
-                                || ticketStatus.contains("open")
-                                || ticketStatus.contains("scheduled");
+                            || ticketStatus.contains("open")
+                            || ticketStatus.contains("scheduled");
                         break;
                     case "ongoing":
                         matchesFilter = ticketStatus.contains("ongoing")
                                 || ticketStatus.contains("progress")
                                 || ticketStatus.contains("accepted");
-                        break;
-                    case "completed":
-                        matchesFilter = ticketStatus.contains("completed") || ticketStatus.contains("resolved")
-                                || ticketStatus.contains("closed");
-                        break;
-                    case "cancelled":
-                        matchesFilter = ticketStatus.contains("cancelled") || ticketStatus.contains("rejected")
-                                || ticketStatus.contains("failed");
                         break;
                 }
             }
@@ -376,15 +366,15 @@ public class ManagerWorkFragment extends Fragment implements TicketDataChangeLis
         adapter.notifyDataSetChanged();
     }
 
-    private boolean isHistoricalTicket(String status) {
+    private boolean isPendingOrOngoingTicket(String status) {
         if (status == null) return false;
         String normalized = status.toLowerCase().trim();
-        return normalized.contains("completed") 
-            || normalized.contains("resolved")
-            || normalized.contains("closed")
-            || normalized.contains("cancelled")
-            || normalized.contains("rejected")
-            || normalized.contains("failed");
+        return normalized.contains("pending")
+                || normalized.contains("open")
+                || normalized.contains("scheduled")
+                || normalized.contains("ongoing")
+                || normalized.contains("progress")
+                || normalized.contains("accepted");
     }
 
     private boolean isExcludedFromWork(String status) {
