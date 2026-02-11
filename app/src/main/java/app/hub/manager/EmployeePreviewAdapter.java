@@ -31,6 +31,32 @@ public class EmployeePreviewAdapter extends RecyclerView.Adapter<EmployeePreview
     public void setEmployees(List<EmployeeResponse.Employee> employees) {
         this.employees = employees != null ? employees : new ArrayList<>();
         notifyDataSetChanged();
+        
+        // Preload images for smooth scrolling
+        preloadImages();
+    }
+    
+    /**
+     * Preload images in background for smooth scrolling
+     */
+    private void preloadImages() {
+        if (context == null || employees == null) return;
+        
+        // Preload first 10 images
+        int preloadCount = Math.min(employees.size(), 10);
+        for (int i = 0; i < preloadCount; i++) {
+            EmployeeResponse.Employee employee = employees.get(i);
+            String imageUrl = employee.getProfilePhoto();
+            
+            if (imageUrl != null && !imageUrl.isEmpty()) {
+                // Preload into Picasso cache
+                Picasso.get()
+                    .load(imageUrl)
+                    .resize(200, 200)
+                    .centerCrop()
+                    .fetch();
+            }
+        }
     }
 
     @NonNull
@@ -46,7 +72,8 @@ public class EmployeePreviewAdapter extends RecyclerView.Adapter<EmployeePreview
 
         // Set employee name
         String fullName = employee.getFirstName() + " " + employee.getLastName();
-        holder.tvEmployeeName.setText(fullName.trim().isEmpty() ? employee.getEmail() : fullName);
+        String displayName = fullName.trim().isEmpty() ? employee.getEmail() : fullName;
+        holder.tvEmployeeName.setText(displayName);
 
         // Set role
         holder.tvEmployeeRole.setText(employee.getRole() != null ? employee.getRole() : "Technician");
@@ -66,25 +93,41 @@ public class EmployeePreviewAdapter extends RecyclerView.Adapter<EmployeePreview
             // Ignore tinting errors
         }
 
-        // Load profile image with Picasso - enhanced with better error handling and caching
+        // Load profile image with Picasso - optimized for smooth loading
         if (holder.employeeImage != null) {
             String imageUrl = employee.getProfilePhoto();
             
-            // Clear any previous image first
-            holder.employeeImage.setImageResource(R.drawable.profile_icon);
+            // Make displayName final for use in callback
+            final String finalDisplayName = displayName;
+            
+            android.util.Log.d("EmployeePreview", "Employee: " + finalDisplayName + ", Profile Photo URL: " + imageUrl);
             
             if (imageUrl != null && !imageUrl.isEmpty()) {
-                android.util.Log.d("EmployeePreview", "Loading image for " + employee.getFirstName() + ": " + imageUrl);
+                android.util.Log.d("EmployeePreview", "Loading image from: " + imageUrl);
                 
+                // Use Picasso with optimized settings for smooth loading
                 Picasso.get()
                     .load(imageUrl)
                     .placeholder(R.drawable.profile_icon)
                     .error(R.drawable.profile_icon)
-                    .fit()
+                    .resize(200, 200) // Resize to reasonable size for performance
                     .centerCrop()
-                    .into(holder.employeeImage);
+                    .priority(com.squareup.picasso.Picasso.Priority.HIGH)
+                    .into(holder.employeeImage, new com.squareup.picasso.Callback() {
+                        @Override
+                        public void onSuccess() {
+                            android.util.Log.d("EmployeePreview", "Image loaded successfully for: " + finalDisplayName);
+                        }
+
+                        @Override
+                        public void onError(Exception e) {
+                            android.util.Log.e("EmployeePreview", "Failed to load image for: " + finalDisplayName + ", Error: " + e.getMessage());
+                            // Set default icon on error
+                            holder.employeeImage.setImageResource(R.drawable.profile_icon);
+                        }
+                    });
             } else {
-                android.util.Log.d("EmployeePreview", "No profile photo for " + employee.getFirstName());
+                android.util.Log.d("EmployeePreview", "No profile photo URL for: " + finalDisplayName);
                 holder.employeeImage.setImageResource(R.drawable.profile_icon);
             }
         }

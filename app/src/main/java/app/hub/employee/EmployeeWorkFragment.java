@@ -74,6 +74,9 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
 
     private android.os.Handler autoRefreshHandler;
     private Runnable autoRefreshRunnable;
+    
+    // Firebase real-time listener
+    private EmployeeFirebaseListener firebaseListener;
 
     private static final String PREFS_NAME = "employee_work_steps";
     private static final String PREFS_TIMES = "employee_work_times";
@@ -144,6 +147,9 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
 
         // Start auto-refresh in background
         startAutoRefresh();
+        
+        // Start Firebase real-time listener
+        startFirebaseListener();
     }
 
     private void initViews(View view) {
@@ -1453,10 +1459,60 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
             autoRefreshHandler.removeCallbacks(autoRefreshRunnable);
         }
 
+        // Stop Firebase listener
+        stopFirebaseListener();
+
         if (mapViewActiveJob != null) {
             mapViewActiveJob.onDestroy();
         }
         super.onDestroyView();
+    }
+    
+    /**
+     * Start Firebase real-time listener for instant ticket updates
+     */
+    private void startFirebaseListener() {
+        if (firebaseListener == null) {
+            firebaseListener = new EmployeeFirebaseListener(requireContext());
+            firebaseListener.setChangeListener(new EmployeeFirebaseListener.TicketChangeListener() {
+                @Override
+                public void onTicketAssigned(String ticketId) {
+                    android.util.Log.i("EmployeeWork", "Firebase: New ticket assigned - " + ticketId);
+                    // Refresh tickets immediately
+                    if (isAdded()) {
+                        loadAssignedTickets(true);
+                    }
+                }
+
+                @Override
+                public void onTicketUpdated(String ticketId) {
+                    android.util.Log.i("EmployeeWork", "Firebase: Ticket updated - " + ticketId);
+                    // Refresh tickets immediately
+                    if (isAdded()) {
+                        loadAssignedTickets(true);
+                    }
+                }
+
+                @Override
+                public void onTicketRemoved(String ticketId) {
+                    android.util.Log.i("EmployeeWork", "Firebase: Ticket removed - " + ticketId);
+                    // Refresh tickets immediately
+                    if (isAdded()) {
+                        loadAssignedTickets(true);
+                    }
+                }
+            });
+        }
+        firebaseListener.startListening();
+    }
+    
+    /**
+     * Stop Firebase listener
+     */
+    private void stopFirebaseListener() {
+        if (firebaseListener != null) {
+            firebaseListener.stopListening();
+        }
     }
 
     private void startAutoRefresh() {
