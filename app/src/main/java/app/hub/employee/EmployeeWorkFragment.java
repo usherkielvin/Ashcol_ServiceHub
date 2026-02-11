@@ -71,7 +71,7 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
     private TicketListResponse.TicketItem activeTicket;
     private ActivityResultLauncher<Intent> paymentLauncher;
     private boolean isLoadingTickets = false;
-    
+
     private android.os.Handler autoRefreshHandler;
     private Runnable autoRefreshRunnable;
 
@@ -117,14 +117,14 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
 
     static {
         BRANCH_ADDRESS_MAP.put(
-            "ASHCOL - CALAUAN LAGUNA",
-            "Purok 4 Kalye Pogi, Brgy. Bangyas, Calauan, Laguna");
+                "ASHCOL - CALAUAN LAGUNA",
+                "Purok 4 Kalye Pogi, Brgy. Bangyas, Calauan, Laguna");
         BRANCH_ADDRESS_MAP.put(
-            "ASHCOL - STA ROSA - TAGAYTAY RD BATANGAS",
-            "2nd Flr Rheayanell Bldg., 9015 Pandan St., Sta. Rosa - Tagaytay Road, Brgy. Puting Kahoy, Silang, Cavite");
+                "ASHCOL - STA ROSA - TAGAYTAY RD BATANGAS",
+                "2nd Flr Rheayanell Bldg., 9015 Pandan St., Sta. Rosa - Tagaytay Road, Brgy. Puting Kahoy, Silang, Cavite");
         BRANCH_ADDRESS_MAP.put(
-            "ASHCOL - PAMPANGA",
-            "202 CityCorp Business Center, San Isidro, City of San Fernando, Pampanga");
+                "ASHCOL - PAMPANGA",
+                "202 CityCorp Business Center, San Isidro, City of San Fernando, Pampanga");
     }
 
     @Nullable
@@ -141,7 +141,7 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
         initViews(view);
         showInitialState();
         loadAssignedTickets(true);
-        
+
         // Start auto-refresh in background
         startAutoRefresh();
     }
@@ -534,7 +534,7 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
         call.enqueue(new Callback<app.hub.api.PaymentDetailResponse>() {
             @Override
             public void onResponse(Call<app.hub.api.PaymentDetailResponse> call,
-                                   Response<app.hub.api.PaymentDetailResponse> response) {
+                    Response<app.hub.api.PaymentDetailResponse> response) {
                 if (!isAdded() || response.body() == null || !response.body().isSuccess()) {
                     return;
                 }
@@ -646,7 +646,7 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
 
         // Get technician ID
         int technicianId = tokenManager.getUserIdInt();
-        
+
         // Create payment request using new API
         app.hub.api.PaymentRequestBody requestBody = new app.hub.api.PaymentRequestBody(ticketId, technicianId);
         ApiService apiService = ApiClient.getApiService();
@@ -655,7 +655,8 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
 
         call.enqueue(new Callback<app.hub.api.PaymentRequestResponse>() {
             @Override
-            public void onResponse(Call<app.hub.api.PaymentRequestResponse> call, Response<app.hub.api.PaymentRequestResponse> response) {
+            public void onResponse(Call<app.hub.api.PaymentRequestResponse> call,
+                    Response<app.hub.api.PaymentRequestResponse> response) {
                 if (!isAdded()) {
                     return;
                 }
@@ -669,7 +670,7 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
                     }
                     // Immediate refresh to update UI
                     loadAssignedTickets(true);
-                    
+
                     // Also trigger an extra refresh after 1 second to ensure backend is updated
                     new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
                         if (isAdded()) {
@@ -678,7 +679,7 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
                     }, 1000);
                     return;
                 }
-                
+
                 // Handle error response
                 String errorMessage = "Failed to request payment";
                 if (response.body() != null && response.body().getMessage() != null) {
@@ -695,7 +696,6 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
             }
         });
     }
-
 
     private void bindTicketDetails(View root, TicketListResponse.TicketItem ticket) {
         if (root == null || ticket == null) {
@@ -832,14 +832,20 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
             return false;
         }
         String normalized = status.toLowerCase().trim();
-        // Check for exact completed statuses, not partial matches
-        // "Pending Payment" should NOT be considered completed
-        return normalized.equals("completed") 
-            || normalized.equals("resolved") 
-            || normalized.equals("closed") 
-            || normalized.contains("completed")
-            || normalized.contains("resolved")
-            || normalized.contains("closed");
+
+        // CRITICAL: "Pending Payment" should NOT be considered completed
+        // The ticket must remain visible until payment is received
+        if (normalized.contains("pending")) {
+            return false;
+        }
+
+        // Check for actual completed statuses
+        return normalized.equals("completed")
+                || normalized.equals("resolved")
+                || normalized.equals("closed")
+                || normalized.contains("completed")
+                || normalized.contains("resolved")
+                || normalized.contains("closed");
     }
 
     private int getTicketPriority(String status) {
@@ -910,24 +916,28 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
     }
 
     private int getSavedStep(String ticketId) {
-        SharedPreferences prefs = requireContext().getSharedPreferences(PREFS_NAME, android.content.Context.MODE_PRIVATE);
+        SharedPreferences prefs = requireContext().getSharedPreferences(PREFS_NAME,
+                android.content.Context.MODE_PRIVATE);
         return prefs.getInt(ticketId, STEP_ASSIGNED);
     }
 
     private void saveStep(String ticketId, int step) {
-        SharedPreferences prefs = requireContext().getSharedPreferences(PREFS_NAME, android.content.Context.MODE_PRIVATE);
+        SharedPreferences prefs = requireContext().getSharedPreferences(PREFS_NAME,
+                android.content.Context.MODE_PRIVATE);
         prefs.edit().putInt(ticketId, step).apply();
     }
 
     private void saveStepTime(String ticketId, int step) {
-        SharedPreferences prefs = requireContext().getSharedPreferences(PREFS_TIMES, android.content.Context.MODE_PRIVATE);
+        SharedPreferences prefs = requireContext().getSharedPreferences(PREFS_TIMES,
+                android.content.Context.MODE_PRIVATE);
         String key = ticketId + "_step_time_" + step;
         String now = new SimpleDateFormat("hh:mm a", Locale.getDefault()).format(new Date());
         prefs.edit().putString(key, now).apply();
     }
 
     private String getStepTime(String ticketId, int step) {
-        SharedPreferences prefs = requireContext().getSharedPreferences(PREFS_TIMES, android.content.Context.MODE_PRIVATE);
+        SharedPreferences prefs = requireContext().getSharedPreferences(PREFS_TIMES,
+                android.content.Context.MODE_PRIVATE);
         String key = ticketId + "_step_time_" + step;
         return prefs.getString(key, "");
     }
@@ -951,21 +961,26 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
         String ticketId = activeTicket.getTicketId();
         // Don't mark as STEP_COMPLETED yet - just flag as ready for payment
         // This keeps the ticket visible in work view
-        SharedPreferences prefs = requireContext().getSharedPreferences(PREFS_READY_PAYMENT, android.content.Context.MODE_PRIVATE);
+        SharedPreferences prefs = requireContext().getSharedPreferences(PREFS_READY_PAYMENT,
+                android.content.Context.MODE_PRIVATE);
         prefs.edit().putBoolean(ticketId, true).apply();
         android.util.Log.d("EmployeeWork", "Marked ticket as ready for payment: " + ticketId);
         updateActiveJobUi();
     }
-    
+
     private boolean isReadyForPayment(String ticketId) {
-        if (ticketId == null) return false;
-        SharedPreferences prefs = requireContext().getSharedPreferences(PREFS_READY_PAYMENT, android.content.Context.MODE_PRIVATE);
+        if (ticketId == null)
+            return false;
+        SharedPreferences prefs = requireContext().getSharedPreferences(PREFS_READY_PAYMENT,
+                android.content.Context.MODE_PRIVATE);
         return prefs.getBoolean(ticketId, false);
     }
-    
+
     private void clearReadyForPayment(String ticketId) {
-        if (ticketId == null) return;
-        SharedPreferences prefs = requireContext().getSharedPreferences(PREFS_READY_PAYMENT, android.content.Context.MODE_PRIVATE);
+        if (ticketId == null)
+            return;
+        SharedPreferences prefs = requireContext().getSharedPreferences(PREFS_READY_PAYMENT,
+                android.content.Context.MODE_PRIVATE);
         prefs.edit().remove(ticketId).apply();
     }
 
@@ -1006,8 +1021,7 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
 
         int labelColor = isReadyForPayment ? 0xFF1B5E20 : 0xFFBDBDBD;
         if (completedStatusView instanceof com.google.android.material.card.MaterialCardView) {
-            com.google.android.material.card.MaterialCardView completedCard =
-                    (com.google.android.material.card.MaterialCardView) completedStatusView;
+            com.google.android.material.card.MaterialCardView completedCard = (com.google.android.material.card.MaterialCardView) completedStatusView;
             if (isReadyForPayment) {
                 completedCard.setCardBackgroundColor(0xFFD1E7D1);
                 completedCard.setStrokeColor(0xFF1B5E20);
@@ -1239,8 +1253,7 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
 
         googleMap.clear();
         int markerCount = 0;
-        com.google.android.gms.maps.model.LatLngBounds.Builder boundsBuilder =
-                new com.google.android.gms.maps.model.LatLngBounds.Builder();
+        com.google.android.gms.maps.model.LatLngBounds.Builder boundsBuilder = new com.google.android.gms.maps.model.LatLngBounds.Builder();
 
         if (branchLatLng != null) {
             googleMap.addMarker(new MarkerOptions()
@@ -1290,7 +1303,6 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
         mapContainer.setVisibility(visible ? View.VISIBLE : View.GONE);
     }
 
-
     private void openMapForActiveTicket() {
         if (activeTicket == null || getContext() == null) {
             return;
@@ -1330,7 +1342,7 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
                     if (onSuccess != null) {
                         onSuccess.run();
                     }
-                    
+
                     // Immediate refresh to sync with backend
                     new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
                         if (isAdded()) {
@@ -1401,13 +1413,13 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
         if (autoRefreshHandler != null && autoRefreshRunnable != null) {
             autoRefreshHandler.removeCallbacks(autoRefreshRunnable);
         }
-        
+
         if (mapViewActiveJob != null) {
             mapViewActiveJob.onDestroy();
         }
         super.onDestroyView();
     }
-    
+
     private void startAutoRefresh() {
         autoRefreshHandler = new android.os.Handler(android.os.Looper.getMainLooper());
         autoRefreshRunnable = new Runnable() {
@@ -1418,14 +1430,14 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
                     android.util.Log.d("EmployeeWork", "Auto-refreshing tickets in background");
                     loadAssignedTickets(true);
                 }
-                
+
                 // Schedule next refresh in 3 seconds (FAST for technician)
                 if (autoRefreshHandler != null) {
                     autoRefreshHandler.postDelayed(this, 3000);
                 }
             }
         };
-        
+
         // Start auto-refresh after 3 seconds
         autoRefreshHandler.postDelayed(autoRefreshRunnable, 3000);
     }
