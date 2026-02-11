@@ -54,6 +54,8 @@ import retrofit2.Response;
  */
 public class UserNotificationFragment extends Fragment implements OnMapReadyCallback {
 
+    private static final long AUTO_REFRESH_INTERVAL_MS = 15000;
+
     private View emptyStateContainer;
     private View trackingContainer;
     private SwipeRefreshLayout swipeRefreshLayout;
@@ -84,6 +86,9 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
     private String previousTicketStatus = null; // Track previous status to detect changes
     private String lastNotificationTicketId = null; // Track which ticket we last notified for
     private String lastNotificationTimestamp = null; // Track the updatedAt timestamp of last notification
+    private String lastPendingPaymentTicketId = null;
+    private boolean isLoadingTickets = false;
+    private long lastRefreshMs = 0L;
 
     public UserNotificationFragment() {
     }
@@ -108,14 +113,28 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
 
         swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout);
         if (swipeRefreshLayout != null) {
-            swipeRefreshLayout.setOnRefreshListener(this::loadTickets);
+            swipeRefreshLayout.setOnRefreshListener(() -> loadTickets(true));
         }
 
         startPendingPaymentsListener();
-        loadTickets();
+        loadTickets(false);
+    }
 
-        // Start auto-refresh in background (every 10 seconds)
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (shouldRefreshNow()) {
+            loadTickets(false);
+        }
         startAutoRefresh();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        if (autoRefreshHandler != null && autoRefreshRunnable != null) {
+            autoRefreshHandler.removeCallbacks(autoRefreshRunnable);
+        }
     }
 
     @Override
@@ -127,12 +146,19 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
             if (data != null && data.getBooleanExtra("payment_confirmed", false)) {
                 Toast.makeText(getContext(), "Payment confirmed successfully!", Toast.LENGTH_SHORT).show();
                 // Refresh tickets to update UI
-                loadTickets();
+                loadTickets(false);
             }
         }
     }
 
     private void loadTickets() {
+        loadTickets(false);
+    }
+
+    private void loadTickets(boolean showSpinner) {
+        if (isLoadingTickets) {
+            return;
+        }
         android.util.Log.d("UserNotification", "Loading tickets...");
 
         String token = tokenManager.getToken();
@@ -144,6 +170,12 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
             return;
         }
 
+        isLoadingTickets = true;
+        lastRefreshMs = System.currentTimeMillis();
+        if (showSpinner && swipeRefreshLayout != null) {
+            swipeRefreshLayout.setRefreshing(true);
+        }
+
         String authToken = token.startsWith("Bearer ") ? token : "Bearer " + token;
         ApiService apiService = ApiClient.getApiService();
         Call<TicketListResponse> call = apiService.getTickets(authToken);
@@ -151,6 +183,7 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
         call.enqueue(new Callback<TicketListResponse>() {
             @Override
             public void onResponse(Call<TicketListResponse> call, Response<TicketListResponse> response) {
+                isLoadingTickets = false;
                 if (swipeRefreshLayout != null)
                     swipeRefreshLayout.setRefreshing(false);
 
@@ -201,6 +234,7 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
 
             @Override
             public void onFailure(Call<TicketListResponse> call, Throwable t) {
+                isLoadingTickets = false;
                 if (swipeRefreshLayout != null)
                     swipeRefreshLayout.setRefreshing(false);
                 showEmptyState();
@@ -598,7 +632,7 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
                 updateTechnicianLocation();
 
                 if (isAdded()) {
-                    loadTickets();
+                    loadTickets(false);
                 }
 
                 // Schedule next update in 30 seconds
@@ -701,7 +735,9 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
         }
 
         String normalized = status.toLowerCase().trim().replace('_', ' ');
-        if (normalized.contains("completed") || normalized.contains("done")) {
+        // Step 5: Work is complete (includes "Completed", "Pending Payment", etc.)
+        if (normalized.contains("completed") || normalized.contains("done")
+                || normalized.contains("pending payment")) {
             return 5;
         }
         if (normalized.contains("in progress") || normalized.contains("ongoing")
@@ -891,20 +927,24 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
             @Override
             public void run() {
                 // Silently refresh in background (no loading indicator)
-                if (isAdded() && getContext() != null) {
+                if (isAdded() && getContext() != null && shouldRefreshNow()) {
                     android.util.Log.d("UserNotification", "Auto-refreshing tickets in background");
                     loadTickets();
                 }
 
-                // Schedule next refresh in 5 seconds
+                // Schedule next refresh in background
                 if (autoRefreshHandler != null) {
-                    autoRefreshHandler.postDelayed(this, 5000);
+                    autoRefreshHandler.postDelayed(this, AUTO_REFRESH_INTERVAL_MS);
                 }
             }
         };
 
-        // Start auto-refresh after 5 seconds
-        autoRefreshHandler.postDelayed(autoRefreshRunnable, 5000);
+        // Start auto-refresh after the interval
+        autoRefreshHandler.postDelayed(autoRefreshRunnable, AUTO_REFRESH_INTERVAL_MS);
+    }
+
+    private boolean shouldRefreshNow() {
+        return System.currentTimeMillis() - lastRefreshMs > AUTO_REFRESH_INTERVAL_MS;
     }
 
     private void openPendingPayment() {
@@ -1013,6 +1053,13 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
 
                 pendingPayment = matched != null ? matched : first;
                 pendingPaymentTicketId = pendingPayment != null ? pendingPayment.ticketId : null;
+
+                if (pendingPaymentTicketId == null) {
+                    lastPendingPaymentTicketId = null;
+                } else if (!pendingPaymentTicketId.equals(lastPendingPaymentTicketId) && isAdded()) {
+                    lastPendingPaymentTicketId = pendingPaymentTicketId;
+                    loadTickets(false);
+                }
 
                 if (currentTicket == null) {
                     if (pendingPaymentTicketId != null && isAdded()) {

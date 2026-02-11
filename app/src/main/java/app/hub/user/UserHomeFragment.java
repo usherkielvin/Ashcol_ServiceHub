@@ -41,7 +41,8 @@ public class UserHomeFragment extends Fragment {
     private LinearLayout dotsLayout;
     private Handler handler;
     private Runnable slideRunnable;
-    private List<Integer> images = Arrays.asList(R.drawable.banner_cleaning, R.drawable.banner_installation, R.drawable.banner_maintainance, R.drawable.banner_repair);
+    private List<Integer> images = Arrays.asList(R.drawable.banner_cleaning, R.drawable.banner_installation,
+            R.drawable.banner_maintainance, R.drawable.banner_repair);
     private TextView tvAssignedBranch;
     private TokenManager tokenManager;
     
@@ -166,12 +167,11 @@ public class UserHomeFragment extends Fragment {
         }
     }
 
-
     private void loadBranchInfo() {
         // First try to load from cache
-        String cachedBranch = tokenManager.getCachedBranch();
-        if (cachedBranch != null && !cachedBranch.isEmpty()) {
-            displayBranch(cachedBranch);
+        String cachedLocation = tokenManager.getCurrentCity();
+        if (cachedLocation != null && !cachedLocation.isEmpty()) {
+            displayLocation(cachedLocation);
         }
 
         // Then fetch fresh data from API
@@ -194,12 +194,14 @@ public class UserHomeFragment extends Fragment {
                     UserResponse userResponse = response.body();
                     if (userResponse.isSuccess() && userResponse.getData() != null) {
                         UserResponse.Data userData = userResponse.getData();
-                        String branch = userData.getBranch();
+                        String location = buildLocationText(userData.getCity(), userData.getRegion());
+                        if (location == null || location.isEmpty()) {
+                            location = userData.getBranch();
+                        }
 
-                        if (branch != null && !branch.isEmpty()) {
-                            // Cache the branch info
-                            tokenManager.saveBranchInfo(branch, 0);
-                            displayBranch(branch);
+                        if (location != null && !location.isEmpty()) {
+                            tokenManager.saveCurrentCity(location);
+                            displayLocation(location);
                         }
                     }
                 } else {
@@ -214,11 +216,11 @@ public class UserHomeFragment extends Fragment {
         });
     }
 
-    private void displayBranch(String branch) {
+    private void displayLocation(String location) {
         if (tvAssignedBranch != null && getActivity() != null) {
             getActivity().runOnUiThread(() -> {
                 if (tvAssignedBranch != null) {
-                    tvAssignedBranch.setText("Assigned to: " + branch);
+                    tvAssignedBranch.setText(location);
                     tvAssignedBranch.setVisibility(View.VISIBLE);
                 }
             });
@@ -247,6 +249,22 @@ public class UserHomeFragment extends Fragment {
         Intent intent = new Intent(getActivity(), ServiceSelectActivity.class);
         intent.putExtra("serviceType", serviceType);
         startActivity(intent);
+    }
+
+    private String buildLocationText(String city, String region) {
+        String trimmedCity = city != null ? city.trim() : "";
+        String trimmedRegion = region != null ? region.trim() : "";
+
+        if (!trimmedCity.isEmpty() && !trimmedRegion.isEmpty()) {
+            return trimmedCity + ", " + trimmedRegion;
+        }
+        if (!trimmedCity.isEmpty()) {
+            return trimmedCity;
+        }
+        if (!trimmedRegion.isEmpty()) {
+            return trimmedRegion;
+        }
+        return null;
     }
 
 }

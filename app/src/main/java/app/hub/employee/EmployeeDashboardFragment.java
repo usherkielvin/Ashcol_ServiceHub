@@ -99,7 +99,8 @@ public class EmployeeDashboardFragment extends Fragment {
         }
 
         // Setup View All Schedules button click
-        com.google.android.material.button.MaterialButton btnViewAllSchedules = view.findViewById(R.id.btnViewAllSchedules);
+        com.google.android.material.button.MaterialButton btnViewAllSchedules = view
+                .findViewById(R.id.btnViewAllSchedules);
         if (btnViewAllSchedules != null) {
             btnViewAllSchedules.setOnClickListener(v -> {
                 // Navigate to EmployeeScheduleFragment
@@ -108,7 +109,7 @@ public class EmployeeDashboardFragment extends Fragment {
                     if (getActivity() instanceof EmployeeDashboardActivity) {
                         ((EmployeeDashboardActivity) getActivity()).updateNavigationIndicator(R.id.nav_sched);
                     }
-                    
+
                     androidx.fragment.app.FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
                     androidx.fragment.app.FragmentTransaction transaction = fragmentManager.beginTransaction();
                     transaction.replace(R.id.fragment_container, new EmployeeScheduleFragment());
@@ -119,7 +120,7 @@ public class EmployeeDashboardFragment extends Fragment {
         }
 
         todayWorkContainer = view.findViewById(R.id.todayWorkContainer);
-        
+
         // Setup SwipeRefreshLayout
         swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout);
         if (swipeRefreshLayout != null) {
@@ -142,7 +143,7 @@ public class EmployeeDashboardFragment extends Fragment {
 
         // Start real-time listener for updates
         setupRealtimeListener();
-        
+
         // Start auto-refresh in background
         startAutoRefresh();
     }
@@ -164,13 +165,15 @@ public class EmployeeDashboardFragment extends Fragment {
     }
 
     private void setupRealtimeListener() {
-        if (getContext() == null) return;
+        if (getContext() == null)
+            return;
 
         firebaseEmployeeListener = new FirebaseEmployeeListener(getContext());
         firebaseEmployeeListener.setOnScheduleChangeListener(new FirebaseEmployeeListener.OnScheduleChangeListener() {
             @Override
             public void onScheduleChanged() {
-                if (!isAdded()) return;
+                if (!isAdded())
+                    return;
                 loadAllTickets();
             }
 
@@ -183,14 +186,17 @@ public class EmployeeDashboardFragment extends Fragment {
     }
 
     /**
-     * Optimized: Single API call to load all tickets, then filter for today's work and schedules
+     * Optimized: Single API call to load all tickets, then filter for today's work
+     * and schedules
      */
     private void loadAllTickets() {
-        if (!isAdded() || getContext() == null) return;
+        if (!isAdded() || getContext() == null)
+            return;
 
         TokenManager tokenManager = new TokenManager(requireContext());
         String token = tokenManager.getToken();
-        if (token == null) return;
+        if (token == null)
+            return;
 
         ApiService apiService = ApiClient.getApiService();
         Call<TicketListResponse> call = apiService.getEmployeeTickets("Bearer " + token);
@@ -198,8 +204,9 @@ public class EmployeeDashboardFragment extends Fragment {
         call.enqueue(new Callback<TicketListResponse>() {
             @Override
             public void onResponse(Call<TicketListResponse> call, Response<TicketListResponse> response) {
-                if (!isAdded() || getContext() == null) return;
-                
+                if (!isAdded() || getContext() == null)
+                    return;
+
                 // Stop refresh animation
                 if (swipeRefreshLayout != null) {
                     swipeRefreshLayout.setRefreshing(false);
@@ -207,12 +214,13 @@ public class EmployeeDashboardFragment extends Fragment {
 
                 if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
                     List<TicketListResponse.TicketItem> allTickets = response.body().getTickets();
-                    List<TicketListResponse.TicketItem> safeTickets = allTickets != null ? allTickets : new ArrayList<>();
-                    
+                    List<TicketListResponse.TicketItem> safeTickets = allTickets != null ? allTickets
+                            : new ArrayList<>();
+
                     // Cache all tickets
                     cachedTodayWork = new ArrayList<>(safeTickets);
                     cachedScheduleTickets = new ArrayList<>(safeTickets);
-                    
+
                     // Display both sections
                     displayTodayWork(safeTickets);
                     displayAssignedSchedules(safeTickets);
@@ -224,13 +232,14 @@ public class EmployeeDashboardFragment extends Fragment {
 
             @Override
             public void onFailure(Call<TicketListResponse> call, Throwable t) {
-                if (!isAdded() || getContext() == null) return;
-                
+                if (!isAdded() || getContext() == null)
+                    return;
+
                 // Stop refresh animation
                 if (swipeRefreshLayout != null) {
                     swipeRefreshLayout.setRefreshing(false);
                 }
-                
+
                 displayTodayWork(new ArrayList<>());
                 displayAssignedSchedules(new ArrayList<>());
             }
@@ -238,11 +247,13 @@ public class EmployeeDashboardFragment extends Fragment {
     }
 
     private void loadAssignedSchedules() {
-        if (!isAdded() || getContext() == null) return;
+        if (!isAdded() || getContext() == null)
+            return;
 
         TokenManager tokenManager = new TokenManager(requireContext());
         String token = tokenManager.getToken();
-        if (token == null) return;
+        if (token == null)
+            return;
 
         ApiService apiService = ApiClient.getApiService();
         Call<TicketListResponse> call = apiService.getEmployeeTickets("Bearer " + token);
@@ -250,8 +261,9 @@ public class EmployeeDashboardFragment extends Fragment {
         call.enqueue(new Callback<TicketListResponse>() {
             @Override
             public void onResponse(Call<TicketListResponse> call, Response<TicketListResponse> response) {
-                if (!isAdded() || getContext() == null) return;
-                
+                if (!isAdded() || getContext() == null)
+                    return;
+
                 // Stop refresh animation
                 if (swipeRefreshLayout != null) {
                     swipeRefreshLayout.setRefreshing(false);
@@ -269,25 +281,28 @@ public class EmployeeDashboardFragment extends Fragment {
 
             @Override
             public void onFailure(Call<TicketListResponse> call, Throwable t) {
-                if (!isAdded() || getContext() == null) return;
-                
+                if (!isAdded() || getContext() == null)
+                    return;
+
                 // Stop refresh animation
                 if (swipeRefreshLayout != null) {
                     swipeRefreshLayout.setRefreshing(false);
                 }
-                
+
                 displayAssignedSchedules(new ArrayList<>());
             }
         });
     }
 
     private void displayAssignedSchedules(List<TicketListResponse.TicketItem> tickets) {
-        if (getView() == null) return;
+        if (getView() == null)
+            return;
 
         LinearLayout scheduleContainer = getView().findViewById(R.id.scheduleItemsContainer);
         TextView tvNoEventsToday = getView().findViewById(R.id.tvNoEventsToday);
 
-        if (scheduleContainer == null || tvNoEventsToday == null) return;
+        if (scheduleContainer == null || tvNoEventsToday == null)
+            return;
 
         scheduleContainer.removeAllViews();
 
@@ -295,7 +310,8 @@ public class EmployeeDashboardFragment extends Fragment {
         String todayDate = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH).format(new Date());
         for (TicketListResponse.TicketItem ticket : tickets) {
             String status = ticket.getStatus();
-            if (status == null) continue;
+            if (status == null)
+                continue;
 
             String normalized = status.trim().toLowerCase(Locale.ENGLISH);
             boolean isInProgress = "in_progress".equals(normalized)
@@ -328,11 +344,13 @@ public class EmployeeDashboardFragment extends Fragment {
     }
 
     private void loadTodayWork() {
-        if (!isAdded() || getContext() == null) return;
+        if (!isAdded() || getContext() == null)
+            return;
 
         TokenManager tokenManager = new TokenManager(requireContext());
         String token = tokenManager.getToken();
-        if (token == null) return;
+        if (token == null)
+            return;
 
         ApiService apiService = ApiClient.getApiService();
         Call<TicketListResponse> call = apiService.getEmployeeTickets("Bearer " + token);
@@ -340,8 +358,9 @@ public class EmployeeDashboardFragment extends Fragment {
         call.enqueue(new Callback<TicketListResponse>() {
             @Override
             public void onResponse(Call<TicketListResponse> call, Response<TicketListResponse> response) {
-                if (!isAdded() || getContext() == null) return;
-                
+                if (!isAdded() || getContext() == null)
+                    return;
+
                 // Stop refresh animation
                 if (swipeRefreshLayout != null) {
                     swipeRefreshLayout.setRefreshing(false);
@@ -359,20 +378,22 @@ public class EmployeeDashboardFragment extends Fragment {
 
             @Override
             public void onFailure(Call<TicketListResponse> call, Throwable t) {
-                if (!isAdded() || getContext() == null) return;
-                
+                if (!isAdded() || getContext() == null)
+                    return;
+
                 // Stop refresh animation
                 if (swipeRefreshLayout != null) {
                     swipeRefreshLayout.setRefreshing(false);
                 }
-                
+
                 displayTodayWork(new ArrayList<>());
             }
         });
     }
 
     private void displayTodayWork(List<TicketListResponse.TicketItem> tickets) {
-        if (todayWorkContainer == null || getContext() == null) return;
+        if (todayWorkContainer == null || getContext() == null)
+            return;
 
         todayWorkContainer.removeAllViews();
 
@@ -381,7 +402,8 @@ public class EmployeeDashboardFragment extends Fragment {
 
         for (TicketListResponse.TicketItem ticket : tickets) {
             String status = ticket.getStatus();
-            if (status == null) continue;
+            if (status == null)
+                continue;
 
             String normalized = status.trim().toLowerCase(Locale.ENGLISH);
             boolean isInProgress = "in_progress".equals(normalized) || "in progress".equals(normalized)
@@ -415,30 +437,35 @@ public class EmployeeDashboardFragment extends Fragment {
 
             TextView tvWorkTitle = itemView.findViewById(R.id.tvWorkTitle);
             TextView tvWorkDetail = itemView.findViewById(R.id.tvWorkDetail);
-            TextView tvRequestedById = itemView.findViewById(R.id.tvRequestedById);
-            TextView tvScheduleValue = itemView.findViewById(R.id.tvScheduleValue);
+            TextView tvScheduleDate = itemView.findViewById(R.id.tvScheduleDate);
+            TextView tvScheduleTime = itemView.findViewById(R.id.tvScheduleTime);
             TextView tvCustomerName = itemView.findViewById(R.id.tvCustomerName);
             TextView tvContactNumber = itemView.findViewById(R.id.tvContactNumber);
             com.google.android.material.button.MaterialButton btnWorkStatus = itemView.findViewById(R.id.btnWorkStatus);
 
-            String title = ticket.getServiceType() != null ? ticket.getServiceType() :
-                    (ticket.getTitle() != null ? ticket.getTitle() : "Service Request");
-            if (tvWorkTitle != null) tvWorkTitle.setText(title);
+            String title = ticket.getServiceType() != null ? ticket.getServiceType()
+                    : (ticket.getTitle() != null ? ticket.getTitle() : "Service Request");
+            if (tvWorkTitle != null)
+                tvWorkTitle.setText(title);
 
-            String detail = ticket.getDescription() != null && !ticket.getDescription().isEmpty()
-                    ? ticket.getDescription()
-                    : "In progress";
-            if (tvWorkDetail != null) tvWorkDetail.setText("• " + detail);
-
-            if (tvRequestedById != null) {
-                String ticketId = ticket.getTicketId();
-                tvRequestedById.setText(ticketId != null ? ticketId : "--");
+            // Show ticket ID in detail field
+            String ticketId = ticket.getTicketId();
+            if (tvWorkDetail != null) {
+                tvWorkDetail.setText("• " + (ticketId != null ? ticketId : "TCK-000"));
             }
 
-            if (tvScheduleValue != null) {
-                String scheduleDisplay = formatScheduleDisplay(ticket.getScheduledDate(), ticket.getScheduledTime());
-                tvScheduleValue.setText(scheduleDisplay);
+            // Format schedule date as "Feb 11, 2026"
+            if (tvScheduleDate != null) {
+                String dateDisplay = this.formatScheduleDate(ticket.getScheduledDate());
+                tvScheduleDate.setText(dateDisplay);
             }
+
+            // Format schedule time as "10:11 AM"
+            if (tvScheduleTime != null) {
+                String timeDisplay = this.formatScheduleTime(ticket.getScheduledTime());
+                tvScheduleTime.setText(timeDisplay);
+            }
+
 
             if (tvCustomerName != null) {
                 tvCustomerName.setText(ticket.getCustomerName() != null ? ticket.getCustomerName() : "--");
@@ -471,20 +498,87 @@ public class EmployeeDashboardFragment extends Fragment {
                     startActivity(intent);
                 }
             });
-
             todayWorkContainer.addView(itemView);
         }
     }
 
-    private String formatScheduleDisplay(String date, String time) {
-        if (date == null && time == null) return "Schedule: --";
-        if (date == null) return time;
-        if (time == null) return date;
-        return date + " - " + time;
+    /**
+     * Format schedule date as "Feb 11, 2026"
+     */
+    private String formatScheduleDate(String date) {
+        if (date == null || date.isEmpty())
+            return "--";
+
+        try {
+            SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
+            SimpleDateFormat outputFormat = new SimpleDateFormat("MMM d, yyyy", Locale.ENGLISH);
+            Date parsedDate = inputFormat.parse(date);
+            if (parsedDate != null) {
+                return outputFormat.format(parsedDate);
+            }
+        } catch (Exception e) {
+            // If parsing fails, return the original date
+        }
+        return date;
+    }
+
+    /**
+     * Format schedule time as "10:11 AM"
+     */
+    private String formatScheduleTime(String time) {
+        if (time == null || time.isEmpty())
+            return "--";
+
+        try {
+            // Try parsing HH:mm:ss format
+            SimpleDateFormat inputFormat = new SimpleDateFormat("HH:mm:ss", Locale.ENGLISH);
+            SimpleDateFormat outputFormat = new SimpleDateFormat("h:mm a", Locale.ENGLISH);
+            Date parsedTime = inputFormat.parse(time);
+            if (parsedTime != null) {
+                return outputFormat.format(parsedTime);
+            }
+        } catch (Exception e) {
+            try {
+                // Try parsing HH:mm format
+                SimpleDateFormat inputFormat = new SimpleDateFormat("HH:mm", Locale.ENGLISH);
+                SimpleDateFormat outputFormat = new SimpleDateFormat("h:mm a", Locale.ENGLISH);
+                Date parsedTime = inputFormat.parse(time);
+                if (parsedTime != null) {
+                    return outputFormat.format(parsedTime);
+                }
+            } catch (Exception ex) {
+                // If parsing fails, return the original time
+            }
+        }
+        return time;
+    }
+
+    private String formatAssignedTime(String updatedAt, String createdAt) {
+        String source = (updatedAt != null && !updatedAt.isEmpty()) ? updatedAt : createdAt;
+        if (source == null || source.isEmpty()) {
+            return "--";
+        }
+
+        String[] patterns = {"yyyy-MM-dd HH:mm:ss", "yyyy-MM-dd'T'HH:mm:ss"};
+        for (String pattern : patterns) {
+            try {
+                SimpleDateFormat inputFormat = new SimpleDateFormat(pattern, Locale.ENGLISH);
+                SimpleDateFormat outputFormat = new SimpleDateFormat("h:mm a", Locale.ENGLISH);
+                Date parsedTime = inputFormat.parse(source);
+                if (parsedTime != null) {
+                    return outputFormat.format(parsedTime);
+                }
+            } catch (Exception ignored) {
+                // Try the next format.
+            }
+        }
+
+        return source;
     }
 
     private View createScheduleItemView(TicketListResponse.TicketItem ticket) {
-        if (getContext() == null) return null;
+        if (getContext() == null)
+            return null;
 
         LayoutInflater inflater = LayoutInflater.from(getContext());
         View itemView = inflater.inflate(R.layout.item_employee_home_schedule, null);
@@ -499,7 +593,8 @@ public class EmployeeDashboardFragment extends Fragment {
         TextView tvScheduleDetail = itemView.findViewById(R.id.tvScheduleDetail);
         TextView tvRequestedById = itemView.findViewById(R.id.tvRequestedById);
         TextView tvScheduleTime = itemView.findViewById(R.id.tvScheduleTime);
-        com.google.android.material.button.MaterialButton btnScheduleStatus = itemView.findViewById(R.id.btnScheduleStatus);
+        com.google.android.material.button.MaterialButton btnScheduleStatus = itemView
+                .findViewById(R.id.btnScheduleStatus);
 
         if (tvScheduleTitle != null) {
             String title = ticket.getServiceType() != null ? ticket.getServiceType()
@@ -520,8 +615,9 @@ public class EmployeeDashboardFragment extends Fragment {
         }
 
         if (tvScheduleTime != null) {
-            String scheduleDisplay = formatScheduleDisplay(ticket.getScheduledDate(), ticket.getScheduledTime());
-            tvScheduleTime.setText(scheduleDisplay);
+            String dateDisplay = formatScheduleDate(ticket.getScheduledDate());
+            String timeDisplay = formatScheduleTime(ticket.getScheduledTime());
+            tvScheduleTime.setText(dateDisplay + " - " + timeDisplay);
         }
 
         if (btnScheduleStatus != null) {
@@ -561,7 +657,7 @@ public class EmployeeDashboardFragment extends Fragment {
         // Refresh data when fragment becomes visible - single API call
         loadAllTickets();
     }
-    
+
     @Override
     public void onDestroyView() {
         super.onDestroyView();
@@ -570,7 +666,7 @@ public class EmployeeDashboardFragment extends Fragment {
             autoRefreshHandler.removeCallbacks(autoRefreshRunnable);
         }
     }
-    
+
     private void startAutoRefresh() {
         autoRefreshHandler = new android.os.Handler(android.os.Looper.getMainLooper());
         autoRefreshRunnable = new Runnable() {
@@ -581,14 +677,14 @@ public class EmployeeDashboardFragment extends Fragment {
                     android.util.Log.d("EmployeeDashboard", "Auto-refreshing tickets in background");
                     loadAllTickets();
                 }
-                
+
                 // Schedule next refresh in 3 seconds (FAST for technician)
                 if (autoRefreshHandler != null) {
                     autoRefreshHandler.postDelayed(this, 3000);
                 }
             }
         };
-        
+
         // Start auto-refresh after 3 seconds
         autoRefreshHandler.postDelayed(autoRefreshRunnable, 3000);
     }

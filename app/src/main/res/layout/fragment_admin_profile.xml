@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#D1E7D1"
+    android:background="?attr/colorSurfaceVariant"
     android:fillViewport="true"
     tools:context="app.hub.admin.AdminProfileFragment">
 
@@ -43,25 +43,6 @@
                     app:strokeWidth="1dp"
                     tools:src="@drawable/user" />
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btn_edit_photo"
-                    style="@style/Widget.Material3.Button.IconButton"
-                    android:layout_width="36dp"
-                    android:layout_height="36dp"
-                    android:insetTop="0dp"
-                    android:insetBottom="0dp"
-                    app:backgroundTint="#1B4332"
-                    app:icon="@drawable/ic_add"
-                    app:iconSize="18dp"
-                    app:iconTint="@color/white"
-                    app:layout_constraintBottom_toBottomOf="@id/img_profile"
-                    app:layout_constraintEnd_toEndOf="@id/img_profile"
-                    app:layout_constraintHorizontal_bias="0.85"
-                    app:layout_constraintVertical_bias="0.85"
-                    app:layout_constraintStart_toStartOf="@id/img_profile"
-                    app:layout_constraintTop_toTopOf="@id/img_profile"
-                    app:shapeAppearanceOverlay="@style/CircleImage" />
-
             </androidx.constraintlayout.widget.ConstraintLayout>
 
             <TextView
@@ -78,10 +59,10 @@
                 android:id="@+id/tv_username"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:alpha="0.6"
                 android:fontFamily="@font/poppins_medium"
                 android:text="email@gmail.com"
                 android:textColor="#1B4332"
-                android:alpha="0.6"
                 android:textSize="14sp" />
 
             <com.google.android.material.card.MaterialCardView
@@ -115,10 +96,10 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="32dp"
-            app:cardBackgroundColor="?attr/colorSurface"
+            app:cardBackgroundColor="?attr/colorSurfaceVariant"
             app:cardElevation="12dp"
-            app:strokeWidth="0dp"
-            app:shapeAppearanceOverlay="@style/ProfileContentCardShape">
+            app:shapeAppearanceOverlay="@style/ProfileContentCardShape"
+            app:strokeWidth="0dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -129,11 +110,11 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
                     android:fontFamily="@font/poppins_bold"
                     android:text="Preferences"
                     android:textColor="#1B4332"
-                    android:textSize="14sp"
-                    android:layout_marginStart="4dp" />
+                    android:textSize="14sp" />
 
                 <!-- Display Row -->
                 <LinearLayout
@@ -151,13 +132,14 @@
                         android:layout_width="36dp"
                         android:layout_height="36dp"
                         android:background="@drawable/bg_icon_circle_green"
-                        android:backgroundTint="?attr/colorOnSurface">
+                        android:backgroundTint="@color/colorSecondaryContainer">
+
                         <ImageView
                             android:layout_width="20dp"
                             android:layout_height="20dp"
                             android:layout_gravity="center"
                             android:src="@drawable/outline_dark_mode_24"
-                            app:tint="?attr/colorSurface" />
+                            app:tint="@color/colorOnSecondaryContainer" />
                     </FrameLayout>
 
                     <TextView
@@ -186,6 +168,7 @@
                         android:layout_height="36dp"
                         android:background="@drawable/bg_icon_circle_green"
                         android:backgroundTint="@color/colorSecondaryContainer">
+
                         <ImageView
                             android:layout_width="20dp"
                             android:layout_height="20dp"
@@ -220,6 +203,7 @@
                         android:layout_height="36dp"
                         android:background="@drawable/bg_icon_circle_green"
                         android:backgroundTint="@color/colorSecondaryContainer">
+
                         <ImageView
                             android:layout_width="20dp"
                             android:layout_height="20dp"
@@ -242,17 +226,17 @@
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
                     android:layout_marginVertical="16dp"
-                    android:background="?attr/colorOutline"
-                    android:alpha="0.1" />
+                    android:alpha="0.1"
+                    android:background="?attr/colorOutline" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
                     android:fontFamily="@font/poppins_bold"
                     android:text="General"
                     android:textColor="#1B4332"
-                    android:textSize="14sp"
-                    android:layout_marginStart="4dp" />
+                    android:textSize="14sp" />
 
                 <!-- Personal Information Row -->
                 <LinearLayout
@@ -271,6 +255,7 @@
                         android:layout_height="36dp"
                         android:background="@drawable/bg_icon_circle_green"
                         android:backgroundTint="@color/colorSecondaryContainer">
+
                         <ImageView
                             android:layout_width="20dp"
                             android:layout_height="20dp"
@@ -305,6 +290,7 @@
                         android:layout_height="36dp"
                         android:background="@drawable/bg_icon_circle_green"
                         android:backgroundTint="@color/colorSecondaryContainer">
+
                         <ImageView
                             android:layout_width="20dp"
                             android:layout_height="20dp"
@@ -327,8 +313,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
                     android:layout_marginVertical="16dp"
-                    android:background="?attr/colorOutline"
-                    android:alpha="0.1" />
+                    android:alpha="0.1"
+                    android:background="?attr/colorOutline" />
 
                 <!-- About Us Row -->
                 <LinearLayout
@@ -345,13 +331,14 @@
                         android:layout_width="36dp"
                         android:layout_height="36dp"
                         android:background="@drawable/bg_icon_circle_green"
-                        android:backgroundTint="#1B4332">
+                        android:backgroundTint="@color/colorSecondaryContainer">
+
                         <ImageView
                             android:layout_width="20dp"
                             android:layout_height="20dp"
                             android:layout_gravity="center"
                             android:src="@drawable/ic_help"
-                            app:tint="@color/white" />
+                            app:tint="@color/colorOnSecondaryContainer" />
                     </FrameLayout>
 
                     <TextView
@@ -395,8 +382,17 @@
                 </LinearLayout>
 
                 <!-- Hidden legacy mapping -->
-                <TextView android:id="@+id/tv_branch" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
-                <TextView android:id="@+id/tv_location" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
+                <TextView
+                    android:id="@+id/tv_branch"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:id="@+id/tv_location"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:visibility="gone" />
 
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>

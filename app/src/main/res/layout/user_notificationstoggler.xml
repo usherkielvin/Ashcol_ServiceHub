@@ -3,13 +3,13 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#00000000">
+    android:background="@android:color/transparent">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
-        android:background="@drawable/bottom_sheet_bg"
+        android:background="?attr/colorSurface"
         android:clickable="true"
         android:focusable="true"
         android:padding="24dp">
@@ -20,7 +20,7 @@
             android:layout_height="wrap_content"
             android:fontFamily="sans-serif-black"
             android:text="@string/notifications_title"
-            android:textColor="@android:color/black"
+            android:textColor="?attr/colorOnSurface"
             android:textSize="20sp"
             android:textStyle="bold"
             app:layout_constraintStart_toStartOf="parent"
@@ -33,7 +33,7 @@
             android:layout_marginTop="32dp"
             android:fontFamily="sans-serif-medium"
             android:text="@string/label_push_notification"
-            android:textColor="@android:color/black"
+            android:textColor="?attr/colorOnSurface"
             android:textSize="16sp"
             app:layout_constraintEnd_toStartOf="@+id/switch_push"
             app:layout_constraintStart_toStartOf="parent"
@@ -47,8 +47,8 @@
             app:layout_constraintBottom_toBottomOf="@+id/tv_push_label"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="@+id/tv_push_label"
-            app:thumbTint="@color/apps_green"
-            app:trackTint="@color/switch_track_green" />
+            app:thumbTint="?attr/colorPrimary"
+            app:trackTint="?attr/colorPrimaryContainer" />
 
         <TextView
             android:id="@+id/tv_email_label"
@@ -57,7 +57,7 @@
             android:layout_marginTop="24dp"
             android:fontFamily="sans-serif-medium"
             android:text="@string/label_email_notification"
-            android:textColor="@android:color/black"
+            android:textColor="?attr/colorOnSurface"
             android:textSize="16sp"
             app:layout_constraintEnd_toStartOf="@+id/switch_email"
             app:layout_constraintStart_toStartOf="parent"
@@ -71,8 +71,8 @@
             app:layout_constraintBottom_toBottomOf="@+id/tv_email_label"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="@+id/tv_email_label"
-            app:thumbTint="@color/apps_green"
-            app:trackTint="@color/switch_track_green" />
+            app:thumbTint="?attr/colorPrimary"
+            app:trackTint="?attr/colorPrimaryContainer" />
 
         <TextView
             android:id="@+id/tv_sms_label"
@@ -81,7 +81,7 @@
             android:layout_marginTop="24dp"
             android:fontFamily="sans-serif-medium"
             android:text="@string/label_sms_notification"
-            android:textColor="@android:color/black"
+            android:textColor="?attr/colorOnSurface"
             android:textSize="16sp"
             app:layout_constraintEnd_toStartOf="@+id/switch_sms"
             app:layout_constraintStart_toStartOf="parent"
@@ -94,8 +94,8 @@
             app:layout_constraintBottom_toBottomOf="@+id/tv_sms_label"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="@+id/tv_sms_label"
-            app:thumbTint="@color/apps_green"
-            app:trackTint="@color/switch_track_green" />
+            app:thumbTint="?attr/colorPrimary"
+            app:trackTint="?attr/colorPrimaryContainer" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

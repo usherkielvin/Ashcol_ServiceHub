@@ -143,16 +143,15 @@ public class UserPaymentFragment extends Fragment {
                 method = "Credit Card";
             }
 
-            if (cardChecked) {
-                requireActivity().getSupportFragmentManager()
-                        .beginTransaction()
-                        .replace(R.id.fragmentContainerView, UserPaymentUnsuccessFragment.newInstance())
-                        .addToBackStack(null)
-                        .commit();
-                return;
+            // For all non-cash payments (GCash, Credit Card), automatically complete payment
+            // Cash payments require manual confirmation by technician
+            if (!cashChecked) {
+                completePayment(method);
+            } else {
+                // For cash, show confirmation that payment will be collected in person
+                Toast.makeText(getContext(), "Payment will be collected by technician in person.", Toast.LENGTH_LONG).show();
+                completePayment(method);
             }
-
-            completePayment(method);
         });
     }
 
