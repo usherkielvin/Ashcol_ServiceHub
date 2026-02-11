@@ -448,10 +448,10 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
-                        android:text="Expand Map View"
+                        android:text="View on Maps"
                         android:textAllCaps="false"
                         android:textColor="@color/service_icon_tint"
-                        android:visibility="visible"
+                        android:visibility="gone"
                         app:icon="@drawable/location"
                         app:iconSize="16dp" />
 
