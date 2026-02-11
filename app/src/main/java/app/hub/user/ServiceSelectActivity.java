@@ -9,6 +9,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.HorizontalScrollView;
 import android.widget.ImageButton;
@@ -22,6 +23,7 @@ import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.datepicker.CalendarConstraints;
 import com.google.android.material.datepicker.MaterialDatePicker;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -66,15 +68,16 @@ public class ServiceSelectActivity extends AppCompatActivity {
     private Button submitButton;
     private RelativeLayout mapLocationButton;
     private HorizontalScrollView imageScrollView;
-    private LinearLayout uploadButton, imagePreviewContainer;
+    private LinearLayout uploadButton, imagePreviewContainer, priceContainer;
     private RelativeLayout imagePreview1Container, imagePreview2Container;
     private ImageView imagePreview1, imagePreview2;
-    private ImageButton btnRemoveImage1, btnRemoveImage2;
-    private Spinner serviceTypeSpinner, unitTypeSpinner;
+    private ImageButton btnRemoveImage1, btnRemoveImage2, btnShowSummary;
+    private Spinner serviceTypeSpinner;
+    private CheckBox cbSplit, cbWindow, cbARF;
     private TextView locationHintText;
     private TokenManager tokenManager;
     private String selectedServiceType;
-    private String selectedUnitType;
+    private Map<String, Integer> unitQuantities = new HashMap<>();
     private Long selectedDateMillis = null;
     private double selectedLatitude = 0.0;
     private double selectedLongitude = 0.0;
@@ -82,11 +85,9 @@ public class ServiceSelectActivity extends AppCompatActivity {
     private Uri selectedImageUri1 = null;
     private Uri selectedImageUri2 = null;
     private int currentImageSlot = 0; // 0 = none, 1 = first slot, 2 = second slot
+    private BottomSheetDialog summaryBottomSheet;
 
     private final String[] serviceTypes = {"Cleaning", "Maintenance", "Repair", "Installation"};
-    private final String[] unitTypes = {
-         "Split","Window","ARF"
-    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -105,7 +106,13 @@ public class ServiceSelectActivity extends AppCompatActivity {
         mapLocationButton = findViewById(R.id.btnMapLocation);
         uploadButton = findViewById(R.id.btnUpload);
         serviceTypeSpinner = findViewById(R.id.spinnerServiceType);
-        unitTypeSpinner = findViewById(R.id.spinnerUnitType);
+        priceContainer = findViewById(R.id.priceContainer);
+        btnShowSummary = findViewById(R.id.btnShowSummary);
+        
+        // Initialize checkboxes
+        cbSplit = findViewById(R.id.cbSplit);
+        cbWindow = findViewById(R.id.cbWindow);
+        cbARF = findViewById(R.id.cbARF);
         
         imageScrollView = findViewById(R.id.imageScrollView);
         imagePreviewContainer = findViewById(R.id.imagePreviewContainer);
@@ -133,10 +140,18 @@ public class ServiceSelectActivity extends AppCompatActivity {
         // Set up service type spinner
         setupServiceTypeSpinner();
         
-        // Set up unit type spinner
-        setupUnitTypeSpinner();
+        // Set up unit checkboxes
+        setupUnitCheckboxes();
 
         updatePresetAmount();
+        
+        // Set up summary button
+        if (btnShowSummary != null) {
+            btnShowSummary.setOnClickListener(v -> showSummaryBottomSheet());
+        }
+        if (priceContainer != null) {
+            priceContainer.setOnClickListener(v -> showSummaryBottomSheet());
+        }
 
         // Set up back button
         findViewById(R.id.btnBack).setOnClickListener(v -> finish());
@@ -210,26 +225,179 @@ public class ServiceSelectActivity extends AppCompatActivity {
         });
     }
 
-    private void setupUnitTypeSpinner() {
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, unitTypes);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        unitTypeSpinner.setAdapter(adapter);
+    private void setupUnitCheckboxes() {
+        // Set up checkbox listeners
+        View.OnClickListener checkboxListener = v -> updatePriceFromCheckboxes();
         
-        unitTypeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                if (position == 0) {
-                    selectedUnitType = null; // "Select Unit Type" option
-                } else {
-                    selectedUnitType = unitTypes[position];
-                }
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-                selectedUnitType = null;
+        if (cbSplit != null) cbSplit.setOnClickListener(checkboxListener);
+        if (cbWindow != null) cbWindow.setOnClickListener(checkboxListener);
+        if (cbARF != null) cbARF.setOnClickListener(checkboxListener);
+        
+        // Initialize quantities for checked boxes
+        unitQuantities.put("Split", 1);
+        unitQuantities.put("Window", 1);
+        unitQuantities.put("ARF", 1);
+    }
+    
+    private void updatePriceFromCheckboxes() {
+        double basePrice = getServicePrice(selectedServiceType);
+        double totalPrice = 0.0;
+        
+        int totalUnits = 0;
+        if (cbSplit != null && cbSplit.isChecked()) {
+            int qty = unitQuantities.getOrDefault("Split", 1);
+            totalPrice += basePrice * qty;
+            totalUnits += qty;
+        }
+        if (cbWindow != null && cbWindow.isChecked()) {
+            int qty = unitQuantities.getOrDefault("Window", 1);
+            totalPrice += basePrice * qty;
+            totalUnits += qty;
+        }
+        if (cbARF != null && cbARF.isChecked()) {
+            int qty = unitQuantities.getOrDefault("ARF", 1);
+            totalPrice += basePrice * qty;
+            totalUnits += qty;
+        }
+        
+        if (amountView != null) {
+            amountView.setText(formatAmount(totalPrice));
+        }
+    }
+    
+    private double getServicePrice(String serviceType) {
+        if (serviceType == null) return 8000.0;
+        
+        switch (serviceType.trim().toLowerCase(Locale.ENGLISH)) {
+            case "installation":
+                return 9000.0;
+            case "repair":
+                return 7000.0;
+            case "maintenance":
+                return 6500.0;
+            case "cleaning":
+                return 8000.0;
+            default:
+                return 8000.0;
+        }
+    }
+    
+    private void showSummaryBottomSheet() {
+        // Check if any unit is selected
+        boolean hasSelection = (cbSplit != null && cbSplit.isChecked()) ||
+                              (cbWindow != null && cbWindow.isChecked()) ||
+                              (cbARF != null && cbARF.isChecked());
+        
+        if (!hasSelection) {
+            Toast.makeText(this, "Please select at least one AC unit type", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        // Create bottom sheet
+        summaryBottomSheet = new BottomSheetDialog(this);
+        View sheetView = getLayoutInflater().inflate(R.layout.bottom_sheet_summary, null);
+        summaryBottomSheet.setContentView(sheetView);
+        
+        LinearLayout itemsContainer = sheetView.findViewById(R.id.itemsContainer);
+        TextView tvSummaryTotal = sheetView.findViewById(R.id.tvSummaryTotal);
+        Button btnContinue = sheetView.findViewById(R.id.btnContinue);
+        
+        // Clear existing items
+        if (itemsContainer != null) {
+            itemsContainer.removeAllViews();
+        }
+        
+        double basePrice = getServicePrice(selectedServiceType);
+        
+        // Add items for each selected unit type
+        if (cbSplit != null && cbSplit.isChecked()) {
+            View itemView = createUnitItemView("Split", basePrice, itemsContainer, tvSummaryTotal);
+            itemsContainer.addView(itemView);
+        }
+        if (cbWindow != null && cbWindow.isChecked()) {
+            View itemView = createUnitItemView("Window", basePrice, itemsContainer, tvSummaryTotal);
+            itemsContainer.addView(itemView);
+        }
+        if (cbARF != null && cbARF.isChecked()) {
+            View itemView = createUnitItemView("ARF", basePrice, itemsContainer, tvSummaryTotal);
+            itemsContainer.addView(itemView);
+        }
+        
+        // Update total
+        updateSummaryTotal(tvSummaryTotal, basePrice);
+        
+        // Continue button
+        if (btnContinue != null) {
+            btnContinue.setOnClickListener(v -> {
+                summaryBottomSheet.dismiss();
+                // Optionally scroll to submit button or show next section
+            });
+        }
+        
+        summaryBottomSheet.show();
+    }
+    
+    private View createUnitItemView(String unitType, double basePrice, LinearLayout container, TextView tvTotal) {
+        View itemView = getLayoutInflater().inflate(R.layout.item_summary_unit, container, false);
+        
+        TextView tvItemName = itemView.findViewById(R.id.tvItemName);
+        TextView tvItemPrice = itemView.findViewById(R.id.tvItemPrice);
+        TextView tvQuantity = itemView.findViewById(R.id.tvQuantity);
+        ImageButton btnMinus = itemView.findViewById(R.id.btnMinus);
+        ImageButton btnPlus = itemView.findViewById(R.id.btnPlus);
+        
+        // Set item name
+        String itemName = unitType + " AC " + (selectedServiceType != null ? selectedServiceType : "Service");
+        tvItemName.setText(itemName);
+        
+        // Set price
+        tvItemPrice.setText(formatAmount(basePrice));
+        
+        // Set quantity
+        int currentQty = unitQuantities.getOrDefault(unitType, 1);
+        tvQuantity.setText(String.valueOf(currentQty));
+        
+        // Minus button
+        btnMinus.setOnClickListener(v -> {
+            int qty = unitQuantities.getOrDefault(unitType, 1);
+            if (qty > 1) {
+                qty--;
+                unitQuantities.put(unitType, qty);
+                tvQuantity.setText(String.valueOf(qty));
+                updateSummaryTotal(tvTotal, basePrice);
+                updatePriceFromCheckboxes();
             }
         });
+        
+        // Plus button
+        btnPlus.setOnClickListener(v -> {
+            int qty = unitQuantities.getOrDefault(unitType, 1);
+            qty++;
+            unitQuantities.put(unitType, qty);
+            tvQuantity.setText(String.valueOf(qty));
+            updateSummaryTotal(tvTotal, basePrice);
+            updatePriceFromCheckboxes();
+        });
+        
+        return itemView;
+    }
+    
+    private void updateSummaryTotal(TextView tvTotal, double basePrice) {
+        if (tvTotal == null) return;
+        
+        double total = 0.0;
+        
+        if (cbSplit != null && cbSplit.isChecked()) {
+            total += basePrice * unitQuantities.getOrDefault("Split", 1);
+        }
+        if (cbWindow != null && cbWindow.isChecked()) {
+            total += basePrice * unitQuantities.getOrDefault("Window", 1);
+        }
+        if (cbARF != null && cbARF.isChecked()) {
+            total += basePrice * unitQuantities.getOrDefault("ARF", 1);
+        }
+        
+        tvTotal.setText(formatAmount(total));
     }
 
     private void prefillContactFromProfile() {
@@ -281,32 +449,33 @@ public class ServiceSelectActivity extends AppCompatActivity {
     }
 
     private void updatePresetAmount() {
-        double amount = getPresetAmount(selectedServiceType);
-        if (amountView != null) {
-            amountView.setText(formatAmount(amount));
-        }
+        updatePriceFromCheckboxes();
     }
 
     private double getPresetAmount(String serviceType) {
-        if (serviceType == null) {
-            return 8000.0;
-        }
-        switch (serviceType.trim().toLowerCase(java.util.Locale.ENGLISH)) {
-            case "cleaning":
-                return 8000.0;
-            case "maintenance":
-                return 6500.0;
-            case "repair":
-                return 7000.0;
-            case "installation":
-                return 9000.0;
-            default:
-                return 8000.0;
-        }
+        return getServicePrice(serviceType);
     }
+
 
     private String formatAmount(double amount) {
         return "Php " + String.format(java.util.Locale.getDefault(), "%,.2f", amount);
+    }
+    
+    private double getTotalAmount() {
+        double basePrice = getServicePrice(selectedServiceType);
+        double total = 0.0;
+        
+        if (cbSplit != null && cbSplit.isChecked()) {
+            total += basePrice * unitQuantities.getOrDefault("Split", 1);
+        }
+        if (cbWindow != null && cbWindow.isChecked()) {
+            total += basePrice * unitQuantities.getOrDefault("Window", 1);
+        }
+        if (cbARF != null && cbARF.isChecked()) {
+            total += basePrice * unitQuantities.getOrDefault("ARF", 1);
+        }
+        
+        return total > 0 ? total : basePrice;
     }
 
     private void showDatePicker() {
@@ -475,6 +644,16 @@ public class ServiceSelectActivity extends AppCompatActivity {
             return;
         }
         
+        // Validate at least one unit type is selected
+        boolean hasUnitSelected = (cbSplit != null && cbSplit.isChecked()) ||
+                                  (cbWindow != null && cbWindow.isChecked()) ||
+                                  (cbARF != null && cbARF.isChecked());
+        
+        if (!hasUnitSelected) {
+            Toast.makeText(this, "Please select at least one AC unit type", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
         if (description.isEmpty()) {
             Toast.makeText(this, "Please provide service details", Toast.LENGTH_SHORT).show();
             return;
@@ -488,7 +667,7 @@ public class ServiceSelectActivity extends AppCompatActivity {
         // Prepare data for checking screen
         String serviceType = selectedServiceType != null ? selectedServiceType : "Service";
         String specificService = description; // Use description as specific service
-        String unitType = selectedUnitType != null ? selectedUnitType : "";
+        String unitType = getSelectedUnitTypesString();
         String landmark = landmarkInput != null ? landmarkInput.getText().toString().trim() : "";
         
         // Show checking fragment
@@ -502,6 +681,27 @@ public class ServiceSelectActivity extends AppCompatActivity {
                 .replace(android.R.id.content, fragment)
                 .addToBackStack(null)
                 .commit();
+    }
+    
+    private String getSelectedUnitTypesString() {
+        StringBuilder units = new StringBuilder();
+        
+        if (cbSplit != null && cbSplit.isChecked()) {
+            int qty = unitQuantities.getOrDefault("Split", 1);
+            units.append("Split (").append(qty).append(")");
+        }
+        if (cbWindow != null && cbWindow.isChecked()) {
+            int qty = unitQuantities.getOrDefault("Window", 1);
+            if (units.length() > 0) units.append(", ");
+            units.append("Window (").append(qty).append(")");
+        }
+        if (cbARF != null && cbARF.isChecked()) {
+            int qty = unitQuantities.getOrDefault("ARF", 1);
+            if (units.length() > 0) units.append(", ");
+            units.append("ARF (").append(qty).append(")");
+        }
+        
+        return units.toString();
     }
     
     public void confirmAndCreateTicket() {
@@ -541,12 +741,13 @@ public class ServiceSelectActivity extends AppCompatActivity {
             preferredDate = DATE_FORMAT_API.format(cal.getTime());
         }
 
-        // Build full description with unit type only
+        // Build full description with unit types and quantities
         String fullDescription = "";
         
-        // Add unit type if selected
-        if (selectedUnitType != null && !selectedUnitType.isEmpty()) {
-            fullDescription = "Unit Type: " + selectedUnitType + "\n";
+        // Add unit types if selected
+        String unitTypesStr = getSelectedUnitTypesString();
+        if (!unitTypesStr.isEmpty()) {
+            fullDescription = "Unit Types: " + unitTypesStr + "\n";
         }
         
         // Add main description
@@ -560,7 +761,7 @@ public class ServiceSelectActivity extends AppCompatActivity {
             fullDescription = "Service request";
         }
 
-        double amount = getPresetAmount(selectedServiceType);
+        double amount = getTotalAmount();
 
         ApiService apiService = ApiClient.getApiService();
         String token = tokenManager.getToken();
@@ -686,7 +887,7 @@ public class ServiceSelectActivity extends AppCompatActivity {
             RequestBody contactBody = RequestBody.create(MediaType.parse("text/plain"), contact);
             RequestBody serviceTypeBody = RequestBody.create(MediaType.parse("text/plain"), serviceType);
             RequestBody unitTypeBody = RequestBody.create(MediaType.parse("text/plain"), 
-                    selectedUnitType != null ? selectedUnitType : "");
+                    getSelectedUnitTypesString());
             RequestBody preferredDateBody = RequestBody.create(MediaType.parse("text/plain"), 
                     preferredDate != null ? preferredDate : "");
             RequestBody latitudeBody = RequestBody.create(MediaType.parse("text/plain"), 

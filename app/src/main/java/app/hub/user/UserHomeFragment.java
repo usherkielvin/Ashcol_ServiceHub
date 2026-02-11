@@ -1,5 +1,6 @@
 package app.hub.user;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -15,6 +16,8 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import java.util.Arrays;
 import java.util.List;
+
+import com.google.android.material.button.MaterialButton;
 
 import app.hub.R;
 import app.hub.api.ApiClient;
@@ -42,6 +45,9 @@ public class UserHomeFragment extends Fragment {
             R.drawable.banner_maintainance, R.drawable.banner_repair);
     private TextView tvAssignedBranch;
     private TokenManager tokenManager;
+    
+    // Service booking buttons
+    private MaterialButton btnBookCleaning, btnBookMaintenance, btnBookInstallation, btnBookRepair;
 
     public UserHomeFragment() {
         // Required empty public constructor
@@ -69,10 +75,17 @@ public class UserHomeFragment extends Fragment {
         bannerViewPager = view.findViewById(R.id.bannerViewPager);
         dotsLayout = view.findViewById(R.id.dotsLayout);
         tvAssignedBranch = view.findViewById(R.id.tvAssignedBranch);
+        
+        // Initialize service booking buttons
+        btnBookCleaning = view.findViewById(R.id.btnBookCleaning);
+        btnBookMaintenance = view.findViewById(R.id.btnBookMaintenance);
+        btnBookInstallation = view.findViewById(R.id.btnBookInstallation);
+        btnBookRepair = view.findViewById(R.id.btnBookRepair);
 
         setupViewPager();
         updateDots(0); // Initialize dots
         loadBranchInfo();
+        setupServiceButtonListeners();
 
         return view;
     }
@@ -212,6 +225,30 @@ public class UserHomeFragment extends Fragment {
                 }
             });
         }
+    }
+    
+    private void setupServiceButtonListeners() {
+        if (btnBookCleaning != null) {
+            btnBookCleaning.setOnClickListener(v -> openServiceRequest("Cleaning"));
+        }
+        
+        if (btnBookMaintenance != null) {
+            btnBookMaintenance.setOnClickListener(v -> openServiceRequest("Maintenance"));
+        }
+        
+        if (btnBookInstallation != null) {
+            btnBookInstallation.setOnClickListener(v -> openServiceRequest("Installation"));
+        }
+        
+        if (btnBookRepair != null) {
+            btnBookRepair.setOnClickListener(v -> openServiceRequest("Repair"));
+        }
+    }
+    
+    private void openServiceRequest(String serviceType) {
+        Intent intent = new Intent(getActivity(), ServiceSelectActivity.class);
+        intent.putExtra("serviceType", serviceType);
+        startActivity(intent);
     }
 
     private String buildLocationText(String city, String region) {
