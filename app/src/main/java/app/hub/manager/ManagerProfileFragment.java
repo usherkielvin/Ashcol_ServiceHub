@@ -27,6 +27,7 @@ import java.net.URL;
 import app.hub.R;
 import app.hub.common.MainActivity;
 import app.hub.employee.EmployeePersonalInfoFragment;
+import app.hub.util.LoadingDialog;
 import app.hub.util.TokenManager;
 import app.hub.util.UiPreferences;
 
@@ -505,7 +506,8 @@ public class ManagerProfileFragment extends Fragment {
     }
 
     private void showPersonalInfo() {
-        navigateToFragment(new EmployeePersonalInfoFragment());
+        Intent intent = new Intent(getActivity(), app.hub.common.PersonalInfoActivity.class);
+        startActivity(intent);
     }
 
     private void navigateToFragment(Fragment fragment) {
@@ -693,14 +695,12 @@ public class ManagerProfileFragment extends Fragment {
     }
 
     private void logout() {
-        // Show progress indicator
+        // Show loading dialog
         if (getActivity() == null)
             return;
 
-        android.app.ProgressDialog progressDialog = new android.app.ProgressDialog(getContext());
-        progressDialog.setMessage("Logging out...");
-        progressDialog.setCancelable(false);
-        progressDialog.show();
+        LoadingDialog loadingDialog = new LoadingDialog(requireContext());
+        loadingDialog.show();
 
         String authToken = tokenManager.getAuthToken();
         if (authToken != null) {
@@ -709,10 +709,8 @@ public class ManagerProfileFragment extends Fragment {
             call.enqueue(new Callback<LogoutResponse>() {
                 @Override
                 public void onResponse(@NonNull Call<LogoutResponse> call, @NonNull Response<LogoutResponse> response) {
-                    // Dismiss progress dialog
-                    if (progressDialog.isShowing()) {
-                        progressDialog.dismiss();
-                    }
+                    // Dismiss loading dialog
+                    loadingDialog.dismiss();
 
                     // Perform cleanup operations asynchronously
                     performLogoutCleanup();
@@ -720,20 +718,16 @@ public class ManagerProfileFragment extends Fragment {
 
                 @Override
                 public void onFailure(@NonNull Call<LogoutResponse> call, @NonNull Throwable t) {
-                    // Dismiss progress dialog
-                    if (progressDialog.isShowing()) {
-                        progressDialog.dismiss();
-                    }
+                    // Dismiss loading dialog
+                    loadingDialog.dismiss();
 
                     // Still perform cleanup even if API call fails
                     performLogoutCleanup();
                 }
             });
         } else {
-            // Dismiss progress dialog
-            if (progressDialog.isShowing()) {
-                progressDialog.dismiss();
-            }
+            // Dismiss loading dialog
+            loadingDialog.dismiss();
 
             // No token, just perform cleanup
             performLogoutCleanup();

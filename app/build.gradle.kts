@@ -102,6 +102,9 @@ dependencies {
     implementation("com.google.openlocationcode:openlocationcode:1.0.4")
     // Picasso for image loading
     implementation("com.squareup.picasso:picasso:2.8")
+    // Glide for GIF support
+    implementation("com.github.bumptech.glide:glide:4.16.0")
+    annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
     implementation("com.facebook.shimmer:shimmer:0.5.0")
     testImplementation(libs.junit)
     testImplementation("org.mockito:mockito-core:5.8.0")

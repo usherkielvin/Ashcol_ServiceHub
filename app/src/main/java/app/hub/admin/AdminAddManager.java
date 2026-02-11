@@ -17,6 +17,7 @@ import app.hub.api.ApiClient;
 import app.hub.api.ApiService;
 import app.hub.api.RegisterRequest;
 import app.hub.api.RegisterResponse;
+import app.hub.util.LoadingDialog;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -140,6 +141,10 @@ public class AdminAddManager extends AppCompatActivity {
             return;
         }
 
+        // Show loading dialog
+        LoadingDialog loadingDialog = new LoadingDialog(this);
+        loadingDialog.show();
+
         // Create manager request
         RegisterRequest registerRequest = new RegisterRequest(
             username, firstName, lastName, email, "", "", 
@@ -152,6 +157,7 @@ public class AdminAddManager extends AppCompatActivity {
         call.enqueue(new Callback<RegisterResponse>() {
             @Override
             public void onResponse(Call<RegisterResponse> call, Response<RegisterResponse> response) {
+                loadingDialog.dismiss();
                 if (response.isSuccessful() && response.body() != null) {
                     RegisterResponse registerResponse = response.body();
                     if (registerResponse.isSuccess()) {
@@ -182,6 +188,7 @@ public class AdminAddManager extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<RegisterResponse> call, Throwable t) {
+                loadingDialog.dismiss();
                 Toast.makeText(AdminAddManager.this, "Network error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });

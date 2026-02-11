@@ -674,6 +674,10 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
                         // Clear the ready for payment flag since payment is now requested
                         clearReadyForPayment(ticketId);
                     }
+                    
+                    // Navigate to confirmation screen
+                    showPaymentConfirmationScreen();
+                    
                     // Immediate refresh to update UI
                     loadAssignedTickets(true);
 
@@ -701,6 +705,32 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
                 }
             }
         });
+    }
+
+    private void showPaymentConfirmationScreen() {
+        if (activeTicket == null || !isAdded()) {
+            return;
+        }
+
+        String customerName = activeTicket.getCustomerName() != null ? 
+                activeTicket.getCustomerName() : "Customer";
+        String serviceName = activeTicket.getServiceType() != null ? 
+                activeTicket.getServiceType() : "Service";
+        double amount = activeTicket.getAmount();
+
+        EmployeeWorkConfirmPaymentFragment confirmFragment = 
+                EmployeeWorkConfirmPaymentFragment.newInstance(
+                        activeTicket.getTicketId(),
+                        customerName,
+                        serviceName,
+                        amount
+                );
+
+        requireActivity().getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragmentContainerView, confirmFragment)
+                .addToBackStack(null)
+                .commit();
     }
 
     private void bindTicketDetails(View root, TicketListResponse.TicketItem ticket) {
@@ -975,9 +1005,9 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
             prefs.edit().putBoolean(ticketId, true).apply();
             android.util.Log.d("EmployeeWork", "Work completed, ready for payment: " + ticketId);
             
-            // Save the completed step and time
-            saveStepTime(ticketId, STEP_COMPLETED);
-            saveStep(ticketId, STEP_COMPLETED);
+            // DO NOT save completed step time yet - only save when payment is actually done
+            // saveStepTime(ticketId, STEP_COMPLETED);
+            // saveStep(ticketId, STEP_COMPLETED);
             
             updateActiveJobUi();
         });

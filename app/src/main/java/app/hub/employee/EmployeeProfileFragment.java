@@ -32,6 +32,7 @@ import app.hub.api.ChangePasswordRequest;
 import app.hub.api.ChangePasswordResponse;
 import app.hub.common.MainActivity;
 import app.hub.common.ProfileAboutUsFragment;
+import app.hub.util.LoadingDialog;
 import app.hub.util.TokenManager;
 import app.hub.util.UiPreferences;
 
@@ -118,7 +119,10 @@ public class EmployeeProfileFragment extends Fragment {
 
         View personalInfoButton = view.findViewById(R.id.btn_personal_info);
         if (personalInfoButton != null) {
-            personalInfoButton.setOnClickListener(v -> navigateToFragment(new EmployeePersonalInfoFragment()));
+            personalInfoButton.setOnClickListener(v -> {
+                Intent intent = new Intent(getActivity(), app.hub.common.PersonalInfoActivity.class);
+                startActivity(intent);
+            });
         }
 
         View jobHistoryButton = view.findViewById(R.id.btn_help);
@@ -128,7 +132,10 @@ public class EmployeeProfileFragment extends Fragment {
 
         View aboutUsButton = view.findViewById(R.id.btn_about_us);
         if (aboutUsButton != null) {
-            aboutUsButton.setOnClickListener(v -> navigateToFragment(new ProfileAboutUsFragment()));
+            aboutUsButton.setOnClickListener(v -> {
+                Intent intent = new Intent(getActivity(), app.hub.common.AboutUsActivity.class);
+                startActivity(intent);
+            });
         }
 
         setupPlaceholderButton(view, R.id.btn_edit_photo, "Edit Photo");
@@ -493,17 +500,9 @@ public class EmployeeProfileFragment extends Fragment {
             return;
         }
 
-        // Show progress indicator
-        final android.app.ProgressDialog[] progressDialogWrapper = {null};
-        try {
-            Log.d("EmployeeProfileFragment", "Creating progress dialog");
-            progressDialogWrapper[0] = new android.app.ProgressDialog(getContext());
-            progressDialogWrapper[0].setMessage("Logging out...");
-            progressDialogWrapper[0].setCancelable(false);
-            progressDialogWrapper[0].show();
-        } catch (Exception e) {
-            Log.w("EmployeeProfileFragment", "Could not create progress dialog: " + e.getMessage());
-        }
+        // Show loading dialog
+        LoadingDialog loadingDialog = new LoadingDialog(requireContext());
+        loadingDialog.show();
 
         Log.d("EmployeeProfileFragment", "Clearing user data immediately");
         // Clear user data immediately (this is the most important part)
@@ -523,8 +522,8 @@ public class EmployeeProfileFragment extends Fragment {
                         Log.d("EmployeeProfileFragment", "API logout response received - Success: "
                                 + response.isSuccessful() + ", Code: " + response.code());
                         
-                        // Dismiss progress dialog safely
-                        dismissProgressDialog(progressDialogWrapper[0]);
+                        // Dismiss loading dialog
+                        loadingDialog.dismiss();
 
                         Log.d("EmployeeProfileFragment", "Performing final cleanup");
                         // Perform remaining cleanup and navigate
@@ -535,8 +534,8 @@ public class EmployeeProfileFragment extends Fragment {
                     public void onFailure(@NonNull Call<LogoutResponse> call, @NonNull Throwable t) {
                         Log.w("EmployeeProfileFragment", "API logout failed: " + t.getMessage());
                         
-                        // Dismiss progress dialog safely
-                        dismissProgressDialog(progressDialogWrapper[0]);
+                        // Dismiss loading dialog
+                        loadingDialog.dismiss();
 
                         Log.d("EmployeeProfileFragment", "Performing final cleanup after API failure");
                         // Still perform cleanup even if API call fails
@@ -545,13 +544,13 @@ public class EmployeeProfileFragment extends Fragment {
                 });
             } catch (Exception e) {
                 Log.e("EmployeeProfileFragment", "Error making logout API call: " + e.getMessage(), e);
-                dismissProgressDialog(progressDialogWrapper[0]);
+                loadingDialog.dismiss();
                 performFinalCleanup();
             }
         } else {
-            Log.d("EmployeeProfileFragment", "No token, dismissing progress dialog");
-            // Dismiss progress dialog
-            dismissProgressDialog(progressDialogWrapper[0]);
+            Log.d("EmployeeProfileFragment", "No token, dismissing loading dialog");
+            // Dismiss loading dialog
+            loadingDialog.dismiss();
 
             Log.d("EmployeeProfileFragment", "Performing final cleanup (no token)");
             // No token, just perform final cleanup

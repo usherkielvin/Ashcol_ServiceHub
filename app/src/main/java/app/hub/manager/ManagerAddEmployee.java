@@ -22,6 +22,7 @@ import app.hub.api.EmployeeResponse;
 import app.hub.api.RegisterRequest;
 import app.hub.api.RegisterResponse;
 import app.hub.api.UserResponse;
+import app.hub.util.LoadingDialog;
 import app.hub.util.TokenManager;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -240,6 +241,10 @@ public class ManagerAddEmployee extends AppCompatActivity {
 
             android.util.Log.d("ManagerAddEmployee", "Validation passed - Role: " + selectedRole + ", Branch: " + selectedBranch);
 
+            // Show loading dialog
+            LoadingDialog loadingDialog = new LoadingDialog(this);
+            loadingDialog.show();
+
             // Create username from first name + last name
             String username = (firstName.toLowerCase() + "." + lastName.toLowerCase()).replaceAll("\\s+", "");
 
@@ -253,6 +258,7 @@ public class ManagerAddEmployee extends AppCompatActivity {
 
             ApiService apiService = ApiClient.getApiService();
             if (apiService == null) {
+                loadingDialog.dismiss();
                 android.util.Log.e("ManagerAddEmployee", "ApiService is null");
                 Toast.makeText(this, "API service error", Toast.LENGTH_SHORT).show();
                 return;
@@ -260,6 +266,7 @@ public class ManagerAddEmployee extends AppCompatActivity {
 
             Call<RegisterResponse> call = apiService.register(registerRequest);
             if (call == null) {
+                loadingDialog.dismiss();
                 android.util.Log.e("ManagerAddEmployee", "API call is null");
                 Toast.makeText(this, "API call error", Toast.LENGTH_SHORT).show();
                 return;
@@ -270,6 +277,7 @@ public class ManagerAddEmployee extends AppCompatActivity {
             call.enqueue(new Callback<RegisterResponse>() {
                 @Override
                 public void onResponse(Call<RegisterResponse> call, Response<RegisterResponse> response) {
+                    loadingDialog.dismiss();
                     try {
                         android.util.Log.d("ManagerAddEmployee", "Response received - Code: " + response.code());
                         android.util.Log.d("ManagerAddEmployee", "Response successful: " + response.isSuccessful());
@@ -395,6 +403,7 @@ public class ManagerAddEmployee extends AppCompatActivity {
 
                 @Override
                 public void onFailure(Call<RegisterResponse> call, Throwable t) {
+                    loadingDialog.dismiss();
                     try {
                         android.util.Log.e("ManagerAddEmployee", "Network error", t);
                         Toast.makeText(ManagerAddEmployee.this, "Network error: " + t.getMessage(), Toast.LENGTH_SHORT)

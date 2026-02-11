@@ -40,7 +40,7 @@ public class ManagerTicketDetailActivity extends AppCompatActivity
         implements com.google.android.gms.maps.OnMapReadyCallback {
 
     private TextView tvTicketId, tvDescription, tvServiceType, tvAddress, tvContact, tvStatus, tvBranch,
-            tvCustomerName, tvCreatedAt, tvAssignedTechnician, tvUnitType;
+            tvCustomerName, tvCreatedAt, tvAssignedTechnician, tvUnitType, tvAmount;
     private Button btnViewMap, btnReject, btnAssignStaff;
     private android.widget.ImageButton btnBack;
     private android.widget.AutoCompleteTextView spinnerTechnician;
@@ -146,6 +146,7 @@ public class ManagerTicketDetailActivity extends AppCompatActivity
             tvDescription = findViewById(R.id.tvDescription);
             tvServiceType = findViewById(R.id.tvServiceType);
             tvUnitType = findViewById(R.id.tvUnitType);
+            tvAmount = findViewById(R.id.tvAmount);
             tvAddress = findViewById(R.id.tvAddress);
             tvContact = findViewById(R.id.tvContact);
             tvStatus = findViewById(R.id.tvStatus);
@@ -387,12 +388,17 @@ public class ManagerTicketDetailActivity extends AppCompatActivity
                 ? ticket.getUnitType() 
                 : "N/A";
         String otherDetails = ticket.getDescription() != null ? ticket.getDescription() : "";
+        
+        // Get amount from ticket
+        double amount = ticket.getAmount();
+        String amountText = amount > 0 ? String.format(java.util.Locale.getDefault(), "Php %,.2f", amount) : "N/A";
 
         // Set text with null checks
         safeSetText(tvTicketId, ticket.getTicketId() != null ? ticket.getTicketId() : "N/A");
         safeSetText(tvDescription, !otherDetails.isEmpty() ? otherDetails : "No Description");
         safeSetText(tvServiceType, ticket.getServiceType() != null ? ticket.getServiceType() : "N/A");
         safeSetText(tvUnitType, unitType);
+        safeSetText(tvAmount, amountText);
         safeSetText(tvAddress, ticket.getAddress() != null ? ticket.getAddress() : "No Address");
         safeSetText(tvContact, ticket.getContact() != null ? ticket.getContact() : "No Contact");
         safeSetText(tvStatus, getString(R.string.manager_ticket_status_format, statusText));
