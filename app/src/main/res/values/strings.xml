@@ -242,8 +242,8 @@
     <string name="manager_ticket_network_error">Network error: %1$s</string>
     <string name="manager_ticket_status_format">Status: %1$s</string>
     <string name="manager_ticket_branch_format">Branch: %1$s</string>
-    <string name="manager_ticket_customer_format">Customer: %1$s</string>
-    <string name="manager_ticket_created_format">Created: %1$s</string>
+    <string name="manager_ticket_customer_format">%1$s</string>
+    <string name="manager_ticket_created_format">%1$s</string>
     <string name="manager_ticket_technician_format">Technician: %1$s</string>
     <string name="manager_ticket_technician_not_assigned">Technician: Not assigned</string>
     <string name="manager_ticket_assign_label">Assign Technician</string>

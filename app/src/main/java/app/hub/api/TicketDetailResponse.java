@@ -52,6 +52,9 @@ public class TicketDetailResponse {
         @SerializedName("service_type")
         private String serviceType;
 
+        @SerializedName("unit_type")
+        private String unitType;
+
         @SerializedName("address")
         private String address;
 
@@ -142,6 +145,14 @@ public class TicketDetailResponse {
 
         public void setServiceType(String serviceType) {
             this.serviceType = serviceType;
+        }
+
+        public String getUnitType() {
+            return unitType;
+        }
+
+        public void setUnitType(String unitType) {
+            this.unitType = unitType;
         }
 
         public String getAddress() {

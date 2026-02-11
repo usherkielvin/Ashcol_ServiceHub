@@ -84,6 +84,9 @@ public class EmployeeResponse {
         @SerializedName("ticket_count")
         private int ticketCount;
 
+        @SerializedName("profile_photo")
+        private String profilePhoto;
+
         public int getId() {
             return id;
         }
@@ -146,6 +149,14 @@ public class EmployeeResponse {
 
         public void setBranch(String branch) {
             this.branch = branch;
+        }
+
+        public String getProfilePhoto() {
+            return profilePhoto;
+        }
+
+        public void setProfilePhoto(String profilePhoto) {
+            this.profilePhoto = profilePhoto;
         }
     }
 }

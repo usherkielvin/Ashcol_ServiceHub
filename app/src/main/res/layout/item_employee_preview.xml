@@ -13,14 +13,19 @@
         android:layout_height="wrap_content"
         android:padding="12dp">
 
-        <View
-            android:id="@+id/statusIndicator"
-            android:layout_width="10dp"
-            android:layout_height="10dp"
-            android:background="@drawable/shape_circle_gray"
-            app:layout_constraintBottom_toBottomOf="parent"
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/employeeImage"
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            android:layout_marginEnd="16dp"
+            android:scaleType="centerCrop"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:shapeAppearanceOverlay="@style/ShapeAppearance.ServiceHub.Circle"
+            app:strokeColor="@color/gray"
+            app:strokeWidth="1dp" />
 
         <TextView
             android:id="@+id/tvEmployeeName"
@@ -29,12 +34,12 @@
             android:layout_marginStart="12dp"
             android:text="John Doe"
             android:textColor="@color/black"
-            android:textSize="14sp"
+            android:textSize="18sp"
             android:textStyle="bold"
-            app:layout_constraintBottom_toTopOf="@+id/tvEmployeeRole"
+            app:layout_constraintTop_toTopOf="@id/employeeImage"
+            app:layout_constraintStart_toEndOf="@id/employeeImage"
             app:layout_constraintEnd_toStartOf="@+id/tvTicketCount"
-            app:layout_constraintStart_toEndOf="@+id/statusIndicator"
-            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toTopOf="@+id/tvEmployeeRole"
             app:layout_constraintVertical_chainStyle="packed" />
 
         <TextView
@@ -45,26 +50,26 @@
             android:layout_marginTop="2dp"
             android:text="Technician"
             android:textColor="@color/gray"
-            android:textSize="11sp"
-            app:layout_constraintBottom_toBottomOf="parent"
+            android:textSize="13sp"
+            app:layout_constraintTop_toBottomOf="@id/tvEmployeeName"
+            app:layout_constraintStart_toEndOf="@id/employeeImage"
             app:layout_constraintEnd_toStartOf="@+id/tvTicketCount"
-            app:layout_constraintStart_toEndOf="@+id/statusIndicator"
-            app:layout_constraintTop_toBottomOf="@+id/tvEmployeeName" />
+            app:layout_constraintBottom_toBottomOf="@id/employeeImage" />
 
         <TextView
             android:id="@+id/tvTicketCount"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="@drawable/bg_status_badge"
-            android:paddingHorizontal="8dp"
-            android:paddingVertical="4dp"
-            android:text="3 tickets"
+            android:paddingHorizontal="14dp"
+            android:paddingVertical="6dp"
+            android:text="3"
             android:textColor="@color/white"
-            android:textSize="10sp"
+            android:textSize="14sp"
             android:textStyle="bold"
-            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toTopOf="@id/employeeImage"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintBottom_toBottomOf="@id/employeeImage" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

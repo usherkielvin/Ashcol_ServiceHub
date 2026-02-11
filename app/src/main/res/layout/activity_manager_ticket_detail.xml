@@ -117,16 +117,17 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_alignParentEnd="true"
-                            android:fontFamily="@font/poppins_bold"
+                            android:fontFamily="@font/poppins_medium"
                             android:text="Sakura Ganda"
                             android:textColor="@android:color/black"
                             android:textSize="14sp" />
                     </RelativeLayout>
 
-                    <RelativeLayout
+                    <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp">
+                        android:layout_marginTop="8dp"
+                        android:orientation="vertical">
 
                         <TextView
                             android:layout_width="wrap_content"
@@ -138,14 +139,14 @@
 
                         <TextView
                             android:id="@+id/tvAddress"
-                            android:layout_width="wrap_content"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_alignParentEnd="true"
-                            android:fontFamily="@font/poppins_bold"
+                            android:layout_marginTop="2dp"
+                            android:fontFamily="@font/poppins_medium"
                             android:text="12 Coral St. Pasay City"
                             android:textColor="@android:color/black"
                             android:textSize="14sp" />
-                    </RelativeLayout>
+                    </LinearLayout>
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -176,30 +177,6 @@
                             android:layout_alignParentEnd="true"
                             android:fontFamily="@font/poppins_bold"
                             android:text="Maintenance"
-                            android:textColor="@android:color/black"
-                            android:textSize="14sp" />
-                    </RelativeLayout>
-
-                    <RelativeLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:fontFamily="@font/poppins_medium"
-                            android:text="Specific Service:"
-                            android:textColor="#424242"
-                            android:textSize="14sp" />
-
-                        <TextView
-                            android:id="@+id/tvTitle"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_alignParentEnd="true"
-                            android:fontFamily="@font/poppins_bold"
-                            android:text="General"
                             android:textColor="@android:color/black"
                             android:textSize="14sp" />
                     </RelativeLayout>
@@ -251,22 +228,6 @@
                             android:textColor="@android:color/black"
                             android:textSize="14sp" />
                     </RelativeLayout>
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
-                        android:fontFamily="@font/poppins_medium"
-                        android:text="Attachment:"
-                        android:textColor="#424242"
-                        android:textSize="14sp" />
-
-                    <View
-                        android:id="@+id/vAttachmentPlaceholder"
-                        android:layout_width="match_parent"
-                        android:layout_height="100dp"
-                        android:layout_marginTop="8dp"
-                        android:background="@drawable/bg_upload_box" />
 
                     <RelativeLayout
                         android:layout_width="match_parent"
