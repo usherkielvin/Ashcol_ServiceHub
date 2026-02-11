@@ -67,7 +67,8 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
     private View vStepAssigned, vStepOtw, vStepArrived, vStepWorking, vStepCompleted;
     private View vConnectorAssignedOtw, vConnectorOtwArrived, vConnectorArrivedWorking, vConnectorWorkingCompleted;
     private TextView tvStepAssigned, tvStepOtw, tvStepArrived, tvStepWorking, tvStepCompleted;
-    private View trackingCard;
+    private View trackingCard; // Map card - stays visible
+    private View trackingStepsCard; // Bottom tracking steps card - replaced by payment button
     private View pendingPaymentCard;
     private TextView tvPendingPaymentMessage;
     private MaterialButton btnPendingPayment;
@@ -78,6 +79,7 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
     private FirestoreManager firestoreManager;
     private FirestoreManager.PendingPayment pendingPayment;
     private String pendingPaymentTicketId;
+    private String previousTicketStatus = null; // Track previous status to detect changes
 
     public UserNotificationFragment() {
     }
@@ -203,15 +205,8 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
         
         android.util.Log.d("UserNotification", "Showing tracking view for ticket: " + currentTicket.getTicketId());
         
-        // Check if this is a pending payment ticket
-        boolean isPendingPayment = currentTicket.getStatus() != null && 
-                                   currentTicket.getStatus().equalsIgnoreCase("Pending Payment");
-        
-        if (isPendingPayment) {
-            // Show notification card instead of full tracking view
-            showPendingPaymentNotification();
-            return;
-        }
+        // Don't redirect to payment notification - keep showing tracking view
+        // The "Pay Now" button will appear at the bottom if payment is pending
         
         // Get the SwipeRefreshLayout
         SwipeRefreshLayout swipeRefresh = getView().findViewById(R.id.swipeRefreshLayout);
@@ -377,7 +372,8 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
         tvTicketId = trackingContainer.findViewById(R.id.tvTicketId);
         tvSpecificService = trackingContainer.findViewById(R.id.tvSpecificService);
         tvSchedule = trackingContainer.findViewById(R.id.tvSchedule);
-        trackingCard = trackingContainer.findViewById(R.id.trackingCard);
+        trackingCard = trackingContainer.findViewById(R.id.trackingCard); // Map card
+        trackingStepsCard = trackingContainer.findViewById(R.id.trackingStepsCard); // Bottom tracking steps
         pendingPaymentCard = trackingContainer.findViewById(R.id.pendingPaymentCard);
         tvPendingPaymentMessage = trackingContainer.findViewById(R.id.tvPendingPaymentMessage);
         btnPendingPayment = trackingContainer.findViewById(R.id.btnPendingPayment);
@@ -895,15 +891,38 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
                              currentTicket.getStatus() != null && 
                              currentTicket.getStatus().equalsIgnoreCase("Pending Payment");
 
-        if (trackingCard != null) {
-            trackingCard.setVisibility(hasPending ? View.GONE : View.VISIBLE);
+        // Always show notification when payment is pending (no previous status check)
+        if (hasPending && isAdded() && getContext() != null) {
+            android.util.Log.d("UserNotification", "Payment is pending - showing notification");
+            double amount = currentTicket.getAmount();
+            app.hub.util.NotificationHelper.showPaymentRequestNotification(
+                    getContext(), 
+                    currentTicket.getTicketId(), 
+                    amount
+            );
         }
+        
+        // Update previous status
+        if (currentTicket != null && currentTicket.getStatus() != null) {
+            previousTicketStatus = currentTicket.getStatus();
+        }
+
+        // Map card (trackingCard) stays visible always
+        // When payment is pending, HIDE tracking steps card and SHOW payment button
+        if (trackingStepsCard != null) {
+            trackingStepsCard.setVisibility(hasPending ? View.GONE : View.VISIBLE);
+        }
+        // Show big payment button instead of tracking steps when payment is pending
         if (pendingPaymentCard != null) {
             pendingPaymentCard.setVisibility(hasPending ? View.VISIBLE : View.GONE);
         }
         if (hasPending && tvPendingPaymentMessage != null) {
-            tvPendingPaymentMessage.setText("Your payment is pending. Please continue to pay your ticket.");
+            tvPendingPaymentMessage.setText("Work completed! Tap below to proceed with payment.");
         }
+    }
+    
+    private boolean isStatusPendingPayment(String status) {
+        return status != null && status.equalsIgnoreCase("Pending Payment");
     }
 
     private void startPendingPaymentsListener() {

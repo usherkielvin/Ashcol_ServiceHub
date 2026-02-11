@@ -58,29 +58,33 @@ public class FirebaseEmployeeListener {
         Log.i(TAG, "Starting Firebase listener for employee: " + employeeName + " / " + employeeEmail);
         isListening = true;
 
-        if (employeeName != null && !employeeName.isEmpty()) {
-            ticketListeners.add(firestore.collection("tickets")
-                    .whereEqualTo("assigned_staff", employeeName)
-                    .addSnapshotListener((snapshots, error) -> handleSnapshot(snapshots, error)));
-        }
+        try {
+            if (employeeName != null && !employeeName.isEmpty()) {
+                ticketListeners.add(firestore.collection("tickets")
+                        .whereEqualTo("assigned_staff", employeeName)
+                        .addSnapshotListener((snapshots, error) -> handleSnapshot(snapshots, error)));
+            }
 
-        if (employeeEmail != null && !employeeEmail.isEmpty()
-                && (employeeName == null || !employeeEmail.equalsIgnoreCase(employeeName))) {
-            ticketListeners.add(firestore.collection("tickets")
-                    .whereEqualTo("assigned_staff", employeeEmail)
+            if (employeeEmail != null && !employeeEmail.isEmpty()
+                    && (employeeName == null || !employeeEmail.equalsIgnoreCase(employeeName))) {
+                ticketListeners.add(firestore.collection("tickets")
+                        .whereEqualTo("assigned_staff", employeeEmail)
+                        .addSnapshotListener((snapshots, error) -> handleSnapshot(snapshots, error)));
+                ticketListeners.add(firestore.collection("tickets")
+                    .whereEqualTo("assigned_staff_email", employeeEmail)
                     .addSnapshotListener((snapshots, error) -> handleSnapshot(snapshots, error)));
-            ticketListeners.add(firestore.collection("tickets")
-                .whereEqualTo("assigned_staff_email", employeeEmail)
-                .addSnapshotListener((snapshots, error) -> handleSnapshot(snapshots, error)));
+            }
+        } catch (Exception e) {
+            Log.d(TAG, "Firestore listener setup failed (expected if using Laravel backend): " + e.getMessage());
+            // Continue without Firestore - Laravel API is the primary source
         }
     }
 
     private void handleSnapshot(com.google.firebase.firestore.QuerySnapshot snapshots, Exception error) {
         if (error != null) {
-            Log.e(TAG, "Firestore listener error", error);
-            if (listener != null) {
-                listener.onError(error.getMessage());
-            }
+            // Silently log Firestore errors since we're using Laravel backend as primary source
+            Log.d(TAG, "Firestore listener error (expected if using Laravel backend): " + error.getMessage());
+            // Don't notify listener of Firestore errors - they're expected
             return;
         }
 

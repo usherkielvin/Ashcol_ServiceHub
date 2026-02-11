@@ -70,6 +70,9 @@ public class DashboardActivity extends AppCompatActivity {
         bottomNavigationView = findViewById(R.id.bottomNavigationView);
         fabChatbot = findViewById(R.id.fab_chatbot);
 
+        // Request notification permission for Android 13+
+        requestNotificationPermission();
+
         initFcmReceiver();
 
         setupFab(fabChatbot);
@@ -545,5 +548,20 @@ public class DashboardActivity extends AppCompatActivity {
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+    
+    /**
+     * Request notification permission for Android 13+ (API 33+)
+     */
+    private void requestNotificationPermission() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            if (checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) 
+                    != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(
+                        new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, 
+                        1001
+                );
+            }
+        }
     }
 }

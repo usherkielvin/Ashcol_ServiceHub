@@ -59,6 +59,11 @@ public class PaymentSelectionActivity extends AppCompatActivity {
         serviceType = intent.getStringExtra("service_type");
         amount = intent.getDoubleExtra("amount", 0.0);
         customerId = intent.getIntExtra("customer_id", 0);
+        
+        // Cancel notification when this activity opens
+        if (ticketId != null) {
+            app.hub.util.NotificationHelper.cancelNotification(this, ticketId);
+        }
 
         // Initialize views
         initializeViews();

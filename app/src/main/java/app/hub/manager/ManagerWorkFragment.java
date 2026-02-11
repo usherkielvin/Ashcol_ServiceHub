@@ -382,6 +382,7 @@ public class ManagerWorkFragment extends Fragment implements TicketDataChangeLis
         return normalized.contains("completed") 
             || normalized.contains("resolved")
             || normalized.contains("closed")
+            || normalized.contains("paid")
             || normalized.contains("cancelled")
             || normalized.contains("rejected")
             || normalized.contains("failed");

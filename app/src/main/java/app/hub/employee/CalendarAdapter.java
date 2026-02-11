@@ -207,7 +207,7 @@ public class CalendarAdapter extends RecyclerView.Adapter<CalendarAdapter.Calend
         private void setIndicatorColor(View indicator, EmployeeScheduleResponse.ScheduledTicket ticket) {
             String status = ticket.getStatus() != null ? ticket.getStatus().toLowerCase() : "";
 
-            if (status.contains("completed") || status.contains("resolved") || status.contains("closed")) {
+            if (status.contains("completed") || status.contains("resolved") || status.contains("closed") || status.contains("paid")) {
                 indicator
                         .setBackgroundTintList(android.content.res.ColorStateList.valueOf(Color.parseColor("#4CAF50")));
             } else if (status.contains("cancel")) {

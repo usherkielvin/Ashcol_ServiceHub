@@ -29,6 +29,7 @@ public class EmployeeDashboardFragment extends Fragment {
     private FirebaseEmployeeListener firebaseEmployeeListener;
     private static List<TicketListResponse.TicketItem> cachedTodayWork = null;
     private static List<TicketListResponse.TicketItem> cachedScheduleTickets = null;
+    private androidx.swiperefreshlayout.widget.SwipeRefreshLayout swipeRefreshLayout;
 
     public EmployeeDashboardFragment() {
         // Required empty public constructor
@@ -116,6 +117,15 @@ public class EmployeeDashboardFragment extends Fragment {
         }
 
         todayWorkContainer = view.findViewById(R.id.todayWorkContainer);
+        
+        // Setup SwipeRefreshLayout
+        swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout);
+        if (swipeRefreshLayout != null) {
+            swipeRefreshLayout.setOnRefreshListener(() -> {
+                // Refresh with single API call
+                loadAllTickets();
+            });
+        }
 
         // Preload cached data to keep home tab smooth when switching
         if (cachedTodayWork != null) {
@@ -125,11 +135,8 @@ public class EmployeeDashboardFragment extends Fragment {
             displayAssignedSchedules(new ArrayList<>(cachedScheduleTickets));
         }
 
-        // Load all assigned tickets for schedules section
-        loadAssignedSchedules();
-
-        // Load today's in-progress work immediately
-        loadTodayWork();
+        // Load all tickets with single API call
+        loadAllTickets();
 
         // Start real-time listener for updates
         setupRealtimeListener();
@@ -159,8 +166,7 @@ public class EmployeeDashboardFragment extends Fragment {
             @Override
             public void onScheduleChanged() {
                 if (!isAdded()) return;
-                loadTodayWork();
-                loadAssignedSchedules();
+                loadAllTickets();
             }
 
             @Override
@@ -169,6 +175,61 @@ public class EmployeeDashboardFragment extends Fragment {
             }
         });
         firebaseEmployeeListener.startListening();
+    }
+
+    /**
+     * Optimized: Single API call to load all tickets, then filter for today's work and schedules
+     */
+    private void loadAllTickets() {
+        if (!isAdded() || getContext() == null) return;
+
+        TokenManager tokenManager = new TokenManager(requireContext());
+        String token = tokenManager.getToken();
+        if (token == null) return;
+
+        ApiService apiService = ApiClient.getApiService();
+        Call<TicketListResponse> call = apiService.getEmployeeTickets("Bearer " + token);
+
+        call.enqueue(new Callback<TicketListResponse>() {
+            @Override
+            public void onResponse(Call<TicketListResponse> call, Response<TicketListResponse> response) {
+                if (!isAdded() || getContext() == null) return;
+                
+                // Stop refresh animation
+                if (swipeRefreshLayout != null) {
+                    swipeRefreshLayout.setRefreshing(false);
+                }
+
+                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                    List<TicketListResponse.TicketItem> allTickets = response.body().getTickets();
+                    List<TicketListResponse.TicketItem> safeTickets = allTickets != null ? allTickets : new ArrayList<>();
+                    
+                    // Cache all tickets
+                    cachedTodayWork = new ArrayList<>(safeTickets);
+                    cachedScheduleTickets = new ArrayList<>(safeTickets);
+                    
+                    // Display both sections
+                    displayTodayWork(safeTickets);
+                    displayAssignedSchedules(safeTickets);
+                } else {
+                    displayTodayWork(new ArrayList<>());
+                    displayAssignedSchedules(new ArrayList<>());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<TicketListResponse> call, Throwable t) {
+                if (!isAdded() || getContext() == null) return;
+                
+                // Stop refresh animation
+                if (swipeRefreshLayout != null) {
+                    swipeRefreshLayout.setRefreshing(false);
+                }
+                
+                displayTodayWork(new ArrayList<>());
+                displayAssignedSchedules(new ArrayList<>());
+            }
+        });
     }
 
     private void loadAssignedSchedules() {
@@ -185,6 +246,11 @@ public class EmployeeDashboardFragment extends Fragment {
             @Override
             public void onResponse(Call<TicketListResponse> call, Response<TicketListResponse> response) {
                 if (!isAdded() || getContext() == null) return;
+                
+                // Stop refresh animation
+                if (swipeRefreshLayout != null) {
+                    swipeRefreshLayout.setRefreshing(false);
+                }
 
                 if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
                     List<TicketListResponse.TicketItem> tickets = response.body().getTickets();
@@ -199,6 +265,12 @@ public class EmployeeDashboardFragment extends Fragment {
             @Override
             public void onFailure(Call<TicketListResponse> call, Throwable t) {
                 if (!isAdded() || getContext() == null) return;
+                
+                // Stop refresh animation
+                if (swipeRefreshLayout != null) {
+                    swipeRefreshLayout.setRefreshing(false);
+                }
+                
                 displayAssignedSchedules(new ArrayList<>());
             }
         });
@@ -264,6 +336,11 @@ public class EmployeeDashboardFragment extends Fragment {
             @Override
             public void onResponse(Call<TicketListResponse> call, Response<TicketListResponse> response) {
                 if (!isAdded() || getContext() == null) return;
+                
+                // Stop refresh animation
+                if (swipeRefreshLayout != null) {
+                    swipeRefreshLayout.setRefreshing(false);
+                }
 
                 if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
                     List<TicketListResponse.TicketItem> tickets = response.body().getTickets();
@@ -278,6 +355,12 @@ public class EmployeeDashboardFragment extends Fragment {
             @Override
             public void onFailure(Call<TicketListResponse> call, Throwable t) {
                 if (!isAdded() || getContext() == null) return;
+                
+                // Stop refresh animation
+                if (swipeRefreshLayout != null) {
+                    swipeRefreshLayout.setRefreshing(false);
+                }
+                
                 displayTodayWork(new ArrayList<>());
             }
         });
@@ -470,8 +553,7 @@ public class EmployeeDashboardFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        // Refresh schedule data when fragment becomes visible
-        loadAssignedSchedules();
-        loadTodayWork();
+        // Refresh data when fragment becomes visible - single API call
+        loadAllTickets();
     }
 }

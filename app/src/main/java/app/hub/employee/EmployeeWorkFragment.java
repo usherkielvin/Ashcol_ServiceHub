@@ -75,6 +75,7 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
     private static final String PREFS_NAME = "employee_work_steps";
     private static final String PREFS_TIMES = "employee_work_times";
     private static final String PREFS_DISMISSED = "employee_work_dismissed";
+    private static final String PREFS_READY_PAYMENT = "employee_work_ready_payment";
     private static final int STEP_ASSIGNED = 0;
     private static final int STEP_ON_THE_WAY = 1;
     private static final int STEP_ARRIVED = 2;
@@ -171,7 +172,7 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
 
             // Set refresh listener
             swipeRefreshLayout.setOnRefreshListener(() -> {
-                android.util.Log.d("EmployeeWork", "Pull-to-refresh triggered");
+                android.util.Log.d("EmployeeWork", "Pull-to-refresh triggered - forcing refresh");
                 if (activeTicket != null && resolveStep(activeTicket) == STEP_COMPLETED) {
                     dismissCompletedTicket(activeTicket.getTicketId());
                 }
@@ -212,8 +213,7 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
             return;
         }
 
-        android.util.Log.d("EmployeeWork", "Loading assigned tickets with token: "
-                + (token.length() > 20 ? token.substring(0, 20) + "..." : token));
+        android.util.Log.d("EmployeeWork", "Loading assigned tickets from API");
 
         // Check if we have user info
         String userEmail = tokenManager.getEmail();
@@ -658,6 +658,8 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
                     if (activeTicket != null && ticketId.equals(activeTicket.getTicketId())) {
                         activeTicket.setStatus("Pending Payment");
                         activeTicket.setStatusDetail("Pending Payment");
+                        // Clear the ready for payment flag since payment is now requested
+                        clearReadyForPayment(ticketId);
                     }
                     loadAssignedTickets(true);
                     return;
@@ -738,9 +740,6 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
         int bestPriority = Integer.MAX_VALUE;
         long bestTime = Long.MAX_VALUE;
 
-        TicketListResponse.TicketItem completedFallback = null;
-        long completedTime = Long.MAX_VALUE;
-
         for (TicketListResponse.TicketItem ticket : tickets) {
             if (ticket == null || ticket.getStatus() == null) {
                 continue;
@@ -749,6 +748,7 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
             String status = ticket.getStatus().trim().toLowerCase();
             long ticketTime = getTicketSortTime(ticket);
 
+            // Clean up dismissed list if ticket is no longer completed
             if (!isTicketCompletedStatus(status) && !isTicketLocallyCompleted(ticket)) {
                 if (ticket.getTicketId() != null && dismissed.contains(ticket.getTicketId())) {
                     dismissed.remove(ticket.getTicketId());
@@ -756,14 +756,13 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
                 }
             }
 
+            // Skip completed tickets entirely - they should not show in work view
             if (isTicketCompletedStatus(status) || isTicketLocallyCompleted(ticket)) {
-                if (ticket.getTicketId() != null && dismissed.contains(ticket.getTicketId())) {
-                    continue;
-                }
-                if (completedFallback == null || ticketTime < completedTime) {
-                    completedFallback = ticket;
-                    completedTime = ticketTime;
-                }
+                continue;
+            }
+
+            // Skip dismissed tickets
+            if (ticket.getTicketId() != null && dismissed.contains(ticket.getTicketId())) {
                 continue;
             }
 
@@ -775,7 +774,7 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
             }
         }
 
-        return best != null ? best : completedFallback;
+        return best;
     }
 
     private java.util.Set<String> getDismissedCompletedTickets() {
@@ -818,7 +817,17 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
         if (status == null) {
             return false;
         }
-        return status.contains("completed") || status.contains("resolved") || status.contains("closed") || status.contains("paid");
+        String normalized = status.toLowerCase().trim();
+        // Check for exact completed statuses, not partial matches
+        // "Pending Payment" should NOT be considered completed
+        return normalized.equals("completed") 
+            || normalized.equals("resolved") 
+            || normalized.equals("closed") 
+            || normalized.equals("paid")
+            || normalized.contains("completed")
+            || normalized.contains("resolved")
+            || normalized.contains("closed")
+            || (normalized.contains("paid") && !normalized.contains("pending"));
     }
 
     private int getTicketPriority(String status) {
@@ -928,10 +937,24 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
             return;
         }
         String ticketId = activeTicket.getTicketId();
-        if (getStepTime(ticketId, STEP_COMPLETED).isEmpty()) {
-            saveStepTime(ticketId, STEP_COMPLETED);
-        }
+        // Don't mark as STEP_COMPLETED yet - just flag as ready for payment
+        // This keeps the ticket visible in work view
+        SharedPreferences prefs = requireContext().getSharedPreferences(PREFS_READY_PAYMENT, android.content.Context.MODE_PRIVATE);
+        prefs.edit().putBoolean(ticketId, true).apply();
+        android.util.Log.d("EmployeeWork", "Marked ticket as ready for payment: " + ticketId);
         updateActiveJobUi();
+    }
+    
+    private boolean isReadyForPayment(String ticketId) {
+        if (ticketId == null) return false;
+        SharedPreferences prefs = requireContext().getSharedPreferences(PREFS_READY_PAYMENT, android.content.Context.MODE_PRIVATE);
+        return prefs.getBoolean(ticketId, false);
+    }
+    
+    private void clearReadyForPayment(String ticketId) {
+        if (ticketId == null) return;
+        SharedPreferences prefs = requireContext().getSharedPreferences(PREFS_READY_PAYMENT, android.content.Context.MODE_PRIVATE);
+        prefs.edit().remove(ticketId).apply();
     }
 
     private void applyCompletedUi(View root, TicketListResponse.TicketItem ticket) {
@@ -945,20 +968,22 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
         View completedStatusView = root.findViewById(R.id.tvCompletedStatus);
         TextView completedLabel = root.findViewById(R.id.tvCompletedLabel);
 
-        String completedTime = getStepTime(ticket.getTicketId(), STEP_COMPLETED);
-        boolean isCompleted = completedTime != null && !completedTime.trim().isEmpty();
+        // Check if work is marked as ready for payment (not actually completed yet)
+        boolean isReadyForPayment = isReadyForPayment(ticket.getTicketId());
 
         if (markButton != null) {
-            markButton.setVisibility(isCompleted ? View.GONE : View.VISIBLE);
-            markButton.setEnabled(!isCompleted);
+            // Hide "Mark as Completed" button once clicked
+            markButton.setVisibility(isReadyForPayment ? View.GONE : View.VISIBLE);
+            markButton.setEnabled(!isReadyForPayment);
         }
         if (requestButton != null) {
-            requestButton.setVisibility(isCompleted ? View.VISIBLE : View.GONE);
-            requestButton.setEnabled(isCompleted);
+            // Show "Request Payment" button after marking as ready
+            requestButton.setVisibility(isReadyForPayment ? View.VISIBLE : View.GONE);
+            requestButton.setEnabled(isReadyForPayment);
         }
 
         if (stepView != null) {
-            if (isCompleted) {
+            if (isReadyForPayment) {
                 stepView.setBackgroundResource(R.drawable.bg_step_solid_green);
                 stepView.setColorFilter(ContextCompat.getColor(requireContext(), R.color.white));
             } else {
@@ -967,11 +992,11 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
             }
         }
 
-        int labelColor = isCompleted ? 0xFF1B5E20 : 0xFFBDBDBD;
+        int labelColor = isReadyForPayment ? 0xFF1B5E20 : 0xFFBDBDBD;
         if (completedStatusView instanceof com.google.android.material.card.MaterialCardView) {
             com.google.android.material.card.MaterialCardView completedCard =
                     (com.google.android.material.card.MaterialCardView) completedStatusView;
-            if (isCompleted) {
+            if (isReadyForPayment) {
                 completedCard.setCardBackgroundColor(0xFFD1E7D1);
                 completedCard.setStrokeColor(0xFF1B5E20);
                 completedCard.setStrokeWidth(dpToPx(1));
@@ -986,7 +1011,7 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
         } else if (completedStatusView instanceof TextView) {
             TextView completedText = (TextView) completedStatusView;
             completedText.setTextColor(labelColor);
-            if (isCompleted) {
+            if (isReadyForPayment) {
                 completedText.setBackgroundColor(0xFFD1E7D1);
             } else {
                 completedText.setBackgroundResource(R.drawable.bg_input_white);
