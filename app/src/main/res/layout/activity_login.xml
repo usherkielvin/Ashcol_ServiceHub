@@ -106,21 +106,19 @@
                         style="@style/Widget.Material3.TextInputLayout.FilledBox"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        android:paddingStart="8dp"
-                        android:paddingEnd="8dp"
                         app:boxBackgroundColor="@android:color/transparent"
                         app:boxStrokeWidth="0dp"
                         app:boxStrokeWidthFocused="0dp"
                         app:hintEnabled="false"
                         app:startIconDrawable="@drawable/profile_icon"
-                        app:startIconTint="#1B4332"
-                        app:startIconMinSize="24dp"
-                        app:startIconPadding="12dp">
+                        app:startIconTint="#1B4332">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/Email_val"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
+                            android:paddingStart="48dp"
+                            android:paddingEnd="16dp"
                             android:paddingTop="0dp"
                             android:paddingBottom="0dp"
                             android:gravity="center_vertical"
@@ -147,8 +145,6 @@
                         style="@style/Widget.Material3.TextInputLayout.FilledBox"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        android:paddingStart="8dp"
-                        android:paddingEnd="8dp"
                         app:boxBackgroundColor="@android:color/transparent"
                         app:boxStrokeWidth="0dp"
                         app:boxStrokeWidthFocused="0dp"
@@ -156,14 +152,14 @@
                         app:endIconTint="#1B4332"
                         app:hintEnabled="false"
                         app:startIconDrawable="@drawable/lock"
-                        app:startIconTint="#1B4332"
-                        app:startIconMinSize="24dp"
-                        app:startIconPadding="12dp">
+                        app:startIconTint="#1B4332">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/Pass_val"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
+                            android:paddingStart="48dp"
+                            android:paddingEnd="48dp"
                             android:paddingTop="0dp"
                             android:paddingBottom="0dp"
                             android:gravity="center_vertical"
@@ -244,7 +240,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/poppins_medium"
-                        android:text="Don\'t have an account yet?"
+                        android:text="Don't have an account yet?"
                         android:textColor="#666666"
                         android:textSize="13sp" />
 

@@ -3,13 +3,13 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#00000000">
+    android:background="@android:color/transparent">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
-        android:background="@drawable/bottom_sheet_bg"
+        android:background="?attr/colorSurface"
         android:clickable="true"
         android:focusable="true"
         android:padding="24dp">
@@ -20,7 +20,7 @@
             android:layout_height="wrap_content"
             android:fontFamily="sans-serif-black"
             android:text="@string/language_title"
-            android:textColor="@android:color/black"
+            android:textColor="?attr/colorOnSurface"
             android:textSize="20sp"
             android:textStyle="bold"
             app:layout_constraintStart_toStartOf="parent"
@@ -40,12 +40,12 @@
                 android:background="?attr/selectableItemBackground"
                 android:button="@null"
                 android:drawableEnd="?android:attr/listChoiceIndicatorSingle"
-                android:drawableTint="#1A4330"
+                android:drawableTint="?attr/colorPrimary"
                 android:fontFamily="sans-serif-medium"
                 android:paddingTop="12dp"
                 android:paddingBottom="12dp"
                 android:text="@string/lang_cebuano"
-                android:textColor="@android:color/black"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="16sp" />
 
             <RadioButton
@@ -56,12 +56,12 @@
                 android:button="@null"
                 android:checked="true"
                 android:drawableEnd="?android:attr/listChoiceIndicatorSingle"
-                android:drawableTint="#1A4330"
+                android:drawableTint="?attr/colorPrimary"
                 android:fontFamily="sans-serif-medium"
                 android:paddingTop="12dp"
                 android:paddingBottom="12dp"
                 android:text="@string/lang_filipino"
-                android:textColor="@android:color/black"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="16sp" />
 
             <RadioButton
@@ -71,12 +71,12 @@
                 android:background="?attr/selectableItemBackground"
                 android:button="@null"
                 android:drawableEnd="?android:attr/listChoiceIndicatorSingle"
-                android:drawableTint="#1A4330"
+                android:drawableTint="?attr/colorPrimary"
                 android:fontFamily="sans-serif-medium"
                 android:paddingTop="12dp"
                 android:paddingBottom="12dp"
                 android:text="@string/lang_english_us"
-                android:textColor="@android:color/black"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="16sp" />
 
             <RadioButton
@@ -86,12 +86,12 @@
                 android:background="?attr/selectableItemBackground"
                 android:button="@null"
                 android:drawableEnd="?android:attr/listChoiceIndicatorSingle"
-                android:drawableTint="#1A4330"
+                android:drawableTint="?attr/colorPrimary"
                 android:fontFamily="sans-serif-medium"
                 android:paddingTop="12dp"
                 android:paddingBottom="12dp"
                 android:text="@string/lang_english_uk"
-                android:textColor="@android:color/black"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="16sp" />
 
         </RadioGroup>
