@@ -163,6 +163,9 @@ public class UserProfileFragment extends Fragment {
         tvUsername = view.findViewById(R.id.tv_username);
         tvBranch = view.findViewById(R.id.tv_branch);
         imgProfile = view.findViewById(R.id.img_profile);
+        if (tvBranch != null) {
+            tvBranch.setVisibility(View.GONE);
+        }
     }
 
     private void loadCachedData() {
@@ -192,26 +195,18 @@ public class UserProfileFragment extends Fragment {
             }
         }
 
-        // Load and display cached branch immediately
-        String cachedBranch = tokenManager.getCachedBranch();
-        if (cachedBranch != null && !cachedBranch.isEmpty()) {
-            currentBranch = cachedBranch;
-            if (tvBranch != null) {
-                tvBranch.setText("📍 " + cachedBranch);
-                tvBranch.setVisibility(View.VISIBLE);
-            }
-        }
+        // Branch display hidden for customer profile.
     }
 
     private void fetchUserData() {
-        String token = tokenManager.getToken();
-        if (token == null) {
+        String authToken = tokenManager.getAuthToken();
+        if (authToken == null) {
             fallbackToCachedData();
             return;
         }
 
         ApiService apiService = ApiClient.getApiService();
-        Call<UserResponse> call = apiService.getUser(token);
+        Call<UserResponse> call = apiService.getUser(authToken);
         call.enqueue(new Callback<UserResponse>() {
             @Override
             public void onResponse(@NonNull Call<UserResponse> call, @NonNull Response<UserResponse> response) {
@@ -256,7 +251,7 @@ public class UserProfileFragment extends Fragment {
             }
             // Also clear local cache
             try {
-                File imageFile = new File(requireContext().getFilesDir(), "profile_image.jpg");
+                File imageFile = tokenManager.getProfileImageFile(requireContext());
                 if (imageFile.exists()) {
                     imageFile.delete();
                 }
@@ -380,18 +375,8 @@ public class UserProfileFragment extends Fragment {
     }
 
     private void updateBranchDisplay() {
-        if (currentBranch != null && !currentBranch.isEmpty() && tvBranch != null) {
-            tvBranch.setText("📍 " + currentBranch);
-            tvBranch.setVisibility(View.VISIBLE);
-            // Cache the branch info
-            tokenManager.saveBranchInfo(currentBranch, 0);
-        } else {
-            // Try to load from cache
-            String cachedBranch = tokenManager.getCachedBranch();
-            if (cachedBranch != null && !cachedBranch.isEmpty() && tvBranch != null) {
-                tvBranch.setText("📍 " + cachedBranch);
-                tvBranch.setVisibility(View.VISIBLE);
-            }
+        if (tvBranch != null) {
+            tvBranch.setVisibility(View.GONE);
         }
     }
 
@@ -478,7 +463,6 @@ public class UserProfileFragment extends Fragment {
         setClickListener(view, R.id.btn_appearance, () -> showThemeToggler());
         setClickListener(view, R.id.btn_notifications, () -> showNotificationSettings());
         setClickListener(view, R.id.btn_language, () -> showLanguageToggler());
-        setClickListener(view, R.id.btn_payments, this::openPayments);
         setClickListener(view, R.id.btn_about_us, () -> navigateToFragment(new ProfileAboutUsFragment()));
     }
 
@@ -577,10 +561,10 @@ public class UserProfileFragment extends Fragment {
         progressDialog.setCancelable(false);
         progressDialog.show();
 
-        String token = tokenManager.getToken();
-        if (token != null) {
+        String authToken = tokenManager.getAuthToken();
+        if (authToken != null) {
             ApiService apiService = ApiClient.getApiService();
-            Call<LogoutResponse> call = apiService.logout(token);
+            Call<LogoutResponse> call = apiService.logout(authToken);
             call.enqueue(new Callback<LogoutResponse>() {
                 @Override
                 public void onResponse(@NonNull Call<LogoutResponse> call, @NonNull Response<LogoutResponse> response) {
@@ -682,17 +666,18 @@ public class UserProfileFragment extends Fragment {
 
     private void clearUserData() {
         try {
+            File imageFile = tokenManager != null
+                    ? tokenManager.getProfileImageFile(requireContext())
+                    : new File(requireContext().getFilesDir(), "profile_image.jpg");
+
             // Clear token manager data
             if (tokenManager != null) {
                 tokenManager.clear();
             }
 
             // Delete locally stored profile photo
-            if (requireContext() != null) {
-                File imageFile = new File(requireContext().getFilesDir(), "profile_image.jpg");
-                if (imageFile.exists()) {
-                    imageFile.delete();
-                }
+            if (imageFile.exists()) {
+                imageFile.delete();
             }
         } catch (Exception e) {
             Log.w("UserProfileFragment", "Error clearing user data: " + e.getMessage());
@@ -824,7 +809,7 @@ public class UserProfileFragment extends Fragment {
 
     private void saveProfileImage(Bitmap bitmap) {
         try {
-            File imageFile = new File(requireContext().getFilesDir(), "profile_image.jpg");
+            File imageFile = tokenManager.getProfileImageFile(requireContext());
             FileOutputStream fos = new FileOutputStream(imageFile);
             bitmap.compress(Bitmap.CompressFormat.JPEG, 90, fos);
             fos.flush();
@@ -838,7 +823,7 @@ public class UserProfileFragment extends Fragment {
         // First try to load from API (will be set in processUserData)
         // If not available, fallback to local cache
         try {
-            File imageFile = new File(requireContext().getFilesDir(), "profile_image.jpg");
+            File imageFile = tokenManager.getProfileImageFile(requireContext());
             if (imageFile.exists() && imgProfile != null) {
                 Bitmap bitmap = BitmapFactory.decodeFile(imageFile.getAbsolutePath());
                 if (bitmap != null) {
@@ -851,8 +836,8 @@ public class UserProfileFragment extends Fragment {
     }
 
     private void uploadProfilePhotoToServer(Uri imageUri) {
-        String token = tokenManager.getToken();
-        if (token == null) {
+        String authToken = tokenManager.getAuthToken();
+        if (authToken == null) {
             showToast("Not authenticated. Please login again.");
             return;
         }
@@ -878,7 +863,7 @@ public class UserProfileFragment extends Fragment {
 
             // Make API call
             ApiService apiService = ApiClient.getApiService();
-            Call<ProfilePhotoResponse> call = apiService.uploadProfilePhoto("Bearer " + token, photoPart);
+            Call<ProfilePhotoResponse> call = apiService.uploadProfilePhoto(authToken, photoPart);
             call.enqueue(new Callback<ProfilePhotoResponse>() {
                 @Override
                 public void onResponse(@NonNull Call<ProfilePhotoResponse> call,
@@ -964,14 +949,14 @@ public class UserProfileFragment extends Fragment {
     }
 
     private void deleteProfilePhoto() {
-        String token = tokenManager.getToken();
-        if (token == null) {
+        String authToken = tokenManager.getAuthToken();
+        if (authToken == null) {
             showToast("Not authenticated. Please login again.");
             return;
         }
 
         ApiService apiService = ApiClient.getApiService();
-        Call<ProfilePhotoResponse> call = apiService.deleteProfilePhoto("Bearer " + token);
+        Call<ProfilePhotoResponse> call = apiService.deleteProfilePhoto(authToken);
         call.enqueue(new Callback<ProfilePhotoResponse>() {
             @Override
             public void onResponse(@NonNull Call<ProfilePhotoResponse> call,
@@ -982,7 +967,7 @@ public class UserProfileFragment extends Fragment {
 
                     // Clear local cache
                     try {
-                        File imageFile = new File(requireContext().getFilesDir(), "profile_image.jpg");
+                        File imageFile = tokenManager.getProfileImageFile(requireContext());
                         if (imageFile.exists()) {
                             imageFile.delete();
                         }

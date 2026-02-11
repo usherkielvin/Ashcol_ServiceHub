@@ -92,9 +92,7 @@ public class AdminProfileFragment extends Fragment {
     public void onResume() {
         super.onResume();
         loadProfileImage();
-        if (shouldRefreshProfile()) {
-            fetchUserData();
-        }
+        fetchUserData();
     }
 
     private void initializeLaunchers() {
@@ -152,8 +150,8 @@ public class AdminProfileFragment extends Fragment {
     }
 
     private void fetchUserData() {
-        String token = tokenManager.getToken();
-        if (token == null) {
+        String authToken = tokenManager.getAuthToken();
+        if (authToken == null) {
             fallbackToCachedData();
             return;
         }
@@ -161,7 +159,7 @@ public class AdminProfileFragment extends Fragment {
         lastProfileFetchMs = System.currentTimeMillis();
 
         ApiService apiService = ApiClient.getApiService();
-        Call<UserResponse> call = apiService.getUser(token);
+        Call<UserResponse> call = apiService.getUser(authToken);
         call.enqueue(new Callback<UserResponse>() {
             @Override
             public void onResponse(@NonNull Call<UserResponse> call, @NonNull Response<UserResponse> response) {
@@ -206,7 +204,7 @@ public class AdminProfileFragment extends Fragment {
                 });
             }
             try {
-                File imageFile = new File(requireContext().getFilesDir(), "profile_image.jpg");
+                File imageFile = tokenManager.getProfileImageFile(requireContext());
                 if (imageFile.exists()) {
                     imageFile.delete();
                 }
@@ -472,10 +470,10 @@ public class AdminProfileFragment extends Fragment {
         progressDialog.setCancelable(false);
         progressDialog.show();
         
-        String token = tokenManager.getToken();
-        if (token != null) {
+        String authToken = tokenManager.getAuthToken();
+        if (authToken != null) {
             ApiService apiService = ApiClient.getApiService();
-            Call<LogoutResponse> call = apiService.logout(token);
+            Call<LogoutResponse> call = apiService.logout(authToken);
             call.enqueue(new Callback<LogoutResponse>() {
                 @Override
                	public void onResponse(@NonNull Call<LogoutResponse> call, @NonNull Response<LogoutResponse> response) {
@@ -533,17 +531,18 @@ public class AdminProfileFragment extends Fragment {
 
     private void clearUserData() {
         try {
+            File imageFile = tokenManager != null
+                    ? tokenManager.getProfileImageFile(requireContext())
+                    : new File(requireContext().getFilesDir(), "profile_image.jpg");
+
             // Clear token manager data
             if (tokenManager != null) {
                 tokenManager.clear();
             }
-            
+
             // Delete locally stored profile photo
-            if (requireContext() != null) {
-                File imageFile = new File(requireContext().getFilesDir(), "profile_image.jpg");
-                if (imageFile.exists()) {
-                    imageFile.delete();
-                }
+            if (imageFile.exists()) {
+                imageFile.delete();
             }
         } catch (Exception e) {
             Log.w("AdminProfileFragment", "Error clearing user data: " + e.getMessage());
@@ -671,7 +670,7 @@ public class AdminProfileFragment extends Fragment {
 
     private void saveProfileImage(Bitmap bitmap) {
         try {
-            File imageFile = new File(requireContext().getFilesDir(), "profile_image.jpg");
+            File imageFile = tokenManager.getProfileImageFile(requireContext());
             FileOutputStream fos = new FileOutputStream(imageFile);
             bitmap.compress(Bitmap.CompressFormat.JPEG, 90, fos);
             fos.flush();
@@ -682,7 +681,7 @@ public class AdminProfileFragment extends Fragment {
 
     private void loadProfileImage() {
         try {
-            File imageFile = new File(requireContext().getFilesDir(), "profile_image.jpg");
+            File imageFile = tokenManager.getProfileImageFile(requireContext());
             if (imageFile.exists() && imgProfile != null) {
                 Bitmap bitmap = BitmapFactory.decodeFile(imageFile.getAbsolutePath());
                 if (bitmap != null) {
@@ -694,8 +693,8 @@ public class AdminProfileFragment extends Fragment {
     }
 
     private void uploadProfilePhotoToServer(Uri imageUri) {
-        String token = tokenManager.getToken();
-        if (token == null) {
+        String authToken = tokenManager.getAuthToken();
+        if (authToken == null) {
             showToast("Not authenticated. Please login again.");
             return;
         }
@@ -719,7 +718,7 @@ public class AdminProfileFragment extends Fragment {
             );
 
             ApiService apiService = ApiClient.getApiService();
-            Call<ProfilePhotoResponse> call = apiService.uploadProfilePhoto("Bearer " + token, photoPart);
+            Call<ProfilePhotoResponse> call = apiService.uploadProfilePhoto(authToken, photoPart);
             call.enqueue(new Callback<ProfilePhotoResponse>() {
                 @Override
                 public void onResponse(@NonNull Call<ProfilePhotoResponse> call, @NonNull Response<ProfilePhotoResponse> response) {
@@ -792,21 +791,21 @@ public class AdminProfileFragment extends Fragment {
     }
 
     private void deleteProfilePhoto() {
-        String token = tokenManager.getToken();
-        if (token == null) {
+        String authToken = tokenManager.getAuthToken();
+        if (authToken == null) {
             showToast("Not authenticated. Please login again.");
             return;
         }
 
         ApiService apiService = ApiClient.getApiService();
-        Call<ProfilePhotoResponse> call = apiService.deleteProfilePhoto("Bearer " + token);
+        Call<ProfilePhotoResponse> call = apiService.deleteProfilePhoto(authToken);
         call.enqueue(new Callback<ProfilePhotoResponse>() {
             @Override
             public void onResponse(@NonNull Call<ProfilePhotoResponse> call, @NonNull Response<ProfilePhotoResponse> response) {
                 if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
                     showToast("Profile photo removed");
                     try {
-                        File imageFile = new File(requireContext().getFilesDir(), "profile_image.jpg");
+                        File imageFile = tokenManager.getProfileImageFile(requireContext());
                         if (imageFile.exists()) {
                             imageFile.delete();
                         }

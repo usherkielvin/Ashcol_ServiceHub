@@ -112,22 +112,10 @@ public class MainActivity extends AppCompatActivity {
     private void updateLocationAndNavigate(String role, String email) {
         Log.d(TAG, "Starting location update and navigation for role: " + role + ", email: " + email);
 
+        navigateToDashboard(role);
+
         if (locationHelper.isLocationPermissionGranted()) {
-            // Add timeout mechanism to ensure navigation happens even if location request
-            // hangs
-            android.os.Handler handler = new android.os.Handler(android.os.Looper.getMainLooper());
-            Runnable timeoutRunnable = () -> {
-                Log.w(TAG, "Location update timed out, proceeding with navigation anyway");
-                runOnUiThread(() -> navigateToDashboard(role));
-            };
-
-            // Schedule timeout after 10 seconds
-            handler.postDelayed(timeoutRunnable, 10000);
-
             locationHelper.getCurrentLocation((Location location) -> {
-                // Remove the timeout runnable since location request completed
-                handler.removeCallbacks(timeoutRunnable);
-
                 if (location != null && email != null) {
                     Log.d(TAG, "Updating location with lat: " + location.getLatitude() + ", lng: "
                             + location.getLongitude());
@@ -135,11 +123,9 @@ public class MainActivity extends AppCompatActivity {
                 } else {
                     Log.w(TAG, "Location is null or email is null, skipping location update");
                 }
-                navigateToDashboard(role);
             });
         } else {
-            Log.d(TAG, "Location permission not granted, navigating directly to dashboard");
-            navigateToDashboard(role);
+            Log.d(TAG, "Location permission not granted, skipping location update");
         }
     }
 

@@ -50,8 +50,8 @@
                     android:insetTop="0dp"
                     android:insetBottom="0dp"
                     android:visibility="gone"
-                    app:backgroundTint="@color/green"
-                    app:icon="@drawable/ic_palette"
+                    app:backgroundTint="@color/apps_green"
+                    app:icon="@android:drawable/ic_menu_edit"
                     app:iconSize="16dp"
                     app:iconTint="@color/white"
                     app:layout_constraintBottom_toBottomOf="@id/img_profile"
@@ -79,17 +79,28 @@
                 android:textSize="14sp"
                 tools:text="email@gmail.com" />
 
+            <TextView
+                android:id="@+id/tv_branch"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:fontFamily="@font/poppins_medium"
+                android:textColor="@color/apps_green"
+                android:textSize="13sp"
+                android:textStyle="italic"
+                android:visibility="gone"
+                tools:text="ASHCOL DASMA" />
+
         </LinearLayout>
 
-        <!-- Content Card with 60dp Rounded Edges -->
+        <!-- Content Card -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/contentCard"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="32dp"
             app:cardBackgroundColor="?attr/colorSurface"
-            app:cardElevation="16dp"
-            app:cardUseCompatPadding="false"
+            app:cardElevation="12dp"
             app:strokeWidth="0dp"
             app:shapeAppearanceOverlay="@style/ProfileContentCardShape">
 
@@ -104,7 +115,7 @@
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/poppins_bold"
                     android:text="Preferences"
-                    android:textColor="@color/apps_green"
+                    android:textColor="#386A4E"
                     android:textSize="14sp"
                     android:layout_marginStart="4dp" />
 
@@ -124,13 +135,13 @@
                         android:layout_width="36dp"
                         android:layout_height="36dp"
                         android:background="@drawable/bg_icon_circle_green"
-                        android:backgroundTint="@color/colorSecondaryContainer">
+                        android:backgroundTint="?attr/colorOnSurface">
                         <ImageView
                             android:layout_width="20dp"
                             android:layout_height="20dp"
                             android:layout_gravity="center"
                             android:src="@drawable/outline_dark_mode_24"
-                            app:tint="@color/colorOnSecondaryContainer" />
+                            app:tint="?attr/colorSurface" />
                     </FrameLayout>
 
                     <TextView
@@ -158,13 +169,13 @@
                         android:layout_width="36dp"
                         android:layout_height="36dp"
                         android:background="@drawable/bg_icon_circle_green"
-                        android:backgroundTint="@color/colorSecondaryContainer">
+                        android:backgroundTint="@color/colorPrimaryContainer">
                         <ImageView
                             android:layout_width="20dp"
                             android:layout_height="20dp"
                             android:layout_gravity="center"
                             android:src="@drawable/ic_notifications"
-                            app:tint="@color/colorOnSecondaryContainer" />
+                            app:tint="@color/colorOnPrimaryContainer" />
                     </FrameLayout>
 
                     <TextView
@@ -192,13 +203,13 @@
                         android:layout_width="36dp"
                         android:layout_height="36dp"
                         android:background="@drawable/bg_icon_circle_green"
-                        android:backgroundTint="@color/colorSecondaryContainer">
+                        android:backgroundTint="@color/colorPrimaryContainer">
                         <ImageView
                             android:layout_width="20dp"
                             android:layout_height="20dp"
                             android:layout_gravity="center"
                             android:src="@drawable/ic_language"
-                            app:tint="@color/colorOnSecondaryContainer" />
+                            app:tint="@color/colorOnPrimaryContainer" />
                     </FrameLayout>
 
                     <TextView
@@ -223,7 +234,7 @@
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/poppins_bold"
                     android:text="General"
-                    android:textColor="@color/apps_green"
+                    android:textColor="#386A4E"
                     android:textSize="14sp"
                     android:layout_marginStart="4dp" />
 
@@ -243,13 +254,13 @@
                         android:layout_width="36dp"
                         android:layout_height="36dp"
                         android:background="@drawable/bg_icon_circle_green"
-                        android:backgroundTint="@color/colorSecondaryContainer">
+                        android:backgroundTint="@color/colorPrimaryContainer">
                         <ImageView
                             android:layout_width="20dp"
                             android:layout_height="20dp"
                             android:layout_gravity="center"
                             android:src="@drawable/ic_person"
-                            app:tint="@color/colorOnSecondaryContainer" />
+                            app:tint="@color/colorOnPrimaryContainer" />
                     </FrameLayout>
 
                     <TextView
@@ -277,13 +288,13 @@
                         android:layout_width="36dp"
                         android:layout_height="36dp"
                         android:background="@drawable/bg_icon_circle_green"
-                        android:backgroundTint="@color/colorSecondaryContainer">
+                        android:backgroundTint="@color/colorPrimaryContainer">
                         <ImageView
                             android:layout_width="20dp"
                             android:layout_height="20dp"
                             android:layout_gravity="center"
                             android:src="@drawable/ic_home"
-                            app:tint="@color/colorOnSecondaryContainer" />
+                            app:tint="@color/colorOnPrimaryContainer" />
                     </FrameLayout>
 
                     <TextView
@@ -311,13 +322,13 @@
                         android:layout_width="36dp"
                         android:layout_height="36dp"
                         android:background="@drawable/bg_icon_circle_green"
-                        android:backgroundTint="@color/colorSecondaryContainer">
+                        android:backgroundTint="@color/colorPrimaryContainer">
                         <ImageView
                             android:layout_width="20dp"
                             android:layout_height="20dp"
                             android:layout_gravity="center"
                             android:src="@drawable/ic_lock"
-                            app:tint="@color/colorOnSecondaryContainer" />
+                            app:tint="@color/colorOnPrimaryContainer" />
                     </FrameLayout>
 
                     <TextView
@@ -345,13 +356,13 @@
                         android:layout_width="36dp"
                         android:layout_height="36dp"
                         android:background="@drawable/bg_icon_circle_green"
-                        android:backgroundTint="@color/colorSecondaryContainer">
+                        android:backgroundTint="@color/colorPrimaryContainer">
                         <ImageView
                             android:layout_width="20dp"
                             android:layout_height="20dp"
                             android:layout_gravity="center"
                             android:src="@drawable/ic_wallet"
-                            app:tint="@color/colorOnSecondaryContainer" />
+                            app:tint="@color/colorOnPrimaryContainer" />
                     </FrameLayout>
 
                     <TextView
@@ -386,13 +397,13 @@
                         android:layout_width="36dp"
                         android:layout_height="36dp"
                         android:background="@drawable/bg_icon_circle_green"
-                        android:backgroundTint="@color/colorSecondaryContainer">
+                        android:backgroundTint="#1B4332">
                         <ImageView
                             android:layout_width="20dp"
                             android:layout_height="20dp"
                             android:layout_gravity="center"
                             android:src="@drawable/ic_help"
-                            app:tint="@color/colorOnSecondaryContainer" />
+                            app:tint="@color/white" />
                     </FrameLayout>
 
                     <TextView
@@ -422,7 +433,7 @@
                         android:layout_height="24dp"
                         android:layout_marginStart="4dp"
                         android:src="@drawable/ic_exit"
-                        app:tint="@color/apps_green" />
+                        app:tint="#386A4E" />
 
                     <TextView
                         android:layout_width="wrap_content"

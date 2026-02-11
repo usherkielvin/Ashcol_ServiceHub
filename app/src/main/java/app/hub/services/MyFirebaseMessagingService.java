@@ -165,15 +165,9 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         // Determine the intent based on notification type
         Intent intent;
         if (TYPE_PAYMENT_REQUEST.equals(type)) {
-            // For payment requests, open PaymentSelectionActivity
-            intent = new Intent(this, app.hub.user.PaymentSelectionActivity.class);
-            if (data != null) {
-                intent.putExtra("ticket_id", data.get("ticket_id"));
-                intent.putExtra("amount", parseDouble(data.get("amount"), 0.0));
-                // Get customer ID from TokenManager
-                TokenManager tokenManager = new TokenManager(this);
-                intent.putExtra("customer_id", tokenManager.getUserId());
-            }
+            String ticketId = data != null ? data.get("ticket_id") : null;
+            double amount = data != null ? parseDouble(data.get("amount"), 0.0) : 0.0;
+            intent = app.hub.user.UserPaymentActivity.createIntent(this, ticketId, 0, amount, null, null);
         } else if (TYPE_PAYMENT_CONFIRMED.equals(type)) {
             // For payment confirmations, open employee dashboard
             intent = new Intent(this, app.hub.employee.EmployeeDashboardActivity.class);
@@ -211,11 +205,8 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
             String ticketId = data.get("ticket_id");
             double amount = parseDouble(data.get("amount"), 0.0);
             
-            Intent payIntent = new Intent(this, app.hub.user.PaymentSelectionActivity.class);
-            payIntent.putExtra("ticket_id", ticketId);
-            payIntent.putExtra("amount", amount);
-            TokenManager tokenManager = new TokenManager(this);
-            payIntent.putExtra("customer_id", tokenManager.getUserId());
+            Intent payIntent = app.hub.user.UserPaymentActivity
+                    .createIntent(this, ticketId, 0, amount, null, null);
             payIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             
             PendingIntent payPendingIntent = PendingIntent.getActivity(

@@ -143,9 +143,7 @@ public class EmployeeProfileFragment extends Fragment {
     public void onResume() {
         super.onResume();
         loadCachedProfileImage();
-        if (shouldRefreshProfile()) {
-            loadProfile();
-        }
+        loadProfile();
     }
 
     private void setupPlaceholderButton(View view, int id, String featureName) {
@@ -157,15 +155,15 @@ public class EmployeeProfileFragment extends Fragment {
     }
 
     private void loadProfile() {
-        String token = tokenManager.getToken();
-        if (token == null) {
+        String authToken = tokenManager.getAuthToken();
+        if (authToken == null) {
             return;
         }
 
         lastProfileFetchMs = System.currentTimeMillis();
 
         ApiService apiService = ApiClient.getApiService();
-        Call<app.hub.api.UserResponse> call = apiService.getUser("Bearer " + token);
+        Call<app.hub.api.UserResponse> call = apiService.getUser(authToken);
         call.enqueue(new Callback<app.hub.api.UserResponse>() {
             @Override
             public void onResponse(@NonNull Call<app.hub.api.UserResponse> call,
@@ -247,7 +245,7 @@ public class EmployeeProfileFragment extends Fragment {
     private void saveProfileImage(android.graphics.Bitmap bitmap) {
         if (bitmap == null) return;
         try {
-            File imageFile = new File(requireContext().getFilesDir(), "profile_image.jpg");
+            File imageFile = tokenManager.getProfileImageFile(requireContext());
             java.io.FileOutputStream outputStream = new java.io.FileOutputStream(imageFile);
             bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 90, outputStream);
             outputStream.flush();
@@ -258,7 +256,7 @@ public class EmployeeProfileFragment extends Fragment {
 
     private void loadCachedProfileImage() {
         try {
-            File imageFile = new File(requireContext().getFilesDir(), "profile_image.jpg");
+            File imageFile = tokenManager.getProfileImageFile(requireContext());
             if (imageFile.exists() && imgProfile != null) {
                 android.graphics.Bitmap bitmap = android.graphics.BitmapFactory.decodeFile(imageFile.getAbsolutePath());
                 if (bitmap != null) {
@@ -365,15 +363,15 @@ public class EmployeeProfileFragment extends Fragment {
             return;
         }
         
-        String token = tokenManager.getToken();
-        if (token == null) {
+        String authToken = tokenManager.getAuthToken();
+        if (authToken == null) {
             Toast.makeText(getContext(), "Authentication error. Please login again.", Toast.LENGTH_SHORT).show();
             return;
         }
 
         ChangePasswordRequest request = new ChangePasswordRequest(currentPassword, newPassword, newPassword);
         ApiService apiService = ApiClient.getApiService();
-        Call<ChangePasswordResponse> call = apiService.changePassword(token, request);
+        Call<ChangePasswordResponse> call = apiService.changePassword(authToken, request);
 
         call.enqueue(new Callback<ChangePasswordResponse>() {
             @Override
@@ -511,14 +509,14 @@ public class EmployeeProfileFragment extends Fragment {
         // Clear user data immediately (this is the most important part)
         clearUserData();
 
-        String token = tokenManager.getToken();
-        Log.d("EmployeeProfileFragment", "Token present: " + (token != null));
+        String authToken = tokenManager.getAuthToken();
+        Log.d("EmployeeProfileFragment", "Token present: " + (authToken != null));
 
-        if (token != null) {
+        if (authToken != null) {
             Log.d("EmployeeProfileFragment", "Making API logout call");
             try {
                 ApiService apiService = ApiClient.getApiService();
-                Call<LogoutResponse> call = apiService.logout(token);
+            Call<LogoutResponse> call = apiService.logout(authToken);
                 call.enqueue(new Callback<LogoutResponse>() {
                     @Override
                     public void onResponse(@NonNull Call<LogoutResponse> call, @NonNull Response<LogoutResponse> response) {
@@ -688,6 +686,9 @@ public class EmployeeProfileFragment extends Fragment {
             Log.d("EmployeeProfileFragment", "Starting clearUserData");
 
             // Clear token manager data
+            File imageFile = tokenManager != null ? tokenManager.getProfileImageFile(requireContext())
+                    : new File(requireContext().getFilesDir(), "profile_image.jpg");
+
             if (tokenManager != null) {
                 Log.d("EmployeeProfileFragment", "Clearing token manager data");
                 tokenManager.clear();
@@ -695,13 +696,10 @@ public class EmployeeProfileFragment extends Fragment {
             }
 
             // Delete locally stored profile photo
-            if (requireContext() != null) {
-                File imageFile = new File(requireContext().getFilesDir(), "profile_image.jpg");
-                if (imageFile.exists()) {
-                    Log.d("EmployeeProfileFragment", "Deleting profile image file");
-                    imageFile.delete();
-                    Log.d("EmployeeProfileFragment", "Profile image file deleted");
-                }
+            if (imageFile.exists()) {
+                Log.d("EmployeeProfileFragment", "Deleting profile image file");
+                imageFile.delete();
+                Log.d("EmployeeProfileFragment", "Profile image file deleted");
             }
 
             Log.d("EmployeeProfileFragment", "clearUserData completed successfully");

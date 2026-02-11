@@ -96,6 +96,15 @@
                     app:checkedIconVisible="false" />
 
                 <com.google.android.material.chip.Chip
+                    android:id="@+id/chipScheduled"
+                    style="@style/Widget.Material3.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/poppins_medium"
+                    android:text="Scheduled"
+                    app:checkedIconVisible="false" />
+
+                <com.google.android.material.chip.Chip
                     android:id="@+id/chipOngoing"
                     style="@style/Widget.Material3.Chip.Filter"
                     android:layout_width="wrap_content"
