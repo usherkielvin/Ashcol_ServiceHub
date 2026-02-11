@@ -53,12 +53,18 @@ public class EmployeeAdapter extends RecyclerView.Adapter<EmployeeAdapter.Employ
         holder.employeeStatus.setText(employee.getBranch() != null ? employee.getBranch() : "No Branch");
         
         // Load profile image with Picasso - enhanced with better error handling and caching
+        String imageUrl = employee.getProfilePhoto();
+        
+        // Make displayName final for use in callback
+        final String finalDisplayName = displayName;
+        
+        android.util.Log.d("EmployeeAdapter", "Employee: " + finalDisplayName + ", Profile Photo URL: " + imageUrl);
+        
         // Clear any previous image first
         holder.employeeImage.setImageResource(R.drawable.profile_icon);
         
-        String imageUrl = employee.getProfilePhoto();
         if (imageUrl != null && !imageUrl.isEmpty()) {
-            android.util.Log.d("EmployeeAdapter", "Loading image for " + displayName + ": " + imageUrl);
+            android.util.Log.d("EmployeeAdapter", "Loading image from: " + imageUrl);
             
             Picasso.get()
                 .load(imageUrl)
@@ -66,9 +72,19 @@ public class EmployeeAdapter extends RecyclerView.Adapter<EmployeeAdapter.Employ
                 .error(R.drawable.profile_icon)
                 .fit()
                 .centerCrop()
-                .into(holder.employeeImage);
+                .into(holder.employeeImage, new com.squareup.picasso.Callback() {
+                    @Override
+                    public void onSuccess() {
+                        android.util.Log.d("EmployeeAdapter", "Image loaded successfully for: " + finalDisplayName);
+                    }
+
+                    @Override
+                    public void onError(Exception e) {
+                        android.util.Log.e("EmployeeAdapter", "Failed to load image for: " + finalDisplayName + ", Error: " + e.getMessage());
+                    }
+                });
         } else {
-            android.util.Log.d("EmployeeAdapter", "No profile photo for " + displayName);
+            android.util.Log.d("EmployeeAdapter", "No profile photo URL for: " + finalDisplayName);
             holder.employeeImage.setImageResource(R.drawable.profile_icon);
         }
     }

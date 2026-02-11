@@ -46,7 +46,8 @@ public class EmployeePreviewAdapter extends RecyclerView.Adapter<EmployeePreview
 
         // Set employee name
         String fullName = employee.getFirstName() + " " + employee.getLastName();
-        holder.tvEmployeeName.setText(fullName.trim().isEmpty() ? employee.getEmail() : fullName);
+        String displayName = fullName.trim().isEmpty() ? employee.getEmail() : fullName;
+        holder.tvEmployeeName.setText(displayName);
 
         // Set role
         holder.tvEmployeeRole.setText(employee.getRole() != null ? employee.getRole() : "Technician");
@@ -70,11 +71,16 @@ public class EmployeePreviewAdapter extends RecyclerView.Adapter<EmployeePreview
         if (holder.employeeImage != null) {
             String imageUrl = employee.getProfilePhoto();
             
+            // Make displayName final for use in callback
+            final String finalDisplayName = displayName;
+            
+            android.util.Log.d("EmployeePreview", "Employee: " + finalDisplayName + ", Profile Photo URL: " + imageUrl);
+            
             // Clear any previous image first
             holder.employeeImage.setImageResource(R.drawable.profile_icon);
             
             if (imageUrl != null && !imageUrl.isEmpty()) {
-                android.util.Log.d("EmployeePreview", "Loading image for " + employee.getFirstName() + ": " + imageUrl);
+                android.util.Log.d("EmployeePreview", "Loading image from: " + imageUrl);
                 
                 Picasso.get()
                     .load(imageUrl)
@@ -82,9 +88,19 @@ public class EmployeePreviewAdapter extends RecyclerView.Adapter<EmployeePreview
                     .error(R.drawable.profile_icon)
                     .fit()
                     .centerCrop()
-                    .into(holder.employeeImage);
+                    .into(holder.employeeImage, new com.squareup.picasso.Callback() {
+                        @Override
+                        public void onSuccess() {
+                            android.util.Log.d("EmployeePreview", "Image loaded successfully for: " + finalDisplayName);
+                        }
+
+                        @Override
+                        public void onError(Exception e) {
+                            android.util.Log.e("EmployeePreview", "Failed to load image for: " + finalDisplayName + ", Error: " + e.getMessage());
+                        }
+                    });
             } else {
-                android.util.Log.d("EmployeePreview", "No profile photo for " + employee.getFirstName());
+                android.util.Log.d("EmployeePreview", "No profile photo URL for: " + finalDisplayName);
                 holder.employeeImage.setImageResource(R.drawable.profile_icon);
             }
         }

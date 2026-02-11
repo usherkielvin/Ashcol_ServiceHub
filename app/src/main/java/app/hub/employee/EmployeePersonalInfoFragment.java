@@ -411,6 +411,10 @@ public class EmployeePersonalInfoFragment extends Fragment {
                         imgProfile.setImageURI(imageUri);
                     }
                     saveProfileImage(imageUri);
+                    
+                    // Clear manager cache so updated photo shows immediately
+                    app.hub.manager.ManagerDataManager.clearEmployeeCache();
+                    
                     Toast.makeText(requireContext(), "Profile photo updated.", Toast.LENGTH_SHORT).show();
                 } else {
                     Toast.makeText(requireContext(), "Failed to upload photo.", Toast.LENGTH_SHORT).show();
@@ -443,6 +447,10 @@ public class EmployeePersonalInfoFragment extends Fragment {
                     imgProfile.setImageResource(R.mipmap.ic_launchericons_round);
                 }
                 clearCachedProfileImage();
+                
+                // Clear manager cache so removed photo reflects immediately
+                app.hub.manager.ManagerDataManager.clearEmployeeCache();
+                
                 Toast.makeText(requireContext(), "Profile photo removed.", Toast.LENGTH_SHORT).show();
             }
 

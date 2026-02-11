@@ -37,9 +37,8 @@ public class ManagerDataManager {
     // Firebase real-time listener
     private static FirebaseManagerListener firebaseListener = null;
 
-    // Cache duration - refresh if data is older than 3 minutes (matches backend
-    // cache)
-    private static final long CACHE_DURATION = 3 * 60 * 1000; // 3 minutes
+    // Cache duration - refresh if data is older than 30 seconds for profile photos
+    private static final long CACHE_DURATION = 30 * 1000; // 30 seconds
 
     // Observer pattern for data changes
     private static final List<EmployeeDataChangeListener> employeeListeners = new ArrayList<>();
@@ -234,6 +233,12 @@ public class ManagerDataManager {
                                 : new ArrayList<>();
 
                         Log.d(TAG, "Technicians loaded: " + cachedEmployees.size() + " in branch: " + cachedBranchName);
+                        
+                        // Log profile photo URLs for debugging
+                        for (EmployeeResponse.Employee emp : cachedEmployees) {
+                            Log.d(TAG, "Employee: " + emp.getFirstName() + " " + emp.getLastName() + 
+                                  ", Profile Photo: " + emp.getProfilePhoto());
+                        }
 
                         // Notify all registered listeners
                         notifyEmployeeListeners();
@@ -526,7 +531,30 @@ public class ManagerDataManager {
     public static void clearEmployeeCache() {
         cachedEmployees = null;
         cachedBranchName = null;
+        lastLoadTime = 0; // Force refresh on next load
         Log.d(TAG, "Employee cache cleared");
+    }
+    
+    /**
+     * Force refresh employee data (ignores cache)
+     * Call this when profile photos are updated
+     */
+    public static void forceRefreshEmployees(Context context, DataLoadCallback callback) {
+        Log.d(TAG, "Force refreshing employee data...");
+        lastLoadTime = 0; // Reset cache timer
+        cachedEmployees = null; // Clear cache
+        
+        TokenManager tokenManager = new TokenManager(context);
+        String token = tokenManager.getToken();
+        
+        if (token != null) {
+            loadEmployees(token, callback);
+        } else {
+            Log.e(TAG, "Cannot force refresh employees - no auth token");
+            if (callback != null) {
+                callback.onLoadError("No authentication token");
+            }
+        }
     }
 
     public static void clearTicketCache() {
