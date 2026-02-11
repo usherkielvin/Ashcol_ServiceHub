@@ -728,7 +728,7 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
 
         requireActivity().getSupportFragmentManager()
                 .beginTransaction()
-                .replace(R.id.fragmentContainerView, confirmFragment)
+                .replace(R.id.fragment_container, confirmFragment)
                 .addToBackStack(null)
                 .commit();
     }

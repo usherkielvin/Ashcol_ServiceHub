@@ -5,6 +5,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -13,10 +14,20 @@ import androidx.fragment.app.Fragment;
 import com.google.android.material.button.MaterialButton;
 
 import app.hub.R;
+import app.hub.api.ApiClient;
+import app.hub.api.ApiService;
+import app.hub.api.CompleteWorkResponse;
+import app.hub.api.PaymentDetailResponse;
+import app.hub.common.FirestoreManager;
+import app.hub.util.TokenManager;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 /**
  * Fragment shown to technician after requesting payment from customer.
  * Displays ticket details and confirmation that payment request was sent.
+ * Listens for payment status changes and auto-closes when customer pays online.
  */
 public class EmployeeWorkConfirmPaymentFragment extends Fragment {
 
@@ -29,6 +40,13 @@ public class EmployeeWorkConfirmPaymentFragment extends Fragment {
     private String customerName;
     private String serviceName;
     private double amount;
+    private int paymentId = 0;
+    
+    private TokenManager tokenManager;
+    private FirestoreManager firestoreManager;
+    private MaterialButton btnPaymentConfirmed;
+    private MaterialButton btnRequestOnlinePayment;
+    private TextView tvPaymentStatus;
 
     public EmployeeWorkConfirmPaymentFragment() {
         // Required empty public constructor
@@ -67,11 +85,16 @@ public class EmployeeWorkConfirmPaymentFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        tokenManager = new TokenManager(requireContext());
+        firestoreManager = new FirestoreManager(requireContext());
+
         TextView tvTicketId = view.findViewById(R.id.tvTicketId);
         TextView tvCustomerName = view.findViewById(R.id.tvCustomerName);
         TextView tvServiceName = view.findViewById(R.id.tvServiceName);
         TextView tvTotalAmount = view.findViewById(R.id.tvTotalAmount);
-        MaterialButton btnPaymentConfirmed = view.findViewById(R.id.btnPaymentConfirmed);
+        tvPaymentStatus = view.findViewById(R.id.tvConfirmationStatus);
+        btnPaymentConfirmed = view.findViewById(R.id.btnPaymentConfirmed);
+        btnRequestOnlinePayment = view.findViewById(R.id.btnRequestOnlinePayment);
 
         // Set ticket details
         if (ticketId != null) {
@@ -87,15 +110,203 @@ public class EmployeeWorkConfirmPaymentFragment extends Fragment {
             tvTotalAmount.setText(formatAmount(amount));
         }
 
-        // Back button to return to work fragment
+        // Hide online payment button (payment already requested)
+        if (btnRequestOnlinePayment != null) {
+            btnRequestOnlinePayment.setVisibility(View.GONE);
+        }
+
+        // Setup cash received button
         if (btnPaymentConfirmed != null) {
-            btnPaymentConfirmed.setText("Back to Work");
-            btnPaymentConfirmed.setOnClickListener(v -> {
-                if (getActivity() != null) {
+            btnPaymentConfirmed.setText("Cash Received");
+            btnPaymentConfirmed.setEnabled(false); // Disabled until we load payment details
+            btnPaymentConfirmed.setOnClickListener(v -> confirmCashPayment());
+        }
+
+        // Load payment details and start listening for changes
+        loadPaymentDetails();
+        startPaymentListener();
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if (firestoreManager != null) {
+            firestoreManager.stopPaymentListening();
+        }
+    }
+
+    private void loadPaymentDetails() {
+        if (ticketId == null || tokenManager == null) {
+            return;
+        }
+
+        String token = tokenManager.getToken();
+        if (token == null) {
+            return;
+        }
+
+        ApiService apiService = ApiClient.getApiService();
+        Call<PaymentDetailResponse> call = apiService.getPaymentByTicketId("Bearer " + token, ticketId);
+
+        call.enqueue(new Callback<PaymentDetailResponse>() {
+            @Override
+            public void onResponse(Call<PaymentDetailResponse> call, Response<PaymentDetailResponse> response) {
+                if (!isAdded() || response.body() == null || !response.body().isSuccess()) {
+                    return;
+                }
+
+                PaymentDetailResponse.PaymentDetail payment = response.body().getPayment();
+                if (payment == null) {
+                    return;
+                }
+
+                paymentId = payment.getId();
+                String status = payment.getStatus();
+                String method = payment.getPaymentMethod();
+
+                updatePaymentUI(status, method);
+            }
+
+            @Override
+            public void onFailure(Call<PaymentDetailResponse> call, Throwable t) {
+                android.util.Log.e("EmployeePaymentConfirm", "Failed to load payment", t);
+            }
+        });
+    }
+
+    private void startPaymentListener() {
+        if (ticketId == null || firestoreManager == null) {
+            return;
+        }
+
+        firestoreManager.listenToPendingPayment(ticketId, new FirestoreManager.PendingPaymentListener() {
+            @Override
+            public void onPaymentUpdated(FirestoreManager.PendingPayment payment) {
+                if (!isAdded() || getActivity() == null) {
+                    return;
+                }
+
+                paymentId = payment.paymentId;
+                String status = payment.status;
+                String method = payment.paymentMethod;
+
+                getActivity().runOnUiThread(() -> updatePaymentUI(status, method));
+            }
+
+            @Override
+            public void onError(Exception e) {
+                android.util.Log.e("EmployeePaymentConfirm", "Payment listener error", e);
+            }
+        });
+    }
+
+    private void updatePaymentUI(String status, String method) {
+        if (!isAdded()) {
+            return;
+        }
+
+        // Check if payment is completed
+        if ("completed".equalsIgnoreCase(status) || "paid".equalsIgnoreCase(status)) {
+            // Payment completed - auto close
+            if (tvPaymentStatus != null) {
+                tvPaymentStatus.setText("Payment received! Closing...");
+            }
+            
+            Toast.makeText(getContext(), "Payment received successfully!", Toast.LENGTH_SHORT).show();
+            
+            // Close fragment after short delay
+            new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+                if (isAdded() && getActivity() != null) {
                     getActivity().getSupportFragmentManager().popBackStack();
                 }
-            });
+            }, 1500);
+            return;
         }
+
+        // Check payment method
+        if ("cash".equalsIgnoreCase(method)) {
+            // Customer selected cash - enable cash received button
+            if (btnPaymentConfirmed != null) {
+                btnPaymentConfirmed.setEnabled(true);
+            }
+            if (tvPaymentStatus != null) {
+                tvPaymentStatus.setText("Customer selected cash payment. Click 'Cash Received' when payment is collected.");
+            }
+        } else if ("online".equalsIgnoreCase(method) || "gcash".equalsIgnoreCase(method) || 
+                   "credit card".equalsIgnoreCase(method)) {
+            // Customer selected online payment - waiting for payment
+            if (btnPaymentConfirmed != null) {
+                btnPaymentConfirmed.setEnabled(false);
+            }
+            if (tvPaymentStatus != null) {
+                tvPaymentStatus.setText("Waiting for customer to complete online payment...");
+            }
+        } else {
+            // Pending - waiting for customer to select method
+            if (btnPaymentConfirmed != null) {
+                btnPaymentConfirmed.setEnabled(false);
+            }
+            if (tvPaymentStatus != null) {
+                tvPaymentStatus.setText("Waiting for customer to select payment method...");
+            }
+        }
+    }
+
+    private void confirmCashPayment() {
+        if (paymentId <= 0) {
+            Toast.makeText(getContext(), "Payment details not loaded yet.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        String token = tokenManager.getToken();
+        if (token == null) {
+            Toast.makeText(getContext(), "Please log in again.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Disable button while processing
+        if (btnPaymentConfirmed != null) {
+            btnPaymentConfirmed.setEnabled(false);
+            btnPaymentConfirmed.setText("Processing...");
+        }
+
+        ApiService apiService = ApiClient.getApiService();
+        Call<CompleteWorkResponse> call = apiService.payCustomerPayment("Bearer " + token, paymentId);
+
+        call.enqueue(new Callback<CompleteWorkResponse>() {
+            @Override
+            public void onResponse(Call<CompleteWorkResponse> call, Response<CompleteWorkResponse> response) {
+                if (!isAdded()) {
+                    return;
+                }
+
+                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                    Toast.makeText(getContext(), "Cash payment confirmed!", Toast.LENGTH_SHORT).show();
+                    
+                    // Close fragment
+                    if (getActivity() != null) {
+                        getActivity().getSupportFragmentManager().popBackStack();
+                    }
+                } else {
+                    Toast.makeText(getContext(), "Failed to confirm payment. Try again.", Toast.LENGTH_SHORT).show();
+                    if (btnPaymentConfirmed != null) {
+                        btnPaymentConfirmed.setEnabled(true);
+                        btnPaymentConfirmed.setText("Cash Received");
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<CompleteWorkResponse> call, Throwable t) {
+                if (isAdded()) {
+                    Toast.makeText(getContext(), "Network error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                    if (btnPaymentConfirmed != null) {
+                        btnPaymentConfirmed.setEnabled(true);
+                        btnPaymentConfirmed.setText("Cash Received");
+                    }
+                }
+            }
+        });
     }
 
     private String formatAmount(double value) {

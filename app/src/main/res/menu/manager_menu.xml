@@ -15,7 +15,7 @@
         android:title="Work" />
     <item
         android:id="@+id/nav_records"
-        android:icon="@drawable/ic_records"
+        android:icon="@drawable/records"
         android:title="Records" />
     <item
         android:id="@+id/nav_profile"

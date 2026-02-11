@@ -52,13 +52,6 @@ public class ManagerRecordsFragment extends Fragment implements TicketDataChange
     private TextView tvPaymentsEmpty;
     private TextView locationTitle;
     private ManagerPaymentsAdapter paymentsAdapter;
-    private final List<PaymentHistoryResponse.PaymentItem> payments = new ArrayList<>();
-    
-    private TokenManager tokenManager;
-    private boolean showingReports = true;
-
-    public ManagerRecordsFragment() {
-        // Required empty public constructor
     }
 
     @Override
@@ -102,11 +95,6 @@ public class ManagerRecordsFragment extends Fragment implements TicketDataChange
         paymentsLoading = view.findViewById(R.id.paymentsLoading);
         tvPaymentsEmpty = view.findViewById(R.id.tvPaymentsEmpty);
         locationTitle = view.findViewById(R.id.locationTitle);
-        
-        // Setup SwipeRefreshLayout
-        if (swipeRefreshRecords != null) {
-            swipeRefreshRecords.setColorSchemeResources(
-                    R.color.green,
                     R.color.blue,
                     R.color.orange);
             swipeRefreshRecords.setOnRefreshListener(() -> {

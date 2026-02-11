@@ -169,6 +169,16 @@ public class UserProfileFragment extends Fragment {
         if (tvBranch != null) {
             tvBranch.setVisibility(View.GONE);
         }
+        
+        // Hide My Addresses and Payments buttons
+        View btnAddresses = view.findViewById(R.id.btn_help);
+        if (btnAddresses != null) {
+            btnAddresses.setVisibility(View.GONE);
+        }
+        View btnPayments = view.findViewById(R.id.btn_payments);
+        if (btnPayments != null) {
+            btnPayments.setVisibility(View.GONE);
+        }
     }
 
     private void loadCachedData() {
