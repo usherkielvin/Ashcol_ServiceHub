@@ -84,6 +84,7 @@ public interface ApiService {
             @Part("preferred_date") RequestBody preferredDate,
             @Part("latitude") RequestBody latitude,
             @Part("longitude") RequestBody longitude,
+            @Part("amount") RequestBody amount,
             @Part MultipartBody.Part image);
 
     @Multipart

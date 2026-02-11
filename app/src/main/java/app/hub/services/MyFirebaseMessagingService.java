@@ -17,6 +17,7 @@ import com.google.firebase.messaging.RemoteMessage;
 import app.hub.R;
 import app.hub.common.MainActivity;
 import app.hub.user.DashboardActivity;
+import app.hub.user.UserPaymentActivity;
 import app.hub.util.TokenManager;
 
 /**
@@ -140,6 +141,33 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                 .setAutoCancel(true)
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setContentIntent(pendingIntent);
+
+        if ("payment_pending".equals(type) && data != null) {
+            String ticketId = data.get("ticket_id");
+            String paymentIdRaw = data.get("payment_id");
+            int paymentId = 0;
+            if (paymentIdRaw != null) {
+                try {
+                    paymentId = Integer.parseInt(paymentIdRaw);
+                } catch (NumberFormatException ignored) {
+                }
+            }
+            Intent payIntent = UserPaymentActivity.createIntent(
+                    this,
+                    ticketId,
+                    paymentId,
+                    0.0,
+                    null,
+                    null);
+            payIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            PendingIntent payPendingIntent = PendingIntent.getActivity(
+                    this,
+                    1,
+                    payIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+
+            notificationBuilder.addAction(0, "Pay Now", payPendingIntent);
+        }
 
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 

@@ -39,6 +39,7 @@ import app.hub.api.ApiClient;
 import app.hub.api.ApiService;
 import app.hub.api.UpdateLocationRequest;
 import app.hub.api.UpdateLocationResponse;
+import app.hub.util.GooglePlayServicesUtils;
 import app.hub.util.TokenManager;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -67,6 +68,11 @@ public class EmployeeMapActivity extends AppCompatActivity implements OnMapReady
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_employee_map);
+
+        if (!GooglePlayServicesUtils.ensureAvailable(this)) {
+            finish();
+            return;
+        }
 
         // Get data from intent
         customerLatitude = getIntent().getDoubleExtra("customer_latitude", 0.0);

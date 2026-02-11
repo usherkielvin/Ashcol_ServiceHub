@@ -41,6 +41,7 @@ import app.hub.api.ApiClient;
 import app.hub.api.ApiService;
 import app.hub.api.CompleteWorkRequest;
 import app.hub.api.CompleteWorkResponse;
+import app.hub.api.TicketDetailResponse;
 import app.hub.api.TicketListResponse;
 import app.hub.api.UpdateTicketStatusRequest;
 import app.hub.api.UpdateTicketStatusResponse;
@@ -471,7 +472,7 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
             }
             View requestPayment = statusView.findViewById(R.id.btnRequestPayment);
             if (requestPayment != null) {
-                requestPayment.setOnClickListener(v -> openPaymentRequestDialog());
+                requestPayment.setOnClickListener(v -> requestOnlinePaymentFromWorkTab());
             }
         }
     }
@@ -560,7 +561,7 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
         view.setOnClickListener(v -> action.run());
     }
 
-    private void openPaymentFlow() {
+    private void openPaymentFlow(boolean requestOnly) {
         if (activeTicket == null || getContext() == null) {
             return;
         }
@@ -568,6 +569,7 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
         intent.putExtra("ticket_id", activeTicket.getTicketId());
         intent.putExtra(EXTRA_OPEN_PAYMENT, true);
         intent.putExtra(EXTRA_FINISH_AFTER_PAYMENT, true);
+        intent.putExtra(EmployeeTicketDetailActivity.EXTRA_REQUEST_PAYMENT, requestOnly);
         if (paymentLauncher != null) {
             paymentLauncher.launch(intent);
         } else {
@@ -575,18 +577,7 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
         }
     }
 
-    private void openPaymentRequestDialog() {
-        if (activeTicket == null || getContext() == null) {
-            return;
-        }
-        PaymentSelectionDialog dialog = new PaymentSelectionDialog(requireContext(),
-                (paymentMethod, amount, notes) -> completeWorkWithPayment(paymentMethod, amount, notes));
-        dialog.setDefaultPaymentMethod("online");
-        dialog.setCashEnabled(false);
-        dialog.show();
-    }
-
-    private void completeWorkWithPayment(String paymentMethod, double amount, String notes) {
+    private void requestOnlinePaymentFromWorkTab() {
         if (activeTicket == null || tokenManager == null) {
             return;
         }
@@ -595,10 +586,62 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
             return;
         }
 
-        CompleteWorkRequest request = new CompleteWorkRequest(paymentMethod, amount, notes);
+        double amount = activeTicket.getAmount();
+        if (amount <= 0) {
+            fetchTicketAmountAndRequestPayment(token, activeTicket.getTicketId());
+            return;
+        }
+        sendPaymentRequest(token, activeTicket.getTicketId(), amount);
+    }
+
+    private void fetchTicketAmountAndRequestPayment(String token, String ticketId) {
+        if (ticketId == null) {
+            return;
+        }
+
+        ApiService apiService = ApiClient.getApiService();
+        Call<TicketDetailResponse> call = apiService.getTicketDetail("Bearer " + token, ticketId);
+        call.enqueue(new Callback<TicketDetailResponse>() {
+            @Override
+            public void onResponse(Call<TicketDetailResponse> call, Response<TicketDetailResponse> response) {
+                if (!isAdded()) {
+                    return;
+                }
+                TicketDetailResponse body = response.body();
+                if (response.isSuccessful() && body != null && body.isSuccess() && body.getTicket() != null) {
+                    double amount = body.getTicket().getAmount();
+                    if (amount > 0) {
+                        if (activeTicket != null && ticketId.equals(activeTicket.getTicketId())) {
+                            activeTicket.setAmount(amount);
+                        }
+                        sendPaymentRequest(token, ticketId, amount);
+                        return;
+                    }
+                }
+
+                Toast.makeText(getContext(),
+                        "Missing amount. Please set the ticket amount first.",
+                        Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onFailure(Call<TicketDetailResponse> call, Throwable t) {
+                if (isAdded()) {
+                    Toast.makeText(getContext(), "Failed to load ticket amount", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+    }
+
+    private void sendPaymentRequest(String token, String ticketId, double amount) {
+        if (ticketId == null) {
+            return;
+        }
+
+        CompleteWorkRequest request = new CompleteWorkRequest("online", amount, "");
         ApiService apiService = ApiClient.getApiService();
         Call<CompleteWorkResponse> call = apiService.completeWorkWithPayment(
-                "Bearer " + token, activeTicket.getTicketId(), request);
+                "Bearer " + token, ticketId, request);
 
         call.enqueue(new Callback<CompleteWorkResponse>() {
             @Override
@@ -608,10 +651,13 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
                 }
                 if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
                     Toast.makeText(getContext(), "Payment request sent to customer.", Toast.LENGTH_SHORT).show();
-                    activeTicket.setStatus("completed");
-                    activeTicket.setStatusDetail("completed");
+                    if (activeTicket != null && ticketId.equals(activeTicket.getTicketId())) {
+                        activeTicket.setStatus("completed");
+                        activeTicket.setStatusDetail("completed");
+                    }
                     markCompletedLocal();
                     loadAssignedTickets(true);
+                    openPaymentFlow(false);
                     return;
                 }
                 Toast.makeText(getContext(), "Failed to request payment", Toast.LENGTH_SHORT).show();
@@ -625,6 +671,7 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
             }
         });
     }
+
 
     private void bindTicketDetails(View root, TicketListResponse.TicketItem ticket) {
         if (root == null || ticket == null) {

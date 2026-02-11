@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.Locale;
 
 import app.hub.R;
+import app.hub.util.GooglePlayServicesUtils;
 import app.hub.util.LocationUtils;
 
 public class MapSelectionActivity extends AppCompatActivity implements OnMapReadyCallback {
@@ -96,7 +97,7 @@ public class MapSelectionActivity extends AppCompatActivity implements OnMapRead
             Log.d(TAG, "MapSelectionActivity onCreate started");
 
             // Check Google Play Services availability first
-            if (!isGooglePlayServicesAvailable()) {
+            if (!GooglePlayServicesUtils.ensureAvailable(this)) {
                 Log.e(TAG, "Google Play Services not available");
                 Toast.makeText(this, "Google Play Services is required for maps", Toast.LENGTH_LONG).show();
                 finish();
@@ -205,28 +206,6 @@ public class MapSelectionActivity extends AppCompatActivity implements OnMapRead
             Log.e(TAG, "Error in onCreate", e);
             Toast.makeText(this, "Error initializing map: " + e.getMessage(), Toast.LENGTH_LONG).show();
             finish();
-        }
-    }
-
-    private boolean isGooglePlayServicesAvailable() {
-        try {
-            com.google.android.gms.common.GoogleApiAvailability apiAvailability = com.google.android.gms.common.GoogleApiAvailability
-                    .getInstance();
-            int resultCode = apiAvailability.isGooglePlayServicesAvailable(this);
-
-            if (resultCode == com.google.android.gms.common.ConnectionResult.SUCCESS) {
-                Log.d(TAG, "Google Play Services is available");
-                return true;
-            } else {
-                Log.e(TAG, "Google Play Services not available, result code: " + resultCode);
-                if (apiAvailability.isUserResolvableError(resultCode)) {
-                    apiAvailability.getErrorDialog(this, resultCode, 9000).show();
-                }
-                return false;
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "Error checking Google Play Services", e);
-            return false;
         }
     }
 

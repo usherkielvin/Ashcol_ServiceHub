@@ -62,6 +62,7 @@ public class ServiceSelectActivity extends AppCompatActivity {
     private static final int MAX_IMAGE_SIZE_MB = 5;
 
     private EditText fullNameInput, contactInput, landmarkInput, descriptionInput, dateInput;
+    private TextView amountView;
     private Button submitButton;
     private RelativeLayout mapLocationButton;
     private HorizontalScrollView imageScrollView;
@@ -98,6 +99,7 @@ public class ServiceSelectActivity extends AppCompatActivity {
         landmarkInput = findViewById(R.id.etLandmark);
         descriptionInput = findViewById(R.id.etDescription);
         dateInput = findViewById(R.id.etDate);
+        amountView = findViewById(R.id.tvEstPrice);
         submitButton = findViewById(R.id.btnSubmit);
         
         mapLocationButton = findViewById(R.id.btnMapLocation);
@@ -133,6 +135,8 @@ public class ServiceSelectActivity extends AppCompatActivity {
         
         // Set up unit type spinner
         setupUnitTypeSpinner();
+
+        updatePresetAmount();
 
         // Set up back button
         findViewById(R.id.btnBack).setOnClickListener(v -> finish());
@@ -196,6 +200,7 @@ public class ServiceSelectActivity extends AppCompatActivity {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 selectedServiceType = serviceTypes[position];
+                updatePresetAmount();
             }
 
             @Override
@@ -273,6 +278,35 @@ public class ServiceSelectActivity extends AppCompatActivity {
                 // Ignore prefill failures.
             }
         });
+    }
+
+    private void updatePresetAmount() {
+        double amount = getPresetAmount(selectedServiceType);
+        if (amountView != null) {
+            amountView.setText(formatAmount(amount));
+        }
+    }
+
+    private double getPresetAmount(String serviceType) {
+        if (serviceType == null) {
+            return 8000.0;
+        }
+        switch (serviceType.trim().toLowerCase(java.util.Locale.ENGLISH)) {
+            case "cleaning":
+                return 8000.0;
+            case "maintenance":
+                return 6500.0;
+            case "repair":
+                return 7000.0;
+            case "installation":
+                return 9000.0;
+            default:
+                return 8000.0;
+        }
+    }
+
+    private String formatAmount(double amount) {
+        return "Php " + String.format(java.util.Locale.getDefault(), "%,.2f", amount);
     }
 
     private void showDatePicker() {
@@ -531,6 +565,8 @@ public class ServiceSelectActivity extends AppCompatActivity {
             fullDescription = "Service request";
         }
 
+        double amount = getPresetAmount(selectedServiceType);
+
         ApiService apiService = ApiClient.getApiService();
         String token = tokenManager.getToken();
 
@@ -549,15 +585,16 @@ public class ServiceSelectActivity extends AppCompatActivity {
         // Check if we have any images to upload
         if (selectedImageUri1 != null || selectedImageUri2 != null) {
             createTicketWithImage(apiService, authToken, fullName, fullDescription, selectedServiceType, 
-                    fullAddress, contact, preferredDate);
+                fullAddress, contact, preferredDate, amount);
         } else {
             createTicketWithoutImage(apiService, authToken, fullName, fullDescription, selectedServiceType, 
-                    fullAddress, contact, preferredDate);
+                fullAddress, contact, preferredDate, amount);
         }
     }
 
     private void createTicketWithoutImage(ApiService apiService, String authToken, String fullName, 
-            String fullDescription, String serviceType, String fullAddress, String contact, String preferredDate) {
+            String fullDescription, String serviceType, String fullAddress, String contact, String preferredDate,
+            double amount) {
         
         CreateTicketRequest request = new CreateTicketRequest(
                 fullName, 
@@ -567,7 +604,8 @@ public class ServiceSelectActivity extends AppCompatActivity {
                 contact,
                 preferredDate, 
                 selectedLatitude != 0.0 ? selectedLatitude : null,
-                selectedLongitude != 0.0 ? selectedLongitude : null
+            selectedLongitude != 0.0 ? selectedLongitude : null,
+            amount
         );
 
         Call<CreateTicketResponse> call = apiService.createTicket(authToken, request);
@@ -588,7 +626,8 @@ public class ServiceSelectActivity extends AppCompatActivity {
     }
 
     private void createTicketWithImage(ApiService apiService, String authToken, String fullName, 
-            String fullDescription, String serviceType, String fullAddress, String contact, String preferredDate) {
+            String fullDescription, String serviceType, String fullAddress, String contact, String preferredDate,
+            double amount) {
         
         try {
             // Use the first available image (prioritize image 1)
@@ -596,7 +635,8 @@ public class ServiceSelectActivity extends AppCompatActivity {
             
             if (imageToUpload == null) {
                 // Fallback to no image
-                createTicketWithoutImage(apiService, authToken, fullName, fullDescription, serviceType, fullAddress, contact, preferredDate);
+                createTicketWithoutImage(apiService, authToken, fullName, fullDescription, serviceType, fullAddress,
+                    contact, preferredDate, amount);
                 return;
             }
             
@@ -658,6 +698,8 @@ public class ServiceSelectActivity extends AppCompatActivity {
                     String.valueOf(selectedLatitude));
             RequestBody longitudeBody = RequestBody.create(MediaType.parse("text/plain"), 
                     String.valueOf(selectedLongitude));
+                RequestBody amountBody = RequestBody.create(MediaType.parse("text/plain"),
+                    String.valueOf(amount));
 
             // Create image part with proper MIME type
             RequestBody imageBody = RequestBody.create(MediaType.parse(mimeType), tempFile);
@@ -668,7 +710,8 @@ public class ServiceSelectActivity extends AppCompatActivity {
             // Make the API call
             Call<CreateTicketResponse> call = apiService.createTicketWithImage(
                     authToken, titleBody, descriptionBody, addressBody, contactBody, 
-                    serviceTypeBody, unitTypeBody, preferredDateBody, latitudeBody, longitudeBody, imagePart);
+                    serviceTypeBody, unitTypeBody, preferredDateBody, latitudeBody, longitudeBody, amountBody,
+                    imagePart);
             
             final File finalTempFile = tempFile;
             call.enqueue(new Callback<CreateTicketResponse>() {
@@ -701,6 +744,7 @@ public class ServiceSelectActivity extends AppCompatActivity {
             submitButton.setText("Submit");
         }
     }
+
 
     private void pushTicketToFirestore(CreateTicketResponse ticketResponse) {
         if (ticketResponse == null) {

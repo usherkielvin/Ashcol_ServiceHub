@@ -340,6 +340,7 @@
 
     <string name="label_est_price">Estimated Price</string>
     <string name="val_est_price">Php 8,000.00</string>
+    <string name="hint_amount">0.00</string>
     <string name="btn_continue">Continue</string>
 
     <string name="title_summary">Summary</string>

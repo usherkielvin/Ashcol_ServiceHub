@@ -28,6 +28,7 @@ import app.hub.R;
 import app.hub.api.ApiClient;
 import app.hub.api.ApiService;
 import app.hub.api.TicketListResponse;
+import app.hub.employee.EmployeeTicketDetailActivity;
 import app.hub.util.TokenManager;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -241,8 +242,9 @@ public class UserTicketsFragment extends Fragment {
         // Set click listener for ticket items
         adapter.setOnTicketClickListener(ticket -> {
             Log.d(TAG, "Ticket clicked: " + ticket.getTicketId());
-            Intent intent = new Intent(getContext(), TicketDetailActivity.class);
+            Intent intent = new Intent(getContext(), EmployeeTicketDetailActivity.class);
             intent.putExtra("ticket_id", ticket.getTicketId());
+            intent.putExtra(EmployeeTicketDetailActivity.EXTRA_READ_ONLY, true);
             startActivity(intent);
         });
 
