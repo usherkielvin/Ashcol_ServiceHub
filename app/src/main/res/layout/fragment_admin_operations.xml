@@ -11,10 +11,10 @@
         android:id="@+id/header"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="?attr/colorSurface"
+        android:background="#FFFFFF"
         android:elevation="12dp"
         android:paddingTop="40dp"
-        android:paddingBottom="8dp"
+        android:paddingBottom="0dp"
         app:layout_constraintTop_toTopOf="parent">
 
         <TextView
@@ -36,6 +36,7 @@
             android:layout_width="match_parent"
             android:layout_height="48dp"
             android:layout_marginTop="8dp"
+            android:background="#FFFFFF"
             android:orientation="horizontal"
             app:layout_constraintTop_toBottomOf="@id/tvHeaderTitle">
 
@@ -44,6 +45,7 @@
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
+                android:background="?attr/selectableItemBackground"
                 android:clickable="true"
                 android:focusable="true"
                 android:gravity="center"
@@ -61,7 +63,7 @@
                 <View
                     android:id="@+id/viewTabBranchUnderline"
                     android:layout_width="match_parent"
-                    android:layout_height="2dp"
+                    android:layout_height="3dp"
                     android:layout_marginTop="8dp"
                     android:background="@color/apps_green" />
             </LinearLayout>
@@ -71,6 +73,7 @@
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
+                android:background="?attr/selectableItemBackground"
                 android:clickable="true"
                 android:focusable="true"
                 android:gravity="center"
@@ -88,7 +91,7 @@
                 <View
                     android:id="@+id/viewTabManagerUnderline"
                     android:layout_width="match_parent"
-                    android:layout_height="2dp"
+                    android:layout_height="3dp"
                     android:layout_marginTop="8dp"
                     android:background="@android:color/transparent" />
             </LinearLayout>
@@ -96,12 +99,45 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
+    <!-- Add Manager Button (Hidden by default, shown on Manager tab) -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/actionButtonContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="24dp"
+        android:paddingVertical="12dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/header">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnAddManager"
+            android:layout_width="wrap_content"
+            android:layout_height="32dp"
+            android:backgroundTint="#1B4332"
+            android:fontFamily="@font/poppins_bold"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:minHeight="0dp"
+            android:paddingHorizontal="16dp"
+            android:text="Add Manager"
+            android:textAllCaps="false"
+            android:textColor="#FFFFFF"
+            android:textSize="10sp"
+            app:cornerRadius="16dp"
+            app:icon="@drawable/ic_add"
+            app:iconSize="12dp"
+            app:iconTint="#FFFFFF"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/swipeRefresh"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/header">
+        app:layout_constraintTop_toBottomOf="@id/actionButtonContainer">
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rvOperations"

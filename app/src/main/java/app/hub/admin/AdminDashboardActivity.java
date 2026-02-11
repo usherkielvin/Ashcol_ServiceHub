@@ -103,4 +103,26 @@ public class AdminDashboardActivity extends AppCompatActivity {
             navIndicator.setTranslationY(targetY);
         }
     }
+
+    /**
+     * Navigate to Operations tab and optionally show Manager or Branch tab
+     * @param showManagerTab true to show Manager tab, false to show Branch tab
+     */
+    public void navigateToOperationsTab(boolean showManagerTab) {
+        // Create the fragment with the tab selection
+        AdminOperationsFragment fragment = AdminOperationsFragment.newInstance(showManagerTab);
+        
+        // Switch to operations tab in bottom navigation
+        if (bottomNav != null) {
+            bottomNav.setSelectedItemId(R.id.admin_operations);
+        }
+        
+        // Replace fragment
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.fragment_container, fragment)
+                .commit();
+        
+        // Move indicator
+        moveIndicatorToItem(R.id.admin_operations, true);
+    }
 }

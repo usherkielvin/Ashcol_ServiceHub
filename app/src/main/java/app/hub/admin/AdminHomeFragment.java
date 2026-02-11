@@ -52,29 +52,35 @@ public class AdminHomeFragment extends Fragment {
     }
     
     private void setupButtons(View view) {
-        // View All Managers text click listener
+        // View All Managers text click listener - Navigate to Operations tab (Manager)
         TextView btnViewAllManagers = view.findViewById(R.id.btnViewAllManagers);
         if (btnViewAllManagers != null) {
             btnViewAllManagers.setOnClickListener(v -> {
                 try {
-                    Intent intent = new Intent(getActivity(), ManagersActivity.class);
-                    startActivity(intent);
+                    // Navigate to Operations tab and show Manager tab
+                    if (getActivity() instanceof AdminDashboardActivity) {
+                        AdminDashboardActivity activity = (AdminDashboardActivity) getActivity();
+                        activity.navigateToOperationsTab(true); // true = show manager tab
+                    }
                 } catch (Exception e) {
-                    Toast.makeText(getContext(), "Error opening managers: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                    Toast.makeText(getContext(), "Error navigating to managers: " + e.getMessage(), Toast.LENGTH_LONG).show();
                     e.printStackTrace();
                 }
             });
         }
         
-        // View All Branches text click listener
+        // View All Branches text click listener - Navigate to Operations tab (Branch)
         TextView viewAllBranches = view.findViewById(R.id.viewAllBranches);
         if (viewAllBranches != null) {
             viewAllBranches.setOnClickListener(v -> {
                 try {
-                    Intent intent = new Intent(getActivity(), BranchesActivity.class);
-                    startActivity(intent);
+                    // Navigate to Operations tab and show Branch tab
+                    if (getActivity() instanceof AdminDashboardActivity) {
+                        AdminDashboardActivity activity = (AdminDashboardActivity) getActivity();
+                        activity.navigateToOperationsTab(false); // false = show branch tab
+                    }
                 } catch (Exception e) {
-                    Toast.makeText(getContext(), "Error opening branches: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                    Toast.makeText(getContext(), "Error navigating to branches: " + e.getMessage(), Toast.LENGTH_LONG).show();
                     e.printStackTrace();
                 }
             });
