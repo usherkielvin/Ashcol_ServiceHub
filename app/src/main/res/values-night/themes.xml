@@ -1,7 +1,29 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme (Material 3, NoActionBar). -->
-    <style name="Theme.ServiceHubApp" parent="Theme.Material3.DayNight.NoActionBar">
+<resources>
+    <!-- Dark Mode version of the base application theme -->
+    <style name="Theme.ServiceHubApp" parent="Theme.Material3.Dark.NoActionBar">
+        <!-- Status and Navigation Bars -->
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
+        
+        <!-- Surface and On-Surface colors -->
+        <item name="colorSurface">#121212</item>
+        <item name="colorOnSurface">#E1E3DF</item>
+        <item name="colorSurfaceVariant">#424940</item>
+        <item name="colorOnSurfaceVariant">#C1C9BE</item>
+        <item name="colorOutline">#8B9389</item>
+
+        <!-- Brand Colors -->
+        <item name="colorPrimary">@color/green</item>
+        <item name="colorOnPrimary">#003916</item>
+        <item name="colorPrimaryContainer">#1B522A</item>
+        <item name="colorOnPrimaryContainer">#D1E7D1</item>
+
+        <item name="colorSecondary">#B6CCB8</item>
+        <item name="colorOnSecondary">#223526</item>
+        <item name="colorSecondaryContainer">#384B3C</item>
+        <item name="colorOnSecondaryContainer">#D2E8D4</item>
+
+        <!-- Remove selection pill background -->
+        <item name="colorSecondaryContainer">@android:color/transparent</item>
     </style>
 </resources>

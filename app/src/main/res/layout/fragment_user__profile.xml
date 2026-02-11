@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/white"
+    android:background="?attr/colorSurfaceVariant"
     android:fillViewport="true">
 
     <LinearLayout
@@ -38,7 +38,7 @@
                     app:layout_constraintTop_toTopOf="parent"
                     app:shapeAppearanceOverlay="@style/CircleImage"
                     app:srcCompat="@mipmap/ic_launchericons_round"
-                    app:strokeColor="#EEEEEE"
+                    app:strokeColor="?attr/colorOutline"
                     app:strokeWidth="1dp"
                     tools:src="@drawable/user" />
 
@@ -50,10 +50,10 @@
                     android:insetTop="0dp"
                     android:insetBottom="0dp"
                     android:visibility="gone"
-                    app:backgroundTint="#00B050"
+                    app:backgroundTint="@color/apps_green"
                     app:icon="@android:drawable/ic_menu_edit"
                     app:iconSize="16dp"
-                    app:iconTint="#FFFFFF"
+                    app:iconTint="@color/white"
                     app:layout_constraintBottom_toBottomOf="@id/img_profile"
                     app:layout_constraintEnd_toEndOf="@id/img_profile"
                     app:shapeAppearanceOverlay="@style/CircleImage" />
@@ -66,7 +66,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:fontFamily="@font/poppins_bold"
-                android:textColor="#1B4332"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="22sp"
                 tools:text="Yooxie Batumbakal" />
 
@@ -75,7 +75,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/poppins_medium"
-                android:textColor="#9E9E9E"
+                android:textColor="?attr/colorOnSurfaceVariant"
                 android:textSize="14sp"
                 tools:text="email@gmail.com" />
 
@@ -85,7 +85,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
                 android:fontFamily="@font/poppins_medium"
-                android:textColor="#00B050"
+                android:textColor="@color/apps_green"
                 android:textSize="13sp"
                 android:textStyle="italic"
                 android:visibility="gone"
@@ -93,16 +93,15 @@
 
         </LinearLayout>
 
-        <!-- Content Card with 60dp Edges and Spacing -->
+        <!-- Content Card -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/contentCard"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="32dp"
-            app:cardBackgroundColor="@android:color/white"
+            app:cardBackgroundColor="?attr/colorSurface"
             app:cardElevation="12dp"
-            app:strokeWidth="1dp"
-            app:strokeColor="#F5F5F5"
+            app:strokeWidth="0dp"
             app:shapeAppearanceOverlay="@style/ProfileContentCardShape">
 
             <LinearLayout
@@ -116,7 +115,7 @@
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/poppins_bold"
                     android:text="Preferences"
-                    android:textColor="#1B4332"
+                    android:textColor="#386A4E"
                     android:textSize="14sp"
                     android:layout_marginStart="4dp" />
 
@@ -136,13 +135,13 @@
                         android:layout_width="36dp"
                         android:layout_height="36dp"
                         android:background="@drawable/bg_icon_circle_green"
-                        android:backgroundTint="#000000">
+                        android:backgroundTint="?attr/colorOnSurface">
                         <ImageView
                             android:layout_width="20dp"
                             android:layout_height="20dp"
                             android:layout_gravity="center"
                             android:src="@drawable/outline_dark_mode_24"
-                            app:tint="@color/white" />
+                            app:tint="?attr/colorSurface" />
                     </FrameLayout>
 
                     <TextView
@@ -151,7 +150,7 @@
                         android:layout_marginStart="16dp"
                         android:fontFamily="@font/poppins_medium"
                         android:text="Display"
-                        android:textColor="#000000"
+                        android:textColor="?attr/colorOnSurface"
                         android:textSize="18sp" />
                 </LinearLayout>
 
@@ -170,13 +169,13 @@
                         android:layout_width="36dp"
                         android:layout_height="36dp"
                         android:background="@drawable/bg_icon_circle_green"
-                        android:backgroundTint="#A5D6A7">
+                        android:backgroundTint="@color/colorPrimaryContainer">
                         <ImageView
                             android:layout_width="20dp"
                             android:layout_height="20dp"
                             android:layout_gravity="center"
                             android:src="@drawable/ic_notifications"
-                            app:tint="@color/white" />
+                            app:tint="@color/colorOnPrimaryContainer" />
                     </FrameLayout>
 
                     <TextView
@@ -185,7 +184,7 @@
                         android:layout_marginStart="16dp"
                         android:fontFamily="@font/poppins_medium"
                         android:text="Notifications"
-                        android:textColor="#000000"
+                        android:textColor="?attr/colorOnSurface"
                         android:textSize="18sp" />
                 </LinearLayout>
 
@@ -204,13 +203,13 @@
                         android:layout_width="36dp"
                         android:layout_height="36dp"
                         android:background="@drawable/bg_icon_circle_green"
-                        android:backgroundTint="#A5D6A7">
+                        android:backgroundTint="@color/colorPrimaryContainer">
                         <ImageView
                             android:layout_width="20dp"
                             android:layout_height="20dp"
                             android:layout_gravity="center"
                             android:src="@drawable/ic_language"
-                            app:tint="@color/white" />
+                            app:tint="@color/colorOnPrimaryContainer" />
                     </FrameLayout>
 
                     <TextView
@@ -219,7 +218,7 @@
                         android:layout_marginStart="16dp"
                         android:fontFamily="@font/poppins_medium"
                         android:text="Language"
-                        android:textColor="#000000"
+                        android:textColor="?attr/colorOnSurface"
                         android:textSize="18sp" />
                 </LinearLayout>
 
@@ -227,14 +226,15 @@
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
                     android:layout_marginVertical="16dp"
-                    android:background="#EEEEEE" />
+                    android:alpha="0.2"
+                    android:background="?attr/colorOutline" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/poppins_bold"
                     android:text="General"
-                    android:textColor="#1B4332"
+                    android:textColor="#386A4E"
                     android:textSize="14sp"
                     android:layout_marginStart="4dp" />
 
@@ -254,13 +254,13 @@
                         android:layout_width="36dp"
                         android:layout_height="36dp"
                         android:background="@drawable/bg_icon_circle_green"
-                        android:backgroundTint="#A5D6A7">
+                        android:backgroundTint="@color/colorPrimaryContainer">
                         <ImageView
                             android:layout_width="20dp"
                             android:layout_height="20dp"
                             android:layout_gravity="center"
                             android:src="@drawable/ic_person"
-                            app:tint="@color/white" />
+                            app:tint="@color/colorOnPrimaryContainer" />
                     </FrameLayout>
 
                     <TextView
@@ -269,7 +269,7 @@
                         android:layout_marginStart="16dp"
                         android:fontFamily="@font/poppins_medium"
                         android:text="Personal Information"
-                        android:textColor="#000000"
+                        android:textColor="?attr/colorOnSurface"
                         android:textSize="18sp" />
                 </LinearLayout>
 
@@ -288,13 +288,13 @@
                         android:layout_width="36dp"
                         android:layout_height="36dp"
                         android:background="@drawable/bg_icon_circle_green"
-                        android:backgroundTint="#A5D6A7">
+                        android:backgroundTint="@color/colorPrimaryContainer">
                         <ImageView
                             android:layout_width="20dp"
                             android:layout_height="20dp"
                             android:layout_gravity="center"
                             android:src="@drawable/ic_home"
-                            app:tint="@color/white" />
+                            app:tint="@color/colorOnPrimaryContainer" />
                     </FrameLayout>
 
                     <TextView
@@ -303,7 +303,7 @@
                         android:layout_marginStart="16dp"
                         android:fontFamily="@font/poppins_medium"
                         android:text="My Addresses"
-                        android:textColor="#000000"
+                        android:textColor="?attr/colorOnSurface"
                         android:textSize="18sp" />
                 </LinearLayout>
 
@@ -322,13 +322,13 @@
                         android:layout_width="36dp"
                         android:layout_height="36dp"
                         android:background="@drawable/bg_icon_circle_green"
-                        android:backgroundTint="#A5D6A7">
+                        android:backgroundTint="@color/colorPrimaryContainer">
                         <ImageView
                             android:layout_width="20dp"
                             android:layout_height="20dp"
                             android:layout_gravity="center"
                             android:src="@drawable/ic_lock"
-                            app:tint="@color/white" />
+                            app:tint="@color/colorOnPrimaryContainer" />
                     </FrameLayout>
 
                     <TextView
@@ -337,7 +337,7 @@
                         android:layout_marginStart="16dp"
                         android:fontFamily="@font/poppins_medium"
                         android:text="Password"
-                        android:textColor="#000000"
+                        android:textColor="?attr/colorOnSurface"
                         android:textSize="18sp" />
                 </LinearLayout>
 
@@ -356,13 +356,13 @@
                         android:layout_width="36dp"
                         android:layout_height="36dp"
                         android:background="@drawable/bg_icon_circle_green"
-                        android:backgroundTint="#A5D6A7">
+                        android:backgroundTint="@color/colorPrimaryContainer">
                         <ImageView
                             android:layout_width="20dp"
                             android:layout_height="20dp"
                             android:layout_gravity="center"
                             android:src="@drawable/ic_wallet"
-                            app:tint="@color/white" />
+                            app:tint="@color/colorOnPrimaryContainer" />
                     </FrameLayout>
 
                     <TextView
@@ -371,7 +371,7 @@
                         android:layout_marginStart="16dp"
                         android:fontFamily="@font/poppins_medium"
                         android:text="Payments"
-                        android:textColor="#000000"
+                        android:textColor="?attr/colorOnSurface"
                         android:textSize="18sp" />
                 </LinearLayout>
 
@@ -379,7 +379,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
                     android:layout_marginVertical="16dp"
-                    android:background="#EEEEEE" />
+                    android:alpha="0.2"
+                    android:background="?attr/colorOutline" />
 
                 <!-- About Us Row -->
                 <LinearLayout
@@ -411,7 +412,7 @@
                         android:layout_marginStart="16dp"
                         android:fontFamily="@font/poppins_medium"
                         android:text="About us"
-                        android:textColor="#000000"
+                        android:textColor="?attr/colorOnSurface"
                         android:textSize="18sp" />
                 </LinearLayout>
 
@@ -432,7 +433,7 @@
                         android:layout_height="24dp"
                         android:layout_marginStart="4dp"
                         android:src="@drawable/ic_exit"
-                        app:tint="#1B4332" />
+                        app:tint="#386A4E" />
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -440,7 +441,7 @@
                         android:layout_marginStart="20dp"
                         android:fontFamily="@font/poppins_medium"
                         android:text="Sign Out"
-                        android:textColor="#000000"
+                        android:textColor="?attr/colorOnSurface"
                         android:textSize="18sp" />
                 </LinearLayout>
 

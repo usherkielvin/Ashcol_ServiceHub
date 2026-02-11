@@ -70,19 +70,19 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:fontFamily="@font/poppins_bold"
+                android:text="Yooxie Batumbakal"
                 android:textColor="#1B4332"
-                android:textSize="22sp"
-                tools:text="Yooxie Batumbakal" />
+                android:textSize="22sp" />
 
             <TextView
                 android:id="@+id/tv_username"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/poppins_medium"
+                android:text="email@gmail.com"
                 android:textColor="#1B4332"
                 android:alpha="0.6"
-                android:textSize="14sp"
-                tools:text="email@gmail.com" />
+                android:textSize="14sp" />
 
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/roleCard"
@@ -102,9 +102,9 @@
                     android:fontFamily="@font/poppins_semibold"
                     android:paddingHorizontal="24dp"
                     android:paddingVertical="6dp"
+                    android:text="Admin | ASHCOL"
                     android:textColor="#1B5E20"
-                    android:textSize="13sp"
-                    tools:text="Admin | ASHCOL" />
+                    android:textSize="13sp" />
             </com.google.android.material.card.MaterialCardView>
 
         </LinearLayout>
@@ -151,13 +151,13 @@
                         android:layout_width="36dp"
                         android:layout_height="36dp"
                         android:background="@drawable/bg_icon_circle_green"
-                        android:backgroundTint="#000000">
+                        android:backgroundTint="?attr/colorOnSurface">
                         <ImageView
                             android:layout_width="20dp"
                             android:layout_height="20dp"
                             android:layout_gravity="center"
                             android:src="@drawable/outline_dark_mode_24"
-                            app:tint="@color/white" />
+                            app:tint="?attr/colorSurface" />
                     </FrameLayout>
 
                     <TextView
@@ -185,13 +185,13 @@
                         android:layout_width="36dp"
                         android:layout_height="36dp"
                         android:background="@drawable/bg_icon_circle_green"
-                        android:backgroundTint="#A5D6A7">
+                        android:backgroundTint="@color/colorSecondaryContainer">
                         <ImageView
                             android:layout_width="20dp"
                             android:layout_height="20dp"
                             android:layout_gravity="center"
                             android:src="@drawable/ic_notifications"
-                            app:tint="@color/white" />
+                            app:tint="@color/colorOnSecondaryContainer" />
                     </FrameLayout>
 
                     <TextView
@@ -219,13 +219,13 @@
                         android:layout_width="36dp"
                         android:layout_height="36dp"
                         android:background="@drawable/bg_icon_circle_green"
-                        android:backgroundTint="#A5D6A7">
+                        android:backgroundTint="@color/colorSecondaryContainer">
                         <ImageView
                             android:layout_width="20dp"
                             android:layout_height="20dp"
                             android:layout_gravity="center"
                             android:src="@drawable/ic_language"
-                            app:tint="@color/white" />
+                            app:tint="@color/colorOnSecondaryContainer" />
                     </FrameLayout>
 
                     <TextView
@@ -270,13 +270,13 @@
                         android:layout_width="36dp"
                         android:layout_height="36dp"
                         android:background="@drawable/bg_icon_circle_green"
-                        android:backgroundTint="#A5D6A7">
+                        android:backgroundTint="@color/colorSecondaryContainer">
                         <ImageView
                             android:layout_width="20dp"
                             android:layout_height="20dp"
                             android:layout_gravity="center"
                             android:src="@drawable/ic_person"
-                            app:tint="@color/white" />
+                            app:tint="@color/colorOnSecondaryContainer" />
                     </FrameLayout>
 
                     <TextView
@@ -304,13 +304,13 @@
                         android:layout_width="36dp"
                         android:layout_height="36dp"
                         android:background="@drawable/bg_icon_circle_green"
-                        android:backgroundTint="#A5D6A7">
+                        android:backgroundTint="@color/colorSecondaryContainer">
                         <ImageView
                             android:layout_width="20dp"
                             android:layout_height="20dp"
                             android:layout_gravity="center"
                             android:src="@drawable/ic_lock"
-                            app:tint="@color/white" />
+                            app:tint="@color/colorOnSecondaryContainer" />
                     </FrameLayout>
 
                     <TextView
@@ -384,6 +384,7 @@
                         app:tint="#1B4332" />
 
                     <TextView
+                        android:id="@+id/logoutText"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="20dp"

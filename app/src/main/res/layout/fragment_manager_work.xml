@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?attr/colorSurface"
+    android:background="?android:attr/colorBackground"
     tools:context=".branch_manager.branch_manage_work">
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -35,7 +35,7 @@
                 android:shadowDy="1.2"
                 android:shadowRadius="1.5"
                 android:text="WORKLOAD STATUS"
-                android:textColor="?attr/colorOnSurfaceVariant"
+                android:textColor="?attr/colorOnSurface"
                 android:textSize="24sp"
                 android:textStyle="bold" />
 
@@ -111,7 +111,7 @@
             android:id="@+id/swipeRefreshLayout"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:background="#F8F9FA"
+            android:background="?android:attr/colorBackground"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintTop_toBottomOf="@id/hsvFilters">
 
