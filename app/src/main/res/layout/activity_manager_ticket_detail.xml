@@ -229,29 +229,30 @@
                             android:textSize="14sp" />
                     </RelativeLayout>
 
-                    <RelativeLayout
+                    <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp">
+                        android:layout_marginTop="8dp"
+                        android:orientation="vertical">
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:fontFamily="@font/poppins_medium"
-                            android:text="Other details:"
+                            android:text="Other Details:"
                             android:textColor="#424242"
                             android:textSize="14sp" />
 
                         <TextView
                             android:id="@+id/tvDescription"
-                            android:layout_width="wrap_content"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_alignParentEnd="true"
-                            android:fontFamily="@font/poppins_bold"
+                            android:layout_marginTop="4dp"
+                            android:fontFamily="@font/poppins_medium"
                             android:text="Unit leaking water"
                             android:textColor="@android:color/black"
                             android:textSize="14sp" />
-                    </RelativeLayout>
+                    </LinearLayout>
 
                     <RelativeLayout
                         android:layout_width="match_parent"
