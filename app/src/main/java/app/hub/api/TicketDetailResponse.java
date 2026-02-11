@@ -64,6 +64,9 @@ public class TicketDetailResponse {
         @SerializedName("status")
         private String status;
 
+        @SerializedName("status_detail")
+        private String statusDetail;
+
         @SerializedName("status_color")
         private String statusColor;
 
@@ -171,6 +174,14 @@ public class TicketDetailResponse {
 
         public void setStatus(String status) {
             this.status = status;
+        }
+
+        public String getStatusDetail() {
+            return statusDetail;
+        }
+
+        public void setStatusDetail(String statusDetail) {
+            this.statusDetail = statusDetail;
         }
 
         public String getStatusColor() {
