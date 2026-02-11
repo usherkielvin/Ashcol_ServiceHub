@@ -286,6 +286,7 @@ public class AdminHomeFragment extends Fragment {
             int count = 0;
             for (EmployeeResponse.Employee employee : employees) {
                 if ("manager".equalsIgnoreCase(employee.getRole()) && count < 3) {
+                    int userId = employee.getId();
                     String fullName = employee.getFirstName() + " " + employee.getLastName();
                     String branch = employee.getBranch() != null ? employee.getBranch() : "No branch assigned";
                     String email = employee.getEmail() != null ? employee.getEmail() : "No email";
@@ -293,7 +294,7 @@ public class AdminHomeFragment extends Fragment {
                     String phone = "+63 9XX XXX XXXX";
                     String joinDate = "N/A";
                     
-                    managers.add(new ManagersActivity.Manager(fullName, branch, email, status, phone, joinDate));
+                    managers.add(new ManagersActivity.Manager(userId, fullName, branch, email, status, phone, joinDate));
                     count++;
                 }
             }

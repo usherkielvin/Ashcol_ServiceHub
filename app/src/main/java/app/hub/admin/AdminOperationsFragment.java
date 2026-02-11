@@ -26,6 +26,7 @@ import app.hub.R;
 import app.hub.api.ApiClient;
 import app.hub.api.ApiService;
 import app.hub.api.BranchResponse;
+import app.hub.api.DeleteAccountResponse;
 import app.hub.api.EmployeeResponse;
 import app.hub.util.TokenManager;
 import retrofit2.Call;
@@ -318,6 +319,7 @@ public class AdminOperationsFragment extends Fragment {
         // Filter only managers
         for (EmployeeResponse.Employee employee : employees) {
             if ("manager".equalsIgnoreCase(employee.getRole())) {
+                int userId = employee.getId();
                 String fullName = employee.getFirstName() + " " + employee.getLastName();
                 String branch = employee.getBranch() != null ? employee.getBranch() : "No branch assigned";
                 String email = employee.getEmail() != null ? employee.getEmail() : "No email";
@@ -325,7 +327,7 @@ public class AdminOperationsFragment extends Fragment {
                 String phone = "+63 9XX XXX XXXX";
                 String joinDate = "N/A";
                 
-                managers.add(new ManagersActivity.Manager(fullName, branch, email, status, phone, joinDate));
+                managers.add(new ManagersActivity.Manager(userId, fullName, branch, email, status, phone, joinDate));
             }
         }
         
@@ -334,6 +336,17 @@ public class AdminOperationsFragment extends Fragment {
             getActivity().runOnUiThread(() -> {
                 if (managersAdapter == null) {
                     managersAdapter = new ManagersAdapter(managers, this::onManagerClick);
+                    managersAdapter.setOnManagerActionListener(new ManagersAdapter.OnManagerActionListener() {
+                        @Override
+                        public void onEditManager(ManagersActivity.Manager manager) {
+                            openManagerEditActivity(manager);
+                        }
+
+                        @Override
+                        public void onRemoveManager(ManagersActivity.Manager manager, int position) {
+                            removeManager(manager, position);
+                        }
+                    });
                     rvOperations.setAdapter(managersAdapter);
                 } else {
                     managersAdapter.notifyDataSetChanged();
@@ -341,6 +354,75 @@ public class AdminOperationsFragment extends Fragment {
                 Log.d(TAG, "Loaded " + managers.size() + " managers");
             });
         }
+    }
+
+    private void openManagerEditActivity(ManagersActivity.Manager manager) {
+        Intent intent = new Intent(getActivity(), AdminEditManagerActivity.class);
+        intent.putExtra("manager_name", manager.getName());
+        intent.putExtra("manager_branch", manager.getBranch());
+        intent.putExtra("manager_email", manager.getEmail());
+        intent.putExtra("manager_status", manager.getStatus());
+        startActivity(intent);
+    }
+
+    private void removeManager(ManagersActivity.Manager manager, int position) {
+        // Show loading
+        if (getActivity() != null) {
+            getActivity().runOnUiThread(() -> {
+                Toast.makeText(getContext(), "Removing " + manager.getName() + "...", Toast.LENGTH_SHORT).show();
+            });
+        }
+
+        String token = tokenManager.getToken();
+        if (token == null) {
+            Log.e(TAG, "No token available");
+            Toast.makeText(getContext(), "Not authenticated", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        int userId = manager.getId();
+        ApiService apiService = ApiClient.getApiService();
+        Call<DeleteAccountResponse> call = apiService.adminDeleteUser("Bearer " + token, userId);
+        
+        call.enqueue(new Callback<DeleteAccountResponse>() {
+            @Override
+            public void onResponse(Call<DeleteAccountResponse> call, Response<DeleteAccountResponse> response) {
+                if (getActivity() == null) return;
+                
+                getActivity().runOnUiThread(() -> {
+                    if (response.isSuccessful() && response.body() != null) {
+                        DeleteAccountResponse deleteResponse = response.body();
+                        
+                        if (deleteResponse.isSuccess()) {
+                            // Remove from local list
+                            managers.remove(position);
+                            if (managersAdapter != null) {
+                                managersAdapter.notifyItemRemoved(position);
+                                managersAdapter.notifyItemRangeChanged(position, managers.size());
+                            }
+                            Toast.makeText(getContext(), manager.getName() + " removed successfully", Toast.LENGTH_SHORT).show();
+                            Log.d(TAG, "Manager deleted successfully: " + manager.getName());
+                        } else {
+                            Toast.makeText(getContext(), "Failed to remove manager: " + deleteResponse.getMessage(), Toast.LENGTH_SHORT).show();
+                            Log.e(TAG, "Delete failed: " + deleteResponse.getMessage());
+                        }
+                    } else {
+                        Toast.makeText(getContext(), "Failed to remove manager", Toast.LENGTH_SHORT).show();
+                        Log.e(TAG, "Delete response not successful: " + response.code());
+                    }
+                });
+            }
+            
+            @Override
+            public void onFailure(Call<DeleteAccountResponse> call, Throwable t) {
+                if (getActivity() == null) return;
+                
+                getActivity().runOnUiThread(() -> {
+                    Toast.makeText(getContext(), "Network error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                    Log.e(TAG, "Delete API call failed: " + t.getMessage(), t);
+                });
+            }
+        });
     }
 
     private void onManagerClick(ManagersActivity.Manager manager) {

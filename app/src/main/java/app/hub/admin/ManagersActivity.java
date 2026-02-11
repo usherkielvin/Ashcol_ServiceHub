@@ -117,6 +117,7 @@ public class ManagersActivity extends AppCompatActivity {
         // Filter employees to get only managers
         for (EmployeeResponse.Employee employee : employees) {
             if ("manager".equalsIgnoreCase(employee.getRole())) {
+                int userId = employee.getId();
                 String fullName = employee.getFirstName() + " " + employee.getLastName();
                 String branch = employee.getBranch() != null ? employee.getBranch() : "No branch assigned";
                 String email = employee.getEmail() != null ? employee.getEmail() : "No email";
@@ -124,7 +125,7 @@ public class ManagersActivity extends AppCompatActivity {
                 String phone = "+63 9XX XXX XXXX"; // Placeholder phone
                 String joinDate = "N/A"; // Placeholder join date
                 
-                managerList.add(new Manager(fullName, branch, email, status, phone, joinDate));
+                managerList.add(new Manager(userId, fullName, branch, email, status, phone, joinDate));
             }
         }
         
@@ -159,6 +160,7 @@ public class ManagersActivity extends AppCompatActivity {
 
     // Manager data class
     public static class Manager {
+        private int id;
         private String name;
         private String branch;
         private String email;
@@ -166,7 +168,8 @@ public class ManagersActivity extends AppCompatActivity {
         private String phone;
         private String joinDate;
 
-        public Manager(String name, String branch, String email, String status, String phone, String joinDate) {
+        public Manager(int id, String name, String branch, String email, String status, String phone, String joinDate) {
+            this.id = id;
             this.name = name;
             this.branch = branch;
             this.email = email;
@@ -175,6 +178,7 @@ public class ManagersActivity extends AppCompatActivity {
             this.joinDate = joinDate;
         }
 
+        public int getId() { return id; }
         public String getName() { return name; }
         public String getBranch() { return branch; }
         public String getEmail() { return email; }

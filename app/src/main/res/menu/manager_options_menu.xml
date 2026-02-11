@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/action_edit_manager"
+        android:title="Edit Manager"
+        android:icon="@drawable/ic_person" />
+    <item
+        android:id="@+id/action_remove_manager"
+        android:title="Remove Manager"
+        android:icon="@drawable/ic_exit" />
+</menu>

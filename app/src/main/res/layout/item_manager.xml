@@ -75,6 +75,7 @@
             android:id="@+id/statusBadge"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
             android:background="@drawable/bg_status_badge"
             android:backgroundTint="#E8F5E8"
             android:padding="8dp"
@@ -82,6 +83,20 @@
             android:textColor="#1B4332"
             android:textSize="12sp"
             android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="@+id/managerAvatar"
+            app:layout_constraintEnd_toStartOf="@+id/btn_manager_menu"
+            app:layout_constraintTop_toTopOf="@+id/managerAvatar" />
+
+        <ImageButton
+            android:id="@+id/btn_manager_menu"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginStart="8dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Manager options"
+            android:padding="4dp"
+            android:src="@drawable/ic_dot"
+            android:tint="#9E9E9E"
             app:layout_constraintBottom_toBottomOf="@+id/managerAvatar"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="@+id/managerAvatar" />

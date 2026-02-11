@@ -183,4 +183,8 @@ public interface ApiService {
     @POST("api/v1/payments/{paymentId}/complete")
     Call<app.hub.api.CompleteWorkResponse> completePayment(@Header("Authorization") String token,
             @retrofit2.http.Path("paymentId") int paymentId);
+
+    @DELETE("api/v1/admin/users/{userId}")
+    Call<DeleteAccountResponse> adminDeleteUser(@Header("Authorization") String token,
+            @retrofit2.http.Path("userId") int userId);
 }
