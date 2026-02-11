@@ -52,7 +52,7 @@ public class EmployeeAdapter extends RecyclerView.Adapter<EmployeeAdapter.Employ
         // Set branch
         holder.employeeStatus.setText(employee.getBranch() != null ? employee.getBranch() : "No Branch");
         
-        // Load profile image with Picasso - enhanced with better error handling and caching
+        // Load profile image with Picasso - optimized for smooth loading
         String imageUrl = employee.getProfilePhoto();
         
         // Make displayName final for use in callback
@@ -60,18 +60,17 @@ public class EmployeeAdapter extends RecyclerView.Adapter<EmployeeAdapter.Employ
         
         android.util.Log.d("EmployeeAdapter", "Employee: " + finalDisplayName + ", Profile Photo URL: " + imageUrl);
         
-        // Clear any previous image first
-        holder.employeeImage.setImageResource(R.drawable.profile_icon);
-        
         if (imageUrl != null && !imageUrl.isEmpty()) {
             android.util.Log.d("EmployeeAdapter", "Loading image from: " + imageUrl);
             
+            // Use Picasso with optimized settings for smooth loading
             Picasso.get()
                 .load(imageUrl)
                 .placeholder(R.drawable.profile_icon)
                 .error(R.drawable.profile_icon)
-                .fit()
+                .resize(200, 200) // Resize to reasonable size for performance
                 .centerCrop()
+                .priority(com.squareup.picasso.Picasso.Priority.HIGH)
                 .into(holder.employeeImage, new com.squareup.picasso.Callback() {
                     @Override
                     public void onSuccess() {
@@ -81,6 +80,8 @@ public class EmployeeAdapter extends RecyclerView.Adapter<EmployeeAdapter.Employ
                     @Override
                     public void onError(Exception e) {
                         android.util.Log.e("EmployeeAdapter", "Failed to load image for: " + finalDisplayName + ", Error: " + e.getMessage());
+                        // Set default icon on error
+                        holder.employeeImage.setImageResource(R.drawable.profile_icon);
                     }
                 });
         } else {
@@ -97,6 +98,32 @@ public class EmployeeAdapter extends RecyclerView.Adapter<EmployeeAdapter.Employ
     public void updateEmployees(List<EmployeeResponse.Employee> newEmployees) {
         this.employees = newEmployees;
         notifyDataSetChanged();
+        
+        // Preload images for smooth scrolling
+        preloadImages();
+    }
+    
+    /**
+     * Preload images in background for smooth scrolling
+     */
+    private void preloadImages() {
+        if (employees == null) return;
+        
+        // Preload first 10 images
+        int preloadCount = Math.min(employees.size(), 10);
+        for (int i = 0; i < preloadCount; i++) {
+            EmployeeResponse.Employee employee = employees.get(i);
+            String imageUrl = employee.getProfilePhoto();
+            
+            if (imageUrl != null && !imageUrl.isEmpty()) {
+                // Preload into Picasso cache
+                Picasso.get()
+                    .load(imageUrl)
+                    .resize(200, 200)
+                    .centerCrop()
+                    .fetch();
+            }
+        }
     }
 
     static class EmployeeViewHolder extends RecyclerView.ViewHolder {

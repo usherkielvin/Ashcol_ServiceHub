@@ -74,6 +74,9 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
 
     private android.os.Handler autoRefreshHandler;
     private Runnable autoRefreshRunnable;
+    
+    // Firebase real-time listener
+    private EmployeeFirebaseListener firebaseListener;
 
     private static final String PREFS_NAME = "employee_work_steps";
     private static final String PREFS_TIMES = "employee_work_times";
@@ -144,6 +147,9 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
 
         // Start auto-refresh in background
         startAutoRefresh();
+        
+        // Start Firebase real-time listener
+        startFirebaseListener();
     }
 
     private void initViews(View view) {
