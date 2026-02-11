@@ -196,4 +196,12 @@ public interface ApiService {
     @DELETE("api/v1/admin/users/{userId}")
     Call<DeleteAccountResponse> adminDeleteUser(@Header("Authorization") String token,
             @retrofit2.http.Path("userId") int userId);
+
+    @GET("api/v1/branches/reports")
+    Call<BranchReportsResponse> getBranchReports(@Header("Authorization") String token);
+
+    @GET("api/v1/branches/{branchId}/tickets")
+    Call<BranchTicketsResponse> getBranchTickets(@Header("Authorization") String token,
+            @retrofit2.http.Path("branchId") int branchId,
+            @retrofit2.http.Query("status") String status);
 }

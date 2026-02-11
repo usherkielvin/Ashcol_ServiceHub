@@ -280,7 +280,6 @@ public class ManagerRecordsFragment extends Fragment implements TicketDataChange
         return normalized.contains("completed") 
             || normalized.contains("resolved")
             || normalized.contains("closed")
-            || normalized.contains("paid")
             || normalized.contains("cancelled")
             || normalized.contains("rejected")
             || normalized.contains("failed");

@@ -667,7 +667,15 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
                         // Clear the ready for payment flag since payment is now requested
                         clearReadyForPayment(ticketId);
                     }
+                    // Immediate refresh to update UI
                     loadAssignedTickets(true);
+                    
+                    // Also trigger an extra refresh after 1 second to ensure backend is updated
+                    new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+                        if (isAdded()) {
+                            loadAssignedTickets(true);
+                        }
+                    }, 1000);
                     return;
                 }
                 
@@ -829,11 +837,9 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
         return normalized.equals("completed") 
             || normalized.equals("resolved") 
             || normalized.equals("closed") 
-            || normalized.equals("paid")
             || normalized.contains("completed")
             || normalized.contains("resolved")
-            || normalized.contains("closed")
-            || (normalized.contains("paid") && !normalized.contains("pending"));
+            || normalized.contains("closed");
     }
 
     private int getTicketPriority(String status) {
@@ -1324,6 +1330,13 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
                     if (onSuccess != null) {
                         onSuccess.run();
                     }
+                    
+                    // Immediate refresh to sync with backend
+                    new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+                        if (isAdded()) {
+                            loadAssignedTickets(true);
+                        }
+                    }, 500);
                     return;
                 }
                 if (getContext() != null) {
@@ -1406,15 +1419,15 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
                     loadAssignedTickets(true);
                 }
                 
-                // Schedule next refresh in 10 seconds
+                // Schedule next refresh in 3 seconds (FAST for technician)
                 if (autoRefreshHandler != null) {
-                    autoRefreshHandler.postDelayed(this, 10000);
+                    autoRefreshHandler.postDelayed(this, 3000);
                 }
             }
         };
         
-        // Start auto-refresh after 10 seconds
-        autoRefreshHandler.postDelayed(autoRefreshRunnable, 10000);
+        // Start auto-refresh after 3 seconds
+        autoRefreshHandler.postDelayed(autoRefreshRunnable, 3000);
     }
 
     @Override

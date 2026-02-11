@@ -582,14 +582,14 @@ public class EmployeeDashboardFragment extends Fragment {
                     loadAllTickets();
                 }
                 
-                // Schedule next refresh in 10 seconds
+                // Schedule next refresh in 3 seconds (FAST for technician)
                 if (autoRefreshHandler != null) {
-                    autoRefreshHandler.postDelayed(this, 10000);
+                    autoRefreshHandler.postDelayed(this, 3000);
                 }
             }
         };
         
-        // Start auto-refresh after 10 seconds
-        autoRefreshHandler.postDelayed(autoRefreshRunnable, 10000);
+        // Start auto-refresh after 3 seconds
+        autoRefreshHandler.postDelayed(autoRefreshRunnable, 3000);
     }
 }

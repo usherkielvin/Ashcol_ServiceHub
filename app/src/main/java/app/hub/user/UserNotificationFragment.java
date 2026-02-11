@@ -82,6 +82,8 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
     private FirestoreManager.PendingPayment pendingPayment;
     private String pendingPaymentTicketId;
     private String previousTicketStatus = null; // Track previous status to detect changes
+    private String lastNotificationTicketId = null; // Track which ticket we last notified for
+    private long lastNotificationTime = 0; // Track when we last showed notification
 
     public UserNotificationFragment() {
     }
@@ -885,15 +887,15 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
                     loadTickets();
                 }
                 
-                // Schedule next refresh in 10 seconds
+                // Schedule next refresh in 5 seconds
                 if (autoRefreshHandler != null) {
-                    autoRefreshHandler.postDelayed(this, 10000);
+                    autoRefreshHandler.postDelayed(this, 5000);
                 }
             }
         };
         
-        // Start auto-refresh after 10 seconds
-        autoRefreshHandler.postDelayed(autoRefreshRunnable, 10000);
+        // Start auto-refresh after 5 seconds
+        autoRefreshHandler.postDelayed(autoRefreshRunnable, 5000);
     }
 
     private void openPendingPayment() {
@@ -922,20 +924,35 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
                              currentTicket.getStatus() != null && 
                              currentTicket.getStatus().equalsIgnoreCase("Pending Payment");
 
-        // Always show notification when payment is pending (no previous status check)
+        // Show notification when payment is pending AND it's a new request
         if (hasPending && isAdded() && getContext() != null) {
-            android.util.Log.d("UserNotification", "Payment is pending - showing notification");
-            double amount = currentTicket.getAmount();
-            String serviceType = currentTicket.getServiceType();
-            int customerId = tokenManager.getUserIdInt();
+            String currentTicketId = currentTicket.getTicketId();
+            String updatedAt = currentTicket.getUpdatedAt();
             
-            app.hub.util.NotificationHelper.showPaymentRequestNotification(
-                    getContext(), 
-                    currentTicket.getTicketId(),
-                    serviceType,
-                    amount,
-                    customerId
-            );
+            // Show notification if:
+            // 1. This is a different ticket than last notification, OR
+            // 2. The updated_at timestamp is different (means tech clicked request payment again)
+            boolean isDifferentTicket = !currentTicketId.equals(lastNotificationTicketId);
+            boolean isNewRequest = updatedAt != null && !updatedAt.equals(String.valueOf(lastNotificationTime));
+            
+            if (isDifferentTicket || isNewRequest) {
+                android.util.Log.d("UserNotification", "New payment request detected - showing notification");
+                double amount = currentTicket.getAmount();
+                String serviceType = currentTicket.getServiceType();
+                int customerId = tokenManager.getUserIdInt();
+                
+                app.hub.util.NotificationHelper.showPaymentRequestNotification(
+                        getContext(), 
+                        currentTicketId,
+                        serviceType,
+                        amount,
+                        customerId
+                );
+                
+                // Remember this notification
+                lastNotificationTicketId = currentTicketId;
+                lastNotificationTime = updatedAt != null ? updatedAt.hashCode() : System.currentTimeMillis();
+            }
         }
         
         // Update previous status

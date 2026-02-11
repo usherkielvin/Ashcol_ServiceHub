@@ -47,7 +47,7 @@ public class ManagerReportsActivity extends AppCompatActivity {
 
         for (TicketListResponse.TicketItem ticket : tickets) {
             String status = ticket.getStatus().toLowerCase();
-            if (status.contains("completed") || status.contains("resolved") || status.contains("closed") || status.contains("paid")) {
+            if (status.contains("completed") || status.contains("resolved") || status.contains("closed")) {
                 completed++;
             } else if (status.contains("cancelled") || status.contains("rejected") || status.contains("failed")) {
                 cancelled++;

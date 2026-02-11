@@ -67,6 +67,9 @@
             android:name=".admin.BranchDetailActivity"
             android:exported="false" />
         <activity
+            android:name=".admin.BranchReportDetailActivity"
+            android:exported="false" />
+        <activity
             android:name=".admin.ManagersActivity"
             android:exported="false" />
         <activity

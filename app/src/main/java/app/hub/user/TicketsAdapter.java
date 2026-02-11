@@ -158,11 +158,6 @@ public class TicketsAdapter extends RecyclerView.Adapter<TicketsAdapter.TicketVi
             String normalizedStatus = normalizeStatus(status);
             String displayStatus = normalizedStatus != null ? normalizedStatus : "Unknown";
 
-            boolean isPaid = ticketId != null && paidTicketIds.contains(ticketId);
-            if (isPaid && "completed".equalsIgnoreCase(displayStatus)) {
-                displayStatus = "Paid";
-            }
-
             if (tvStatus != null) {
                 tvStatus.setText(displayStatus);
                 applyStatusStyle(tvStatus, normalizedStatus);
@@ -279,7 +274,6 @@ public class TicketsAdapter extends RecyclerView.Adapter<TicketsAdapter.TicketVi
                 case "arrived":
                     return Color.parseColor("#2196F3"); // Blue
                 case "completed":
-                case "paid":
                 case "closed": // Treat closed as completed/history
                     return Color.parseColor("#4CAF50"); // Green
                 case "rejected":

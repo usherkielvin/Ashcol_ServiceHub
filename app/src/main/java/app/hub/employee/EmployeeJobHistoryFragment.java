@@ -203,8 +203,7 @@ public class EmployeeJobHistoryFragment extends Fragment {
 
         return normalized.contains("completed")
                 || normalized.contains("resolved")
-                || normalized.contains("closed")
-                || normalized.contains("paid");
+                || normalized.contains("closed");
     }
 
     private boolean matchesTechnician(TicketListResponse.TicketItem ticket) {

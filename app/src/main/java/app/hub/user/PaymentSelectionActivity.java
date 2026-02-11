@@ -49,6 +49,8 @@ public class PaymentSelectionActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_payment_selection);
 
+        Log.d(TAG, "onCreate() - PaymentSelectionActivity started");
+
         // Initialize TokenManager and ApiService
         tokenManager = new TokenManager(this);
         apiService = ApiClient.getClient().create(ApiService.class);
@@ -60,9 +62,13 @@ public class PaymentSelectionActivity extends AppCompatActivity {
         amount = intent.getDoubleExtra("amount", 0.0);
         customerId = intent.getIntExtra("customer_id", 0);
         
+        Log.d(TAG, "Intent data - Ticket: " + ticketId + ", Service: " + serviceType + 
+                ", Amount: " + amount + ", Customer: " + customerId);
+        
         // Cancel notification when this activity opens
         if (ticketId != null) {
             app.hub.util.NotificationHelper.cancelNotification(this, ticketId);
+            Log.d(TAG, "Notification cancelled for ticket: " + ticketId);
         }
 
         // Initialize views
@@ -73,6 +79,8 @@ public class PaymentSelectionActivity extends AppCompatActivity {
 
         // Setup listeners
         setupListeners();
+        
+        Log.d(TAG, "onCreate() completed - Activity ready for user interaction");
     }
 
     private void initializeViews() {
@@ -90,13 +98,34 @@ public class PaymentSelectionActivity extends AppCompatActivity {
     }
 
     private void displayTicketData() {
-        tvTicketId.setText(ticketId != null ? ticketId : "N/A");
+        // Validate data
+        if (ticketId == null || ticketId.isEmpty()) {
+            Toast.makeText(this, "Invalid ticket ID", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
+        
+        if (customerId == 0) {
+            // Get customer ID from token if not provided
+            customerId = tokenManager.getUserIdInt();
+            Log.d(TAG, "Customer ID from token: " + customerId);
+        }
+        
+        if (customerId == 0) {
+            Toast.makeText(this, "Invalid customer ID. Please login again.", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
+        
+        tvTicketId.setText(ticketId);
         tvServiceType.setText(serviceType != null ? serviceType : "N/A");
         tvAmount.setText(String.format("₱%.2f", amount));
         
-        // Cash is pre-selected, so enable button and set payment method
+        // Cash is pre-selected by default in layout
         selectedPaymentMethod = PaymentMethod.CASH;
         btnConfirmPayment.setEnabled(true);
+        
+        Log.d(TAG, "Payment form loaded - Ticket: " + ticketId + ", Amount: " + amount + ", Customer: " + customerId);
     }
 
     private void setupListeners() {
@@ -155,10 +184,15 @@ public class PaymentSelectionActivity extends AppCompatActivity {
     }
 
     private void confirmPayment() {
+        Log.d(TAG, "confirmPayment() called");
+        
         if (selectedPaymentMethod == null) {
             Toast.makeText(this, "Please select a payment method", Toast.LENGTH_SHORT).show();
             return;
         }
+
+        Log.d(TAG, "Confirming payment - Method: " + selectedPaymentMethod.getValue() + 
+                ", Ticket: " + ticketId + ", Amount: " + amount + ", Customer: " + customerId);
 
         // Show loading
         showLoading(true);
@@ -176,8 +210,11 @@ public class PaymentSelectionActivity extends AppCompatActivity {
         if (token == null || token.isEmpty()) {
             showLoading(false);
             Toast.makeText(this, "Authentication error. Please login again.", Toast.LENGTH_SHORT).show();
+            Log.e(TAG, "No token found");
             return;
         }
+
+        Log.d(TAG, "Sending payment confirmation to API...");
 
         // Call API
         Call<PaymentConfirmationResponse> call = apiService.confirmPayment("Bearer " + token, requestBody);
@@ -185,9 +222,13 @@ public class PaymentSelectionActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<PaymentConfirmationResponse> call, Response<PaymentConfirmationResponse> response) {
                 showLoading(false);
+                
+                Log.d(TAG, "API Response - Code: " + response.code() + ", Success: " + response.isSuccessful());
 
                 if (response.isSuccessful() && response.body() != null) {
                     PaymentConfirmationResponse result = response.body();
+                    
+                    Log.d(TAG, "Response body - Success: " + result.isSuccess() + ", Message: " + result.getMessage());
                     
                     if (result.isSuccess()) {
                         handleConfirmationResponse(result);
@@ -198,6 +239,13 @@ public class PaymentSelectionActivity extends AppCompatActivity {
                     }
                 } else {
                     Log.e(TAG, "Payment confirmation failed: " + response.code());
+                    try {
+                        if (response.errorBody() != null) {
+                            Log.e(TAG, "Error body: " + response.errorBody().string());
+                        }
+                    } catch (Exception e) {
+                        Log.e(TAG, "Could not read error body", e);
+                    }
                     Toast.makeText(PaymentSelectionActivity.this, 
                             "Payment confirmation failed. Please try again.", 
                             Toast.LENGTH_SHORT).show();

@@ -263,8 +263,7 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity
         String normalized = status.trim().toLowerCase(java.util.Locale.ENGLISH);
         boolean showPayment = normalized.contains("completed")
                 || normalized.contains("resolved")
-                || normalized.contains("closed")
-                || normalized.contains("paid");
+                || normalized.contains("closed");
 
         if (!showPayment) {
             paymentCard.setVisibility(View.GONE);
@@ -342,8 +341,7 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity
     private boolean isPaidStatus(String status) {
         if (status == null) return false;
         String normalized = status.trim().toLowerCase(java.util.Locale.ENGLISH);
-        return normalized.contains("paid")
-                || normalized.contains("completed")
+        return normalized.contains("completed")
                 || normalized.contains("resolved")
                 || normalized.contains("closed");
     }
@@ -631,9 +629,6 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity
                     break;
                 case "completed":
                     color = Color.parseColor("#4CAF50");
-                    break;
-                case "paid":
-                    color = Color.parseColor("#2E7D32");
                     break;
                 case "cancelled":
                 case "rejected":

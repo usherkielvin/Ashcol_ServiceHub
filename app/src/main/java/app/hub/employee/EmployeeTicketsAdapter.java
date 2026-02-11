@@ -161,9 +161,6 @@ public class EmployeeTicketsAdapter extends RecyclerView.Adapter<EmployeeTickets
                 case "completed":
                     tintStatus(textView, "#4CAF50");
                     break;
-                case "paid":
-                    tintStatus(textView, "#2E7D32");
-                    break;
                 case "cancelled":
                 case "rejected":
                     tintStatus(textView, "#F44336");
@@ -186,9 +183,6 @@ public class EmployeeTicketsAdapter extends RecyclerView.Adapter<EmployeeTickets
                 return "Completed";
             }
             String normalized = status.trim().toLowerCase(Locale.ENGLISH);
-            if (normalized.contains("paid")) {
-                return "Paid";
-            }
             if (normalized.contains("completed") || normalized.contains("resolved") || normalized.contains("closed")) {
                 return "Completed";
             }
