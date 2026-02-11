@@ -71,6 +71,8 @@ public class ManagerDashboardActivity extends AppCompatActivity {
             selectedFragment = new ManagerEmployeeFragment();
         } else if (itemId == R.id.nav_work) {
             selectedFragment = new ManagerWorkFragment();
+        } else if (itemId == R.id.nav_records) {
+            selectedFragment = new ManagerRecordsFragment();
         } else if (itemId == R.id.nav_profile) {
             selectedFragment = new ManagerProfileFragment();
         }

@@ -40,7 +40,6 @@ public class UserPaymentFragment extends Fragment {
     private String serviceName;
     private String technicianName;
     private String paymentMethod;
-    private boolean autoPaymentTriggered = false;
 
     public UserPaymentFragment() {
         // Required empty public constructor
@@ -137,10 +136,10 @@ public class UserPaymentFragment extends Fragment {
             String method;
             if (cashChecked) {
                 method = "Cash";
-                // For cash payment, just close the form (go back)
-                Toast.makeText(getContext(), "Payment will be collected by technician in person.", Toast.LENGTH_SHORT).show();
+                // For cash payment, show confirmation and close
+                Toast.makeText(getContext(), "Cash payment selected. Payment will be collected by technician.", Toast.LENGTH_LONG).show();
                 if (getActivity() != null) {
-                    getActivity().getSupportFragmentManager().popBackStack();
+                    getActivity().finish();
                 }
                 return;
             } else if (gcashChecked) {
@@ -149,7 +148,7 @@ public class UserPaymentFragment extends Fragment {
                 method = "Credit Card";
             }
 
-            // For non-cash payments (GCash, Credit Card), proceed with payment
+            // For online payments (GCash, Credit Card), proceed with payment
             completePayment(method);
         });
     }
@@ -253,12 +252,6 @@ public class UserPaymentFragment extends Fragment {
 
                         boolean pending = payment.getStatus() != null
                                 && payment.getStatus().equalsIgnoreCase("pending");
-
-                        if (pending && isOnlinePayment(paymentMethod) && !autoPaymentTriggered) {
-                            autoPaymentTriggered = true;
-                            completePayment("Online");
-                            return;
-                        }
 
                         if (isCashPayment(paymentMethod)) {
                             btnContinuePayment.setText("Awaiting Cash Collection");

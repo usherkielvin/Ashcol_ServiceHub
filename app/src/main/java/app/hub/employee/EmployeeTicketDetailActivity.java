@@ -662,6 +662,12 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity
         String customerName = currentTicket != null ? currentTicket.getCustomerName() : null;
         String serviceName = currentTicket != null ? currentTicket.getServiceType() : null;
         double amount = currentTicket != null ? currentTicket.getAmount() : 0.0;
+        
+        View fragmentContainer = findViewById(R.id.fragment_container);
+        if (fragmentContainer != null) {
+            fragmentContainer.setVisibility(View.VISIBLE);
+        }
+        
         EmployeePaymentFragment fragment = EmployeePaymentFragment.newInstance(
             ticketId,
             customerName,
@@ -670,7 +676,7 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity
             isRequestPayment);
         getSupportFragmentManager()
                 .beginTransaction()
-                .add(android.R.id.content, fragment)
+                .replace(R.id.fragment_container, fragment)
                 .addToBackStack(null)
                 .commit();
     }

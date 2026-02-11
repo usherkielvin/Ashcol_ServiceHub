@@ -274,6 +274,7 @@ public class FirestoreManager {
         public String serviceName;
         public String technicianName;
         public String status;
+        public String paymentMethod;
         public double amount;
 
         public PendingPayment() {

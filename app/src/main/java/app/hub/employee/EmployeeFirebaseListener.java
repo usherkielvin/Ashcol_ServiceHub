@@ -49,8 +49,8 @@ public class EmployeeFirebaseListener {
             return;
         }
 
-        String userIdStr = tokenManager.getUserId();
-        if (userIdStr == null || userIdStr.isEmpty()) {
+        int technicianId = tokenManager.getUserId();
+        if (technicianId <= 0) {
             Log.w(TAG, "Invalid technician ID, cannot start Firebase listener");
             return;
         }

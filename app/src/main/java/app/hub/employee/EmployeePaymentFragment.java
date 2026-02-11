@@ -149,20 +149,32 @@ public class EmployeePaymentFragment extends Fragment {
                     }
                     return;
                 }
+                
+                boolean listenerCalled = false;
+                
+                // Try activity first
                 if (getActivity() instanceof OnPaymentRequestListener) {
                     ((OnPaymentRequestListener) getActivity())
                             .onPaymentRequested(totalAmount, "");
-                } else if (getParentFragment() instanceof OnPaymentRequestListener) {
+                    listenerCalled = true;
+                }
+                // Then try parent fragment
+                else if (getParentFragment() instanceof OnPaymentRequestListener) {
                     ((OnPaymentRequestListener) getParentFragment())
                             .onPaymentRequested(totalAmount, "");
-                } else if (getContext() != null) {
+                    listenerCalled = true;
+                }
+                
+                if (!listenerCalled && getContext() != null) {
                     android.widget.Toast.makeText(getContext(),
                             "Unable to request payment right now.",
                             android.widget.Toast.LENGTH_SHORT).show();
+                    return;
                 }
 
-                if (getParentFragmentManager() != null) {
-                    getParentFragmentManager().popBackStack();
+                // Close the fragment after successful request
+                if (getActivity() != null && getActivity().getSupportFragmentManager() != null) {
+                    getActivity().getSupportFragmentManager().popBackStack();
                 }
             });
         }
@@ -177,16 +189,24 @@ public class EmployeePaymentFragment extends Fragment {
                     }
                     return;
                 }
+                
+                boolean listenerCalled = false;
+                
+                // Try activity first
                 if (getActivity() instanceof OnPaymentConfirmedListener) {
                     ((OnPaymentConfirmedListener) getActivity())
                             .onPaymentConfirmed("cash", totalAmount, "");
-                } else if (getParentFragment() instanceof OnPaymentConfirmedListener) {
+                    listenerCalled = true;
+                }
+                // Then try parent fragment
+                else if (getParentFragment() instanceof OnPaymentConfirmedListener) {
                     ((OnPaymentConfirmedListener) getParentFragment())
                             .onPaymentConfirmed("cash", totalAmount, "");
+                    listenerCalled = true;
                 }
 
-                if (getParentFragmentManager() != null) {
-                    getParentFragmentManager().popBackStack();
+                if (listenerCalled && getActivity() != null && getActivity().getSupportFragmentManager() != null) {
+                    getActivity().getSupportFragmentManager().popBackStack();
                 }
             });
         }

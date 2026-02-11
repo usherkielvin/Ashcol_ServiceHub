@@ -52,9 +52,8 @@ public class ManagerRecordsFragment extends Fragment implements TicketDataChange
     private TextView tvPaymentsEmpty;
     private TextView locationTitle;
     private ManagerPaymentsAdapter paymentsAdapter;
-    private final List<PaymentHistoryResponse.PaymentItem> payments = new ArrayList<>();
-    
     private TokenManager tokenManager;
+    private List<PaymentHistoryResponse.PaymentItem> payments;
     private boolean showingReports = true;
 
     public ManagerRecordsFragment() {
@@ -74,6 +73,7 @@ public class ManagerRecordsFragment extends Fragment implements TicketDataChange
         tokenManager = new TokenManager(requireContext());
         allTickets = new ArrayList<>();
         filteredReports = new ArrayList<>();
+        payments = new ArrayList<>();
 
         initViews(view);
         setupSubTabs();
@@ -103,20 +103,13 @@ public class ManagerRecordsFragment extends Fragment implements TicketDataChange
         tvPaymentsEmpty = view.findViewById(R.id.tvPaymentsEmpty);
         locationTitle = view.findViewById(R.id.locationTitle);
         
-        // Setup SwipeRefreshLayout
-        if (swipeRefreshRecords != null) {
-            swipeRefreshRecords.setColorSchemeResources(
-                    R.color.green,
-                    R.color.blue,
-                    R.color.orange);
-            swipeRefreshRecords.setOnRefreshListener(() -> {
-                if (showingReports) {
-                    refreshReports();
-                } else {
-                    loadPaymentHistory();
-                }
-            });
-        }
+        swipeRefreshRecords.setOnRefreshListener(() -> {
+            if (cardReports.getVisibility() == View.VISIBLE) {
+                refreshReports();
+            } else {
+                loadPaymentHistory();
+            }
+        });
     }
 
     private void setupSubTabs() {

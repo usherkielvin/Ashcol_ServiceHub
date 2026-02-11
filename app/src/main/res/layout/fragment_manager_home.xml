@@ -233,9 +233,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
+                android:layout_marginBottom="16dp"
                 android:nestedScrollingEnabled="false"
                 android:paddingHorizontal="12dp"
-                app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/empOverSub"
                 tools:listitem="@layout/item_employee_preview" />
 
