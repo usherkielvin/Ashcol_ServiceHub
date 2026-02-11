@@ -15,6 +15,9 @@ public class PaymentRequestResponse {
     @SerializedName("ticket_id")
     private String ticketId;
 
+    @SerializedName("is_reminder")
+    private boolean isReminder;
+
     public boolean isSuccess() {
         return success;
     }
@@ -45,5 +48,13 @@ public class PaymentRequestResponse {
 
     public void setTicketId(String ticketId) {
         this.ticketId = ticketId;
+    }
+
+    public boolean isReminder() {
+        return isReminder;
+    }
+
+    public void setReminder(boolean reminder) {
+        isReminder = reminder;
     }
 }

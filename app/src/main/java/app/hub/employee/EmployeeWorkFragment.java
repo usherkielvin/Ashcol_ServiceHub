@@ -667,7 +667,14 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
                     return;
                 }
                 if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
-                    Toast.makeText(getContext(), "Payment request sent to customer.", Toast.LENGTH_SHORT).show();
+                    // Check if this is a reminder or new request
+                    boolean isReminder = response.body().isReminder();
+                    String message = isReminder 
+                        ? "Payment reminder sent to customer." 
+                        : "Payment request sent to customer.";
+                    
+                    Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
+                    
                     if (activeTicket != null && ticketId.equals(activeTicket.getTicketId())) {
                         activeTicket.setStatus("Pending Payment");
                         activeTicket.setStatusDetail("Pending Payment");
@@ -675,7 +682,7 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
                         clearReadyForPayment(ticketId);
                     }
                     
-                    // Navigate to confirmation screen
+                    // Always navigate to confirmation screen (for new requests and reopening)
                     showPaymentConfirmationScreen();
                     
                     // Immediate refresh to update UI

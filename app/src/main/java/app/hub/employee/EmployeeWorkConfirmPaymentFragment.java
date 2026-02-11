@@ -45,7 +45,6 @@ public class EmployeeWorkConfirmPaymentFragment extends Fragment {
     private TokenManager tokenManager;
     private FirestoreManager firestoreManager;
     private MaterialButton btnPaymentConfirmed;
-    private MaterialButton btnRequestOnlinePayment;
     private TextView tvPaymentStatus;
 
     public EmployeeWorkConfirmPaymentFragment() {
@@ -94,7 +93,6 @@ public class EmployeeWorkConfirmPaymentFragment extends Fragment {
         TextView tvTotalAmount = view.findViewById(R.id.tvTotalAmount);
         tvPaymentStatus = view.findViewById(R.id.tvConfirmationStatus);
         btnPaymentConfirmed = view.findViewById(R.id.btnPaymentConfirmed);
-        btnRequestOnlinePayment = view.findViewById(R.id.btnRequestOnlinePayment);
 
         // Set ticket details
         if (ticketId != null) {
@@ -110,15 +108,11 @@ public class EmployeeWorkConfirmPaymentFragment extends Fragment {
             tvTotalAmount.setText(formatAmount(amount));
         }
 
-        // Hide online payment button (payment already requested)
-        if (btnRequestOnlinePayment != null) {
-            btnRequestOnlinePayment.setVisibility(View.GONE);
-        }
-
         // Setup cash received button
         if (btnPaymentConfirmed != null) {
             btnPaymentConfirmed.setText("Cash Received");
-            btnPaymentConfirmed.setEnabled(false); // Disabled until we load payment details
+            btnPaymentConfirmed.setVisibility(View.GONE); // Initially hidden
+            btnPaymentConfirmed.setEnabled(false);
             btnPaymentConfirmed.setOnClickListener(v -> confirmCashPayment());
         }
 
@@ -179,7 +173,8 @@ public class EmployeeWorkConfirmPaymentFragment extends Fragment {
             return;
         }
 
-        firestoreManager.listenToPendingPayment(ticketId, new FirestoreManager.PendingPaymentListener() {
+        // Listen to payment by ticket ID (any status) to catch status changes
+        firestoreManager.listenToPaymentByTicket(ticketId, new FirestoreManager.PendingPaymentListener() {
             @Override
             public void onPaymentUpdated(FirestoreManager.PendingPayment payment) {
                 if (!isAdded() || getActivity() == null) {
@@ -205,11 +200,11 @@ public class EmployeeWorkConfirmPaymentFragment extends Fragment {
             return;
         }
 
-        // Check if payment is completed
-        if ("completed".equalsIgnoreCase(status) || "paid".equalsIgnoreCase(status)) {
-            // Payment completed - auto close
+        // Check if payment is completed or collected
+        if ("completed".equalsIgnoreCase(status) || "collected".equalsIgnoreCase(status)) {
+            // Payment completed - auto close and mark ticket as completed
             if (tvPaymentStatus != null) {
-                tvPaymentStatus.setText("Payment received! Closing...");
+                tvPaymentStatus.setText("Payment received! Completing job...");
             }
             
             Toast.makeText(getContext(), "Payment received successfully!", Toast.LENGTH_SHORT).show();
@@ -225,26 +220,28 @@ public class EmployeeWorkConfirmPaymentFragment extends Fragment {
 
         // Check payment method
         if ("cash".equalsIgnoreCase(method)) {
-            // Customer selected cash - enable cash received button
+            // Customer selected cash - enable cash received button and show it
             if (btnPaymentConfirmed != null) {
+                btnPaymentConfirmed.setVisibility(View.VISIBLE);
                 btnPaymentConfirmed.setEnabled(true);
+                btnPaymentConfirmed.setText("Cash Received");
             }
             if (tvPaymentStatus != null) {
                 tvPaymentStatus.setText("Customer selected cash payment. Click 'Cash Received' when payment is collected.");
             }
         } else if ("online".equalsIgnoreCase(method) || "gcash".equalsIgnoreCase(method) || 
-                   "credit card".equalsIgnoreCase(method)) {
-            // Customer selected online payment - waiting for payment
+                   "credit card".equalsIgnoreCase(method) || "bank transfer".equalsIgnoreCase(method)) {
+            // Customer selected online payment - hide button and wait for auto-completion
             if (btnPaymentConfirmed != null) {
-                btnPaymentConfirmed.setEnabled(false);
+                btnPaymentConfirmed.setVisibility(View.GONE);
             }
             if (tvPaymentStatus != null) {
-                tvPaymentStatus.setText("Waiting for customer to complete online payment...");
+                tvPaymentStatus.setText("Customer selected online payment. This screen will close automatically when payment is confirmed.");
             }
         } else {
             // Pending - waiting for customer to select method
             if (btnPaymentConfirmed != null) {
-                btnPaymentConfirmed.setEnabled(false);
+                btnPaymentConfirmed.setVisibility(View.GONE);
             }
             if (tvPaymentStatus != null) {
                 tvPaymentStatus.setText("Waiting for customer to select payment method...");

@@ -320,6 +320,35 @@ public class FirestoreManager {
                 });
     }
 
+    /**
+     * Listen to payment for a specific ticket (any status)
+     * Used by technician to monitor payment status changes
+     */
+    public void listenToPaymentByTicket(@Nullable String ticketId, PendingPaymentListener listener) {
+        if (ticketId == null) {
+            listener.onError(new Exception("Missing ticket id"));
+            return;
+        }
+
+        paymentListener = db.collection("payments")
+                .whereEqualTo("ticketId", ticketId)
+                .addSnapshotListener((snapshots, error) -> {
+                    if (error != null) {
+                        listener.onError(error);
+                        return;
+                    }
+
+                    if (snapshots != null && !snapshots.isEmpty()) {
+                        // Get the most recent payment for this ticket
+                        DocumentSnapshot doc = snapshots.getDocuments().get(0);
+                        PendingPayment payment = doc.toObject(PendingPayment.class);
+                        if (payment != null) {
+                            listener.onPaymentUpdated(payment);
+                        }
+                    }
+                });
+    }
+
     public void listenToCompletedPayment(@Nullable String ticketId, PendingPaymentListener listener) {
         String email = tokenManager.getEmail();
         if (email == null || ticketId == null) {
