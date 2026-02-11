@@ -80,6 +80,9 @@ public class DashboardActivity extends AppCompatActivity {
                 fabChatbot.show();
             }
             getIntent().removeExtra(EXTRA_SHOW_MY_TICKETS);
+        } else {
+            // Activity recreated (e.g., theme change) - restore navigation state
+            restoreNavigationState();
         }
 
         handleNotificationIntent(getIntent());
@@ -364,6 +367,50 @@ public class DashboardActivity extends AppCompatActivity {
                         new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, 
                         1001
                 );
+            }
+        }
+    }
+    
+    /**
+     * Restore navigation state after activity recreation (e.g., theme change).
+     * Syncs the bottom navigation and chatbot visibility with the currently displayed fragment.
+     */
+    private void restoreNavigationState() {
+        // Get the currently displayed fragment
+        Fragment currentFragment = getSupportFragmentManager().findFragmentById(R.id.fragmentContainerView);
+        
+        if (currentFragment == null) {
+            return;
+        }
+        
+        // Determine which navigation item should be selected based on the fragment
+        int selectedItemId = R.id.homebtn; // Default to home
+        boolean shouldShowChatbot = false;
+        
+        if (currentFragment instanceof UserHomeFragment) {
+            selectedItemId = R.id.homebtn;
+            shouldShowChatbot = true;
+        } else if (currentFragment instanceof UserTicketsFragment) {
+            selectedItemId = R.id.my_ticket;
+        } else if (currentFragment instanceof UserNotificationFragment) {
+            selectedItemId = R.id.activitybtn;
+        } else if (currentFragment instanceof UserProfileFragment) {
+            selectedItemId = R.id.Profile;
+        }
+        
+        // Update bottom navigation selection
+        final int finalSelectedItemId = selectedItemId;
+        bottomNavigationView.post(() -> {
+            bottomNavigationView.setSelectedItemId(finalSelectedItemId);
+            moveIndicatorToItem(finalSelectedItemId, false);
+        });
+        
+        // Update chatbot visibility
+        if (fabChatbot != null) {
+            if (shouldShowChatbot) {
+                fabChatbot.show();
+            } else {
+                fabChatbot.hide();
             }
         }
     }

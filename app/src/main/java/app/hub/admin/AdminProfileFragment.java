@@ -32,6 +32,7 @@ import app.hub.api.UserResponse;
 import app.hub.common.MainActivity;
 import app.hub.common.ProfileAboutUsFragment;
 import app.hub.employee.EmployeePersonalInfoFragment;
+import app.hub.util.LoadingDialog;
 import app.hub.util.TokenManager;
 import app.hub.util.UiPreferences;
 
@@ -410,10 +411,19 @@ public class AdminProfileFragment extends Fragment {
     }
 
     private void openPersonalInfo() {
-        navigateToFragment(new EmployeePersonalInfoFragment());
+        Intent intent = new Intent(getActivity(), app.hub.common.PersonalInfoActivity.class);
+        startActivity(intent);
     }
 
     private void navigateToFragment(Fragment fragment) {
+        // For About Us, launch as activity
+        if (fragment instanceof ProfileAboutUsFragment) {
+            Intent intent = new Intent(getActivity(), app.hub.common.AboutUsActivity.class);
+            startActivity(intent);
+            return;
+        }
+        
+        // Fallback for other fragments (if any)
         if (!isAdded() || getActivity() == null) {
             return;
         }
@@ -462,13 +472,11 @@ public class AdminProfileFragment extends Fragment {
     }
 
     private void logout() {
-        // Show progress indicator
+        // Show loading dialog
         if (getActivity() == null) return;
         
-        android.app.ProgressDialog progressDialog = new android.app.ProgressDialog(getContext());
-        progressDialog.setMessage("Logging out...");
-        progressDialog.setCancelable(false);
-        progressDialog.show();
+        LoadingDialog loadingDialog = new LoadingDialog(requireContext());
+        loadingDialog.show();
         
         String authToken = tokenManager.getAuthToken();
         if (authToken != null) {
@@ -477,10 +485,8 @@ public class AdminProfileFragment extends Fragment {
             call.enqueue(new Callback<LogoutResponse>() {
                 @Override
                	public void onResponse(@NonNull Call<LogoutResponse> call, @NonNull Response<LogoutResponse> response) {
-                    // Dismiss progress dialog
-                    if (progressDialog.isShowing()) {
-                        progressDialog.dismiss();
-                    }
+                    // Dismiss loading dialog
+                    loadingDialog.dismiss();
                     
                     // Perform cleanup operations asynchronously
                     performLogoutCleanup();
@@ -488,20 +494,16 @@ public class AdminProfileFragment extends Fragment {
 
                 @Override
                 public void onFailure(@NonNull Call<LogoutResponse> call, @NonNull Throwable t) {
-                    // Dismiss progress dialog
-                    if (progressDialog.isShowing()) {
-                        progressDialog.dismiss();
-                    }
+                    // Dismiss loading dialog
+                    loadingDialog.dismiss();
                     
                     // Still perform cleanup even if API call fails
                     performLogoutCleanup();
                 }
             });
         } else {
-            // Dismiss progress dialog
-            if (progressDialog.isShowing()) {
-                progressDialog.dismiss();
-            }
+            // Dismiss loading dialog
+            loadingDialog.dismiss();
             
             // No token, just perform cleanup
             performLogoutCleanup();

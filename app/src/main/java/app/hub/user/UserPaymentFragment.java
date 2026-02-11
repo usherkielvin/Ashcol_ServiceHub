@@ -137,21 +137,20 @@ public class UserPaymentFragment extends Fragment {
             String method;
             if (cashChecked) {
                 method = "Cash";
+                // For cash payment, just close the form (go back)
+                Toast.makeText(getContext(), "Payment will be collected by technician in person.", Toast.LENGTH_SHORT).show();
+                if (getActivity() != null) {
+                    getActivity().getSupportFragmentManager().popBackStack();
+                }
+                return;
             } else if (gcashChecked) {
                 method = "GCash";
             } else {
                 method = "Credit Card";
             }
 
-            // For all non-cash payments (GCash, Credit Card), automatically complete payment
-            // Cash payments require manual confirmation by technician
-            if (!cashChecked) {
-                completePayment(method);
-            } else {
-                // For cash, show confirmation that payment will be collected in person
-                Toast.makeText(getContext(), "Payment will be collected by technician in person.", Toast.LENGTH_LONG).show();
-                completePayment(method);
-            }
+            // For non-cash payments (GCash, Credit Card), proceed with payment
+            completePayment(method);
         });
     }
 

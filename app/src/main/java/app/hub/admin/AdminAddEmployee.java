@@ -14,6 +14,7 @@ import app.hub.api.ApiClient;
 import app.hub.api.ApiService;
 import app.hub.api.RegisterRequest;
 import app.hub.api.RegisterResponse;
+import app.hub.util.LoadingDialog;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -119,6 +120,10 @@ public class AdminAddEmployee extends AppCompatActivity {
             return;
         }
 
+        // Show loading dialog
+        LoadingDialog loadingDialog = new LoadingDialog(this);
+        loadingDialog.show();
+
         // Create register request with role and branch
         RegisterRequest registerRequest = new RegisterRequest(
             username, firstName, lastName, email, "", "", 
@@ -131,6 +136,7 @@ public class AdminAddEmployee extends AppCompatActivity {
         call.enqueue(new Callback<RegisterResponse>() {
             @Override
             public void onResponse(Call<RegisterResponse> call, Response<RegisterResponse> response) {
+                loadingDialog.dismiss();
                 if (response.isSuccessful() && response.body() != null) {
                     RegisterResponse registerResponse = response.body();
                     if (registerResponse.isSuccess()) {
@@ -146,6 +152,7 @@ public class AdminAddEmployee extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<RegisterResponse> call, Throwable t) {
+                loadingDialog.dismiss();
                 Toast.makeText(AdminAddEmployee.this, "Network error: " + t.getMessage(), Toast.LENGTH_LONG).show();
             }
         });
