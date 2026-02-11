@@ -959,13 +959,22 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
             return;
         }
         String ticketId = activeTicket.getTicketId();
-        // Don't mark as STEP_COMPLETED yet - just flag as ready for payment
-        // This keeps the ticket visible in work view
-        SharedPreferences prefs = requireContext().getSharedPreferences(PREFS_READY_PAYMENT,
-                android.content.Context.MODE_PRIVATE);
-        prefs.edit().putBoolean(ticketId, true).apply();
-        android.util.Log.d("EmployeeWork", "Marked ticket as ready for payment: " + ticketId);
-        updateActiveJobUi();
+        
+        // Update status_detail to "work_completed" (keep status as "ongoing", not "completed" yet)
+        // Ticket will only be marked "completed" after payment is confirmed
+        updateTicketStatus("ongoing", "work_completed", () -> {
+            // After backend update succeeds, mark as ready for payment locally
+            SharedPreferences prefs = requireContext().getSharedPreferences(PREFS_READY_PAYMENT,
+                    android.content.Context.MODE_PRIVATE);
+            prefs.edit().putBoolean(ticketId, true).apply();
+            android.util.Log.d("EmployeeWork", "Work completed, ready for payment: " + ticketId);
+            
+            // Save the completed step and time
+            saveStepTime(ticketId, STEP_COMPLETED);
+            saveStep(ticketId, STEP_COMPLETED);
+            
+            updateActiveJobUi();
+        });
     }
 
     private boolean isReadyForPayment(String ticketId) {

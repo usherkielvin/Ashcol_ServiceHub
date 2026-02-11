@@ -24,7 +24,7 @@
             android:layout_marginStart="20dp"
             android:layout_marginTop="20dp"
             android:fontFamily="@font/poppins_bold"
-            android:text="Split AC General Cleaning"
+            android:text="Maintenance"
             android:textColor="@android:color/black"
             android:textSize="18sp"
             android:textStyle="bold"
@@ -38,7 +38,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="20dp"
             android:fontFamily="@font/poppins_medium"
-            android:text="• 1 Unit"
+            android:text="• TCK-001"
             android:textColor="#616161"
             android:textSize="14sp"
             app:layout_constraintEnd_toStartOf="@+id/btnWorkStatus"
@@ -71,55 +71,55 @@
             app:strokeColor="#1B5E20"
             app:strokeWidth="1dp" />
 
-        <!-- Middle Section -->
+        <!-- Middle Section - Schedule -->
         <TextView
-            android:id="@+id/tvRequestedByLabel"
+            android:id="@+id/tvScheduleLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="20dp"
             android:layout_marginTop="20dp"
             android:fontFamily="@font/poppins_medium"
-            android:text="Requested by:"
+            android:text="Schedule:"
             android:textColor="@android:color/black"
             android:textSize="14sp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/tvWorkDetail" />
 
         <TextView
-            android:id="@+id/tvRequestedById"
+            android:id="@+id/tvScheduleDate"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="20dp"
             android:fontFamily="@font/poppins_semibold"
-            android:text="CLN1004"
+            android:text="Feb 11, 2026"
             android:textColor="@android:color/black"
             android:textSize="14sp"
-            app:layout_constraintBaseline_toBaselineOf="@+id/tvRequestedByLabel"
+            app:layout_constraintBaseline_toBaselineOf="@+id/tvScheduleLabel"
             app:layout_constraintEnd_toEndOf="parent" />
 
         <TextView
-            android:id="@+id/tvScheduleLabel"
+            android:id="@+id/tvScheduleTimeLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="20dp"
             android:layout_marginTop="8dp"
             android:fontFamily="@font/poppins_medium"
-            android:text="Schedule:"
+            android:text="Time:"
             android:textColor="@android:color/black"
             android:textSize="14sp"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/tvRequestedByLabel" />
+            app:layout_constraintTop_toBottomOf="@+id/tvScheduleLabel" />
 
         <TextView
-            android:id="@+id/tvScheduleValue"
+            android:id="@+id/tvScheduleTime"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="20dp"
             android:fontFamily="@font/poppins_semibold"
-            android:text="Feb 04, 2026 - 10 : 00 AM"
+            android:text="10:11 AM"
             android:textColor="@android:color/black"
             android:textSize="14sp"
-            app:layout_constraintBaseline_toBaselineOf="@+id/tvScheduleLabel"
+            app:layout_constraintBaseline_toBaselineOf="@+id/tvScheduleTimeLabel"
             app:layout_constraintEnd_toEndOf="parent" />
 
         <!-- Divider -->
@@ -130,7 +130,7 @@
             android:layout_marginTop="16dp"
             android:background="#EEEEEE"
             android:visibility="visible"
-            app:layout_constraintTop_toBottomOf="@+id/tvScheduleLabel" />
+            app:layout_constraintTop_toBottomOf="@+id/tvScheduleTimeLabel" />
 
         <!-- Bottom Section (Customer Info) -->
         <TextView

@@ -212,6 +212,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content">
                         <TextView
+                            android:id="@+id/tvArrivedTitle"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:fontFamily="@font/poppins_bold"
@@ -219,35 +220,16 @@
                             android:textColor="@android:color/black"
                             android:textSize="15sp" />
                         <TextView
-                            android:id="@+id/tvTicketId"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_alignParentEnd="true"
-                            android:fontFamily="@font/poppins_medium"
-                            android:text="Ticket ID: TCKTid_1004"
-                            android:textColor="#424242"
-                            android:textSize="13sp" />
-                        <TextView
                             android:id="@+id/tvArrivedTime"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:layout_alignBaseline="@id/tvArrivedTitle"
                             android:layout_alignParentEnd="true"
-                            android:layout_below="@id/tvTicketId"
                             android:fontFamily="@font/poppins_medium"
                             android:text=""
                             android:textColor="#1B5E20"
                             android:textSize="12sp" />
                     </RelativeLayout>
-
-                    <TextView
-                        android:id="@+id/tvEta"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:fontFamily="@font/poppins_medium"
-                        android:text="ETA: auto calculated"
-                        android:textColor="#424242"
-                        android:textSize="14sp" />
 
                     <TextView
                         android:id="@+id/tvPhone"
