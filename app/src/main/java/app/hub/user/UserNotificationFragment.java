@@ -907,15 +907,9 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
         String ticketId = currentTicket.getTicketId();
         String serviceType = currentTicket.getServiceType();
         double amount = currentTicket.getAmount();
-        int customerId = tokenManager.getUserIdInt();
-        
-        // Launch PaymentSelectionActivity
-        Intent intent = new Intent(getContext(), PaymentSelectionActivity.class);
-        intent.putExtra("ticket_id", ticketId);
-        intent.putExtra("service_type", serviceType);
-        intent.putExtra("amount", amount);
-        intent.putExtra("customer_id", customerId);
-        startActivityForResult(intent, 1001);
+        Intent intent = UserPaymentActivity.createIntent(getContext(), ticketId, 0, amount,
+            serviceType, currentTicket.getAssignedStaff());
+        startActivity(intent);
     }
 
     private void updatePendingPaymentUi() {
@@ -946,7 +940,8 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
                         currentTicketId,
                         serviceType,
                         amount,
-                        customerId
+                    customerId,
+                    null
                 );
                 
                 // Remember this notification
