@@ -353,6 +353,20 @@ public class ManagerTicketDetailActivity extends AppCompatActivity
             }
         });
         
+        // Add item click listener to prevent selection of busy technicians
+        spinnerTechnician.setOnItemClickListener((parent, view, position, id) -> {
+            EmployeeResponse.Employee selectedTech = (EmployeeResponse.Employee) parent.getItemAtPosition(position);
+            if (selectedTech != null && selectedTech.getTicketCount() > 0) {
+                // Technician is busy - prevent selection
+                Toast.makeText(this, 
+                    "This technician is busy with " + selectedTech.getTicketCount() + 
+                    " ticket(s). Please select an available technician.", 
+                    Toast.LENGTH_LONG).show();
+                spinnerTechnician.setText(""); // Clear the selection
+                spinnerTechnician.dismissDropDown();
+            }
+        });
+        
         android.util.Log.d("ManagerTicketDetail", "Technician spinner setup complete with " + employees.size() + " technicians");
     }
 
@@ -639,6 +653,14 @@ public class ManagerTicketDetailActivity extends AppCompatActivity
         
         if (selectedTechnician == null) {
             Toast.makeText(this, "Please select a valid technician", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        
+        // Check if the technician is busy
+        if (selectedTechnician.getTicketCount() > 0) {
+            Toast.makeText(this, "This technician is currently busy. Please select an available technician.", 
+                          Toast.LENGTH_LONG).show();
+            spinnerTechnician.setText(""); // Clear the selection
             return;
         }
         

@@ -762,6 +762,7 @@ public class RegisterActivity extends AppCompatActivity {
 		Log.d(TAG, "Saving user data - Email: " + user.getEmail() + ", Role: " + user.getRole());
 		
 		tokenManager.saveToken("Bearer " + response.getData().getToken());
+		tokenManager.saveUserId(user.getId());
 		tokenManager.saveEmail(user.getEmail());
 		tokenManager.saveRole(user.getRole()); // Added role saving
 
@@ -852,6 +853,7 @@ public class RegisterActivity extends AppCompatActivity {
 		// Save user data and token
 		GoogleSignInResponse.User user = response.getData().getUser();
 		tokenManager.saveToken("Bearer " + response.getData().getToken());
+		tokenManager.saveUserId(user.getId());
 		tokenManager.saveEmail(user.getEmail());
 
 		// Build and save name
@@ -1074,6 +1076,7 @@ public class RegisterActivity extends AppCompatActivity {
 		if (user != null) {
 			// User exists - save user data and token
 			tokenManager.saveToken("Bearer " + response.getData().getToken());
+			tokenManager.saveUserId(user.getId());
 			tokenManager.saveEmail(user.getEmail());
 
 			// Build and save name
@@ -1162,6 +1165,9 @@ public class RegisterActivity extends AppCompatActivity {
 						// Save user data and token
 						if (token != null) {
 							tokenManager.saveToken("Bearer " + token);
+						}
+						if (user != null) {
+							tokenManager.saveUserId(user.getId());
 						}
 						tokenManager.saveEmail(user != null ? user.getEmail() : email);
 

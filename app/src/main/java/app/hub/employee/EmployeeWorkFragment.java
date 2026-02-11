@@ -638,33 +638,41 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
             return;
         }
 
-        CompleteWorkRequest request = new CompleteWorkRequest("online", amount, "");
+        // Get technician ID
+        int technicianId = tokenManager.getUserIdInt();
+        
+        // Create payment request using new API
+        app.hub.api.PaymentRequestBody requestBody = new app.hub.api.PaymentRequestBody(ticketId, technicianId);
         ApiService apiService = ApiClient.getApiService();
-        Call<CompleteWorkResponse> call = apiService.completeWorkWithPayment(
-                "Bearer " + token, ticketId, request);
+        Call<app.hub.api.PaymentRequestResponse> call = apiService.requestPayment(
+                "Bearer " + token, requestBody);
 
-        call.enqueue(new Callback<CompleteWorkResponse>() {
+        call.enqueue(new Callback<app.hub.api.PaymentRequestResponse>() {
             @Override
-            public void onResponse(Call<CompleteWorkResponse> call, Response<CompleteWorkResponse> response) {
+            public void onResponse(Call<app.hub.api.PaymentRequestResponse> call, Response<app.hub.api.PaymentRequestResponse> response) {
                 if (!isAdded()) {
                     return;
                 }
                 if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
                     Toast.makeText(getContext(), "Payment request sent to customer.", Toast.LENGTH_SHORT).show();
                     if (activeTicket != null && ticketId.equals(activeTicket.getTicketId())) {
-                        activeTicket.setStatus("completed");
-                        activeTicket.setStatusDetail("completed");
+                        activeTicket.setStatus("Pending Payment");
+                        activeTicket.setStatusDetail("Pending Payment");
                     }
-                    markCompletedLocal();
                     loadAssignedTickets(true);
-                    openPaymentFlow(false);
                     return;
                 }
-                Toast.makeText(getContext(), "Failed to request payment", Toast.LENGTH_SHORT).show();
+                
+                // Handle error response
+                String errorMessage = "Failed to request payment";
+                if (response.body() != null && response.body().getMessage() != null) {
+                    errorMessage = response.body().getMessage();
+                }
+                Toast.makeText(getContext(), errorMessage, Toast.LENGTH_SHORT).show();
             }
 
             @Override
-            public void onFailure(Call<CompleteWorkResponse> call, Throwable t) {
+            public void onFailure(Call<app.hub.api.PaymentRequestResponse> call, Throwable t) {
                 if (isAdded()) {
                     Toast.makeText(getContext(), "Network error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
                 }
@@ -810,7 +818,7 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
         if (status == null) {
             return false;
         }
-        return status.contains("completed") || status.contains("resolved") || status.contains("closed");
+        return status.contains("completed") || status.contains("resolved") || status.contains("closed") || status.contains("paid");
     }
 
     private int getTicketPriority(String status) {

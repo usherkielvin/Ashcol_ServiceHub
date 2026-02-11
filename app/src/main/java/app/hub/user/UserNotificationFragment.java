@@ -109,6 +109,20 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
         loadTickets();
     }
 
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        
+        // Handle payment confirmation result
+        if (requestCode == 1001 && resultCode == getActivity().RESULT_OK) {
+            if (data != null && data.getBooleanExtra("payment_confirmed", false)) {
+                Toast.makeText(getContext(), "Payment confirmed successfully!", Toast.LENGTH_SHORT).show();
+                // Refresh tickets to update UI
+                loadTickets();
+            }
+        }
+    }
+
     private void loadTickets() {
         android.util.Log.d("UserNotification", "Loading tickets...");
         
@@ -188,6 +202,16 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
         }
         
         android.util.Log.d("UserNotification", "Showing tracking view for ticket: " + currentTicket.getTicketId());
+        
+        // Check if this is a pending payment ticket
+        boolean isPendingPayment = currentTicket.getStatus() != null && 
+                                   currentTicket.getStatus().equalsIgnoreCase("Pending Payment");
+        
+        if (isPendingPayment) {
+            // Show notification card instead of full tracking view
+            showPendingPaymentNotification();
+            return;
+        }
         
         // Get the SwipeRefreshLayout
         SwipeRefreshLayout swipeRefresh = getView().findViewById(R.id.swipeRefreshLayout);
@@ -272,6 +296,75 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
         
         // Start location updates
         startLocationUpdates();
+    }
+
+    private void showPendingPaymentNotification() {
+        if (getView() == null || currentTicket == null) {
+            return;
+        }
+        
+        android.util.Log.d("UserNotification", "Showing pending payment notification");
+        
+        // Get the SwipeRefreshLayout
+        SwipeRefreshLayout swipeRefresh = getView().findViewById(R.id.swipeRefreshLayout);
+        if (swipeRefresh == null) {
+            return;
+        }
+        
+        // Find the FrameLayout inside SwipeRefreshLayout
+        FrameLayout frameLayout = null;
+        for (int i = 0; i < swipeRefresh.getChildCount(); i++) {
+            View child = swipeRefresh.getChildAt(i);
+            if (child instanceof FrameLayout) {
+                frameLayout = (FrameLayout) child;
+                break;
+            }
+        }
+        
+        if (frameLayout == null) {
+            return;
+        }
+        
+        // Hide empty state and recycler view
+        if (emptyStateContainer != null) {
+            emptyStateContainer.setVisibility(View.GONE);
+        }
+        View recyclerView = frameLayout.findViewById(R.id.rvActivity);
+        if (recyclerView != null) {
+            recyclerView.setVisibility(View.GONE);
+        }
+        
+        // Remove existing tracking container if present
+        if (trackingContainer != null && trackingContainer.getParent() != null) {
+            frameLayout.removeView(trackingContainer);
+            trackingContainer = null;
+        }
+        
+        // Inflate notification card layout
+        View notificationCard = getLayoutInflater().inflate(R.layout.card_pending_payment_notification, frameLayout, false);
+        frameLayout.addView(notificationCard);
+        
+        // Setup notification card
+        TextView tvTicketId = notificationCard.findViewById(R.id.tvNotificationTicketId);
+        TextView tvServiceType = notificationCard.findViewById(R.id.tvNotificationServiceType);
+        TextView tvAmount = notificationCard.findViewById(R.id.tvNotificationAmount);
+        MaterialButton btnPayNow = notificationCard.findViewById(R.id.btnNotificationPayNow);
+        
+        if (tvTicketId != null) {
+            tvTicketId.setText("Ticket ID: " + currentTicket.getTicketId());
+        }
+        if (tvServiceType != null) {
+            tvServiceType.setText(currentTicket.getServiceType());
+        }
+        if (tvAmount != null) {
+            tvAmount.setText(String.format("₱%.2f", currentTicket.getAmount()));
+        }
+        if (btnPayNow != null) {
+            btnPayNow.setOnClickListener(v -> openPendingPayment());
+        }
+        
+        // Make the entire card clickable
+        notificationCard.setOnClickListener(v -> openPendingPayment());
     }
 
     private void initializeTrackingViews() {
@@ -567,7 +660,8 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
                 || normalized.equals("accepted")
                 || normalized.equals("assigned")
                 || normalized.equals("ongoing")
-                || normalized.equals("on going");
+                || normalized.equals("on going")
+                || normalized.equals("pending payment");
     }
 
     private void updateTrackingSteps(@Nullable String status) {
@@ -779,24 +873,27 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
         if (!isAdded() || getContext() == null || currentTicket == null) {
             return;
         }
+        
+        // Get ticket details
         String ticketId = currentTicket.getTicketId();
-        int paymentId = pendingPayment != null ? pendingPayment.paymentId : 0;
-        double amount = pendingPayment != null ? pendingPayment.amount : 0.0;
-        String serviceName = pendingPayment != null ? pendingPayment.serviceName : null;
-        String technicianName = pendingPayment != null ? pendingPayment.technicianName : null;
-        startActivity(UserPaymentActivity.createIntent(
-                getContext(),
-                ticketId,
-                paymentId,
-                amount,
-                serviceName,
-                technicianName));
+        String serviceType = currentTicket.getServiceType();
+        double amount = currentTicket.getAmount();
+        int customerId = tokenManager.getUserIdInt();
+        
+        // Launch PaymentSelectionActivity
+        Intent intent = new Intent(getContext(), PaymentSelectionActivity.class);
+        intent.putExtra("ticket_id", ticketId);
+        intent.putExtra("service_type", serviceType);
+        intent.putExtra("amount", amount);
+        intent.putExtra("customer_id", customerId);
+        startActivityForResult(intent, 1001);
     }
 
     private void updatePendingPaymentUi() {
-        boolean hasPending = pendingPaymentTicketId != null
-                && currentTicket != null
-                && pendingPaymentTicketId.equals(currentTicket.getTicketId());
+        // Check if current ticket has "Pending Payment" status
+        boolean hasPending = currentTicket != null && 
+                             currentTicket.getStatus() != null && 
+                             currentTicket.getStatus().equalsIgnoreCase("Pending Payment");
 
         if (trackingCard != null) {
             trackingCard.setVisibility(hasPending ? View.GONE : View.VISIBLE);

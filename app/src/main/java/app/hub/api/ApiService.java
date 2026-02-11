@@ -184,6 +184,15 @@ public interface ApiService {
     Call<app.hub.api.CompleteWorkResponse> completePayment(@Header("Authorization") String token,
             @retrofit2.http.Path("paymentId") int paymentId);
 
+    // Payment Request Flow APIs
+    @POST("api/v1/payment-request")
+    Call<PaymentRequestResponse> requestPayment(@Header("Authorization") String token,
+            @Body PaymentRequestBody request);
+
+    @POST("api/v1/payment-confirm")
+    Call<PaymentConfirmationResponse> confirmPayment(@Header("Authorization") String token,
+            @Body PaymentConfirmationBody request);
+
     @DELETE("api/v1/admin/users/{userId}")
     Call<DeleteAccountResponse> adminDeleteUser(@Header("Authorization") String token,
             @retrofit2.http.Path("userId") int userId);

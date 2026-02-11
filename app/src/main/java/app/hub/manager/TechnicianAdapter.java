@@ -59,12 +59,20 @@ public class TechnicianAdapter extends ArrayAdapter<EmployeeResponse.Employee> {
 
         // Set status based on ticket count
         int ticketCount = technician.getTicketCount();
-        if (ticketCount > 0) {
-            tvStatus.setText("Busy");
+        boolean isBusy = ticketCount > 0;
+        
+        if (isBusy) {
+            // Busy technician - show as disabled
+            tvStatus.setText("Busy (" + ticketCount + ")");
             tvStatus.setTextColor(context.getResources().getColor(android.R.color.holo_red_dark));
+            tvName.setAlpha(0.5f);
+            tvStatus.setAlpha(0.5f);
         } else {
+            // Available technician - show as enabled
             tvStatus.setText("Available");
             tvStatus.setTextColor(context.getResources().getColor(android.R.color.holo_green_dark));
+            tvName.setAlpha(1.0f);
+            tvStatus.setAlpha(1.0f);
         }
 
         return convertView;
@@ -92,6 +100,7 @@ public class TechnicianAdapter extends ArrayAdapter<EmployeeResponse.Employee> {
             List<EmployeeResponse.Employee> suggestions = new ArrayList<>();
 
             if (constraint == null || constraint.length() == 0) {
+                // Show all technicians
                 suggestions.addAll(techniciansFull);
             } else {
                 String filterPattern = constraint.toString().toLowerCase().trim();

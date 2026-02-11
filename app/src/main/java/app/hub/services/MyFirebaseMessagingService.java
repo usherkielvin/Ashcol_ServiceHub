@@ -28,6 +28,10 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
     private static final String TAG = "FCMService";
     private static final String CHANNEL_ID = "ashcol_notifications";
     private static final String CHANNEL_NAME = "Ashcol Service Hub";
+    
+    // Notification type constants
+    private static final String TYPE_PAYMENT_REQUEST = "payment_request";
+    private static final String TYPE_PAYMENT_CONFIRMED = "payment_confirmed";
 
     @Override
     public void onCreate() {
@@ -100,6 +104,13 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
     private void handleDataPayload(String type, String action, java.util.Map<String, String> data) {
         Log.d(TAG, "Handling notification type: " + type + ", action: " + action);
 
+        // Handle payment-specific notifications
+        if (TYPE_PAYMENT_REQUEST.equals(type)) {
+            handlePaymentRequestNotification(data);
+        } else if (TYPE_PAYMENT_CONFIRMED.equals(type)) {
+            handlePaymentConfirmationNotification(data);
+        }
+
         // Broadcast intent to notify active fragments/activities
         Intent broadcastIntent = new Intent("com.ashcol.FCM_MESSAGE");
         broadcastIntent.putExtra("type", type);
@@ -114,55 +125,102 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
     }
 
     /**
+     * Handle payment request notification (for customers)
+     */
+    private void handlePaymentRequestNotification(java.util.Map<String, String> data) {
+        Log.d(TAG, "Handling payment request notification");
+        
+        String ticketId = data.get("ticket_id");
+        String amount = data.get("amount");
+        
+        // Update Activity Tab if app is in foreground
+        Intent updateIntent = new Intent("com.ashcol.PAYMENT_REQUEST");
+        updateIntent.putExtra("ticket_id", ticketId);
+        updateIntent.putExtra("amount", amount);
+        sendBroadcast(updateIntent);
+    }
+
+    /**
+     * Handle payment confirmation notification (for technicians)
+     */
+    private void handlePaymentConfirmationNotification(java.util.Map<String, String> data) {
+        Log.d(TAG, "Handling payment confirmation notification");
+        
+        String ticketId = data.get("ticket_id");
+        String paymentMethod = data.get("payment_method");
+        
+        // Update Work Tab if app is in foreground
+        Intent updateIntent = new Intent("com.ashcol.PAYMENT_CONFIRMED");
+        updateIntent.putExtra("ticket_id", ticketId);
+        updateIntent.putExtra("payment_method", paymentMethod);
+        sendBroadcast(updateIntent);
+    }
+
+    /**
      * Show notification in status bar
      */
     private void showNotification(String title, String body, java.util.Map<String, String> data) {
         String type = data != null ? data.get("type") : null;
-        Intent intent = "payment_pending".equals(type)
-            ? new Intent(this, DashboardActivity.class)
-            : new Intent(this, MainActivity.class);
+        
+        // Determine the intent based on notification type
+        Intent intent;
+        if (TYPE_PAYMENT_REQUEST.equals(type)) {
+            // For payment requests, open PaymentSelectionActivity
+            intent = new Intent(this, app.hub.user.PaymentSelectionActivity.class);
+            if (data != null) {
+                intent.putExtra("ticket_id", data.get("ticket_id"));
+                intent.putExtra("amount", parseDouble(data.get("amount"), 0.0));
+                // Get customer ID from TokenManager
+                TokenManager tokenManager = new TokenManager(this);
+                intent.putExtra("customer_id", tokenManager.getUserId());
+            }
+        } else if (TYPE_PAYMENT_CONFIRMED.equals(type)) {
+            // For payment confirmations, open employee dashboard
+            intent = new Intent(this, app.hub.employee.EmployeeDashboardActivity.class);
+        } else if ("payment_pending".equals(type)) {
+            intent = new Intent(this, DashboardActivity.class);
+        } else {
+            intent = new Intent(this, MainActivity.class);
+        }
+        
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 
         // Add notification data to intent
-        for (java.util.Map.Entry<String, String> entry : data.entrySet()) {
-            intent.putExtra(entry.getKey(), entry.getValue());
+        if (data != null) {
+            for (java.util.Map.Entry<String, String> entry : data.entrySet()) {
+                intent.putExtra(entry.getKey(), entry.getValue());
+            }
         }
 
         PendingIntent pendingIntent = PendingIntent.getActivity(
                 this,
-                0,
+                (int) System.currentTimeMillis(), // Unique request code
                 intent,
                 PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE);
 
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setSmallIcon(R.drawable.ic_notification) // You'll need to add this icon
+                .setSmallIcon(R.drawable.ic_notification)
                 .setContentTitle(title)
                 .setContentText(body)
                 .setAutoCancel(true)
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setContentIntent(pendingIntent);
 
-        if ("payment_pending".equals(type) && data != null) {
+        // Add "Pay Now" action for payment request notifications
+        if (TYPE_PAYMENT_REQUEST.equals(type) && data != null) {
             String ticketId = data.get("ticket_id");
-            String paymentIdRaw = data.get("payment_id");
-            int paymentId = 0;
-            if (paymentIdRaw != null) {
-                try {
-                    paymentId = Integer.parseInt(paymentIdRaw);
-                } catch (NumberFormatException ignored) {
-                }
-            }
-            Intent payIntent = UserPaymentActivity.createIntent(
-                    this,
-                    ticketId,
-                    paymentId,
-                    0.0,
-                    null,
-                    null);
+            double amount = parseDouble(data.get("amount"), 0.0);
+            
+            Intent payIntent = new Intent(this, app.hub.user.PaymentSelectionActivity.class);
+            payIntent.putExtra("ticket_id", ticketId);
+            payIntent.putExtra("amount", amount);
+            TokenManager tokenManager = new TokenManager(this);
+            payIntent.putExtra("customer_id", tokenManager.getUserId());
             payIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            
             PendingIntent payPendingIntent = PendingIntent.getActivity(
                     this,
-                    1,
+                    (int) System.currentTimeMillis() + 1,
                     payIntent,
                     PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
@@ -172,7 +230,19 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
         if (notificationManager != null) {
-            notificationManager.notify(0, notificationBuilder.build());
+            notificationManager.notify((int) System.currentTimeMillis(), notificationBuilder.build());
+        }
+    }
+    
+    /**
+     * Helper method to parse double from string
+     */
+    private double parseDouble(String value, double defaultValue) {
+        if (value == null) return defaultValue;
+        try {
+            return Double.parseDouble(value);
+        } catch (NumberFormatException e) {
+            return defaultValue;
         }
     }
 

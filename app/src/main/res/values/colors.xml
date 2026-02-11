@@ -37,6 +37,11 @@
     <color name="blue">#2196F3</color>
     <color name="red">#F44336</color>
 
+    <!-- Payment Selection Activity Colors -->
+    <color name="background_gray">#F5F5F5</color>
+    <color name="text_secondary">#757575</color>
+    <color name="divider">#E0E0E0</color>
+
     <!-- Semantic colors for fragment_user_home -->
     <color name="quick_services_title_color">#1B4332</color>
     <color name="service_icon_tint">#2D6A4F</color>

@@ -224,8 +224,12 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if (googleSignInHelper != null) {
-            Intent signInIntent = googleSignInHelper.getSignInIntent();
-            startActivityForResult(signInIntent, RC_SIGN_IN);
+            // Sign out first to force account picker to show
+            googleSignInHelper.signOut(() -> {
+                Log.d(TAG, "Signed out from Google, launching account picker");
+                Intent signInIntent = googleSignInHelper.getSignInIntent();
+                startActivityForResult(signInIntent, RC_SIGN_IN);
+            });
         }
     }
 
@@ -406,6 +410,7 @@ public class MainActivity extends AppCompatActivity {
         Log.d(TAG, "Saving user data - Email: " + user.getEmail() + ", Role: " + user.getRole());
 
         tokenManager.saveToken("Bearer " + response.getData().getToken());
+        tokenManager.saveUserId(user.getId());
         tokenManager.saveEmail(user.getEmail());
         tokenManager.saveRole(user.getRole());
         if (user.getBranch() != null) {
@@ -476,6 +481,7 @@ public class MainActivity extends AppCompatActivity {
                         // Save token and user data
                         LoginResponse.User user = loginResponse.getData().getUser();
                         tokenManager.saveToken("Bearer " + loginResponse.getData().getToken());
+                        tokenManager.saveUserId(user.getId());
 
                         // Save email or connection status
                         String email = user.getEmail();

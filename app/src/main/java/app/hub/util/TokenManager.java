@@ -8,6 +8,7 @@ import java.util.Map;
 public class TokenManager {
     private static final String PREF_NAME = "auth_pref";
     private static final String KEY_TOKEN = "token";
+    private static final String KEY_USER_ID = "user_id";
     private static final String KEY_EMAIL = "email";
     private static final String KEY_NAME = "name";
     private static final String KEY_ROLE = "role";
@@ -70,6 +71,14 @@ public class TokenManager {
 
     public String getRole() {
         return sharedPreferences.getString(KEY_ROLE, null);
+    }
+
+    public void saveUserId(int userId) {
+        sharedPreferences.edit().putInt(KEY_USER_ID, userId).apply();
+    }
+
+    public int getUserIdInt() {
+        return sharedPreferences.getInt(KEY_USER_ID, -1);
     }
 
     public String getUserId() {
