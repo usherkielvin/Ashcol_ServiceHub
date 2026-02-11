@@ -115,7 +115,7 @@ public class MapSelectionActivity extends AppCompatActivity implements OnMapRead
             fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
             // Setup close button
-            com.google.android.material.button.MaterialButton closeButton = findViewById(R.id.closeButton);
+            android.widget.ImageButton closeButton = findViewById(R.id.closeButton);
             if (closeButton != null) {
                 closeButton.setOnClickListener(v -> {
                     Log.d(TAG, "Close button clicked");
