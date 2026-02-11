@@ -49,22 +49,9 @@ public class EmployeeFirebaseListener {
             return;
         }
 
-        String userIdStr = tokenManager.getUserId();
-        if (userIdStr == null || userIdStr.isEmpty()) {
-            Log.w(TAG, "Invalid technician ID, cannot start Firebase listener");
-            return;
-        }
-        
-        int technicianId;
-        try {
-            technicianId = Integer.parseInt(userIdStr);
-        } catch (NumberFormatException e) {
-            Log.w(TAG, "Invalid technician ID format: " + userIdStr);
-            return;
-        }
-        
+        int technicianId = tokenManager.getUserId();
         if (technicianId <= 0) {
-            Log.w(TAG, "Invalid technician ID value: " + technicianId);
+            Log.w(TAG, "Invalid technician ID, cannot start Firebase listener");
             return;
         }
 
