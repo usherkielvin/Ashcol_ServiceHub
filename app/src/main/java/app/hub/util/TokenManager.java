@@ -3,6 +3,8 @@ package app.hub.util;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import java.io.File;
+
 import java.util.Map;
 
 public class TokenManager {
@@ -49,12 +51,28 @@ public class TokenManager {
         return sharedPreferences.getString(KEY_TOKEN, null);
     }
 
+    public String getAuthToken() {
+        String token = getToken();
+        if (token == null || token.trim().isEmpty()) {
+            return null;
+        }
+        if (token.startsWith("Bearer ")) {
+            return token;
+        }
+        return "Bearer " + token;
+    }
+
     public void saveEmail(String email) {
         sharedPreferences.edit().putString(KEY_EMAIL, email).apply();
     }
 
     public String getEmail() {
         return sharedPreferences.getString(KEY_EMAIL, null);
+    }
+
+    public File getProfileImageFile(Context context) {
+        String fileName = buildProfileImageFileName();
+        return new File(context.getFilesDir(), fileName);
     }
 
     public void saveName(String name) {
@@ -186,6 +204,20 @@ public class TokenManager {
     private String sanitizeKey(String key) {
         // Replace characters that are not allowed in SharedPreferences keys
         return key.replaceAll("[^a-zA-Z0-9_]", "_");
+    }
+
+    private String buildProfileImageFileName() {
+        int userId = getUserIdInt();
+        if (userId > 0) {
+            return "profile_image_" + userId + ".jpg";
+        }
+
+        String email = getEmail();
+        if (email != null && !email.trim().isEmpty()) {
+            return "profile_image_" + sanitizeKey(email.toLowerCase()) + ".jpg";
+        }
+
+        return "profile_image.jpg";
     }
 
     // Notification Settings Methods

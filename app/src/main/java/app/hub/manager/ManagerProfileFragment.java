@@ -88,9 +88,7 @@ public class ManagerProfileFragment extends Fragment {
     public void onResume() {
         super.onResume();
         loadProfileImage();
-        if (shouldRefreshProfile()) {
-            fetchUserData();
-        }
+        fetchUserData();
     }
 
     private void initializeViews(View view) {
@@ -141,15 +139,15 @@ public class ManagerProfileFragment extends Fragment {
     }
 
     private void fetchUserData() {
-        String token = tokenManager.getToken();
-        if (token == null) {
+        String authToken = tokenManager.getAuthToken();
+        if (authToken == null) {
             return;
         }
 
         lastProfileFetchMs = System.currentTimeMillis();
 
         ApiService apiService = ApiClient.getApiService();
-        Call<UserResponse> call = apiService.getUser("Bearer " + token);
+        Call<UserResponse> call = apiService.getUser(authToken);
         call.enqueue(new Callback<UserResponse>() {
             @Override
             public void onResponse(@NonNull Call<UserResponse> call, @NonNull Response<UserResponse> response) {
@@ -235,7 +233,7 @@ public class ManagerProfileFragment extends Fragment {
 
     private void loadProfileImage() {
         try {
-            File imageFile = new File(requireContext().getFilesDir(), "profile_image.jpg");
+            File imageFile = tokenManager.getProfileImageFile(requireContext());
             if (imageFile.exists() && imgProfile != null) {
                 Bitmap bitmap = BitmapFactory.decodeFile(imageFile.getAbsolutePath());
                 if (bitmap != null) {
@@ -276,7 +274,7 @@ public class ManagerProfileFragment extends Fragment {
     private void saveProfileImage(Bitmap bitmap) {
         if (bitmap == null) return;
         try {
-            File imageFile = new File(requireContext().getFilesDir(), "profile_image.jpg");
+            File imageFile = tokenManager.getProfileImageFile(requireContext());
             FileOutputStream fos = new FileOutputStream(imageFile);
             bitmap.compress(Bitmap.CompressFormat.JPEG, 90, fos);
             fos.flush();
@@ -288,7 +286,7 @@ public class ManagerProfileFragment extends Fragment {
 
     private void clearCachedProfileImage() {
         try {
-            File imageFile = new File(requireContext().getFilesDir(), "profile_image.jpg");
+            File imageFile = tokenManager.getProfileImageFile(requireContext());
             if (imageFile.exists()) {
                 imageFile.delete();
             }
@@ -704,10 +702,10 @@ public class ManagerProfileFragment extends Fragment {
         progressDialog.setCancelable(false);
         progressDialog.show();
 
-        String token = tokenManager.getToken();
-        if (token != null) {
+        String authToken = tokenManager.getAuthToken();
+        if (authToken != null) {
             ApiService apiService = ApiClient.getApiService();
-            Call<LogoutResponse> call = apiService.logout(token);
+            Call<LogoutResponse> call = apiService.logout(authToken);
             call.enqueue(new Callback<LogoutResponse>() {
                 @Override
                 public void onResponse(@NonNull Call<LogoutResponse> call, @NonNull Response<LogoutResponse> response) {
@@ -818,12 +816,13 @@ public class ManagerProfileFragment extends Fragment {
     }
 
     private void clearUserData() {
+        File imageFile = tokenManager.getProfileImageFile(requireContext());
+
         // Clear token manager data
         tokenManager.clear();
 
         // Delete locally stored profile photo
         try {
-            File imageFile = new File(requireContext().getFilesDir(), "profile_image.jpg");
             if (imageFile.exists()) {
                 imageFile.delete();
             }

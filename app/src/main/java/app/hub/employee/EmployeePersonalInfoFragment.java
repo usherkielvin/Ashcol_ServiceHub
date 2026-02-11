@@ -167,15 +167,15 @@ public class EmployeePersonalInfoFragment extends Fragment {
 
     private void loadProfile() {
         setLoading(true);
-        String token = tokenManager.getToken();
-        if (token == null) {
+        String authToken = tokenManager.getAuthToken();
+        if (authToken == null) {
             setLoading(false);
             Toast.makeText(requireContext(), "Authentication error. Please login again.", Toast.LENGTH_SHORT).show();
             return;
         }
 
         ApiService apiService = ApiClient.getApiService();
-        Call<UserResponse> call = apiService.getUser("Bearer " + token);
+        Call<UserResponse> call = apiService.getUser(authToken);
         call.enqueue(new Callback<UserResponse>() {
             @Override
             public void onResponse(@NonNull Call<UserResponse> call, @NonNull Response<UserResponse> response) {
@@ -384,8 +384,8 @@ public class EmployeePersonalInfoFragment extends Fragment {
     private void uploadProfilePhoto(Uri imageUri) {
         if (getContext() == null) return;
 
-        String token = tokenManager.getToken();
-        if (token == null) {
+        String authToken = tokenManager.getAuthToken();
+        if (authToken == null) {
             Toast.makeText(requireContext(), "Authentication error. Please login again.", Toast.LENGTH_SHORT).show();
             return;
         }
@@ -400,7 +400,7 @@ public class EmployeePersonalInfoFragment extends Fragment {
         MultipartBody.Part body = MultipartBody.Part.createFormData("photo", tempFile.getName(), requestBody);
 
         ApiService apiService = ApiClient.getApiService();
-        Call<ProfilePhotoResponse> call = apiService.uploadProfilePhoto("Bearer " + token, body);
+        Call<ProfilePhotoResponse> call = apiService.uploadProfilePhoto(authToken, body);
         call.enqueue(new Callback<ProfilePhotoResponse>() {
             @Override
             public void onResponse(@NonNull Call<ProfilePhotoResponse> call,
@@ -426,14 +426,14 @@ public class EmployeePersonalInfoFragment extends Fragment {
     }
 
     private void deleteProfilePhoto() {
-        String token = tokenManager.getToken();
-        if (token == null) {
+        String authToken = tokenManager.getAuthToken();
+        if (authToken == null) {
             Toast.makeText(requireContext(), "Authentication error. Please login again.", Toast.LENGTH_SHORT).show();
             return;
         }
 
         ApiService apiService = ApiClient.getApiService();
-        Call<ProfilePhotoResponse> call = apiService.deleteProfilePhoto("Bearer " + token);
+        Call<ProfilePhotoResponse> call = apiService.deleteProfilePhoto(authToken);
         call.enqueue(new Callback<ProfilePhotoResponse>() {
             @Override
             public void onResponse(@NonNull Call<ProfilePhotoResponse> call,
@@ -501,7 +501,7 @@ public class EmployeePersonalInfoFragment extends Fragment {
     private void saveProfileBitmap(Bitmap bitmap) {
         if (bitmap == null) return;
         try {
-            File imageFile = new File(requireContext().getFilesDir(), "profile_image.jpg");
+            File imageFile = tokenManager.getProfileImageFile(requireContext());
             FileOutputStream outputStream = new FileOutputStream(imageFile);
             bitmap.compress(Bitmap.CompressFormat.JPEG, 90, outputStream);
             outputStream.flush();
@@ -515,7 +515,7 @@ public class EmployeePersonalInfoFragment extends Fragment {
             InputStream inputStream = requireContext().getContentResolver().openInputStream(imageUri);
             if (inputStream == null) return;
 
-            File imageFile = new File(requireContext().getFilesDir(), "profile_image.jpg");
+            File imageFile = tokenManager.getProfileImageFile(requireContext());
             FileOutputStream outputStream = new FileOutputStream(imageFile);
             byte[] buffer = new byte[8192];
             int read;
@@ -531,7 +531,7 @@ public class EmployeePersonalInfoFragment extends Fragment {
 
     private void loadCachedProfileImage() {
         try {
-            File imageFile = new File(requireContext().getFilesDir(), "profile_image.jpg");
+            File imageFile = tokenManager.getProfileImageFile(requireContext());
             if (imageFile.exists() && imgProfile != null) {
                 Bitmap bitmap = BitmapFactory.decodeFile(imageFile.getAbsolutePath());
                 if (bitmap != null) {
@@ -544,7 +544,7 @@ public class EmployeePersonalInfoFragment extends Fragment {
 
     private void clearCachedProfileImage() {
         try {
-            File imageFile = new File(requireContext().getFilesDir(), "profile_image.jpg");
+            File imageFile = tokenManager.getProfileImageFile(requireContext());
             if (imageFile.exists()) {
                 imageFile.delete();
             }
@@ -568,8 +568,8 @@ public class EmployeePersonalInfoFragment extends Fragment {
             return;
         }
 
-        String token = tokenManager.getToken();
-        if (token == null) {
+        String authToken = tokenManager.getAuthToken();
+        if (authToken == null) {
             Toast.makeText(requireContext(), "Authentication error. Please login again.", Toast.LENGTH_SHORT).show();
             return;
         }
@@ -582,7 +582,7 @@ public class EmployeePersonalInfoFragment extends Fragment {
         UpdateProfileRequest request = new UpdateProfileRequest(firstName, lastName, username,
             phone, location, gender, birthdate);
         ApiService apiService = ApiClient.getApiService();
-        Call<UserResponse> call = apiService.updateUser("Bearer " + token, request);
+        Call<UserResponse> call = apiService.updateUser(authToken, request);
 
         call.enqueue(new Callback<UserResponse>() {
             @Override
@@ -712,15 +712,15 @@ public class EmployeePersonalInfoFragment extends Fragment {
     }
 
     private void deleteAccount(String password) {
-        String token = tokenManager.getToken();
-        if (token == null) {
+        String authToken = tokenManager.getAuthToken();
+        if (authToken == null) {
             Toast.makeText(requireContext(), "Authentication error. Please login again.", Toast.LENGTH_SHORT).show();
             return;
         }
 
         ApiService apiService = ApiClient.getApiService();
         DeleteAccountRequest request = new DeleteAccountRequest(password);
-        Call<DeleteAccountResponse> call = apiService.deleteAccount("Bearer " + token, request);
+        Call<DeleteAccountResponse> call = apiService.deleteAccount(authToken, request);
         call.enqueue(new Callback<DeleteAccountResponse>() {
             @Override
             public void onResponse(@NonNull Call<DeleteAccountResponse> call,
