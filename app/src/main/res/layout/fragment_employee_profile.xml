@@ -111,10 +111,10 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="32dp"
-            app:cardBackgroundColor="?attr/colorSurface"
+            app:cardBackgroundColor="?attr/colorSurfaceVariant"
             app:cardElevation="16dp"
-            app:strokeWidth="0dp"
-            app:shapeAppearanceOverlay="@style/ProfileContentCardShape">
+            app:shapeAppearanceOverlay="@style/ProfileContentCardShape"
+            app:strokeWidth="0dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -125,11 +125,11 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
                     android:fontFamily="@font/poppins_bold"
                     android:text="Preferences"
                     android:textColor="@color/apps_green"
-                    android:textSize="14sp"
-                    android:layout_marginStart="4dp" />
+                    android:textSize="14sp" />
 
                 <!-- Display Row -->
                 <LinearLayout
@@ -147,14 +147,14 @@
                         android:layout_width="36dp"
                         android:layout_height="36dp"
                         android:background="@drawable/bg_icon_circle_green"
-                        android:backgroundTint="?attr/colorOnSurface">
+                        android:backgroundTint="@color/colorSecondaryContainer">
 
                         <ImageView
                             android:layout_width="20dp"
                             android:layout_height="20dp"
                             android:layout_gravity="center"
                             android:src="@drawable/outline_dark_mode_24"
-                            app:tint="?attr/colorSurface" />
+                            app:tint="@color/colorOnSecondaryContainer" />
                     </FrameLayout>
 
                     <TextView
@@ -183,6 +183,7 @@
                         android:layout_height="36dp"
                         android:background="@drawable/bg_icon_circle_green"
                         android:backgroundTint="@color/colorSecondaryContainer">
+
                         <ImageView
                             android:layout_width="20dp"
                             android:layout_height="20dp"
@@ -217,6 +218,7 @@
                         android:layout_height="36dp"
                         android:background="@drawable/bg_icon_circle_green"
                         android:backgroundTint="@color/colorSecondaryContainer">
+
                         <ImageView
                             android:layout_width="20dp"
                             android:layout_height="20dp"
@@ -239,17 +241,17 @@
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
                     android:layout_marginVertical="16dp"
-                    android:background="?attr/colorOutline"
-                    android:alpha="0.2" />
+                    android:alpha="0.2"
+                    android:background="?attr/colorOutline" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
                     android:fontFamily="@font/poppins_bold"
                     android:text="General"
                     android:textColor="@color/apps_green"
-                    android:textSize="14sp"
-                    android:layout_marginStart="4dp" />
+                    android:textSize="14sp" />
 
                 <!-- Personal Information Row -->
                 <LinearLayout
@@ -268,6 +270,7 @@
                         android:layout_height="36dp"
                         android:background="@drawable/bg_icon_circle_green"
                         android:backgroundTint="@color/colorSecondaryContainer">
+
                         <ImageView
                             android:layout_width="20dp"
                             android:layout_height="20dp"
@@ -302,6 +305,7 @@
                         android:layout_height="36dp"
                         android:background="@drawable/bg_icon_circle_green"
                         android:backgroundTint="@color/colorSecondaryContainer">
+
                         <ImageView
                             android:layout_width="20dp"
                             android:layout_height="20dp"
@@ -336,6 +340,7 @@
                         android:layout_height="36dp"
                         android:background="@drawable/bg_icon_circle_green"
                         android:backgroundTint="@color/colorSecondaryContainer">
+
                         <ImageView
                             android:layout_width="20dp"
                             android:layout_height="20dp"
@@ -358,8 +363,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
                     android:layout_marginVertical="16dp"
-                    android:background="?attr/colorOutline"
-                    android:alpha="0.2" />
+                    android:alpha="0.2"
+                    android:background="?attr/colorOutline" />
 
                 <!-- About Us Row -->
                 <LinearLayout
@@ -376,13 +381,14 @@
                         android:layout_width="36dp"
                         android:layout_height="36dp"
                         android:background="@drawable/bg_icon_circle_green"
-                        android:backgroundTint="@color/apps_green">
+                        android:backgroundTint="@color/colorSecondaryContainer">
+
                         <ImageView
                             android:layout_width="20dp"
                             android:layout_height="20dp"
                             android:layout_gravity="center"
                             android:src="@drawable/ic_help"
-                            app:tint="@color/white" />
+                            app:tint="@color/colorOnSecondaryContainer" />
                     </FrameLayout>
 
                     <TextView

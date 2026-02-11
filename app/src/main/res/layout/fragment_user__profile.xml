@@ -341,6 +341,40 @@
                         android:textSize="18sp" />
                 </LinearLayout>
 
+                <!-- Payments Row -->
+                <LinearLayout
+                    android:id="@+id/btn_payments"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:background="?attr/selectableItemBackground"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <FrameLayout
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:background="@drawable/bg_icon_circle_green"
+                        android:backgroundTint="@color/colorPrimaryContainer">
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_wallet"
+                            app:tint="@color/colorOnPrimaryContainer" />
+                    </FrameLayout>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:fontFamily="@font/poppins_medium"
+                        android:text="Payments"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textSize="18sp" />
+                </LinearLayout>
+
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
