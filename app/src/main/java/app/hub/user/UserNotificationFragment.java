@@ -74,6 +74,8 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
     private MaterialButton btnPendingPayment;
     private Handler locationUpdateHandler;
     private Runnable locationUpdateRunnable;
+    private Handler autoRefreshHandler;
+    private Runnable autoRefreshRunnable;
     private FirebaseFirestore firestore;
     private ListenerRegistration ticketListener;
     private FirestoreManager firestoreManager;
@@ -109,6 +111,9 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
 
         startPendingPaymentsListener();
         loadTickets();
+        
+        // Start auto-refresh in background (every 10 seconds)
+        startAutoRefresh();
     }
 
     @Override
@@ -861,8 +866,34 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
         if (locationUpdateHandler != null && locationUpdateRunnable != null) {
             locationUpdateHandler.removeCallbacks(locationUpdateRunnable);
         }
+        // Stop auto-refresh
+        if (autoRefreshHandler != null && autoRefreshRunnable != null) {
+            autoRefreshHandler.removeCallbacks(autoRefreshRunnable);
+        }
         stopTicketListener();
         stopPendingPaymentListeners();
+    }
+    
+    private void startAutoRefresh() {
+        autoRefreshHandler = new Handler(Looper.getMainLooper());
+        autoRefreshRunnable = new Runnable() {
+            @Override
+            public void run() {
+                // Silently refresh in background (no loading indicator)
+                if (isAdded() && getContext() != null) {
+                    android.util.Log.d("UserNotification", "Auto-refreshing tickets in background");
+                    loadTickets();
+                }
+                
+                // Schedule next refresh in 10 seconds
+                if (autoRefreshHandler != null) {
+                    autoRefreshHandler.postDelayed(this, 10000);
+                }
+            }
+        };
+        
+        // Start auto-refresh after 10 seconds
+        autoRefreshHandler.postDelayed(autoRefreshRunnable, 10000);
     }
 
     private void openPendingPayment() {
@@ -895,10 +926,15 @@ public class UserNotificationFragment extends Fragment implements OnMapReadyCall
         if (hasPending && isAdded() && getContext() != null) {
             android.util.Log.d("UserNotification", "Payment is pending - showing notification");
             double amount = currentTicket.getAmount();
+            String serviceType = currentTicket.getServiceType();
+            int customerId = tokenManager.getUserIdInt();
+            
             app.hub.util.NotificationHelper.showPaymentRequestNotification(
                     getContext(), 
-                    currentTicket.getTicketId(), 
-                    amount
+                    currentTicket.getTicketId(),
+                    serviceType,
+                    amount,
+                    customerId
             );
         }
         

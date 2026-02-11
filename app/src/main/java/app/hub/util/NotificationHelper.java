@@ -47,14 +47,16 @@ public class NotificationHelper {
     /**
      * Show payment request notification
      */
-    public static void showPaymentRequestNotification(Context context, String ticketId, double amount) {
+    public static void showPaymentRequestNotification(Context context, String ticketId, String serviceType, double amount, int customerId) {
         // Create notification channel first
         createNotificationChannel(context);
         
         // Create intent to open payment selection activity directly
         Intent intent = new Intent(context, app.hub.user.PaymentSelectionActivity.class);
         intent.putExtra("ticket_id", ticketId);
+        intent.putExtra("service_type", serviceType);
         intent.putExtra("amount", amount);
+        intent.putExtra("customer_id", customerId);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
         
         PendingIntent pendingIntent = PendingIntent.getActivity(

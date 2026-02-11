@@ -71,6 +71,9 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
     private TicketListResponse.TicketItem activeTicket;
     private ActivityResultLauncher<Intent> paymentLauncher;
     private boolean isLoadingTickets = false;
+    
+    private android.os.Handler autoRefreshHandler;
+    private Runnable autoRefreshRunnable;
 
     private static final String PREFS_NAME = "employee_work_steps";
     private static final String PREFS_TIMES = "employee_work_times";
@@ -138,6 +141,9 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
         initViews(view);
         showInitialState();
         loadAssignedTickets(true);
+        
+        // Start auto-refresh in background
+        startAutoRefresh();
     }
 
     private void initViews(View view) {
@@ -1378,10 +1384,37 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
 
     @Override
     public void onDestroyView() {
+        // Stop auto-refresh
+        if (autoRefreshHandler != null && autoRefreshRunnable != null) {
+            autoRefreshHandler.removeCallbacks(autoRefreshRunnable);
+        }
+        
         if (mapViewActiveJob != null) {
             mapViewActiveJob.onDestroy();
         }
         super.onDestroyView();
+    }
+    
+    private void startAutoRefresh() {
+        autoRefreshHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+        autoRefreshRunnable = new Runnable() {
+            @Override
+            public void run() {
+                // Silently refresh in background (preserve UI)
+                if (isAdded() && getContext() != null && !isLoadingTickets) {
+                    android.util.Log.d("EmployeeWork", "Auto-refreshing tickets in background");
+                    loadAssignedTickets(true);
+                }
+                
+                // Schedule next refresh in 10 seconds
+                if (autoRefreshHandler != null) {
+                    autoRefreshHandler.postDelayed(this, 10000);
+                }
+            }
+        };
+        
+        // Start auto-refresh after 10 seconds
+        autoRefreshHandler.postDelayed(autoRefreshRunnable, 10000);
     }
 
     @Override

@@ -30,6 +30,8 @@ public class EmployeeDashboardFragment extends Fragment {
     private static List<TicketListResponse.TicketItem> cachedTodayWork = null;
     private static List<TicketListResponse.TicketItem> cachedScheduleTickets = null;
     private androidx.swiperefreshlayout.widget.SwipeRefreshLayout swipeRefreshLayout;
+    private android.os.Handler autoRefreshHandler;
+    private Runnable autoRefreshRunnable;
 
     public EmployeeDashboardFragment() {
         // Required empty public constructor
@@ -140,6 +142,9 @@ public class EmployeeDashboardFragment extends Fragment {
 
         // Start real-time listener for updates
         setupRealtimeListener();
+        
+        // Start auto-refresh in background
+        startAutoRefresh();
     }
 
     @Override
@@ -555,5 +560,36 @@ public class EmployeeDashboardFragment extends Fragment {
         super.onResume();
         // Refresh data when fragment becomes visible - single API call
         loadAllTickets();
+    }
+    
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        // Stop auto-refresh
+        if (autoRefreshHandler != null && autoRefreshRunnable != null) {
+            autoRefreshHandler.removeCallbacks(autoRefreshRunnable);
+        }
+    }
+    
+    private void startAutoRefresh() {
+        autoRefreshHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+        autoRefreshRunnable = new Runnable() {
+            @Override
+            public void run() {
+                // Silently refresh in background
+                if (isAdded() && getContext() != null) {
+                    android.util.Log.d("EmployeeDashboard", "Auto-refreshing tickets in background");
+                    loadAllTickets();
+                }
+                
+                // Schedule next refresh in 10 seconds
+                if (autoRefreshHandler != null) {
+                    autoRefreshHandler.postDelayed(this, 10000);
+                }
+            }
+        };
+        
+        // Start auto-refresh after 10 seconds
+        autoRefreshHandler.postDelayed(autoRefreshRunnable, 10000);
     }
 }
