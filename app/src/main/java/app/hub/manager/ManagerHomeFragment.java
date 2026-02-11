@@ -124,6 +124,41 @@ public class ManagerHomeFragment extends Fragment implements ManagerDataManager.
 
     private void updateDashboardStats(DashboardStatsResponse.Stats stats) {
         android.util.Log.d("ManagerHome", "Total Tickets: " + stats.getTotalTickets());
+        View view = getView();
+        if (view == null) return;
+        // Ongoing counter (in progress)
+        TextView tvOngoing = null;
+        TextView tvPending = null;
+        // Find the first and second large stat TextViews by traversing the layout
+        // Ongoing (first card)
+        try {
+            ViewGroup statsRow = view.findViewById(R.id.statsRow);
+            // First card: MaterialCardView -> LinearLayout -> TextView (first child)
+            ViewGroup firstCard = (ViewGroup) statsRow.getChildAt(0);
+            ViewGroup firstCardLinearLayout = (ViewGroup) firstCard.getChildAt(0);
+            tvOngoing = (TextView) firstCardLinearLayout.getChildAt(0);
+            
+            // Second card: MaterialCardView -> LinearLayout -> TextView (first child)
+            ViewGroup secondCard = (ViewGroup) statsRow.getChildAt(1);
+            ViewGroup secondCardLinearLayout = (ViewGroup) secondCard.getChildAt(0);
+            tvPending = (TextView) secondCardLinearLayout.getChildAt(0);
+        } catch (Exception e) {
+            // fallback: do nothing
+        }
+        if (tvOngoing != null) {
+            if (stats.getInProgress() == 0) {
+                tvOngoing.setText("No");
+            } else {
+                tvOngoing.setText(String.format("%02d", stats.getInProgress()));
+            }
+        }
+        if (tvPending != null) {
+            if (stats.getPending() == 0) {
+                tvPending.setText("No");
+            } else {
+                tvPending.setText(String.format("%02d", stats.getPending()));
+            }
+        }
     }
 
     @Override

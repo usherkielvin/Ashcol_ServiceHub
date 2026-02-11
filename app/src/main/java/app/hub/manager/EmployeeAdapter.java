@@ -52,8 +52,25 @@ public class EmployeeAdapter extends RecyclerView.Adapter<EmployeeAdapter.Employ
         // Set branch
         holder.employeeStatus.setText(employee.getBranch() != null ? employee.getBranch() : "No Branch");
         
-        // Set default image
+        // Load profile image with Picasso - enhanced with better error handling and caching
+        // Clear any previous image first
         holder.employeeImage.setImageResource(R.drawable.profile_icon);
+        
+        String imageUrl = employee.getProfilePhoto();
+        if (imageUrl != null && !imageUrl.isEmpty()) {
+            android.util.Log.d("EmployeeAdapter", "Loading image for " + displayName + ": " + imageUrl);
+            
+            Picasso.get()
+                .load(imageUrl)
+                .placeholder(R.drawable.profile_icon)
+                .error(R.drawable.profile_icon)
+                .fit()
+                .centerCrop()
+                .into(holder.employeeImage);
+        } else {
+            android.util.Log.d("EmployeeAdapter", "No profile photo for " + displayName);
+            holder.employeeImage.setImageResource(R.drawable.profile_icon);
+        }
     }
 
     @Override

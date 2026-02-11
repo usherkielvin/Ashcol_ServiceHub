@@ -39,7 +39,7 @@ import retrofit2.Response;
 public class ManagerTicketDetailActivity extends AppCompatActivity
         implements com.google.android.gms.maps.OnMapReadyCallback {
 
-    private TextView tvTicketId, tvTitle, tvDescription, tvServiceType, tvAddress, tvContact, tvStatus, tvBranch,
+    private TextView tvTicketId, tvDescription, tvServiceType, tvAddress, tvContact, tvStatus, tvBranch,
             tvCustomerName, tvCreatedAt, tvAssignedTechnician, tvUnitType;
     private Button btnViewMap, btnReject, btnAssignStaff;
     private android.widget.ImageButton btnBack;
@@ -143,7 +143,6 @@ public class ManagerTicketDetailActivity extends AppCompatActivity
     private void initViews() {
         try {
             tvTicketId = findViewById(R.id.tvTicketId);
-            tvTitle = findViewById(R.id.tvTitle);
             tvDescription = findViewById(R.id.tvDescription);
             tvServiceType = findViewById(R.id.tvServiceType);
             tvUnitType = findViewById(R.id.tvUnitType);
@@ -162,7 +161,7 @@ public class ManagerTicketDetailActivity extends AppCompatActivity
             mapCardContainer = findViewById(R.id.mapCardContainer);
 
             // Check if any critical views are null
-            if (tvTicketId == null || tvTitle == null || btnBack == null) {
+            if (tvTicketId == null || btnBack == null) {
                 Toast.makeText(this, getString(R.string.manager_ticket_layout_error), Toast.LENGTH_SHORT).show();
                 finish();
             }
@@ -381,32 +380,19 @@ public class ManagerTicketDetailActivity extends AppCompatActivity
         String branchText = ticket.getBranch() != null ? ticket.getBranch() : getString(R.string.manager_ticket_unassigned);
         String customerText = ticket.getCustomerName() != null ? ticket.getCustomerName()
                 : getString(R.string.manager_ticket_unknown);
-        String createdText = ticket.getCreatedAt() != null ? ticket.getCreatedAt()
-                : getString(R.string.manager_ticket_unknown);
+        String createdText = formatPreferredDate(ticket.getCreatedAt());
 
-        // Parse unit type and description from the description field
-        String description = ticket.getDescription() != null ? ticket.getDescription() : "";
-        String unitType = "";
-        String otherDetails = description;
-        
-        // Check if description contains "Unit Type: " prefix
-        if (description.startsWith("Unit Type: ")) {
-            int lineBreak = description.indexOf('\n');
-            if (lineBreak > 0) {
-                unitType = description.substring("Unit Type: ".length(), lineBreak).trim();
-                otherDetails = description.substring(lineBreak + 1).trim();
-            } else {
-                unitType = description.substring("Unit Type: ".length()).trim();
-                otherDetails = "";
-            }
-        }
+        // Get unit type from ticket (now stored separately in database)
+        String unitType = ticket.getUnitType() != null && !ticket.getUnitType().isEmpty() 
+                ? ticket.getUnitType() 
+                : "N/A";
+        String otherDetails = ticket.getDescription() != null ? ticket.getDescription() : "";
 
         // Set text with null checks
         safeSetText(tvTicketId, ticket.getTicketId() != null ? ticket.getTicketId() : "N/A");
-        safeSetText(tvTitle, ticket.getTitle() != null ? ticket.getTitle() : "No Title");
         safeSetText(tvDescription, !otherDetails.isEmpty() ? otherDetails : "No Description");
         safeSetText(tvServiceType, ticket.getServiceType() != null ? ticket.getServiceType() : "N/A");
-        safeSetText(tvUnitType, !unitType.isEmpty() ? unitType : "N/A");
+        safeSetText(tvUnitType, unitType);
         safeSetText(tvAddress, ticket.getAddress() != null ? ticket.getAddress() : "No Address");
         safeSetText(tvContact, ticket.getContact() != null ? ticket.getContact() : "No Contact");
         safeSetText(tvStatus, getString(R.string.manager_ticket_status_format, statusText));
@@ -729,12 +715,11 @@ public class ManagerTicketDetailActivity extends AppCompatActivity
     }
     
     private void showAssignmentConfirmation(String technicianName, String scheduledDate, String scheduledTime) {
-        // Format the service name
-        String serviceName = (currentTicket.getServiceType() != null ? currentTicket.getServiceType() : "") + 
-                           " - " + (currentTicket.getTitle() != null ? currentTicket.getTitle() : "");
+        // Format the service name (only service type, no customer name)
+        String serviceName = currentTicket.getServiceType() != null ? currentTicket.getServiceType() : "";
         
-        // Format date and time
-        String dateTime = scheduledDate + " - " + scheduledTime;
+        // Format date and time as "Feb 11, 2026 7:34AM"
+        String dateTime = formatAssignmentDateTime(scheduledDate, scheduledTime);
         
         AssignConfirmBottomSheet bottomSheet = AssignConfirmBottomSheet.newInstance(
             ticketId, serviceName, technicianName, dateTime
@@ -920,6 +905,43 @@ public class ManagerTicketDetailActivity extends AppCompatActivity
     private void safeSetText(TextView view, String text) {
         if (view != null) {
             view.setText(text);
+        }
+    }
+
+    private String formatPreferredDate(String dateStr) {
+        if (dateStr == null || dateStr.isEmpty()) {
+            return getString(R.string.manager_ticket_unknown);
+        }
+        try {
+            // Parse the incoming date format (e.g., "2026-02-11 23:09:45" or "2026-02-11")
+            java.text.SimpleDateFormat inputFormat;
+            if (dateStr.contains(" ")) {
+                inputFormat = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault());
+            } else {
+                inputFormat = new java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault());
+            }
+            java.util.Date date = inputFormat.parse(dateStr);
+            // Format to "MMM dd, yyyy" (e.g., "Feb 11, 2026")
+            java.text.SimpleDateFormat outputFormat = new java.text.SimpleDateFormat("MMM dd, yyyy", java.util.Locale.getDefault());
+            return outputFormat.format(date);
+        } catch (Exception e) {
+            android.util.Log.e("ManagerTicketDetail", "Error formatting date: " + dateStr, e);
+            return dateStr; // Return original if parsing fails
+        }
+    }
+
+    private String formatAssignmentDateTime(String dateStr, String timeStr) {
+        try {
+            // Parse date "2026-02-11" and time "23:24"
+            String dateTimeStr = dateStr + " " + timeStr;
+            java.text.SimpleDateFormat inputFormat = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", java.util.Locale.getDefault());
+            java.util.Date dateTime = inputFormat.parse(dateTimeStr);
+            // Format to "MMM dd, yyyy h:mma" (e.g., "Feb 11, 2026 7:34AM")
+            java.text.SimpleDateFormat outputFormat = new java.text.SimpleDateFormat("MMM dd, yyyy h:mma", java.util.Locale.getDefault());
+            return outputFormat.format(dateTime);
+        } catch (Exception e) {
+            android.util.Log.e("ManagerTicketDetail", "Error formatting date/time: " + dateStr + " " + timeStr, e);
+            return dateStr + " " + timeStr;
         }
     }
 

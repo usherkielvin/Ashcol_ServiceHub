@@ -219,12 +219,13 @@
                 android:id="@+id/empOverSub"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="20dp"
+                android:layout_marginTop="4dp"
                 android:fontFamily="@font/poppins_medium"
-                android:text="Key Metrics"
-                android:textColor="?attr/colorOnSurfaceVariant"
-                android:textSize="13sp"
-                android:textStyle="italic"
-                app:layout_constraintStart_toStartOf="@+id/empOverTitle"
+                android:text="View your team members"
+                android:textColor="#666666"
+                android:textSize="14sp"
+                app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/empOverTitle" />
 
             <androidx.recyclerview.widget.RecyclerView
