@@ -149,6 +149,13 @@
                 android:layout_width="8dp"
                 android:layout_height="8dp"
                 android:layout_marginStart="6dp"
+                android:layout_marginEnd="6dp"
+                android:background="@drawable/dot_unselected" />
+
+            <View
+                android:layout_width="8dp"
+                android:layout_height="8dp"
+                android:layout_marginStart="6dp"
                 android:background="@drawable/dot_unselected" />
         </LinearLayout>
 
@@ -218,6 +225,7 @@
                                 android:textColor="?attr/colorOnSurfaceVariant"
                                 android:textSize="9sp" />
                             <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btnBookCleaning"
                                 android:layout_width="match_parent"
                                 android:layout_height="32dp"
                                 android:layout_marginTop="6dp"
@@ -270,6 +278,7 @@
                                 android:textColor="?attr/colorOnSurfaceVariant"
                                 android:textSize="9sp" />
                             <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btnBookMaintenance"
                                 android:layout_width="match_parent"
                                 android:layout_height="32dp"
                                 android:layout_marginTop="6dp"
@@ -321,6 +330,7 @@
                                 android:textColor="?attr/colorOnSurfaceVariant"
                                 android:textSize="9sp" />
                             <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btnBookInstallation"
                                 android:layout_width="match_parent"
                                 android:layout_height="32dp"
                                 android:layout_marginTop="6dp"
@@ -371,6 +381,7 @@
                                 android:textColor="?attr/colorOnSurfaceVariant"
                                 android:textSize="9sp" />
                             <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btnBookRepair"
                                 android:layout_width="match_parent"
                                 android:layout_height="32dp"
                                 android:layout_marginTop="6dp"

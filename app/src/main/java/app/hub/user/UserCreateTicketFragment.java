@@ -60,7 +60,8 @@ public class UserCreateTicketFragment extends Fragment {
     private Button submitButton;
     private RelativeLayout mapLocationButton;
     private LinearLayout uploadButton;
-    private Spinner serviceTypeSpinner, unitTypeSpinner;
+    private Spinner serviceTypeSpinner;
+    // unitTypeSpinner removed - now using checkboxes
     private TextView serviceTypeDisplay, locationHintText;
     private TokenManager tokenManager;
     private String selectedServiceType = "General Service";
@@ -113,7 +114,7 @@ public class UserCreateTicketFragment extends Fragment {
         mapLocationButton = view.findViewById(R.id.btnMapLocation);
         uploadButton = view.findViewById(R.id.btnUpload);
         serviceTypeSpinner = view.findViewById(R.id.spinnerServiceType);
-        unitTypeSpinner = view.findViewById(R.id.spinnerUnitType);
+        // unitTypeSpinner removed - now using checkboxes
         
         locationHintText = view.findViewById(R.id.tvLocationHint);
 
@@ -134,8 +135,8 @@ public class UserCreateTicketFragment extends Fragment {
         // Set up service type spinner
         setupServiceTypeSpinner();
         
-        // Set up unit type spinner
-        setupUnitTypeSpinner();
+        // Unit type spinner removed - now using checkboxes in layout
+        // setupUnitTypeSpinner();
 
         updatePresetAmount();
 
@@ -191,6 +192,8 @@ public class UserCreateTicketFragment extends Fragment {
         });
     }
 
+    // Unit type spinner method removed - now using checkboxes
+    /*
     private void setupUnitTypeSpinner() {
         ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, unitTypes);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -212,6 +215,7 @@ public class UserCreateTicketFragment extends Fragment {
             }
         });
     }
+    */
 
     private void updatePresetAmount() {
         double amount = getPresetAmount(selectedServiceType);
@@ -513,7 +517,7 @@ public class UserCreateTicketFragment extends Fragment {
         if (dateInput != null) dateInput.setText("");
         if (locationHintText != null) locationHintText.setText(R.string.hint_map);
         if (serviceTypeSpinner != null) serviceTypeSpinner.setSelection(0);
-        if (unitTypeSpinner != null) unitTypeSpinner.setSelection(0);
+        // unitTypeSpinner removed - checkboxes will need to be unchecked separately if needed
         selectedDateMillis = null;
         selectedAddress = "";
         selectedUnitType = null;

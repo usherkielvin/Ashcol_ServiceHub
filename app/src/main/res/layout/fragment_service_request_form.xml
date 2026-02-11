@@ -79,6 +79,9 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:layout_marginTop="8dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackgroundBorderless"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/footerDivider">
@@ -108,11 +111,13 @@
                     android:textStyle="bold" />
 
                 <ImageButton
+                    android:id="@+id/btnShowSummary"
                     android:layout_width="20dp"
                     android:layout_height="20dp"
                     android:layout_marginStart="4dp"
                     android:src="@drawable/arrow_up"
-                    android:contentDescription="up"
+                    android:contentDescription="Show summary"
+                    android:background="?attr/selectableItemBackgroundBorderless"
                     app:tint="?attr/colorOnSurface"
                     tools:ignore="TouchTargetSizeCheck"/>
             </LinearLayout>
@@ -341,16 +346,46 @@
                 android:textColor="?attr/colorOnSurface"
                 android:textStyle="bold" />
 
-            <Spinner
-                android:id="@+id/spinnerUnitType"
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
+                android:layout_height="wrap_content"
                 android:layout_marginTop="6dp"
                 android:layout_marginHorizontal="2dp"
                 android:background="@drawable/bg_input_box"
                 android:elevation="4dp"
-                android:paddingHorizontal="16dp"
-                android:spinnerMode="dropdown" />
+                android:orientation="vertical"
+                android:padding="12dp">
+
+                <CheckBox
+                    android:id="@+id/cbSplit"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/poppins_medium"
+                    android:text="Split"
+                    android:textColor="?attr/colorOnSurface"
+                    android:textSize="14sp"
+                    android:buttonTint="#1B5E20" />
+
+                <CheckBox
+                    android:id="@+id/cbWindow"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/poppins_medium"
+                    android:text="Window"
+                    android:textColor="?attr/colorOnSurface"
+                    android:textSize="14sp"
+                    android:buttonTint="#1B5E20" />
+
+                <CheckBox
+                    android:id="@+id/cbARF"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/poppins_medium"
+                    android:text="ARF"
+                    android:textColor="?attr/colorOnSurface"
+                    android:textSize="14sp"
+                    android:buttonTint="#1B5E20" />
+            </LinearLayout>
 
             <TextView
                 android:layout_width="wrap_content"
