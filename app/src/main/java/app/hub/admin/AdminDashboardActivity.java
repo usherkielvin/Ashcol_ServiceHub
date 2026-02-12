@@ -19,12 +19,25 @@ public class AdminDashboardActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        app.hub.util.EdgeToEdgeHelper.enable(this);
+        
         super.onCreate(savedInstanceState);
         try {
             setContentView(R.layout.activity_admin_dashboard);
 
             navIndicator = findViewById(R.id.navIndicator);
             bottomNav = findViewById(R.id.bottom_navigation);
+            
+            // Apply bottom inset only to the bottom navigation
+            if (bottomNav != null) {
+                androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(bottomNav, (v, windowInsets) -> {
+                    androidx.core.graphics.Insets insets = windowInsets.getInsets(
+                        androidx.core.view.WindowInsetsCompat.Type.systemBars()
+                    );
+                    v.setPadding(0, 0, 0, insets.bottom);
+                    return windowInsets;
+                });
+            }
             
             if (bottomNav != null) {
                 bottomNav.setOnNavigationItemSelectedListener(navListener);

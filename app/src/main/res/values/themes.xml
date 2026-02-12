@@ -5,6 +5,11 @@
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
         
+        <!-- Edge-to-edge display support -->
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+        <item name="android:enforceStatusBarContrast">false</item>
+        <item name="android:enforceNavigationBarContrast">false</item>
+        
         <!-- Remove the Material 3 selection pill background -->
         <item name="colorSecondaryContainer">@android:color/transparent</item>
         

@@ -24,11 +24,23 @@ public class ManagerDashboardActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        app.hub.util.EdgeToEdgeHelper.enable(this);
+        
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_manager_dashboard);
 
         navIndicator = findViewById(R.id.navIndicator);
         bottomNav = findViewById(R.id.bottom_navigation);
+        
+        // Apply bottom inset only to the bottom navigation
+        androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(bottomNav, (v, windowInsets) -> {
+            androidx.core.graphics.Insets insets = windowInsets.getInsets(
+                androidx.core.view.WindowInsetsCompat.Type.systemBars()
+            );
+            v.setPadding(0, 0, 0, insets.bottom);
+            return windowInsets;
+        });
+        
         bottomNav.setOnNavigationItemSelectedListener(navListener);
 
         disableNavigationTooltips(bottomNav);

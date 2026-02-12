@@ -45,11 +45,26 @@ public class DashboardActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        app.hub.util.EdgeToEdgeHelper.enable(this);
+        
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_user_dashboard);
 
         apiService = ApiClient.getApiService();
         tokenManager = new TokenManager(this);
+        navIndicator = findViewById(R.id.navIndicator);
+        bottomNavigationView = findViewById(R.id.bottomNavigationView);
+        fabChatbot = findViewById(R.id.fab_chatbot);
+
+        // Apply bottom inset only to the bottom navigation
+        androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(bottomNavigationView, (v, windowInsets) -> {
+            androidx.core.graphics.Insets insets = windowInsets.getInsets(
+                androidx.core.view.WindowInsetsCompat.Type.systemBars()
+            );
+            v.setPadding(v.getPaddingLeft(), v.getPaddingTop(), v.getPaddingRight(), 
+                v.getPaddingBottom() + insets.bottom);
+            return windowInsets;
+        });
         navIndicator = findViewById(R.id.navIndicator);
         bottomNavigationView = findViewById(R.id.bottomNavigationView);
         fabChatbot = findViewById(R.id.fab_chatbot);
