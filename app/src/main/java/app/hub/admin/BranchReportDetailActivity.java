@@ -1,20 +1,18 @@
 package app.hub.admin;
 
-import android.graphics.Color;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
-
-import com.google.android.material.tabs.TabLayout;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,6 +21,8 @@ import app.hub.R;
 import app.hub.api.ApiClient;
 import app.hub.api.ApiService;
 import app.hub.api.BranchTicketsResponse;
+import app.hub.manager.ManagerCompleteTicketsAdapter;
+import app.hub.manager.ManagerTicketDetailActivity;
 import app.hub.util.TokenManager;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -31,20 +31,18 @@ import retrofit2.Response;
 public class BranchReportDetailActivity extends AppCompatActivity {
 
     private TextView tvBranchName;
-    private TabLayout tabLayout;
     private RecyclerView rvTickets;
     private SwipeRefreshLayout swipeRefreshLayout;
     private ProgressBar progressBar;
     private TextView tvEmptyState;
     
-    private BranchTicketsAdapter adapter;
-    private List<BranchTicketsResponse.Ticket> ticketList;
+    private ManagerCompleteTicketsAdapter adapter;
+    private List<app.hub.api.TicketListResponse.TicketItem> ticketList;
     private TokenManager tokenManager;
     
     private int branchId;
     private String branchName;
     private String branchLocation;
-    private String currentStatus = "completed"; // Default to completed
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,58 +59,53 @@ public class BranchReportDetailActivity extends AppCompatActivity {
         setupToolbar();
         initViews();
         setupRecyclerView();
-        setupTabs();
-        loadTickets();
+        loadCompletedTickets();
     }
 
     private void setupToolbar() {
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-            getSupportActionBar().setDisplayShowHomeEnabled(true);
+        // Back button click listener
+        ImageButton btnBack = findViewById(R.id.btnBack);
+        if (btnBack != null) {
+            btnBack.setOnClickListener(v -> onBackPressed());
         }
-        toolbar.setNavigationOnClickListener(v -> onBackPressed());
     }
 
     private void initViews() {
         tvBranchName = findViewById(R.id.tvBranchName);
-        tabLayout = findViewById(R.id.tabLayout);
         rvTickets = findViewById(R.id.rvTickets);
         swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout);
         progressBar = findViewById(R.id.progressBar);
         tvEmptyState = findViewById(R.id.tvEmptyState);
 
-        tvBranchName.setText(branchName);
-        swipeRefreshLayout.setOnRefreshListener(this::loadTickets);
+        // Format branch name - keep ASHCOL prefix and make uppercase
+        String displayName = branchName;
+        if (!displayName.toUpperCase().startsWith("ASHCOL")) {
+            displayName = "ASHCOL " + displayName;
+        }
+        tvBranchName.setText(displayName.toUpperCase());
+        swipeRefreshLayout.setOnRefreshListener(this::loadCompletedTickets);
     }
 
     private void setupRecyclerView() {
         ticketList = new ArrayList<>();
-        adapter = new BranchTicketsAdapter(ticketList);
+        adapter = new ManagerCompleteTicketsAdapter(ticketList);
         rvTickets.setLayoutManager(new LinearLayoutManager(this));
         rvTickets.setAdapter(adapter);
-    }
-
-    private void setupTabs() {
-        tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
-            @Override
-            public void onTabSelected(TabLayout.Tab tab) {
-                currentStatus = tab.getPosition() == 0 ? "completed" : "cancelled";
-                loadTickets();
+        
+        // Set click listener to view ticket details
+        adapter.setOnTicketClickListener(ticket -> {
+            if (ticket == null || ticket.getTicketId() == null || ticket.getTicketId().trim().isEmpty()) {
+                Toast.makeText(this, "Ticket ID missing", Toast.LENGTH_SHORT).show();
+                return;
             }
-
-            @Override
-            public void onTabUnselected(TabLayout.Tab tab) {
-            }
-
-            @Override
-            public void onTabReselected(TabLayout.Tab tab) {
-            }
+            
+            Intent intent = new Intent(this, ManagerTicketDetailActivity.class);
+            intent.putExtra("ticket_id", ticket.getTicketId());
+            startActivity(intent);
         });
     }
 
-    private void loadTickets() {
+    private void loadCompletedTickets() {
         showLoading(true);
         tvEmptyState.setVisibility(View.GONE);
 
@@ -126,7 +119,7 @@ public class BranchReportDetailActivity extends AppCompatActivity {
         Call<BranchTicketsResponse> call = apiService.getBranchTickets(
                 "Bearer " + token, 
                 branchId, 
-                currentStatus
+                "completed"
         );
 
         call.enqueue(new Callback<BranchTicketsResponse>() {
@@ -141,14 +134,19 @@ public class BranchReportDetailActivity extends AppCompatActivity {
                         List<BranchTicketsResponse.Ticket> tickets = ticketsResponse.getTickets();
                         
                         if (tickets != null && !tickets.isEmpty()) {
+                            // Convert BranchTicketsResponse.Ticket to TicketListResponse.TicketItem
                             ticketList.clear();
-                            ticketList.addAll(tickets);
-                            adapter.updateData(ticketList);
+                            for (BranchTicketsResponse.Ticket ticket : tickets) {
+                                ticketList.add(convertToTicketItem(ticket));
+                            }
+                            adapter.notifyDataSetChanged();
                             tvEmptyState.setVisibility(View.GONE);
+                            rvTickets.setVisibility(View.VISIBLE);
                         } else {
                             ticketList.clear();
-                            adapter.updateData(ticketList);
+                            adapter.notifyDataSetChanged();
                             tvEmptyState.setVisibility(View.VISIBLE);
+                            rvTickets.setVisibility(View.GONE);
                         }
                     } else {
                         showError(ticketsResponse.getMessage());
@@ -165,6 +163,23 @@ public class BranchReportDetailActivity extends AppCompatActivity {
                 showError("Network error: " + t.getMessage());
             }
         });
+    }
+
+    private app.hub.api.TicketListResponse.TicketItem convertToTicketItem(BranchTicketsResponse.Ticket ticket) {
+        app.hub.api.TicketListResponse.TicketItem item = new app.hub.api.TicketListResponse.TicketItem();
+        item.setId(ticket.getId());
+        item.setTicketId(ticket.getTicketId());
+        item.setTitle(ticket.getTitle());
+        item.setDescription(ticket.getDescription());
+        item.setServiceType(ticket.getServiceType());
+        item.setStatus(ticket.getStatus());
+        item.setStatusColor(ticket.getStatusColor());
+        item.setCustomerName(ticket.getCustomerName());
+        item.setAssignedStaff(ticket.getAssignedStaff());
+        item.setCreatedAt(ticket.getCreatedAt());
+        item.setUpdatedAt(ticket.getUpdatedAt());
+        // Note: BranchTicketsResponse doesn't include scheduled date/time
+        return item;
     }
 
     private void showLoading(boolean show) {
