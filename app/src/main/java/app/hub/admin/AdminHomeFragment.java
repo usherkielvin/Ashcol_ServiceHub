@@ -155,87 +155,68 @@ public class AdminHomeFragment extends Fragment {
                 
                 // Only show branches with employees
                 if (branch.getEmployeeCount() > 0) {
-                    createBranchPreviewItem(branch, activeBranches == 0);
+                    createBranchPreviewCard(branch);
                     activeBranches++;
                 }
             }
             
             if (activeBranches == 0) {
-                // No active branches
-                TextView noBranchesText = new TextView(getContext());
-                noBranchesText.setText("📍 No active branches yet");
-                noBranchesText.setTextColor(getResources().getColor(android.R.color.darker_gray));
-                noBranchesText.setTextSize(14);
-                noBranchesText.setPadding(32, 16, 32, 16);
-                noBranchesText.setBackgroundResource(R.drawable.bg_input_field);
-                branchPreviewLayout.addView(noBranchesText);
+                // No active branches - use preset card style
+                View noBranchCard = LayoutInflater.from(getContext()).inflate(R.layout.item_admin_branch_card, branchPreviewLayout, false);
+                TextView branchName = noBranchCard.findViewById(R.id.tvBranchName);
+                TextView branchAddress = noBranchCard.findViewById(R.id.tvBranchAddress);
+                TextView managerCount = noBranchCard.findViewById(R.id.tvManagerCount);
+                TextView employeeCount = noBranchCard.findViewById(R.id.tvEmployeeCount);
+                
+                branchName.setText("NO ACTIVE BRANCHES");
+                branchAddress.setText("No branches with employees yet");
+                managerCount.setText("0 Managers");
+                employeeCount.setText("0 Employees");
+                
+                branchPreviewLayout.addView(noBranchCard);
             }
         }
     }
 
-    private void createBranchPreviewItem(app.hub.api.BranchResponse.Branch branch, boolean isFirst) {
-        // Create branch item container
-        LinearLayout branchItem = new LinearLayout(getContext());
-        branchItem.setOrientation(LinearLayout.VERTICAL);
-        branchItem.setBackgroundResource(R.drawable.bg_input_field);
-        branchItem.setPadding(32, 24, 32, 24);
+    private void createBranchPreviewCard(app.hub.api.BranchResponse.Branch branch) {
+        // Inflate the preset card layout
+        View branchCard = LayoutInflater.from(getContext()).inflate(R.layout.item_admin_branch_card, branchPreviewLayout, false);
         
-        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.MATCH_PARENT,
-            LinearLayout.LayoutParams.WRAP_CONTENT
-        );
-        if (!isFirst) {
-            layoutParams.topMargin = 16;
-        }
-        branchItem.setLayoutParams(layoutParams);
+        // Get references to the card's views
+        TextView branchName = branchCard.findViewById(R.id.tvBranchName);
+        TextView branchAddress = branchCard.findViewById(R.id.tvBranchAddress);
+        TextView managerCount = branchCard.findViewById(R.id.tvManagerCount);
+        TextView employeeCount = branchCard.findViewById(R.id.tvEmployeeCount);
         
-        // Branch name
-        TextView branchNameText = new TextView(getContext());
-        String displayName = branch.getName().replace("ASHCOL ", ""); // Remove ASHCOL prefix for cleaner display
-        branchNameText.setText(displayName);
-        branchNameText.setTextColor(getResources().getColor(android.R.color.black));
-        branchNameText.setTextSize(16);
-        branchNameText.setTypeface(null, android.graphics.Typeface.BOLD);
-        branchItem.addView(branchNameText);
+        // Populate with branch data
+        String displayName = branch.getName().replace("ASHCOL - ", "").replace("ASHCOL ", "");
+        branchName.setText(displayName.toUpperCase());
         
-        // Location
-        TextView locationText = new TextView(getContext());
-        locationText.setText("📍 " + (branch.getAddress() != null ? branch.getAddress() : branch.getLocation()));
-        locationText.setTextColor(getResources().getColor(android.R.color.darker_gray));
-        locationText.setTextSize(12);
-        locationText.setPadding(0, 4, 0, 8);
-        branchItem.addView(locationText);
-        
-        // Stats layout
-        LinearLayout statsLayout = new LinearLayout(getContext());
-        statsLayout.setOrientation(LinearLayout.HORIZONTAL);
+        String address = branch.getAddress() != null ? branch.getAddress() : branch.getLocation();
+        branchAddress.setText(address);
         
         // Manager count
-        int managerCount = !"No manager assigned".equals(branch.getManager()) ? 1 : 0;
-        TextView managersText = new TextView(getContext());
-        managersText.setText("👥 " + managerCount + " Manager" + (managerCount != 1 ? "s" : ""));
-        managersText.setTextColor(getResources().getColor(R.color.green));
-        managersText.setTextSize(12);
-        managersText.setPadding(0, 0, 32, 0);
-        statsLayout.addView(managersText);
+        int managers = !"No manager assigned".equals(branch.getManager()) ? 1 : 0;
+        managerCount.setText(managers + " Manager" + (managers != 1 ? "s" : ""));
         
         // Employee count
-        TextView employeesText = new TextView(getContext());
-        employeesText.setText("👤 " + branch.getEmployeeCount() + " Employee" + (branch.getEmployeeCount() != 1 ? "s" : ""));
-        employeesText.setTextColor(getResources().getColor(android.R.color.darker_gray));
-        employeesText.setTextSize(12);
-        employeesText.setPadding(0, 0, 32, 0);
-        statsLayout.addView(employeesText);
+        int employees = branch.getEmployeeCount();
+        employeeCount.setText(employees + " Employee" + (employees != 1 ? "s" : ""));
         
-        // Active jobs (placeholder for now)
-        TextView jobsText = new TextView(getContext());
-        jobsText.setText("📋 0 Active Jobs");
-        jobsText.setTextColor(getResources().getColor(android.R.color.darker_gray));
-        jobsText.setTextSize(12);
-        statsLayout.addView(jobsText);
+        // Add click listener to navigate to branch details
+        branchCard.setOnClickListener(v -> {
+            try {
+                Intent intent = new Intent(getContext(), BranchDetailActivity.class);
+                intent.putExtra("branch_id", branch.getId());
+                intent.putExtra("branch_name", branch.getName());
+                startActivity(intent);
+            } catch (Exception e) {
+                Toast.makeText(getContext(), "Error opening branch details", Toast.LENGTH_SHORT).show();
+                e.printStackTrace();
+            }
+        });
         
-        branchItem.addView(statsLayout);
-        branchPreviewLayout.addView(branchItem);
+        branchPreviewLayout.addView(branchCard);
     }
 
     private void loadEmployeesForManagerPreview(String token) {
@@ -267,13 +248,20 @@ public class AdminHomeFragment extends Fragment {
             getActivity().runOnUiThread(() -> {
                 branchPreviewLayout.removeAllViews();
                 
-                TextView errorText = new TextView(getContext());
-                errorText.setText("📍 " + errorMessage);
-                errorText.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
-                errorText.setTextSize(14);
-                errorText.setPadding(32, 16, 32, 16);
-                errorText.setBackgroundResource(R.drawable.bg_input_field);
-                branchPreviewLayout.addView(errorText);
+                // Use preset card style for error message
+                View errorCard = LayoutInflater.from(getContext()).inflate(R.layout.item_admin_branch_card, branchPreviewLayout, false);
+                TextView branchName = errorCard.findViewById(R.id.tvBranchName);
+                TextView branchAddress = errorCard.findViewById(R.id.tvBranchAddress);
+                TextView managerCount = errorCard.findViewById(R.id.tvManagerCount);
+                TextView employeeCount = errorCard.findViewById(R.id.tvEmployeeCount);
+                
+                branchName.setText("ERROR");
+                branchName.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
+                branchAddress.setText(errorMessage);
+                managerCount.setText("Unable to load");
+                employeeCount.setText("data");
+                
+                branchPreviewLayout.addView(errorCard);
             });
         }
     }

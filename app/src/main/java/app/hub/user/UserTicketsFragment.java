@@ -53,6 +53,11 @@ public class UserTicketsFragment extends Fragment {
     private TextView tabRecent, tabPending, tabInProgress, tabCompleted;
     private EditText etSearch;
 
+    // Auto-refresh mechanism
+    private android.os.Handler autoRefreshHandler;
+    private Runnable autoRefreshRunnable;
+    private CustomerFirebaseListener customerFirebaseListener;
+
     /** Pending ticket for instant display after creation (cleared after shown) */
     private static volatile TicketListResponse.TicketItem pendingNewTicket = null;
 
@@ -103,6 +108,10 @@ public class UserTicketsFragment extends Fragment {
             swipeRefreshLayout.setRefreshing(true);
         }
         loadTickets(pending != null);
+
+        // Start auto-refresh and Firebase listener
+        startAutoRefresh();
+        startCustomerFirebaseListener();
     }
 
     private void initViews(View view) {
@@ -727,11 +736,95 @@ public class UserTicketsFragment extends Fragment {
         }
     }
 
+    /**
+     * Start auto-refresh polling for customer tickets
+     */
+    private void startAutoRefresh() {
+        autoRefreshHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+        autoRefreshRunnable = new Runnable() {
+            @Override
+            public void run() {
+                // Silently refresh in background (preserve UI)
+                if (isAdded() && getContext() != null) {
+                    Log.d(TAG, "Auto-refreshing customer tickets in background");
+                    loadTickets(true);
+                }
+
+                // Schedule next refresh in 5 seconds (customer polling)
+                if (autoRefreshHandler != null) {
+                    autoRefreshHandler.postDelayed(this, 5000);
+                }
+            }
+        };
+
+        // Start auto-refresh after 5 seconds
+        autoRefreshHandler.postDelayed(autoRefreshRunnable, 5000);
+        Log.d(TAG, "Auto-refresh started for customer tickets");
+    }
+
+    /**
+     * Stop auto-refresh polling
+     */
+    private void stopAutoRefresh() {
+        if (autoRefreshHandler != null && autoRefreshRunnable != null) {
+            autoRefreshHandler.removeCallbacks(autoRefreshRunnable);
+            Log.d(TAG, "Auto-refresh stopped");
+        }
+    }
+
+    /**
+     * Start Firebase real-time listener for customer tickets
+     */
+    private void startCustomerFirebaseListener() {
+        if (customerFirebaseListener == null) {
+            customerFirebaseListener = new CustomerFirebaseListener(requireContext());
+            customerFirebaseListener.setChangeListener(new CustomerFirebaseListener.TicketChangeListener() {
+                @Override
+                public void onTicketUpdated(String ticketId) {
+                    Log.i(TAG, "Firebase: Customer ticket updated - " + ticketId);
+                    // Refresh tickets immediately
+                    if (isAdded()) {
+                        loadTickets(true);
+                    }
+                }
+
+                @Override
+                public void onTicketStatusChanged(String ticketId, String newStatus) {
+                    Log.i(TAG, "Firebase: Ticket status changed - " + ticketId + " -> " + newStatus);
+                    // Refresh tickets immediately
+                    if (isAdded()) {
+                        loadTickets(true);
+                    }
+                }
+            });
+        }
+        customerFirebaseListener.startListening();
+        Log.d(TAG, "Customer Firebase listener started");
+    }
+
+    /**
+     * Stop Firebase listener
+     */
+    private void stopCustomerFirebaseListener() {
+        if (customerFirebaseListener != null) {
+            customerFirebaseListener.stopListening();
+            Log.d(TAG, "Customer Firebase listener stopped");
+        }
+    }
+
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        
+        // Stop auto-refresh
+        stopAutoRefresh();
+        
+        // Stop Firebase listeners
         if (firestoreManager != null) {
             firestoreManager.stopTicketListening();
         }
+        stopCustomerFirebaseListener();
+        
+        Log.d(TAG, "Fragment destroyed, all listeners stopped");
     }
 }
