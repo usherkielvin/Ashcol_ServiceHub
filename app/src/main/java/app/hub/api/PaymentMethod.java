@@ -3,7 +3,7 @@ package app.hub.api;
 public enum PaymentMethod {
     CASH("cash", "Cash"),
     CREDIT_CARD("credit_card", "Credit Card"),
-    GCASH("gcash", "GCash"),
+    GPAY("gpay", "Google Pay"),
     BANK_TRANSFER("bank_transfer", "Bank Transfer"),
     ONLINE("online", "Online");
 

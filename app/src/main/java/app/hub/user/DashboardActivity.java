@@ -61,9 +61,10 @@ public class DashboardActivity extends AppCompatActivity {
             androidx.core.graphics.Insets insets = windowInsets.getInsets(
                 androidx.core.view.WindowInsetsCompat.Type.systemBars()
             );
-            v.setPadding(v.getPaddingLeft(), v.getPaddingTop(), v.getPaddingRight(), 
-                v.getPaddingBottom() + insets.bottom);
-            return windowInsets;
+            ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) v.getLayoutParams();
+            params.bottomMargin = insets.bottom;
+            v.setLayoutParams(params);
+            return androidx.core.view.WindowInsetsCompat.CONSUMED;
         });
         navIndicator = findViewById(R.id.navIndicator);
         bottomNavigationView = findViewById(R.id.bottomNavigationView);
@@ -263,22 +264,21 @@ public class DashboardActivity extends AppCompatActivity {
         View itemView = bottomNavigationView.findViewById(itemId);
         if (itemView == null || navIndicator == null) return;
 
-        int itemWidth = itemView.getWidth();
-        int indicatorWidth = navIndicator.getWidth();
-        float targetX = itemView.getLeft() + (itemWidth / 2f) - (indicatorWidth / 2f);
-        float targetY = 0f; 
+        itemView.post(() -> {
+            int itemWidth = itemView.getWidth();
+            int indicatorWidth = navIndicator.getWidth();
+            float targetX = itemView.getLeft() + (itemWidth / 2f) - (indicatorWidth / 2f);
 
-        if (animate) {
-            navIndicator.animate()
-                    .translationX(targetX)
-                    .translationY(targetY)
-                    .setDuration(300)
-                    .setInterpolator(new AccelerateDecelerateInterpolator())
-                    .start();
-        } else {
-            navIndicator.setTranslationX(targetX);
-            navIndicator.setTranslationY(targetY);
-        }
+            if (animate) {
+                navIndicator.animate()
+                        .translationX(targetX)
+                        .setDuration(300)
+                        .setInterpolator(new AccelerateDecelerateInterpolator())
+                        .start();
+            } else {
+                navIndicator.setTranslationX(targetX);
+            }
+        });
     }
 
     private void setupFab(FloatingActionButton fab) {

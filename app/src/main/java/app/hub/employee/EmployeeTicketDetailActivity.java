@@ -41,7 +41,7 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity
     EmployeePaymentFragment.OnPaymentRequestListener,
     OnMapReadyCallback {
 
-        private TextView tvTicketId, tvTitle, tvDescription, tvServiceType, tvAddress, tvContact, tvStatus, tvCustomerName,
+        private TextView tvTicketId, tvTitle, tvDescription, tvServiceType, tvUnitType, tvAddress, tvContact, tvStatus, tvCustomerName,
             tvCreatedAt, tvScheduleDate, tvScheduleTime, tvScheduleNotes;
         private TextView tvPaymentStatus, tvPaymentMethod, tvPaymentAmount, tvPaymentCollectedBy;
         private View paymentCard;
@@ -111,6 +111,7 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity
         tvTitle = findViewById(R.id.tvTitle);
         tvDescription = findViewById(R.id.tvDescription);
         tvServiceType = findViewById(R.id.tvServiceType);
+        tvUnitType = findViewById(R.id.tvUnitType);
         tvAddress = findViewById(R.id.tvAddress);
         tvContact = findViewById(R.id.tvContact);
         tvStatus = findViewById(R.id.tvStatus);
@@ -199,6 +200,16 @@ public class EmployeeTicketDetailActivity extends AppCompatActivity
         }
         tvTicketId.setText(ticket.getTicketId());
         tvTitle.setText(ticket.getTicketId());
+        
+        // Display unit type from separate field
+        String unitType = ticket.getUnitType();
+        if (unitType != null && !unitType.trim().isEmpty()) {
+            tvUnitType.setText(unitType);
+        } else {
+            tvUnitType.setText("N/A");
+        }
+        
+        // Display other details (description) separately
         tvDescription.setText(cleanInfoText(ticket.getDescription()));
         tvServiceType.setText(ticket.getServiceType());
         tvAddress.setText(ticket.getAddress());

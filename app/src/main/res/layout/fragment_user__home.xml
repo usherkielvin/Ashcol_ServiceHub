@@ -435,10 +435,11 @@
                     android:gravity="center"
                     android:orientation="vertical">
                     <TextView
+                        android:id="@+id/tvNewTicketsCount"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/poppins_bold"
-                        android:text="03"
+                        android:text="0"
                         android:textColor="@color/black"
                         android:textSize="40sp" />
                     <TextView
@@ -466,10 +467,11 @@
                     android:gravity="center"
                     android:orientation="vertical">
                     <TextView
+                        android:id="@+id/tvPendingTicketsCount"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/poppins_bold"
-                        android:text="05"
+                        android:text="0"
                         android:textColor="@color/black"
                         android:textSize="40sp" />
                     <TextView
@@ -497,10 +499,11 @@
                     android:gravity="center"
                     android:orientation="vertical">
                     <TextView
+                        android:id="@+id/tvCompletedTicketsCount"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="@font/poppins_bold"
-                        android:text="15"
+                        android:text="0"
                         android:textColor="@color/black"
                         android:textSize="40sp" />
                     <TextView

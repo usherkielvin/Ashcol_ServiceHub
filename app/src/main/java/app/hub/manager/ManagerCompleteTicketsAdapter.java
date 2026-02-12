@@ -84,16 +84,33 @@ public class ManagerCompleteTicketsAdapter extends RecyclerView.Adapter<ManagerC
             tvTitle.setText(getTitleOrTicketId(ticket));
             tvTicketId.setText(ticket.getTicketId());
             tvServiceType.setText(buildServiceText(ticket));
-            tvStatus.setText("Completed");
+            
+            // Display actual status (Completed or Cancelled)
+            String status = ticket.getStatus();
+            if (status != null) {
+                String normalizedStatus = status.toLowerCase().trim();
+                if (normalizedStatus.contains("cancelled") || normalizedStatus.contains("canceled") || normalizedStatus.contains("rejected")) {
+                    tvStatus.setText("Cancelled");
+                    // Set status color to red for cancelled
+                    int color = Color.parseColor("#F44336");
+                    tvStatus.setBackgroundTintList(android.content.res.ColorStateList.valueOf(color));
+                } else {
+                    tvStatus.setText("Completed");
+                    // Set status color to green for completed
+                    int color = Color.parseColor("#4CAF50");
+                    tvStatus.setBackgroundTintList(android.content.res.ColorStateList.valueOf(color));
+                }
+            } else {
+                tvStatus.setText("Completed");
+                int color = Color.parseColor("#4CAF50");
+                tvStatus.setBackgroundTintList(android.content.res.ColorStateList.valueOf(color));
+            }
+            tvStatus.setTextColor(Color.WHITE);
+            
             tvCustomerName.setText(ticket.getCustomerName() != null ? ticket.getCustomerName() : "Unknown");
             
             // Display amount
             tvAmount.setText(String.format(Locale.getDefault(), "Php %,.2f", ticket.getAmount()));
-
-            // Set status color to green for completed
-            int color = Color.parseColor("#4CAF50");
-            tvStatus.setBackgroundTintList(android.content.res.ColorStateList.valueOf(color));
-            tvStatus.setTextColor(Color.WHITE);
 
             // Format date
             String formattedDate = formatDate(getHistoryDate(ticket));

@@ -115,18 +115,34 @@ public class BranchReportDetailActivity extends AppCompatActivity {
             return;
         }
 
+        // Load both completed and cancelled tickets
+        ticketList.clear();
+        loadTicketsByStatus(token, "completed", () -> {
+            loadTicketsByStatus(token, "cancelled", () -> {
+                showLoading(false);
+                if (ticketList.isEmpty()) {
+                    tvEmptyState.setVisibility(View.VISIBLE);
+                    rvTickets.setVisibility(View.GONE);
+                } else {
+                    adapter.notifyDataSetChanged();
+                    tvEmptyState.setVisibility(View.GONE);
+                    rvTickets.setVisibility(View.VISIBLE);
+                }
+            });
+        });
+    }
+
+    private void loadTicketsByStatus(String token, String status, Runnable onComplete) {
         ApiService apiService = ApiClient.getApiService();
         Call<BranchTicketsResponse> call = apiService.getBranchTickets(
                 "Bearer " + token, 
                 branchId, 
-                "completed"
+                status
         );
 
         call.enqueue(new Callback<BranchTicketsResponse>() {
             @Override
             public void onResponse(Call<BranchTicketsResponse> call, Response<BranchTicketsResponse> response) {
-                showLoading(false);
-
                 if (response.isSuccessful() && response.body() != null) {
                     BranchTicketsResponse ticketsResponse = response.body();
                     
@@ -134,33 +150,24 @@ public class BranchReportDetailActivity extends AppCompatActivity {
                         List<BranchTicketsResponse.Ticket> tickets = ticketsResponse.getTickets();
                         
                         if (tickets != null && !tickets.isEmpty()) {
-                            // Convert BranchTicketsResponse.Ticket to TicketListResponse.TicketItem
-                            ticketList.clear();
                             for (BranchTicketsResponse.Ticket ticket : tickets) {
                                 ticketList.add(convertToTicketItem(ticket));
                             }
-                            adapter.notifyDataSetChanged();
-                            tvEmptyState.setVisibility(View.GONE);
-                            rvTickets.setVisibility(View.VISIBLE);
-                        } else {
-                            ticketList.clear();
-                            adapter.notifyDataSetChanged();
-                            tvEmptyState.setVisibility(View.VISIBLE);
-                            rvTickets.setVisibility(View.GONE);
                         }
-                    } else {
-                        showError(ticketsResponse.getMessage());
                     }
-                } else {
-                    showError("Failed to load tickets");
+                }
+                
+                if (onComplete != null) {
+                    onComplete.run();
                 }
             }
 
             @Override
             public void onFailure(Call<BranchTicketsResponse> call, Throwable t) {
-                showLoading(false);
-                Log.e("BranchReportDetail", "API call failed: " + t.getMessage(), t);
-                showError("Network error: " + t.getMessage());
+                Log.e("BranchReportDetail", "API call failed for status " + status + ": " + t.getMessage(), t);
+                if (onComplete != null) {
+                    onComplete.run();
+                }
             }
         });
     }

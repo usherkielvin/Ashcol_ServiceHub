@@ -36,45 +36,18 @@
                 app:strokeColor="#4DFFFFFF"
                 app:strokeWidth="1dp" />
 
-            <LinearLayout
+            <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="12dp"
-                android:orientation="vertical"
+                android:text="Ashcol Assistant"
+                android:textColor="#FFFFFF"
+                android:textSize="16sp"
+                android:textStyle="bold"
                 app:layout_constraintBottom_toBottomOf="@id/botAvatar"
                 app:layout_constraintEnd_toStartOf="@+id/minimizeButton"
                 app:layout_constraintStart_toEndOf="@id/botAvatar"
-                app:layout_constraintTop_toTopOf="@id/botAvatar">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Ashcol Assistant"
-                    android:textColor="#FFFFFF"
-                    android:textSize="16sp"
-                    android:textStyle="bold" />
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <View
-                        android:layout_width="8dp"
-                        android:layout_height="8dp"
-                        android:background="@drawable/bg_circle_green"
-                        android:backgroundTint="#4CAF50" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="6dp"
-                        android:text="Always online"
-                        android:textColor="#CCFFFFFF"
-                        android:textSize="11sp" />
-                </LinearLayout>
-            </LinearLayout>
+                app:layout_constraintTop_toTopOf="@id/botAvatar" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/minimizeButton"
@@ -112,64 +85,7 @@
                 android:visibility="gone" />
         </FrameLayout>
 
-        <!-- Quick Suggestions bar (Modern AI Feature) -->
-        <HorizontalScrollView
-            android:id="@+id/suggestionsScroll"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="?attr/colorSurfaceVariant"
-            android:paddingVertical="8dp"
-            android:scrollbars="none">
 
-            <LinearLayout
-                android:id="@+id/suggestionsLayout"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:paddingHorizontal="16dp">
-
-                <!-- Placeholder for dynamic suggestion chips -->
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/rounded_white_bg"
-                    android:paddingHorizontal="12dp"
-                    android:paddingVertical="6dp"
-                    android:text="Check Ticket Status"
-                    android:textColor="@color/service_icon_tint"
-                    android:textSize="12sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:background="@drawable/rounded_white_bg"
-                    android:paddingHorizontal="12dp"
-                    android:paddingVertical="6dp"
-                    android:text="Book Service"
-                    android:textColor="@color/service_icon_tint"
-                    android:textSize="12sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:background="@drawable/rounded_white_bg"
-                    android:paddingHorizontal="12dp"
-                    android:paddingVertical="6dp"
-                    android:text="Speak to Human"
-                    android:textColor="@color/service_icon_tint"
-                    android:textSize="12sp"
-                    android:textStyle="bold" />
-            </LinearLayout>
-        </HorizontalScrollView>
-
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="?attr/colorOutlineVariant" />
 
         <!-- Interaction Area -->
         <LinearLayout

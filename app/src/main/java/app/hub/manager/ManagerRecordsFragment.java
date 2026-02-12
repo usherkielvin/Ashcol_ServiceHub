@@ -138,7 +138,10 @@ public class ManagerRecordsFragment extends Fragment implements TicketDataChange
         String normalized = status.toLowerCase().trim();
         return normalized.contains("completed") 
             || normalized.contains("resolved")
-            || normalized.contains("closed");
+            || normalized.contains("closed")
+            || normalized.contains("cancelled")
+            || normalized.contains("canceled")
+            || normalized.contains("rejected");
     }
 
     private void stopSwipeRefresh() {

@@ -245,7 +245,25 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="12dp"
                         android:fontFamily="@font/poppins_medium"
-                        android:text="Description"
+                        android:text="Unit Type"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:textSize="12sp" />
+
+                    <TextView
+                        android:id="@+id/tvUnitType"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/poppins_bold"
+                        android:textColor="?attr/colorOnSurface"
+                        android:textSize="15sp"
+                        tools:text="Split (1), Window (1)" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:fontFamily="@font/poppins_medium"
+                        android:text="Other Details"
                         android:textColor="?attr/colorOnSurfaceVariant"
                         android:textSize="12sp" />
 

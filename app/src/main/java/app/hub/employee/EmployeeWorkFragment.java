@@ -393,6 +393,7 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
         bindTicketDetails(statusView, activeTicket);
         bindStepTimes(statusView, activeTicket);
         bindStatusActions(statusView, step);
+        applyStepStyling(statusView, step);
         applyCompletedUi(statusView, activeTicket);
         setMapVisible(false);
         updateMapMarker(activeTicket.getLatitude(), activeTicket.getLongitude());
@@ -1034,6 +1035,87 @@ public class EmployeeWorkFragment extends Fragment implements OnMapReadyCallback
         SharedPreferences prefs = requireContext().getSharedPreferences(PREFS_READY_PAYMENT,
                 android.content.Context.MODE_PRIVATE);
         prefs.edit().remove(ticketId).apply();
+    }
+
+    /**
+     * Apply grey styling to tracking steps until service actually starts (STEP_IN_PROGRESS)
+     * Steps should remain grey until technician clicks "Start Service"
+     */
+    private void applyStepStyling(View root, int currentStep) {
+        if (root == null) {
+            return;
+        }
+
+        // If service hasn't started yet (before STEP_IN_PROGRESS), keep all future steps grey
+        boolean serviceStarted = currentStep >= STEP_IN_PROGRESS;
+
+        // Step 2: On the Way - grey out if service not started
+        if (!serviceStarted && currentStep < STEP_ON_THE_WAY) {
+            ImageView step2Icon = root.findViewById(R.id.ivStep2);
+            View step2Status = root.findViewById(R.id.tvOnWayStatus);
+            if (step2Icon != null) {
+                step2Icon.setBackgroundResource(R.drawable.shape_circle_gray);
+                step2Icon.setColorFilter(ContextCompat.getColor(requireContext(), R.color.white));
+            }
+            if (step2Status != null && step2Status instanceof TextView) {
+                ((TextView) step2Status).setTextColor(ContextCompat.getColor(requireContext(), R.color.gray));
+            }
+        }
+
+        // Step 3: Arrived - grey out if service not started
+        if (!serviceStarted && currentStep < STEP_ARRIVED) {
+            ImageView step3Icon = root.findViewById(R.id.ivStep3);
+            View step3Status = root.findViewById(R.id.tvArrivedStatus);
+            View step3StatusLabel = root.findViewById(R.id.tvArrivedStatusLabel);
+            if (step3Icon != null) {
+                step3Icon.setBackgroundResource(R.drawable.shape_circle_gray);
+                step3Icon.setColorFilter(ContextCompat.getColor(requireContext(), R.color.white));
+            }
+            if (step3Status != null && step3Status instanceof TextView) {
+                ((TextView) step3Status).setTextColor(ContextCompat.getColor(requireContext(), R.color.gray));
+            }
+            if (step3StatusLabel != null && step3StatusLabel instanceof com.google.android.material.card.MaterialCardView) {
+                com.google.android.material.card.MaterialCardView card = (com.google.android.material.card.MaterialCardView) step3StatusLabel;
+                card.setCardBackgroundColor(ContextCompat.getColor(requireContext(), android.R.color.white));
+                card.setStrokeColor(0xFFBDBDBD);
+                TextView arrivedLabel = root.findViewById(R.id.tvArrivedLabel);
+                if (arrivedLabel != null) {
+                    arrivedLabel.setTextColor(0xFFBDBDBD);
+                }
+            }
+        }
+
+        // Step 4: In Progress - grey out if service not started
+        if (!serviceStarted && currentStep < STEP_IN_PROGRESS) {
+            ImageView step4Icon = root.findViewById(R.id.ivStep4);
+            View step4Status = root.findViewById(R.id.tvInProgressStatus);
+            if (step4Icon != null) {
+                step4Icon.setBackgroundResource(R.drawable.shape_circle_gray);
+                step4Icon.setColorFilter(ContextCompat.getColor(requireContext(), R.color.white));
+            }
+            if (step4Status != null && step4Status instanceof TextView) {
+                ((TextView) step4Status).setTextColor(ContextCompat.getColor(requireContext(), R.color.gray));
+            }
+        }
+
+        // Step 5: Completed - always grey until actually completed
+        if (currentStep < STEP_COMPLETED) {
+            ImageView step5Icon = root.findViewById(R.id.ivStep5);
+            View step5Status = root.findViewById(R.id.tvCompletedStatus);
+            TextView step5Label = root.findViewById(R.id.tvCompletedLabel);
+            if (step5Icon != null) {
+                step5Icon.setBackgroundResource(R.drawable.shape_circle_gray);
+                step5Icon.setColorFilter(ContextCompat.getColor(requireContext(), R.color.white));
+            }
+            if (step5Status != null && step5Status instanceof com.google.android.material.card.MaterialCardView) {
+                com.google.android.material.card.MaterialCardView card = (com.google.android.material.card.MaterialCardView) step5Status;
+                card.setCardBackgroundColor(ContextCompat.getColor(requireContext(), android.R.color.white));
+                card.setStrokeColor(0xFFBDBDBD);
+            }
+            if (step5Label != null) {
+                step5Label.setTextColor(0xFFBDBDBD);
+            }
+        }
     }
 
     private void applyCompletedUi(View root, TicketListResponse.TicketItem ticket) {

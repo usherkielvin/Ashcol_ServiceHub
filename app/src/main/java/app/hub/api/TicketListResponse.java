@@ -53,6 +53,9 @@ public class TicketListResponse {
         @SerializedName("service_type")
         private String serviceType;
 
+        @SerializedName("unit_type")
+        private String unitType;
+
         @SerializedName("address")
         private String address;
 
@@ -146,6 +149,14 @@ public class TicketListResponse {
 
         public void setServiceType(String serviceType) {
             this.serviceType = serviceType;
+        }
+
+        public String getUnitType() {
+            return unitType;
+        }
+
+        public void setUnitType(String unitType) {
+            this.unitType = unitType;
         }
 
         public String getAddress() {
@@ -306,6 +317,7 @@ public class TicketListResponse {
         item.setTitle(data.getTitle());
         item.setDescription(data.getDescription());
         item.setServiceType(data.getServiceType());
+        item.setUnitType(data.getUnitType());
         item.setAddress(data.getAddress());
         item.setContact(data.getContact());
         if (data.getAmount() != null) {

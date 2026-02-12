@@ -439,11 +439,18 @@ public class RegisterActivity extends AppCompatActivity {
 			return;
 		}
 
+		// Check if phone contains only numbers and + symbol
+		if (!phone.matches("[0-9+]+")) {
+			showValidationError(phoneVal, "Only numbers and + allowed");
+			return;
+		}
+
 		int digitCount = getPhoneDigitCount(phone);
-		if (digitCount >= 10 && digitCount <= 15) {
+		// Allow up to 12 digits (not exactly 10)
+		if (digitCount > 0 && digitCount <= 12) {
 			hideValidationError(phoneVal);
 		} else {
-			showValidationError(phoneVal, "Phone 10 digits min");
+			showValidationError(phoneVal, "Maximum 12 digits allowed");
 		}
 	}
 
@@ -477,8 +484,11 @@ public class RegisterActivity extends AppCompatActivity {
 		if (phone.isEmpty()) {
 			showValidationError(phoneVal, "Phone required");
 			isValid = false;
-		} else if (getPhoneDigitCount(phone) < 10) {
-			showValidationError(phoneVal, "Phone 10 digits min");
+		} else if (!phone.matches("[0-9+]+")) {
+			showValidationError(phoneVal, "Only numbers and + allowed");
+			isValid = false;
+		} else if (getPhoneDigitCount(phone) > 12) {
+			showValidationError(phoneVal, "Maximum 12 digits allowed");
 			isValid = false;
 		}
 
@@ -509,20 +519,26 @@ public class RegisterActivity extends AppCompatActivity {
 				combinedLocation = region;
 			}
 
+			// Get phone number and add +63 prefix
+			String phoneNumber = getText(phoneInput);
+			String fullPhoneNumber = "+63" + phoneNumber;
+
 			setUserPersonalInfo(
 					getText(firstNameInput),
 					getText(lastNameInput),
 					getText(usernameInput),
-					getText(phoneInput),
+					fullPhoneNumber,
 					combinedLocation);
 		} catch (Exception e) {
 			Log.e(TAG, "Error saving personal info", e);
 			// Continue anyway with empty location
+			String phoneNumber = getText(phoneInput);
+			String fullPhoneNumber = "+63" + phoneNumber;
 			setUserPersonalInfo(
 					getText(firstNameInput),
 					getText(lastNameInput),
 					getText(usernameInput),
-					getText(phoneInput),
+					fullPhoneNumber,
 					"");
 		}
 
@@ -964,8 +980,23 @@ public class RegisterActivity extends AppCompatActivity {
 
 		// Populate Regions and Cities - RESTRICTED TO AVAILABLE BRANCH LOCATIONS
 
-		// 1. NCR (Taguig, Valenzuela)
+		// 1. NCR - All cities in Metro Manila
 		regionCityMap.put("NCR", Arrays.asList(
+				"Caloocan City",
+				"Las Piñas City",
+				"Makati City",
+				"Malabon City",
+				"Mandaluyong City",
+				"Manila City",
+				"Marikina City",
+				"Muntinlupa City",
+				"Navotas City",
+				"Parañaque City",
+				"Pasay City",
+				"Pasig City",
+				"Pateros",
+				"Quezon City",
+				"San Juan City",
 				"Taguig City",
 				"Valenzuela City"));
 

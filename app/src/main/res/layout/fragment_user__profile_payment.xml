@@ -99,12 +99,14 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
-                <!-- GCash -->
+                <!-- Google Pay -->
                 <com.google.android.material.card.MaterialCardView
-                    android:id="@+id/cardGcash"
+                    android:id="@+id/cardGpay"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="12dp"
+                    android:clickable="true"
+                    android:focusable="true"
                     app:cardBackgroundColor="@android:color/white"
                     app:cardCornerRadius="12dp"
                     app:cardElevation="2dp"
@@ -121,7 +123,7 @@
                             android:layout_height="wrap_content"
                             android:orientation="vertical"
                             app:layout_constraintBottom_toBottomOf="parent"
-                            app:layout_constraintEnd_toStartOf="@+id/rbGcash"
+                            app:layout_constraintEnd_toStartOf="@+id/rbGpay"
                             app:layout_constraintStart_toStartOf="parent"
                             app:layout_constraintTop_toTopOf="parent">
 
@@ -129,7 +131,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:fontFamily="@font/poppins_bold"
-                                android:text="GCash"
+                                android:text="Google Pay"
                                 android:textColor="@android:color/black"
                                 android:textSize="16sp" />
 
@@ -137,17 +139,19 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:fontFamily="@font/poppins_medium"
-                                android:text="GCash bank"
+                                android:text="Google Payment"
                                 android:textColor="#9E9E9E"
                                 android:textSize="13sp" />
                         </LinearLayout>
 
                         <RadioButton
-                            android:id="@+id/rbGcash"
+                            android:id="@+id/rbGpay"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:buttonTint="@color/status_green"
                             android:checked="true"
+                            android:clickable="false"
+                            android:focusable="false"
                             app:layout_constraintBottom_toBottomOf="parent"
                             app:layout_constraintEnd_toEndOf="parent"
                             app:layout_constraintTop_toTopOf="parent" />
@@ -203,6 +207,8 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:buttonTint="#BDBDBD"
+                            android:clickable="false"
+                            android:focusable="false"
                             app:layout_constraintBottom_toBottomOf="parent"
                             app:layout_constraintEnd_toEndOf="parent"
                             app:layout_constraintTop_toTopOf="parent" />

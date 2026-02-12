@@ -30,7 +30,7 @@ public class PaymentSelectionActivity extends AppCompatActivity {
 
     private TextView tvTicketId, tvServiceType, tvAmount;
     private RadioGroup rgPaymentMethods;
-    private RadioButton rbCash, rbCreditCard, rbGCash, rbBankTransfer;
+    private RadioButton rbCash, rbCreditCard, rbGPay, rbBankTransfer;
     private Button btnConfirmPayment;
     private ProgressBar progressBar;
     private ImageView btnBack;
@@ -90,7 +90,7 @@ public class PaymentSelectionActivity extends AppCompatActivity {
         rgPaymentMethods = findViewById(R.id.rgPaymentMethods);
         rbCash = findViewById(R.id.rbCash);
         rbCreditCard = findViewById(R.id.rbCreditCard);
-        rbGCash = findViewById(R.id.rbGCash);
+        rbGPay = findViewById(R.id.rbGPay);
         rbBankTransfer = findViewById(R.id.rbBankTransfer);
         btnConfirmPayment = findViewById(R.id.btnConfirmPayment);
         progressBar = findViewById(R.id.progressBar);
@@ -148,8 +148,8 @@ public class PaymentSelectionActivity extends AppCompatActivity {
             validateSelection();
         });
 
-        rbGCash.setOnClickListener(v -> {
-            rgPaymentMethods.check(R.id.rbGCash);
+        rbGPay.setOnClickListener(v -> {
+            rgPaymentMethods.check(R.id.rbGPay);
             validateSelection();
         });
 
@@ -171,8 +171,8 @@ public class PaymentSelectionActivity extends AppCompatActivity {
         } else if (selectedId == R.id.rbCreditCard) {
             selectedPaymentMethod = PaymentMethod.CREDIT_CARD;
             btnConfirmPayment.setEnabled(true);
-        } else if (selectedId == R.id.rbGCash) {
-            selectedPaymentMethod = PaymentMethod.GCASH;
+        } else if (selectedId == R.id.rbGPay) {
+            selectedPaymentMethod = PaymentMethod.GPAY;
             btnConfirmPayment.setEnabled(true);
         } else if (selectedId == R.id.rbBankTransfer) {
             selectedPaymentMethod = PaymentMethod.BANK_TRANSFER;

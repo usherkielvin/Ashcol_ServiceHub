@@ -203,7 +203,7 @@
                     android:focusable="true" />
             </androidx.cardview.widget.CardView>
 
-            <!-- GCash Option -->
+            <!-- Google Pay Option -->
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -213,10 +213,10 @@
                 app:cardBackgroundColor="@android:color/white">
                 
                 <RadioButton
-                    android:id="@+id/rbGCash"
+                    android:id="@+id/rbGPay"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="GCash"
+                    android:text="Google Pay"
                     android:textSize="16sp"
                     android:textColor="@color/text_primary"
                     android:padding="16dp"

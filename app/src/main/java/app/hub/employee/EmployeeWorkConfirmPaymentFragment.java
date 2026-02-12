@@ -229,8 +229,8 @@ public class EmployeeWorkConfirmPaymentFragment extends Fragment {
             if (tvPaymentStatus != null) {
                 tvPaymentStatus.setText("Customer selected cash payment. Click 'Cash Received' when payment is collected.");
             }
-        } else if ("online".equalsIgnoreCase(method) || "gcash".equalsIgnoreCase(method) || 
-                   "credit card".equalsIgnoreCase(method) || "bank transfer".equalsIgnoreCase(method)) {
+        } else if ("online".equalsIgnoreCase(method) || "gpay".equalsIgnoreCase(method) || 
+                   "google pay".equalsIgnoreCase(method) || "credit card".equalsIgnoreCase(method) || "bank transfer".equalsIgnoreCase(method)) {
             // Customer selected online payment - hide button and wait for auto-completion
             if (btnPaymentConfirmed != null) {
                 btnPaymentConfirmed.setVisibility(View.GONE);

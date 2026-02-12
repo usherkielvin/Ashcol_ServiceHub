@@ -74,6 +74,9 @@ public class CreateTicketResponse {
         @SerializedName("service_type")
         private String serviceType;
         
+        @SerializedName("unit_type")
+        private String unitType;
+        
         @SerializedName("address")
         private String address;
         
@@ -107,6 +110,9 @@ public class CreateTicketResponse {
         
         public String getServiceType() { return serviceType; }
         public void setServiceType(String serviceType) { this.serviceType = serviceType; }
+        
+        public String getUnitType() { return unitType; }
+        public void setUnitType(String unitType) { this.unitType = unitType; }
         
         public String getAddress() { return address; }
         public void setAddress(String address) { this.address = address; }

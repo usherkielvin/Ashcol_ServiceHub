@@ -23,6 +23,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import app.hub.R;
 import app.hub.api.ApiClient;
 import app.hub.api.ApiService;
+import app.hub.api.TicketListResponse;
 import app.hub.api.UserResponse;
 import app.hub.util.TokenManager;
 import retrofit2.Call;
@@ -49,6 +50,9 @@ public class UserHomeFragment extends Fragment {
     
     // Service booking buttons
     private MaterialButton btnBookCleaning, btnBookMaintenance, btnBookInstallation, btnBookRepair;
+    
+    // Ticket count TextViews
+    private TextView tvNewTicketsCount, tvPendingTicketsCount, tvCompletedTicketsCount;
 
     public UserHomeFragment() {
         // Required empty public constructor
@@ -82,11 +86,17 @@ public class UserHomeFragment extends Fragment {
         btnBookMaintenance = view.findViewById(R.id.btnBookMaintenance);
         btnBookInstallation = view.findViewById(R.id.btnBookInstallation);
         btnBookRepair = view.findViewById(R.id.btnBookRepair);
+        
+        // Initialize ticket count TextViews
+        tvNewTicketsCount = view.findViewById(R.id.tvNewTicketsCount);
+        tvPendingTicketsCount = view.findViewById(R.id.tvPendingTicketsCount);
+        tvCompletedTicketsCount = view.findViewById(R.id.tvCompletedTicketsCount);
 
         setupViewPager();
         updateDots(0); // Initialize dots
         loadBranchInfo();
         setupServiceButtonListeners();
+        loadTicketCounts();
 
         return view;
     }
@@ -158,6 +168,8 @@ public class UserHomeFragment extends Fragment {
         if (handler != null && slideRunnable != null) {
             handler.postDelayed(slideRunnable, 4000);
         }
+        // Refresh ticket counts when fragment becomes visible
+        loadTicketCounts();
     }
 
     @Override
@@ -266,6 +278,76 @@ public class UserHomeFragment extends Fragment {
             return trimmedRegion;
         }
         return null;
+    }
+    
+    private void loadTicketCounts() {
+        String token = tokenManager.getToken();
+        if (token == null) {
+            Log.w(TAG, "No auth token available for loading ticket counts");
+            return;
+        }
+
+        ApiService apiService = ApiClient.getApiService();
+        Call<TicketListResponse> call = apiService.getTickets(token);
+        call.enqueue(new Callback<TicketListResponse>() {
+            @Override
+            public void onResponse(@NonNull Call<TicketListResponse> call, @NonNull Response<TicketListResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    TicketListResponse ticketResponse = response.body();
+                    if (ticketResponse.isSuccess() && ticketResponse.getTickets() != null) {
+                        updateTicketCounts(ticketResponse.getTickets());
+                    }
+                } else {
+                    Log.e(TAG, "Failed to fetch tickets: " + response.code());
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<TicketListResponse> call, @NonNull Throwable t) {
+                Log.e(TAG, "API call failed for tickets: " + t.getMessage());
+            }
+        });
+    }
+    
+    private void updateTicketCounts(List<TicketListResponse.TicketItem> tickets) {
+        int newCount = 0;
+        int pendingCount = 0;
+        int completedCount = 0;
+        
+        for (TicketListResponse.TicketItem ticket : tickets) {
+            String status = ticket.getStatus();
+            if (status != null) {
+                status = status.toLowerCase();
+                if (status.contains("pending") || status.equals("new")) {
+                    pendingCount++;
+                } else if (status.contains("in progress") || status.contains("in_progress") || 
+                           status.contains("scheduled") || status.contains("assigned")) {
+                    newCount++;
+                } else if (status.contains("completed") || status.contains("done")) {
+                    completedCount++;
+                }
+            }
+        }
+        
+        // Make variables effectively final for lambda
+        final int finalNewCount = newCount;
+        final int finalPendingCount = pendingCount;
+        final int finalCompletedCount = completedCount;
+        
+        // Update UI on main thread
+        if (getActivity() != null) {
+            getActivity().runOnUiThread(() -> {
+                if (tvNewTicketsCount != null) {
+                    tvNewTicketsCount.setText(String.valueOf(finalNewCount));
+                }
+                if (tvPendingTicketsCount != null) {
+                    tvPendingTicketsCount.setText(String.valueOf(finalPendingCount));
+                }
+                if (tvCompletedTicketsCount != null) {
+                    tvCompletedTicketsCount.setText(String.valueOf(finalCompletedCount));
+                }
+            });
+        }
     }
 
 }
