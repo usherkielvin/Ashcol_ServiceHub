@@ -487,14 +487,14 @@ public class UserProfileFragment extends Fragment {
     }
 
     private void openPersonalInfo() {
-        Intent intent = new Intent(getActivity(), PersonalInfoActivity.class);
+        Intent intent = new Intent(getActivity(), app.hub.common.PersonalInfoActivity.class);
         startActivity(intent);
     }
 
     private void navigateToFragment(Fragment fragment) {
         // For About Us, launch as activity
         if (fragment instanceof ProfileAboutUsFragment) {
-            Intent intent = new Intent(getActivity(), AboutUsActivity.class);
+            Intent intent = new Intent(getActivity(), app.hub.common.AboutUsActivity.class);
             startActivity(intent);
             return;
         }

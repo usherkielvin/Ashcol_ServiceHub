@@ -338,10 +338,13 @@ public class ManagerProfileFragment extends Fragment {
             payrollButton.setOnClickListener(v -> showPayrollInfo());
         }
 
-        // Help Button (LinearLayout)
-        View helpButton = view.findViewById(R.id.btn_help);
-        if (helpButton != null) {
-            helpButton.setOnClickListener(v -> showHelpAndFeedback());
+        // About Us Button (LinearLayout)
+        View aboutUsButton = view.findViewById(R.id.btn_help);
+        if (aboutUsButton != null) {
+            aboutUsButton.setOnClickListener(v -> {
+                Intent intent = new Intent(getActivity(), app.hub.common.AboutUsActivity.class);
+                startActivity(intent);
+            });
         }
 
         // Logout Button (LinearLayout)

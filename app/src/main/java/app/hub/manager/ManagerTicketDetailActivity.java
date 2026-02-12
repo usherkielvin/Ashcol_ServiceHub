@@ -45,6 +45,7 @@ public class ManagerTicketDetailActivity extends AppCompatActivity
     private android.widget.ImageButton btnBack;
     private android.widget.AutoCompleteTextView spinnerTechnician;
     private View mapCardContainer;
+    private android.widget.LinearLayout assignTechnicianSection;
     private TokenManager tokenManager;
     private String ticketId;
     private double latitude, longitude;
@@ -160,6 +161,7 @@ public class ManagerTicketDetailActivity extends AppCompatActivity
             btnAssignStaff = findViewById(R.id.btnAssignStaff);
             spinnerTechnician = findViewById(R.id.spinnerTechnician);
             mapCardContainer = findViewById(R.id.mapCardContainer);
+            assignTechnicianSection = findViewById(R.id.assignTechnicianSection);
 
             // Check if any critical views are null
             if (tvTicketId == null || btnBack == null) {
@@ -445,6 +447,7 @@ public class ManagerTicketDetailActivity extends AppCompatActivity
             // Hide all buttons if status is null
             btnReject.setVisibility(View.GONE);
             btnAssignStaff.setVisibility(View.GONE);
+            safeSetVisible(assignTechnicianSection, View.GONE);
             return;
         }
 
@@ -477,6 +480,7 @@ public class ManagerTicketDetailActivity extends AppCompatActivity
                     btnAssignStaff.setAlpha(1.0f);
                 }
                 btnReject.setVisibility(View.VISIBLE);
+                safeSetVisible(assignTechnicianSection, View.VISIBLE);
                 break;
                 
             case "in progress":
@@ -495,15 +499,17 @@ public class ManagerTicketDetailActivity extends AppCompatActivity
                     btnAssignStaff.setVisibility(View.GONE);
                 }
                 btnReject.setVisibility(View.GONE);
+                safeSetVisible(assignTechnicianSection, View.GONE);
                 break;
                 
             case "completed":
             case "cancelled":
             case "resolved":
             case "closed":
-                // Ticket is done - hide all action buttons
+                // Ticket is done - hide all action buttons and assignment section
                 btnReject.setVisibility(View.GONE);
                 btnAssignStaff.setVisibility(View.GONE);
+                safeSetVisible(assignTechnicianSection, View.GONE);
                 break;
                 
             default:
@@ -521,6 +527,7 @@ public class ManagerTicketDetailActivity extends AppCompatActivity
                     btnAssignStaff.setAlpha(1.0f);
                 }
                 btnReject.setVisibility(View.VISIBLE);
+                safeSetVisible(assignTechnicianSection, View.VISIBLE);
                 break;
         }
     }

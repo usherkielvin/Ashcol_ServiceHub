@@ -29,71 +29,12 @@
             android:shadowDx="1.2"
             android:shadowDy="1.2"
             android:shadowRadius="1.5"
-            android:text="REPORTS"
+            android:text="RECORDS"
             android:textColor="?attr/colorOnSurface"
             android:textSize="26sp"
             android:textStyle="bold"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
-
-        <LinearLayout
-            android:id="@+id/tabContainer"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:layout_marginTop="16dp"
-            android:orientation="horizontal"
-            app:layout_constraintTop_toBottomOf="@id/tvHeaderTitle">
-
-            <LinearLayout
-                android:id="@+id/cardReports"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:clickable="true"
-                android:focusable="true"
-                android:gravity="center"
-                android:orientation="vertical">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:fontFamily="@font/poppins_bold"
-                    android:text="Reports"
-                    android:textColor="@color/apps_green"
-                    android:textSize="14sp" />
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="2dp"
-                    android:layout_marginTop="8dp"
-                    android:background="@color/apps_green" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/cardPayments"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:clickable="true"
-                android:focusable="true"
-                android:gravity="center"
-                android:orientation="vertical">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:fontFamily="@font/poppins_medium"
-                    android:text="Customer Payments"
-                    android:textColor="?attr/colorOnSurfaceVariant"
-                    android:textSize="14sp" />
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="2dp"
-                    android:layout_marginTop="8dp"
-                    android:background="@android:color/transparent" />
-            </LinearLayout>
-        </LinearLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -117,18 +58,22 @@
                 android:paddingBottom="24dp">
 
                 <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/rvDailyJobs"
+                    android:id="@+id/rvCompleteTickets"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:clipToPadding="false"
-                    android:paddingHorizontal="16dp"
-                    android:paddingTop="16dp"
-                    tools:listitem="@layout/item_daily_schedule_ticket" />
+                    android:paddingTop="16dp" />
 
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/recyclerPayments"
-                    android:layout_width="0dp"
-                    android:layout_height="0dp"
+                <TextView
+                    android:id="@+id/tvCompleteEmpty"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="48dp"
+                    android:fontFamily="@font/poppins_medium"
+                    android:gravity="center"
+                    android:text="No completed tickets"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    android:textSize="14sp"
                     android:visibility="gone" />
 
             </LinearLayout>
@@ -147,24 +92,13 @@
     <View android:id="@+id/tvMonthYear" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
     <View android:id="@+id/btnPreviousMonth" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
     <View android:id="@+id/btnNextMonth" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
-
-    <ProgressBar
-        android:id="@+id/paymentsLoading"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-    <TextView
-        android:id="@+id/tvPaymentsEmpty"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+    <View android:id="@+id/rvDailyJobs" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
+    <View android:id="@+id/cardReports" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
+    <View android:id="@+id/recyclerPayments" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
+    <View android:id="@+id/paymentsLoading" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
+    <View android:id="@+id/tabContainer" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
+    <View android:id="@+id/cardComplete" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
+    <View android:id="@+id/cardPayments" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
+
